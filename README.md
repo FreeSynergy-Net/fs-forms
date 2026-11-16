@@ -1,8 +1,8 @@
-# FreeSynergy Surveys — ask, and decide together
+# FreeSynergy Forms — ask, and decide together
 
 **A poll where an anonymous answer really is anonymous, not just labelled that way.**
 
-FreeSynergy Surveys lets a person or a group ask questions, collect answers and read the result. Answers can carry a name, or be anonymous. A survey can start in a small group and later widen to the larger group around it, keeping the answers already given.
+FreeSynergy Forms lets a person or a group ask questions, collect answers and read the result. Answers can carry a name, or be anonymous. A survey can start in a small group and later widen to the larger group around it, keeping the answers already given.
 
 What is different here: anonymous answers do not go into the ordinary store at all. They go into a separate box that keeps no log and no time, with answers shuffled. Results appear only in batches of at least a minimum group size, so reading twice cannot reveal one person's answer. If answers are held back and could change the outcome, the program says it cannot name a winner yet. A decision can be linked to the tasks that follow from it.
 
@@ -29,13 +29,13 @@ Latest tag: `v0.0.1`.
 
 ## Part of FreeSynergy
 
-Surveys belongs to the democracy and project-management suites. FreeSynergy is a family of programs that are free for everyone, forever, and that keep your data yours. The documentation, the manifesto and the overall plan live in [fs-documentation](https://github.com/FreeSynergy/fs-documentation); the reading version is at <https://freesynergy.github.io/fs-documentation/>. Start with the [manifesto](https://freesynergy.github.io/fs-documentation/manifesto/) if you want to know why we do this.
+Forms belongs to the democracy and project-management suites. FreeSynergy is a family of programs that are free for everyone, forever, and that keep your data yours. The documentation, the manifesto and the overall plan live in [fs-documentation](https://github.com/FreeSynergy/fs-documentation); the reading version is at <https://freesynergy.github.io/fs-documentation/>. Start with the [manifesto](https://freesynergy.github.io/fs-documentation/manifesto/) if you want to know why we do this.
 
 
 ## For developers
 
-- Workspace crates: `fs-surveys-core` (core, no GUI) and `fs-surveys-methods` (counting methods).
-- The contract is `surveys.capnp` in [fs-interfaces](https://github.com/FreeSynergy/fs-interfaces) (draft, provisional). Surveys owns it.
+- Workspace crates: `fs-forms-core` (core, no GUI) and `fs-forms-methods` (counting methods).
+- The contract is `surveys.capnp` in [fs-interfaces](https://github.com/FreeSynergy/fs-interfaces) (draft, provisional). Forms owns it.
 - Build and test: `cargo build --workspace` and `cargo test --workspace`.
 - Design and decisions: [DESIGN.md](DESIGN.md).
 - Licence: MIT OR Apache-2.0.

@@ -615,7 +615,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "fs-surveys-core"
+name = "fs-forms-core"
 version = "0.0.1"
 dependencies = [
  "async-trait",
@@ -623,7 +623,7 @@ dependencies = [
  "fs-groups-core",
  "fs-interfaces",
  "fs-objects",
- "fs-surveys-methods",
+ "fs-forms-methods",
  "getrandom 0.3.4",
  "serde",
  "serde_json",
@@ -633,7 +633,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "fs-surveys-methods"
+name = "fs-forms-methods"
 version = "0.0.1"
 dependencies = [
  "thiserror",

@@ -1,6 +1,6 @@
-# fs-surveys – Design
+# fs-forms – Design
 
-`fs-surveys` is the surveys program of FreeSynergy. This repo holds the **program core**, no GUI. Contract: `surveys.capnp` in
+`fs-forms` is the forms program of FreeSynergy. This repo holds the **program core**, no GUI. Contract: `surveys.capnp` in
 `fs-interfaces` v0.46.0 (draft, provisional: no survey frontends are analysed yet). Program docs:
 `fs-documentation/docs/en/programs/apps/surveys/`.
 
@@ -145,7 +145,7 @@ It can be edited in `draft` only. Widening has no such parameter, so it cannot g
 Store type `Decision` (AS2 has none), main store, `context=surveys`, content in `fs:` members; index `survey`, `task` (multi-valued). A decision names survey, question, method, threshold, stage, outcome, note and task IRIs. The task itself stays in fs-tasks; `record` does not require the method's own winner, because people decide. It is refused if a choice id does not exist.
 
 ### Methods are a separate crate
-`fs-surveys-methods` is pure: ballots in, `Tally` out, one strategy per method, a registry from `Method` to strategy. The same ballots can be evaluated by every method whose ballot form fits; a form that does not fit is an error, not a guess.
+`fs-forms-methods` is pure: ballots in, `Tally` out, one strategy per method, a registry from `Method` to strategy. The same ballots can be evaluated by every method whose ballot form fits; a form that does not fit is an error, not a guess.
 Not in the contract yet, so not built: quadratic voting, delegation, clustering, matrix questions.
 
 ### Not built in this version

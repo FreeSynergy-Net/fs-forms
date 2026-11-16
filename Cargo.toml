@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/fs-surveys-methods", "crates/fs-surveys-core"]
+members = ["crates/fs-forms-methods", "crates/fs-forms-core"]
 
 [workspace.package]
 version = "0.0.1"

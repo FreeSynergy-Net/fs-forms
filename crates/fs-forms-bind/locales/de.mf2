@@ -1,0 +1,19 @@
+# MF2 texts (ADR 0057), German. One key per BindCode; proposal of the host draft, syntax not yet checked against fs-components-mf2.
+bind-error-locked = Dieser Teil ist gesperrt: {$cause}
+bind-error-provider-unreachable = Das Programm für „{$capability}“ ist gerade nicht erreichbar.
+bind-error-block-not-built = Der Baustein „{$block}“ ist in dieser Version noch nicht gebaut.
+bind-error-field-component-missing = Für {$basic} in der Rolle {$role} fehlt noch ein Feld-Baustein; nur Anzeige.
+bind-error-write-later = „{$command}“ kommt mit der Schreib-Stufe.
+bind-error-workflow-runtime-missing = Der Ablauf „{$workflow}“ braucht die Workflow-Laufzeit; sie kommt.
+bind-error-coming = „{$command}“ kommt.
+bind-error-shortcut-conflict = Das Kürzel {$shortcut} ist doppelt belegt ({$commands}); es tut nichts, bis das geklärt ist.
+bind-error-shortcut-invalid = Das Kürzel „{$text}“ ist nicht lesbar.
+bind-error-key-reserved = Die Taste {$shortcut} gehört {$owner} und kann hier nicht belegt werden.
+bind-error-standard-twice = Das Standardmenü „{$standard}“ steht zweimal in der Beschreibung.
+bind-error-seq-twice = Auf der Seite „{$page}“ haben zwei Teile die Position {$seq}.
+bind-error-page-empty = Die Seite „{$page}“ hat nichts zum Anzeigen.
+bind-error-page-refused = Daten verworfen, weil sie die Regeln verletzen: {$kind}
+bind-error-field-hidden = verborgen ({$reason})
+bind-error-settings-defaults = Einstellungen nicht erreichbar; es gelten die Voreinstellungen.
+bind-error-no-selection = Erst einen Eintrag auswählen.
+bind-error-elem-orphan = Ein Hinweis zur Beschreibung betrifft ein Element, das es nicht mehr gibt ({$elem}).

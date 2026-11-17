@@ -1,7 +1,7 @@
 # fs-forms – Design
 
 `fs-forms` is the forms program of FreeSynergy. This repo holds the **program core** (`fs-forms-core`, `fs-forms-methods`: no GUI, no RPC) and, since 0.0.2, the server, client, frontend and command of the basics (see "The basics"). Contract: `surveys.capnp` in
-`fs-interfaces` v0.46.0 (draft, provisional: no survey frontends are analysed yet). Program docs:
+`fs-interfaces` v0.0.27 (draft, provisional: no survey frontends are analysed yet). Program docs:
 `fs-documentation/docs/en/programs/apps/surveys/`.
 
 ## State

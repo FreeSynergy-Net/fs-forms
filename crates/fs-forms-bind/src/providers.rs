@@ -3,6 +3,9 @@
 //! Pattern: Port (`ProviderFacts`) + Snapshot values.
 
 use crate::coded::Coded;
+use fs_components_commands::Platform;
+
+use crate::menu_std::StandardMenus;
 use crate::types::{Limits, SearchKind};
 
 /// One installed provider version.
@@ -74,4 +77,8 @@ pub struct Providers<'a> {
     pub settings: &'a SettingsFacts,
     /// Host abilities.
     pub host: HostCaps,
+    /// The platform `Primary` resolves for (shortcut conflicts).
+    pub platform: Platform,
+    /// The standard menus of the shell, read by the host (never copied into the plan).
+    pub standard: &'a StandardMenus,
 }

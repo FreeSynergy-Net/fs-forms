@@ -8,10 +8,14 @@ authors.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 
-# No dependencies on purpose (H-K17: no toml / JSON at run time; no I/O; no Blinc, tokio or capnp).
+# Two dependencies, both with evidence in the draft (E7, A-P2, A-P3); H-K17: no toml / JSON at run time; no I/O; no Blinc, tokio, capnp.
+# fs-components-commands (pure, no dependencies): shortcuts, the dispatcher `Keymap`, `conflicts`, the standard commands.
+# sha2 0.10: the digest of the plan; the SAME version as already in the Cargo.lock of this tree (0.10.9), no second state.
 # The input types are narrow mirrors of the F1b `Resolved` and the F1 accepts/records values; they are replaced by the real
 # crates when `forms_f1_v1` and `layouts_v1` are set.
 [dependencies]
+fs-components-commands = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.29" }
+sha2 = "0.10"
 
 [features]
 # The in-crate test doubles (`TestCatalog`, fixtures): tests only.

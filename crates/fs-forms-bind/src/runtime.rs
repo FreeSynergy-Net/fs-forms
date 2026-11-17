@@ -67,7 +67,14 @@ pub enum Admitted {
 /// `hidden-has-value`, `estimate-mixed`). Refused: the lock sits on the placement (`part`).
 #[must_use]
 pub fn admit_page(limits: &Limits, size: usize, page: RecordPage, part: Part) -> Admitted {
-    let refuse = |c: Coded| Admitted::Refused(PartLock::locked(part.clone(), c));
+    // The cause of the placement lock is `bind-error-page-refused{kind}` with the records code as `kind` (draft section 13).
+    let refuse = |c: Coded| {
+        let mut r = BindCode::PageRefused.coded().with("kind", c.code.clone());
+        for (k, v) in &c.params {
+            r = r.with(k, v.clone());
+        }
+        Admitted::Refused(PartLock::locked(part.clone(), r))
+    };
     if page.records.len() > size {
         let c = Coded::new("records-error-page-too-long")
             .with("size", size.to_string())

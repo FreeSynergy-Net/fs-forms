@@ -1,4 +1,4 @@
-//! Queries on a built `Plan`: canonical form, all locks, placement lookup.
+//! Queries on a built `Plan`: all locks, placement lookup.
 //!
 //! Pattern: Query methods kept apart from the value objects.
 
@@ -6,15 +6,6 @@ use crate::codes::PartLock;
 use crate::plan::{FieldFill, Fill, InputState, PlacePlan, PlaceStatus, Plan};
 
 impl Plan {
-    /// Canonical form of the plan WITHOUT `style` (rule `plan.style-blind`). Equal for every style.
-    /// A sha256 over it comes when fs-types is a dependency (this crate has none on purpose).
-    #[must_use]
-    pub fn canonical_without_style(&self) -> String {
-        let mut p = self.clone();
-        p.style = None;
-        format!("{p:?}")
-    }
-
     /// Every lock of the plan with its part.
     #[must_use]
     pub fn locks(&self) -> Vec<&PartLock> {

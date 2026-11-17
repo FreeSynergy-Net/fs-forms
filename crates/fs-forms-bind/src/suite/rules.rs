@@ -165,12 +165,12 @@ pub(super) fn bindings_ordered(f: &dyn PlanFixture) -> R {
 }
 
 pub(super) fn style_blind(f: &dyn PlanFixture) -> R {
-    let base = f.build().canonical_without_style();
+    let base = f.build().digest_without_style();
     for style in ["fiori", "apple", "windows", "simple"] {
         let Some(p) = f.with_style(style) else {
             continue;
         };
-        if p.canonical_without_style() != base || p.style.as_deref() != Some(style) {
+        if p.digest_without_style() != base || p.style.as_deref() != Some(style) {
             return Err(format!("style {style} changes the plan"));
         }
     }

@@ -203,8 +203,10 @@ pub struct Resolved {
     pub pages: Vec<PageIn>,
     /// Menu roots.
     pub menu: Vec<MenuIn>,
-    /// Live problems found by F1b.
+    /// Locking problems found by F1b (missing or unreachable provider, mismatching range, broken elements).
     pub problems: Vec<Problem>,
+    /// Warnings found by F1b (e.g. `layout-error-provider-unchecked`): shown as notices, never a lock (c0 86).
+    pub warnings: Vec<Problem>,
     /// Open overlay conflicts.
     pub conflicts: Vec<Problem>,
 }

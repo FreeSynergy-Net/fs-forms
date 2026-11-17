@@ -31,7 +31,8 @@ fn refused(a: &Admitted, code: &str) {
     let Admitted::Refused(l) = a else {
         panic!("page must be refused: {a:?}")
     };
-    assert_eq!(code_of(l), code);
+    assert_eq!(code_of(l), "bind-error-page-refused");
+    assert_eq!(l.cause.coded().param("kind"), Some(code));
     assert_eq!(
         l.part.text(),
         "place:board/main",

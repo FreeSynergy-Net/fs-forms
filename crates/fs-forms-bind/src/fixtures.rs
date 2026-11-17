@@ -187,6 +187,7 @@ pub fn tasks_resolved() -> Resolved {
             node("m-help", MenuKind::Standard("help".to_owned()), vec![]),
         ],
         problems: vec![],
+        warnings: vec![],
         conflicts: vec![],
     }
 }

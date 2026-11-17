@@ -1,4 +1,4 @@
-# Copy to <repo>/.github/workflows/check.yml - runs fmt, clippy (pedantic), tests and the coding rules on every push.
+# Runs fmt, clippy (pedantic), tests and the coding rules on every push (fs-release caller, pinned).
 name: check
 on:
   push:
@@ -7,9 +7,13 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
 jobs:
   check:
-    uses: FreeSynergy/fs-release/.github/workflows/check.yml@main
-    # with:
-    #   working-directory: "."
-    #   apt-packages: "libssl-dev"
+    uses: FreeSynergy/fs-release/.github/workflows/check.yml@v0.0.10
+    with:
+      # Software Vulkan (lavapipe) and fonts, as for the other programs with a window (the frontend builds on fs-components).
+      software-gpu: true

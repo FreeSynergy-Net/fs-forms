@@ -1,4 +1,4 @@
-//! Guarantee 5: widening over a real group hierarchy.
+//! Guarantee 5: widening over a group hierarchy (in-memory stand-in for the groups, see `common`).
 
 mod common;
 
@@ -6,25 +6,21 @@ use common::*;
 use fs_forms_core::{ALL_STAGES, Anonymity, Error, Survey};
 use fs_objects::ObjectId;
 
-fn id(g: fs_objects::ObjectId) -> ObjectId {
-    g.to_string().parse().unwrap()
-}
-
 struct Tree {
     root: ObjectId,
     team: ObjectId,
     other: ObjectId,
 }
 
-async fn tree(e: &Env) -> Tree {
-    let root = e.groups.create("Association", "org").await.unwrap();
-    let team = e.groups.create("Team", "team").await.unwrap();
-    let other = e.groups.create("Elsewhere", "org").await.unwrap();
-    nest(&e.groups, team.id, root.id).await;
+fn tree(e: &Env) -> Tree {
+    let root = e.groups.create("Association", "org");
+    let team = e.groups.create("Team", "team");
+    let other = e.groups.create("Elsewhere", "org");
+    nest(&e.groups, team.id, root.id);
     Tree {
-        root: id(root.id),
-        team: id(team.id),
-        other: id(other.id),
+        root: root.id,
+        team: team.id,
+        other: other.id,
     }
 }
 
@@ -45,7 +41,7 @@ async fn bound(e: &Env, scope: ObjectId) -> (Survey, ObjectId) {
 #[tokio::test]
 async fn results_stay_by_stage_and_anonymity_stays() {
     let e = env().await;
-    let t = tree(&e).await;
+    let t = tree(&e);
     let (s, q) = bound(&e, t.team).await;
     submit_open(&e, &s, q, "a", 3).await;
     let wide = e.repo.widen(s.id(), t.root).await.unwrap();
@@ -68,7 +64,7 @@ async fn results_stay_by_stage_and_anonymity_stays() {
 #[tokio::test]
 async fn a_small_rest_waits_for_the_next_release() {
     let e = env().await;
-    let t = tree(&e).await;
+    let t = tree(&e);
     let (s, q) = bound(&e, t.team).await;
     submit_open(&e, &s, q, "a", 2).await;
     e.repo.widen(s.id(), t.root).await.unwrap();
@@ -86,7 +82,7 @@ async fn a_small_rest_waits_for_the_next_release() {
 #[tokio::test]
 async fn only_an_ancestor_of_the_scope_is_accepted() {
     let e = env().await;
-    let t = tree(&e).await;
+    let t = tree(&e);
     let (s, _) = bound(&e, t.team).await;
     for parent in [t.other, t.team, ObjectId::new()] {
         let r = e.repo.widen(s.id(), parent).await;

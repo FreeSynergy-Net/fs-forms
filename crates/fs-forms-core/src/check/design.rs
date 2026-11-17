@@ -39,10 +39,10 @@ pub fn check_question(q: &Question) -> Result<()> {
     if scored && q.min > q.max {
         return bad("min is above max");
     }
-    if let (Some(a), Some(b)) = (q.min_number, q.max_number) {
-        if a > b {
-            return bad("minNumber is above maxNumber");
-        }
+    if let (Some(a), Some(b)) = (q.min_number, q.max_number)
+        && a > b
+    {
+        return bad("minNumber is above maxNumber");
     }
     Ok(())
 }

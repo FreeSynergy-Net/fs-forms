@@ -63,9 +63,9 @@ fn band(sum: &fs_forms_core::Summary, b: ObjectId) -> (u32, bool, Vec<(String, u
 #[tokio::test]
 async fn a_lone_answer_in_a_later_batch_stays_hidden_across_stages() {
     let e = env().await;
-    let team = e.groups.create("Team", "t").await.unwrap();
-    let root = e.groups.create("Root", "o").await.unwrap();
-    nest(&e.groups, team.id, root.id).await;
+    let team = e.groups.create("Team", "t");
+    let root = e.groups.create("Root", "o");
+    nest(&e.groups, team.id, root.id);
     let (team, root): (ObjectId, ObjectId) = (
         team.id.to_string().parse().unwrap(),
         root.id.to_string().parse().unwrap(),

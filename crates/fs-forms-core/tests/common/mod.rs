@@ -1,7 +1,8 @@
-//! Shared helpers of the integration tests: real in-memory stores, real groups, a collecting delivery.
+//! Shared helpers of the integration tests: real in-memory stores, an in-memory group tree, a collecting delivery.
 
 #![allow(dead_code)] // each test file uses a different subset
 
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 pub mod ai;
@@ -52,45 +53,91 @@ impl TokenDelivery for Failing {
     }
 }
 
-/// `GroupLookup` over the real `fs-groups-core` (built on fs-objects 0.2, so ids pass as text).
-pub struct Groups(pub fs_groups_core::GroupRepo);
-
-fn to_old(id: ObjectId) -> fs_objects::ObjectId {
-    id.to_string().parse().unwrap()
+/// A group the tests made.
+pub struct Made {
+    pub id: ObjectId,
 }
-fn from_old(id: fs_objects::ObjectId) -> ObjectId {
-    id.to_string().parse().unwrap()
+
+/// Who can be in a group (the tests only need people).
+pub enum Member {
+    Person(String),
+}
+
+/// A small in-memory group tree and its members, answering `GroupLookup`.
+///
+/// The tests used the real `fs-groups-core` (built on fs-objects 0.0.1). A tree with two sources of a library is no longer
+/// allowed (one source per library, ADR 0092 rule 2), and fs-groups has no tag yet on the same pins as the rest, so this
+/// stand-in carries the same questions (ancestors and effective members) until that tag exists.
+#[derive(Clone, Default)]
+pub struct GroupRepo {
+    parents: Arc<Mutex<HashMap<ObjectId, ObjectId>>>,
+    members: Arc<Mutex<HashMap<ObjectId, Vec<String>>>>,
+}
+
+impl GroupRepo {
+    #[allow(clippy::unused_self)] // same shape as the real `GroupRepo::create`
+    pub fn create(&self, _name: &str, _kind: &str) -> Made {
+        Made {
+            id: ObjectId::new(),
+        }
+    }
+
+    pub fn add(&self, group: ObjectId, member: Member, _role: &str) {
+        let Member::Person(person) = member;
+        self.members
+            .lock()
+            .unwrap()
+            .entry(group)
+            .or_default()
+            .push(person);
+    }
+
+    fn above(&self, group: ObjectId) -> Vec<ObjectId> {
+        let parents = self.parents.lock().unwrap();
+        let mut found = Vec::new();
+        let mut at = group;
+        while let Some(up) = parents.get(&at) {
+            if found.contains(up) {
+                break;
+            }
+            found.push(*up);
+            at = *up;
+        }
+        found
+    }
 }
 
 #[async_trait]
-impl GroupLookup for Groups {
+impl GroupLookup for GroupRepo {
     async fn ancestors(&self, group: ObjectId) -> Result<Vec<ObjectId>> {
-        let found = self.0.ancestors(to_old(group)).await.unwrap();
-        Ok(found.into_iter().map(from_old).collect())
+        Ok(self.above(group))
     }
     async fn members(&self, group: ObjectId) -> Result<Vec<String>> {
-        let found = self.0.effective(to_old(group)).await.unwrap();
-        Ok(found.into_iter().map(|m| m.person).collect())
+        let all: Vec<ObjectId> = self.members.lock().unwrap().keys().copied().collect();
+        let mut people = Vec::new();
+        for g in all {
+            if g == group || self.above(g).contains(&group) {
+                for p in self
+                    .members
+                    .lock()
+                    .unwrap()
+                    .get(&g)
+                    .cloned()
+                    .unwrap_or_default()
+                {
+                    if !people.contains(&p) {
+                        people.push(p);
+                    }
+                }
+            }
+        }
+        Ok(people)
     }
 }
 
-/// Everybody in the group tests is a person.
-struct Humans;
-
-#[async_trait]
-impl fs_groups_core::AiMarking for Humans {
-    async fn is_ai(&self, _person: &str) -> fs_groups_core::Result<Option<bool>> {
-        Ok(Some(false))
-    }
-}
-
-/// Make `child` a child of `parent` (asked and approved by the same owner).
-pub async fn nest(groups: &fs_groups_core::GroupRepo, child: ObjectId, parent: ObjectId) {
-    let request = groups
-        .request_parent(to_old(child), to_old(parent))
-        .await
-        .unwrap();
-    groups.approve_parent(request.id).await.unwrap();
+/// Make `child` a child of `parent`.
+pub fn nest(groups: &GroupRepo, child: ObjectId, parent: ObjectId) {
+    groups.parents.lock().unwrap().insert(child, parent);
 }
 
 /// Everything a test needs.
@@ -99,21 +146,17 @@ pub struct Env {
     pub main: Arc<TursoStore>,
     pub ballots: Arc<TursoStore>,
     pub delivery: Arc<Collect>,
-    pub groups: fs_groups_core::GroupRepo,
+    pub groups: GroupRepo,
 }
 
 pub async fn env() -> Env {
     let main = Arc::new(TursoStore::open_in_memory().await.unwrap());
     let ballots = Arc::new(TursoStore::open_in_memory().await.unwrap());
-    let old: Arc<dyn fs_objects::Store> =
-        Arc::new(fs_objects::TursoStore::open_in_memory().await.unwrap());
-    let groups = fs_groups_core::GroupRepo::new(old, ME)
-        .with_instance("example.org")
-        .with_ai_marking(Arc::new(Humans));
+    let groups = GroupRepo::default();
     let delivery = Arc::new(Collect::default());
     let repo = SurveyRepo::new(main.clone(), ballots.clone(), ME)
         .with_instance("example.org")
-        .with_groups(Arc::new(Groups(groups.clone())))
+        .with_groups(Arc::new(groups.clone()))
         .with_delivery(delivery.clone())
         .with_ai_marking(Arc::new(ai::Marks));
     Env {

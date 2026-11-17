@@ -76,12 +76,12 @@ pub(crate) fn scores(
                 return Err(wrong(method, b));
             };
             let idx = resolve(choices, pairs.iter().map(|(id, _)| id))?;
-            if let Some((lo, hi)) = range {
-                if pairs.iter().any(|(_, s)| *s < lo || *s > hi) {
-                    return Err(Error::InvalidBallot(format!(
-                        "a score is outside {lo}..={hi}"
-                    )));
-                }
+            if let Some((lo, hi)) = range
+                && pairs.iter().any(|(_, s)| *s < lo || *s > hi)
+            {
+                return Err(Error::InvalidBallot(format!(
+                    "a score is outside {lo}..={hi}"
+                )));
             }
             Ok(idx.into_iter().zip(pairs.iter().map(|(_, s)| *s)).collect())
         })

@@ -139,15 +139,12 @@ async fn tokens_can_be_asked_for_only_with_a_delivery() {
 #[tokio::test]
 async fn groups_are_invited_through_the_lookup() {
     let e = env().await;
-    let g = e.groups.create("Team", "team").await.unwrap();
+    let g = e.groups.create("Team", "team");
     for n in ["ada", "bob"] {
-        e.groups
-            .add(g.id, fs_groups_core::Member::Person(person(n)), "member")
-            .await
-            .unwrap();
+        e.groups.add(g.id, Member::Person(person(n)), "member");
     }
     let (s, _) = once(&e).await;
-    let gid = g.id.to_string().parse().unwrap();
+    let gid = g.id;
     let r = e
         .repo
         .invite(s.id(), &[person("ada")], &[gid])

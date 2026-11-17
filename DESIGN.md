@@ -1,6 +1,6 @@
 # fs-forms – Design
 
-`fs-forms` is the forms program of FreeSynergy. This repo holds the **program core**, no GUI. Contract: `surveys.capnp` in
+`fs-forms` is the forms program of FreeSynergy. This repo holds the **program core** (`fs-forms-core`, `fs-forms-methods`: no GUI, no RPC) and, since 0.0.2, the server, client, frontend and command of the basics (see "The basics"). Contract: `surveys.capnp` in
 `fs-interfaces` v0.46.0 (draft, provisional: no survey frontends are analysed yet). Program docs:
 `fs-documentation/docs/en/programs/apps/surveys/`.
 
@@ -15,7 +15,7 @@ Version 0.3.0 (AI participants and open surveys). Contract methods are the trait
 | Anonymous: separate unlogged ballot store, one box per survey, batches, tokens through `TokenDelivery` | done; tokens have no real delivery until fs-messenger plugs in |
 | Results: summary, evaluate, CSV export; `filter` and rows for `named` only | done; DDI `Unsupported` |
 | Ten methods, held-back bound | done |
-| Widening over groups through `GroupLookup` | done, tested with real `fs-groups-core` |
+| Widening over groups through `GroupLookup` | done, tested with an in-memory `GroupLookup` (real `fs-groups-core` has other pins: two sources of a library are not allowed, so it left the dev-dependencies) |
 | Decisions linked to task IRIs | done |
 | `survey.publicLink`, `poll.embed` | `Unsupported`; `publish` refuses a `public` survey |
 | AI participants: permission per survey (default no), marking by the host, doubt = AI, results apart in every reading | done, **provisional**, see "AI participants" |
@@ -26,6 +26,21 @@ Version 0.3.0 (AI participants and open surveys). Contract methods are the trait
 | Tests | see `cargo test`, real stores |
 
 Checked by an independent reviewer over three rounds before the tag; two rounds found serious errors, and the last found nothing serious.
+
+## The basics (0.0.2, workflow `grundfassung`)
+
+A slim first version: window, "what comes" and documentation. It stores no data through the contract; the core is not connected to the server.
+
+| Crate | Role | Pattern |
+|---|---|---|
+| `fs-forms-server` | `surveys.capnp` (draft 0.1) over a local socket via `fs-rpc`; answers `capabilities` (no ids, the contract version) and `supportReport`; every other method `unimplemented` (ADR 0045) | Adapter |
+| `fs-forms-client` | handshake and contract check (same main level, minor level not lower) | Template method |
+| `fs-forms-simple` | frontend `simple`, own process; depends only on the client and fs-components (a test reads `cargo tree`) | Adapter, Builder |
+| `fs-forms-bin` | command `fs-forms`: starter with fallback (exit 3 = contract does not fit), `serve`, `--version`, `--help` | Facade, Strategy (`decide`) |
+
+- Capability name in `capabilities.txt`: `surveys` (shown as Forms); the contract file keeps its name `surveys.capnp`.
+- No lease: the server keeps running after the window closes until it is stopped (`Control.stop`) or replaced by a newer one.
+- Contract: draft, not locked. The basics are released with this draft contract. Next: the window for the list, the editor and answering on top of the core (feature list `todo/features/forms.md`); first only invited people can answer; the public link comes with the server part; date polls belong to Decisions (embedded fields, ADR 0087).
 
 ## AI participants (thread 5, item 7; owner 2026-11-07; all provisional)
 
@@ -136,7 +151,7 @@ One `StoredObject` of store type `SurveyResponse` per person and survey in the m
 It can be edited in `draft` only. Widening has no such parameter, so it cannot get weaker.
 
 ### Widening
-`widen(id, parent)`: survey must be `open` and bound to a group; `parent` must be an ancestor of a group in `scope`, asked through the `GroupLookup` port. Releases pending per the batch rule, then `stage += 1`, `scope` gains `parent`. The survey stays one object. New people are invited with `invite`. Tests use real `fs-groups-core` behind an adapter in the test directory (dev-dependency only).
+`widen(id, parent)`: survey must be `open` and bound to a group; `parent` must be an ancestor of a group in `scope`, asked through the `GroupLookup` port. Releases pending per the batch rule, then `stage += 1`, `scope` gains `parent`. The survey stays one object. New people are invited with `invite`. Tests use a small in-memory group tree in the test directory (the real `fs-groups-core` is not a dev-dependency since 0.0.2: it has other pins, and a tree holds one source per library).
 
 ### Ports (Strategy, ADR 0043)
 `GroupLookup` (`ancestors(group)`, `members(group)` as person IRIs) and `TokenDelivery` (`send(person, survey, token)`). No delivery configured: `invite` on `anonymousOnce` answers `Unsupported`. fs-messenger and the capnp clients plug in later.

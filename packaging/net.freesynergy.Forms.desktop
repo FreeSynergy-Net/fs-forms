@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=FreeSynergy.Forms
+GenericName=Forms
+Comment=Ask questions, collect answers and read the result; anonymous means anonymous
+Exec=fs-forms
+Icon=net.freesynergy.Forms
+Terminal=false
+Categories=Office;Network;

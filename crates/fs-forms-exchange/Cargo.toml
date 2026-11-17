@@ -1,0 +1,19 @@
+[package]
+name = "fs-forms-exchange"
+description = "The only place that reads and writes TOML or JSON of a forms description: import, canonical export"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[features]
+default = []
+# Stage 2: JSON in and out (RFC 8785 canonical form).
+json = ["dep:serde_json"]
+
+[dependencies]
+fs-forms-layout = { path = "../fs-forms-layout" }
+toml = "0.8"
+serde_json = { version = "1", optional = true }

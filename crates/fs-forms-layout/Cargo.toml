@@ -1,0 +1,12 @@
+[package]
+name = "fs-forms-layout"
+description = "Typed model of a forms description (Layout), overlays, the storage port LayoutStore and an in-memory store; no file formats, no runtime"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+sha2 = "0.10"

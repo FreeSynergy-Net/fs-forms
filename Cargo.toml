@@ -2,6 +2,8 @@
 resolver = "2"
 members = [
     "crates/fs-forms-core",
+    "crates/fs-forms-layout",
+    "crates/fs-forms-exchange",
     "crates/fs-forms-server",
     "crates/fs-forms-client",
     "crates/fs-forms-simple",

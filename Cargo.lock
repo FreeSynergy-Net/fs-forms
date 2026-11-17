@@ -1368,7 +1368,7 @@ checksum = "aa9a19cbb55df58761df49b23516a86d432839add4af60fc256da840f66ed35b"
 [[package]]
 name = "fs-ballot"
 version = "0.0.1"
-source = "git+https://github.com/FreeSynergy/fs-ballot?rev=2431cfca7e72b344b8e69aea868148099f9f648d#2431cfca7e72b344b8e69aea868148099f9f648d"
+source = "git+https://github.com/FreeSynergy/fs-ballot?tag=v0.0.1#d7017b8057066f637adb2325dc00f5c6cc958644"
 dependencies = [
  "getrandom 0.3.4",
  "serde",
@@ -1588,7 +1588,7 @@ dependencies = [
 [[package]]
 name = "fs-tally"
 version = "0.0.1"
-source = "git+https://github.com/FreeSynergy/fs-tally?rev=2be03abda51a1f46e1ae31f05f83192d8548729d#2be03abda51a1f46e1ae31f05f83192d8548729d"
+source = "git+https://github.com/FreeSynergy/fs-tally?tag=v0.0.1#c462f0d7b60c98493f9aa4aa485bb5ae3457fe17"
 dependencies = [
  "thiserror 2.0.21",
 ]

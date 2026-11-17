@@ -7,13 +7,13 @@ Version = tag; all crates of the workspace carry the same version.
 ### English
 
 - The crate `fs-forms-methods` is gone: the ten counting methods are the library `fs-tally` (own repo, tests moved with it). The box logic (`Lane`, token hash, OS randomness) is the library `fs-ballot`; `fs-forms-core` keeps its two lanes as `fs_ballot::Lane<Ballot, Signals>` (`Signals` implements `fs_ballot::Meta`). Behaviour and stored JSON field names are unchanged; the legacy single lane of box 0.1.0 now also keeps its pending pattern counts.
-- **Pin per `rev` until the tag `v0.0.1`:** `fs-tally` and `fs-ballot` are pinned to a commit (`rev`) because their tags `v0.0.1` do not exist yet; the pins stay on `rev` until those tags exist, then they become `tag = "v0.0.1"`. `.fs-lock-sources.toml` stays strict.
+- **Pins:** `fs-tally` and `fs-ballot` are pinned to their tag `v0.0.1`. `.fs-lock-sources.toml` stays strict.
 - Still open: the box is one JSON document in `fs-objects` (typed columns are the separate step D2b).
 
 ### Deutsch
 
 - Das Crate `fs-forms-methods` entfällt: die zehn Zählverfahren sind die Bibliothek `fs-tally` (eigenes Repo, Tests mitgezogen). Die Urnen-Logik (`Lane`, Token-Hash, Zufall des Systems) ist die Bibliothek `fs-ballot`; `fs-forms-core` hält seine zwei Bahnen als `fs_ballot::Lane<Ballot, Signals>` (`Signals` setzt `fs_ballot::Meta` um). Verhalten und gespeicherte JSON-Feldnamen unverändert; die alte Einzelbahn der Urne 0.1.0 behält jetzt auch ihre wartenden Muster-Zählwerte.
-- **Pin per `rev` bis zum Tag `v0.0.1`:** `fs-tally` und `fs-ballot` hängen an einem Commit (`rev`), weil es ihre Tags `v0.0.1` noch nicht gibt; die Pins bleiben auf `rev`, bis diese Tags da sind, dann werden sie `tag = "v0.0.1"`. `.fs-lock-sources.toml` bleibt streng.
+- **Pins:** `fs-tally` und `fs-ballot` hängen an ihrem Tag `v0.0.1`. `.fs-lock-sources.toml` bleibt streng.
 - Noch offen: die Urne ist ein JSON-Dokument in `fs-objects` (typisierte Spalten sind der eigene Schritt D2b).
 
 ## 0.0.2

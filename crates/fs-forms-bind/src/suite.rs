@@ -6,6 +6,7 @@
 
 pub mod bench;
 mod rules;
+mod rules_menu;
 
 use crate::catalog::Catalog;
 use crate::model::Resolved;
@@ -78,8 +79,8 @@ impl PlanSuite {
             ("plan.source-lock-spreads", rules::source_lock_spreads),
             ("plan.chosen", rules::chosen),
             ("plan.schemes", rules::schemes),
-            ("plan.commands", rules::commands),
-            ("plan.menu-from-layout", rules::menu_from_layout),
+            ("plan.commands", rules_menu::commands),
+            ("plan.menu-from-layout", rules_menu::menu_from_layout),
             ("plan.bindings-ordered", rules::bindings_ordered),
             ("plan.style-blind", rules::style_blind),
             ("plan.deterministic", rules::deterministic),

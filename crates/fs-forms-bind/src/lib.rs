@@ -25,10 +25,13 @@ mod keys;
 mod menu;
 mod model;
 mod plan;
+mod plan_query;
 mod providers;
 mod runtime;
 mod types;
 
+#[cfg(feature = "testing")]
+mod fixtures;
 #[cfg(feature = "conformance")]
 pub mod suite;
 #[cfg(feature = "testing")]

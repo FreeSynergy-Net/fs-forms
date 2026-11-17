@@ -29,7 +29,11 @@ fn with_field(basic: Basic, schemes: Option<Vec<&str>>, problems: Vec<Problem>) 
             }],
         }],
     }];
-    r.problems = problems;
+    let (warn, lock): (Vec<_>, Vec<_>) = problems
+        .into_iter()
+        .partition(|p| p.code == "layout-error-provider-unchecked");
+    r.problems = lock;
+    r.warnings = warn;
     build_with(&r, &TestCatalog::new(), &tasks_facts(), host())
 }
 

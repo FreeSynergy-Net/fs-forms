@@ -74,6 +74,9 @@ pub struct CommandDesc {
     pub writes: bool,
     /// Acts on one record (needs a selection).
     pub on_record: bool,
+    /// Type-level right (`Shape.may`, c0 86) for a type command such as `create`: `Some(false)` = no right = hidden;
+    /// `None` = the provider does not say, the command is shown (the provider answers `forbidden` visibly).
+    pub type_may: Option<bool>,
 }
 
 /// Why a field is hidden for this person.

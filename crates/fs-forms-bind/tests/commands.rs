@@ -40,8 +40,8 @@ fn surfaces(
     let direct = command_state(c, sel);
     let out = plan
         .keys
-        .keymap_for(&plan.menu, sel)
-        .dispatch(key, Focus::List);
+        .keymap_for(&plan.menu, sel, Platform::Linux)
+        .dispatch(&press(key), FocusContext::List);
     (menu, direct, out)
 }
 
@@ -52,7 +52,7 @@ fn table_on_all_surfaces() {
         ("release", true, false, true, Some("f3")),
         ("setColumns", false, false, false, Some("f4")),
         ("note", true, false, true, Some("f5")),
-        ("delete", true, true, true, Some("f6x")),
+        ("delete", true, true, true, Some("f7")),
     ]);
     let plan = build_with(
         &r,
@@ -71,7 +71,7 @@ fn table_on_all_surfaces() {
         (
             Some(Shown::Enabled),
             Shown::Enabled,
-            Outcome::Run("0/claim".into())
+            Outcome::Run(CommandId::new("0/claim"))
         )
     );
     // release: not in may -> absent on every surface, key does nothing.
@@ -80,13 +80,13 @@ fn table_on_all_surfaces() {
     // setColumns: visible "coming", key disabled.
     let (m, d, k) = surfaces(&plan, "setColumns", Some(&sel), "f4");
     assert_eq!((m, d), (Some(Shown::Coming), Shown::Coming));
-    assert!(matches!(k, Outcome::Disabled(_)));
+    assert!(matches!(k, Outcome::Disabled { .. }));
     // note: no selection -> locked, visible.
     let (m, d, _) = surfaces(&plan, "note", None, "f5");
     assert!(matches!(&d, Shown::Locked(l) if code_of(l) == "bind-error-no-selection"));
     assert_eq!(m, Some(d));
     // delete with write = false -> write-later.
-    let (m, d, _) = surfaces(&plan, "delete", Some(&sel), "f6x");
+    let (m, d, _) = surfaces(&plan, "delete", Some(&sel), "f7");
     assert!(matches!(&d, Shown::Locked(l) if code_of(l) == "bind-error-write-later"));
     assert_eq!(m, Some(d));
 }
@@ -162,4 +162,20 @@ fn workflow_target_is_locked_until_the_runtime_exists() {
         None,
     );
     assert!(p.fixed.is_none());
+}
+
+#[test]
+fn type_command_is_hidden_only_when_the_type_right_says_no() {
+    let mut c = cmd("create", true, true, false);
+    let mut mk = |t: Option<bool>| {
+        c.desc.type_may = t;
+        command_plan(&c, host(), None)
+    };
+    assert_eq!(command_state(&mk(Some(false)), None), Shown::Hidden);
+    assert_eq!(command_state(&mk(Some(true)), None), Shown::Enabled);
+    assert_eq!(
+        command_state(&mk(None), None),
+        Shown::Enabled,
+        "unknown: shown, the provider answers forbidden"
+    );
 }

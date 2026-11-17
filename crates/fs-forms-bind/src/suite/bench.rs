@@ -89,7 +89,7 @@ impl BindBench {
             },
             data_type: "Note".into(),
         });
-        let mut note_place = |name: &str, seq: u32| PlaceIn {
+        let note_place = |name: &str, seq: u32| PlaceIn {
             elem: format!("pl-notes-{name}"),
             place: name.into(),
             seq,
@@ -143,12 +143,15 @@ impl BindBench {
     }
 
     fn plan(&self, style: Option<&str>) -> Plan {
+        let std = crate::testing::standard();
         let mut s = settings();
         s.style = style.map(str::to_owned);
         let providers = Providers {
             records: &self.facts,
             settings: &s,
             host: self.host(),
+            platform: crate::Platform::Linux,
+            standard: &std,
         };
         let mut plan = Bind::build(&self.resolved, &self.catalog, &providers);
         self.calls.set(self.calls.get() + 1);

@@ -2,7 +2,7 @@
 //!
 //! Pattern: Builder. Every problem lands as a `PartLock` on the smallest part it concerns, or as a window `Notice`.
 
-use crate::build_menu::build_menu;
+use crate::build_menu::{MenuCtx, build_menu};
 use crate::build_place::{Env, build_place};
 use crate::catalog::Catalog;
 use crate::coded::Coded;
@@ -31,7 +31,7 @@ impl<'a> Pool<'a> {
         }
     }
 
-    /// The problems of one element. `provider-unchecked` is only a window notice (bind checks the lists itself).
+    /// The locking problems of one element (warnings never come here: they are notices).
     pub(crate) fn take(&mut self, elem: &str) -> Vec<Coded> {
         let mut out = Vec::new();
         for (i, p) in self.items.iter().enumerate() {
@@ -39,12 +39,7 @@ impl<'a> Pool<'a> {
                 continue;
             }
             self.used[i] = true;
-            let c = coded(p);
-            if p.code == "layout-error-provider-unchecked" {
-                self.notices.push(Notice::new(c));
-            } else {
-                out.push(c);
-            }
+            out.push(coded(p));
         }
         out
     }
@@ -108,9 +103,21 @@ impl Bind {
                 places,
             });
         }
-        let menu = build_menu(&layout.menu, &sources, env_host, &mut pool);
+        let ctx = MenuCtx {
+            sources: &sources,
+            host: env_host,
+            platform: providers.platform,
+            standard: providers.standard,
+        };
+        let menu = build_menu(&layout.menu, &ctx, &mut pool);
         let mut notices = std::mem::take(&mut pool.notices);
-        notices.extend(layout.conflicts.iter().map(|p| Notice::new(coded(p))));
+        notices.extend(
+            layout
+                .warnings
+                .iter()
+                .chain(&layout.conflicts)
+                .map(|p| Notice::new(coded(p))),
+        );
         for (i, p) in layout.problems.iter().enumerate() {
             match (&p.elem, pool.used[i]) {
                 (None, _) => notices.push(Notice::new(coded(p))),

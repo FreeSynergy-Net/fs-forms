@@ -126,6 +126,12 @@ pub fn tasks_facts() -> FakeFacts {
     )])
 }
 
+/// The standard menus as the host reads them from the shell.
+#[must_use]
+pub fn standard() -> crate::menu_std::StandardMenus {
+    crate::menu_std::StandardMenus::from_shell()
+}
+
 /// Settings without a person style, store healthy.
 #[must_use]
 pub fn settings() -> SettingsFacts {
@@ -158,6 +164,7 @@ pub fn cmd(name: &str, supported: bool, writes: bool, on_record: bool) -> Comman
             supported,
             writes,
             on_record,
+            type_may: None,
         },
         target: Target::Program,
     }

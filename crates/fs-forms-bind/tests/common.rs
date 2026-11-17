@@ -1,7 +1,7 @@
 //! Shared helpers of the integration tests.
 #![allow(dead_code)]
 
-use fs_forms_bind::testing::{TestCatalog, settings, tasks_facts, tasks_resolved};
+use fs_forms_bind::testing::{TestCatalog, settings, standard, tasks_facts, tasks_resolved};
 use fs_forms_bind::*;
 
 pub fn build_with(
@@ -18,6 +18,8 @@ pub fn build_with(
             records: facts,
             settings: &s,
             host,
+            platform: Platform::Linux,
+            standard: &standard(),
         },
     )
 }
@@ -55,4 +57,10 @@ pub fn view(may: &[&str]) -> RecordView {
         may: may.iter().map(|s| (*s).to_owned()).collect(),
         ..RecordView::default()
     }
+}
+
+/// A key press from the stored text form (`Control+N`, `Delete`).
+pub fn press(text: &str) -> KeyPress {
+    let sc = Shortcut::parse(text).expect("a readable key");
+    KeyPress::new(sc.modifiers(), sc.key()).expect("a key press")
 }

@@ -3,7 +3,7 @@
 use super::PlanFixture;
 use super::rules::{R, plan_commands};
 use crate::codes::Severity;
-use crate::menu::{MenuPlan, standard_entries};
+use crate::menu::MenuPlan;
 use crate::model::{MenuIn, MenuKind, Target};
 
 pub(super) fn commands(f: &dyn PlanFixture) -> R {
@@ -43,11 +43,12 @@ fn expected_outline(nodes: &[MenuIn], depth: usize, out: &mut Vec<String>) {
             MenuKind::Menu(l) => out.push(format!("{pad}{l}")),
             MenuKind::Standard(w) => {
                 out.push(format!("{pad}standard:{w}"));
-                for (name, key) in standard_entries(w) {
-                    out.push(format!(
-                        "{pad}  {name}{}",
-                        key.map_or(String::new(), |k| format!(" [{k}]"))
-                    ));
+                for e in crate::testing::standard().entries(w) {
+                    let k = e
+                        .shortcut
+                        .as_ref()
+                        .map_or(String::new(), |k| format!(" [{k}]"));
+                    out.push(format!("{pad}  {}{k}", e.name));
                 }
             }
             MenuKind::Command {
@@ -58,7 +59,8 @@ fn expected_outline(nodes: &[MenuIn], depth: usize, out: &mut Vec<String>) {
                     command.name,
                     shortcut
                         .as_ref()
-                        .map_or(String::new(), |s| format!(" [{s}]"))
+                        .and_then(|s| fs_components_commands::Shortcut::parse(s).ok())
+                        .map_or(String::new(), |s| format!(" [{}]", s.aria()))
                 ));
             }
             MenuKind::View(v) => out.push(format!("{pad}view:{v}")),
@@ -71,7 +73,7 @@ fn expected_outline(nodes: &[MenuIn], depth: usize, out: &mut Vec<String>) {
 pub(super) fn menu_from_layout(f: &dyn PlanFixture) -> R {
     let mut want = Vec::new();
     expected_outline(&f.resolved().menu, 0, &mut want);
-    let got = MenuPlan::outline(&f.build().menu);
+    let got = MenuPlan::outline(&f.build().menu, &crate::testing::standard());
     if want == got {
         Ok(())
     } else {

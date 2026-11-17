@@ -4,7 +4,9 @@
 
 use crate::codes::PartLock;
 use crate::commands::{Shown, command_id, command_state};
-use crate::keys::Shortcut;
+use fs_components_commands::Shortcut;
+
+use crate::menu_std::StandardMenus;
 use crate::plan::CommandPlan;
 use crate::types::RecordView;
 
@@ -66,20 +68,6 @@ pub struct Arranged {
     pub id: String,
     /// How it appears (never `Hidden`).
     pub shown: Shown,
-}
-
-/// Standard entries of the shell menus. [nicht belegt] against `standard.rs` of fs-components-app; copied from the plan §1.8.
-#[must_use]
-pub fn standard_entries(which: &str) -> &'static [(&'static str, Option<&'static str>)] {
-    match which {
-        "program" => &[
-            ("settings", None),
-            ("language", None),
-            ("quit", Some("ctrl+q")),
-        ],
-        "help" => &[("help", Some("f1")), ("about", None)],
-        _ => &[],
-    }
 }
 
 impl MenuPlan {
@@ -159,19 +147,20 @@ impl MenuPlan {
 
     /// The tree as plain words, one line per node, depth by two spaces.
     #[must_use]
-    pub fn outline(&self) -> Vec<String> {
-        fn go(nodes: &[MenuNode], depth: usize, out: &mut Vec<String>) {
+    pub fn outline(&self, standard: &StandardMenus) -> Vec<String> {
+        fn go(nodes: &[MenuNode], depth: usize, out: &mut Vec<String>, standard: &StandardMenus) {
             for n in nodes {
                 let pad = "  ".repeat(depth);
                 match &n.entry {
                     MenuEntry::Menu { label_key } => out.push(format!("{pad}{label_key}")),
                     MenuEntry::Standard { which } => {
                         out.push(format!("{pad}standard:{which}"));
-                        for (name, key) in standard_entries(which) {
-                            out.push(format!(
-                                "{pad}  {name}{}",
-                                key.map_or(String::new(), |k| format!(" [{k}]"))
-                            ));
+                        for e in standard.entries(which) {
+                            let k = e
+                                .shortcut
+                                .as_ref()
+                                .map_or(String::new(), |k| format!(" [{k}]"));
+                            out.push(format!("{pad}  {}{k}", e.name));
                         }
                     }
                     MenuEntry::Command {
@@ -179,17 +168,17 @@ impl MenuPlan {
                     } => {
                         let k = shortcut
                             .as_ref()
-                            .map_or(String::new(), |s| format!(" [{}]", s.text));
+                            .map_or(String::new(), |s| format!(" [{}]", s.aria()));
                         out.push(format!("{pad}{}{k}", command.name));
                     }
                     MenuEntry::View { view } => out.push(format!("{pad}view:{view}")),
                     MenuEntry::Separator => out.push(format!("{pad}-")),
                 }
-                go(&n.children, depth + 1, out);
+                go(&n.children, depth + 1, out, standard);
             }
         }
         let mut out = Vec::new();
-        go(&self.roots, 0, &mut out);
+        go(&self.roots, 0, &mut out, standard);
         out
     }
 }

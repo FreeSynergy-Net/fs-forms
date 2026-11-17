@@ -148,9 +148,11 @@ fn style_changes_nothing_but_the_echo_and_builds_are_equal() {
                 records: &tasks_facts(),
                 settings: &s,
                 host: host(),
+                platform: Platform::Linux,
+                standard: &standard(),
             },
         );
-        assert_eq!(p.canonical_without_style(), base.canonical_without_style());
+        assert_eq!(p.digest_without_style(), base.digest_without_style());
         assert_eq!(p.style.as_deref(), Some(style));
     }
 }

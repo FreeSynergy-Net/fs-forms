@@ -27,21 +27,20 @@ fn outline_follows_the_description() {
     let want = [
         "standard:program",
         "  settings",
-        "  language",
-        "  quit [ctrl+q]",
+        "  quit [Primary+Q]",
         "menu-task",
-        "  create [ctrl+n]",
+        "  create [Control+N]",
         "  claim",
         "  release",
         "  note",
-        "  delete [delete]",
+        "  delete [Delete]",
         "menu-view",
         "  view:board",
         "standard:help",
-        "  help [f1]",
+        "  help [F1]",
         "  about",
     ];
-    assert_eq!(tasks_plan().menu.outline(), want);
+    assert_eq!(tasks_plan().menu.outline(&standard()), want);
 }
 
 #[test]
@@ -54,7 +53,7 @@ fn duplicate_shortcut_conflicts_and_keeps_both() {
         .filter(|l| code_of(l) == "bind-error-shortcut-conflict")
         .collect();
     assert_eq!(l.len(), 1);
-    assert_eq!(l[0].cause.coded().param("shortcut"), Some("ctrl+n"));
+    assert_eq!(l[0].cause.coded().param("shortcut"), Some("Control+N"));
     assert_eq!(
         p.menu
             .commands()
@@ -65,9 +64,9 @@ fn duplicate_shortcut_conflicts_and_keeps_both() {
     );
     assert_eq!(
         p.keys
-            .keymap_for(&p.menu, None)
-            .dispatch("ctrl+n", Focus::Global),
-        Outcome::Conflict
+            .keymap_for(&p.menu, None, Platform::Linux)
+            .dispatch(&press("ctrl+n"), FocusContext::Global),
+        Outcome::Conflict(vec![CommandId::new("0/create"), CommandId::new("0/other")])
     );
 }
 
@@ -80,18 +79,26 @@ fn reserved_and_invalid_keys_are_refused_visibly() {
     let codes: Vec<String> = p.menu.locks.iter().map(code_of).collect();
     assert!(codes.contains(&"bind-error-key-reserved".to_owned()));
     assert!(codes.contains(&"bind-error-shortcut-invalid".to_owned()));
-    let km = p.keys.keymap_for(&p.menu, None);
-    assert_eq!(km.dispatch("tab", Focus::Global), Outcome::NoMatch);
+    let km = p.keys.keymap_for(&p.menu, None, Platform::Linux);
+    assert_eq!(
+        km.dispatch(&press("Tab"), FocusContext::Global),
+        Outcome::NoMatch
+    );
 }
 
 #[test]
 fn delete_runs_in_a_list_never_in_a_text_field() {
     let p = tasks_plan();
-    let km = p.keys.keymap_for(&p.menu, Some(&view(&["delete"])));
-    assert_eq!(km.dispatch("delete", Focus::TextField), Outcome::NoMatch);
+    let km = p
+        .keys
+        .keymap_for(&p.menu, Some(&view(&["delete"])), Platform::Linux);
     assert_eq!(
-        km.dispatch("delete", Focus::List),
-        Outcome::Run("0/delete".into())
+        km.dispatch(&press("Delete"), FocusContext::TextField),
+        Outcome::NoMatch
+    );
+    assert_eq!(
+        km.dispatch(&press("Delete"), FocusContext::List),
+        Outcome::Run(CommandId::new("0/delete"))
     );
 }
 

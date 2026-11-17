@@ -1407,6 +1407,11 @@ dependencies = [
 ]
 
 [[package]]
+name = "fs-components-commands"
+version = "0.0.29"
+source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.29#b42cb17c2bcdfb0427474f0f145efa73b596ae3d"
+
+[[package]]
 name = "fs-components-mf2"
 version = "0.0.25"
 source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.25#7bf826c9ffa9e470802e69f97fdf07569bfff06c"
@@ -1481,6 +1486,15 @@ version = "0.0.2"
 dependencies = [
  "fs-forms-client",
  "fs-forms-server",
+]
+
+[[package]]
+name = "fs-forms-bind"
+version = "0.0.2"
+dependencies = [
+ "fs-components-commands",
+ "fs-forms-bind",
+ "sha2 0.10.9",
 ]
 
 [[package]]

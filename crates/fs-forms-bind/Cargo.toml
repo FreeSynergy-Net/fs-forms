@@ -1,0 +1,24 @@
+[package]
+name = "fs-forms-bind"
+description = "FreeSynergy Forms: the pure build plan (layout + catalog + providers -> plan), every problem a visible lock on the smallest part"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+# No dependencies on purpose (H-K17: no toml / JSON at run time; no I/O; no Blinc, tokio or capnp).
+# The input types are narrow mirrors of the F1b `Resolved` and the F1 accepts/records values; they are replaced by the real
+# crates when `forms_f1_v1` and `layouts_v1` are set.
+[dependencies]
+
+[features]
+# The in-crate test doubles (`TestCatalog`, fixtures): tests only.
+testing = []
+# The `PlanSuite` (12 rules, 12 bench mutants); fs-conformance joins here later and never in the normal graph.
+conformance = ["testing"]
+
+# Self dev-dependency: the integration tests need the test doubles without a feature flag on the command line.
+[dev-dependencies]
+fs-forms-bind = { path = ".", features = ["testing", "conformance"] }

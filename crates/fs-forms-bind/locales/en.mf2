@@ -1,0 +1,19 @@
+# MF2 texts (ADR 0057), English. One key per BindCode.
+bind-error-locked = This part is locked: {$cause}
+bind-error-provider-unreachable = The program for “{$capability}” cannot be reached right now.
+bind-error-block-not-built = The building block “{$block}” is not built in this version yet.
+bind-error-field-component-missing = No field block for {$basic} in role {$role} yet; display only.
+bind-error-write-later = “{$command}” comes with the write stage.
+bind-error-workflow-runtime-missing = The workflow “{$workflow}” needs the workflow runtime; it is coming.
+bind-error-coming = “{$command}” is coming.
+bind-error-shortcut-conflict = The shortcut {$shortcut} is assigned twice ({$commands}); it does nothing until resolved.
+bind-error-shortcut-invalid = The shortcut “{$text}” cannot be read.
+bind-error-key-reserved = The key {$shortcut} belongs to {$owner} and cannot be assigned here.
+bind-error-standard-twice = The standard menu “{$standard}” appears twice in the description.
+bind-error-seq-twice = Two parts on page “{$page}” have position {$seq}.
+bind-error-page-empty = Page “{$page}” has nothing to show.
+bind-error-page-refused = Data rejected because it breaks the rules: {$kind}
+bind-error-field-hidden = hidden ({$reason})
+bind-error-settings-defaults = Settings cannot be reached; defaults apply.
+bind-error-no-selection = Select an item first.
+bind-error-elem-orphan = A note about the description refers to an element that no longer exists ({$elem}).

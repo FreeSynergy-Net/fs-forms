@@ -1,10 +1,10 @@
 //! Evaluating one question under a decision method.
 //!
-//! Pattern: Adapter — answers become `fs_forms_methods::Ballot`s; the strategies live in that crate.
+//! Pattern: Adapter — answers become `fs_tally::Ballot`s; the strategies live in that crate.
 //! Held-back answers are handed on, so a result they could tip is not called decided.
 
-use fs_forms_methods::{Ballot, Method, evaluate_with_held_back};
 use fs_objects::ObjectId;
+use fs_tally::{Ballot, Method, evaluate_with_held_back};
 
 use super::handle::SurveyRepo;
 use super::reading::{Collected, values_for};

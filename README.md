@@ -37,7 +37,8 @@ Forms belongs to the democracy and project-management suites. FreeSynergy is a f
 
 ## For developers
 
-- Workspace crates: `fs-forms-core` (core, no GUI) and `fs-forms-methods` (counting methods), `fs-forms-server` (the contract over a local socket), `fs-forms-client` (the contract as a client), `fs-forms-simple` (the frontend `simple`, a process of its own, depends only on the client and fs-components), `fs-forms-bin` (the command `fs-forms`: starter and `serve`).
+- The counting methods and the anonymous box logic are libraries of their own: [fs-tally](https://github.com/FreeSynergy/fs-tally) and [fs-ballot](https://github.com/FreeSynergy/fs-ballot) (pinned by commit until their first tags).
+- Workspace crates: `fs-forms-core` (core, no GUI), `fs-forms-server` (the contract over a local socket), `fs-forms-client` (the contract as a client), `fs-forms-simple` (the frontend `simple`, a process of its own, depends only on the client and fs-components), `fs-forms-bin` (the command `fs-forms`: starter and `serve`).
 - Engine and frontend are separate processes (ADR 0021, 0094 draft); the manifest of the frontend is `packaging/frontends/simple.metainfo.xml`.
 - The contract is `surveys.capnp` in [fs-interfaces](https://github.com/FreeSynergy/fs-interfaces) (draft, not locked; shown as Forms). Forms owns it.
 - Build and test: `cargo build --workspace` and `cargo test --workspace` (the window crates need the system libraries of Blinc; the tests do not open a window).

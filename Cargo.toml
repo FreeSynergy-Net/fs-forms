@@ -1,7 +1,6 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/fs-forms-methods",
     "crates/fs-forms-core",
     "crates/fs-forms-server",
     "crates/fs-forms-client",

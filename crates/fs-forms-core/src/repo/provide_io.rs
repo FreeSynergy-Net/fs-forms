@@ -3,8 +3,8 @@
 //! Pattern: Adapter — each trait method calls the inherent method of the same concern.
 
 use async_trait::async_trait;
-use fs_forms_methods::Method;
 use fs_objects::ObjectId;
+use fs_tally::Method;
 
 use super::handle::SurveyRepo;
 use crate::error::Result;

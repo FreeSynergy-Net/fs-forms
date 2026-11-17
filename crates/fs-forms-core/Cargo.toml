@@ -9,7 +9,9 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-fs-forms-methods = { path = "../fs-forms-methods" }
+# Pin by rev until the tags v0.0.1 of fs-tally and fs-ballot exist; then `tag = "v0.0.1"` (set with the tags).
+fs-tally = { git = "https://github.com/FreeSynergy/fs-tally", rev = "2be03abda51a1f46e1ae31f05f83192d8548729d" }
+fs-ballot = { git = "https://github.com/FreeSynergy/fs-ballot", rev = "2431cfca7e72b344b8e69aea868148099f9f648d", features = ["serde"] }
 fs-objects = { git = "https://github.com/FreeSynergy/fs-objects", tag = "v0.0.6" }
 fs-interfaces = { git = "https://github.com/FreeSynergy/fs-interfaces", tag = "v0.0.27" }
 serde = { version = "1", features = ["derive"] }

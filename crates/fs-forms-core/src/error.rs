@@ -62,8 +62,17 @@ pub enum Error {
     Random(String),
     /// Decision methods refused the ballots.
     #[error(transparent)]
-    Method(#[from] fs_forms_methods::Error),
+    Method(#[from] fs_tally::Error),
     /// The explicit "not possible" of a provider (ADR 0045).
     #[error(transparent)]
     Unsupported(#[from] fs_interfaces::Unsupported),
+}
+
+impl From<fs_ballot::Error> for Error {
+    fn from(e: fs_ballot::Error) -> Self {
+        match e {
+            fs_ballot::Error::TokenUnknownOrSpent => Self::InvalidToken,
+            fs_ballot::Error::Random(m) => Self::Random(m),
+        }
+    }
 }

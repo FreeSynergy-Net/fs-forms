@@ -5,59 +5,24 @@
 //! each, so AI ballots never fill a batch of people, nor the other way round. A box of version 0.1.0 has
 //! no classes; what it holds is read as AI (doubt).
 
+use fs_ballot::Lane;
 use serde::{Deserialize, Serialize};
 
 use crate::error::Result;
 use crate::model::{Answer, Class, Signals, Voluntary};
-use crate::random::{insert_random, shuffle};
 
 /// One anonymous ballot: answers in question order, nothing else.
 pub type Ballot = Vec<Answer>;
 
-/// Ballots released together at one stage.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub struct Batch {
-    stage: u16,
-    ballots: Vec<Ballot>,
-    /// The pattern counts of these ballots (open surveys), released with them.
-    #[serde(default)]
-    signals: Signals,
-}
-
-/// Everything of one class.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(default)]
-pub struct Lane {
-    pending: Vec<Ballot>,
-    batches: Vec<Batch>,
-    tokens: Vec<String>,
-    /// Pattern counts of the pending ballots; they join a batch when it is released.
-    pending_signals: Signals,
-}
-
-impl Lane {
-    fn release(&mut self, stage: u16, min_group: u16) -> Result<()> {
-        if self.pending.is_empty() || self.pending.len() < usize::from(min_group) {
-            return Ok(());
-        }
-        let mut ballots = std::mem::take(&mut self.pending);
-        shuffle(&mut ballots)?;
-        let signals = std::mem::take(&mut self.pending_signals);
-        self.batches.push(Batch {
-            stage,
-            ballots,
-            signals,
-        });
-        Ok(())
-    }
-}
+/// The lane of one class: the logic of the box is `fs_ballot::Lane`; the pattern counts travel with its batches.
+type ClassLane = Lane<Ballot, Signals>;
 
 /// The box of a survey.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(from = "Stored")]
 pub struct BallotBox {
-    people: Lane,
-    ai: Lane,
+    people: ClassLane,
+    ai: ClassLane,
     /// Details given after the answers, in random order, tied to no ballot.
     voluntary: Vec<Vec<Voluntary>>,
 }
@@ -67,22 +32,18 @@ pub struct BallotBox {
 #[derive(Deserialize)]
 struct Stored {
     #[serde(default)]
-    people: Lane,
+    people: ClassLane,
     #[serde(default)]
-    ai: Lane,
+    ai: ClassLane,
     #[serde(default)]
     voluntary: Vec<Vec<Voluntary>>,
     #[serde(flatten)]
-    legacy: Lane,
+    legacy: ClassLane,
 }
 
 impl From<Stored> for BallotBox {
     fn from(mut s: Stored) -> Self {
-        s.ai.pending.append(&mut s.legacy.pending);
-        s.ai.batches.append(&mut s.legacy.batches);
-        s.ai.tokens.append(&mut s.legacy.tokens);
-        s.ai.tokens.sort();
-        s.ai.tokens.dedup();
+        s.ai.merge_from(s.legacy);
         Self {
             people: s.people,
             ai: s.ai,
@@ -91,8 +52,13 @@ impl From<Stored> for BallotBox {
     }
 }
 
+/// `None` for "all stages" (`0xFFFF` in the contract), else the stage.
+fn only(stage: u16) -> Option<u16> {
+    (stage != crate::model::ALL_STAGES).then_some(stage)
+}
+
 impl BallotBox {
-    fn lane(&self, class: Class) -> &Lane {
+    fn lane(&self, class: Class) -> &ClassLane {
         if class.is_ai() {
             &self.ai
         } else {
@@ -100,7 +66,7 @@ impl BallotBox {
         }
     }
 
-    fn lane_mut(&mut self, class: Class) -> &mut Lane {
+    fn lane_mut(&mut self, class: Class) -> &mut ClassLane {
         if class.is_ai() {
             &mut self.ai
         } else {
@@ -110,7 +76,7 @@ impl BallotBox {
 
     /// Add a ballot at a random position among the pending ones of its class.
     pub fn add_ballot(&mut self, class: Class, ballot: Ballot) -> Result<()> {
-        insert_random(&mut self.lane_mut(class).pending, ballot)
+        Ok(self.lane_mut(class).add_ballot(ballot)?)
     }
 
     /// Add a ballot of an open survey together with its pattern counts (kept as a count, not with the ballot).
@@ -120,14 +86,15 @@ impl BallotBox {
         ballot: Ballot,
         signals: &Signals,
     ) -> Result<()> {
-        self.add_ballot(class, ballot)?;
-        self.lane_mut(class).pending_signals.add(signals);
-        Ok(())
+        Ok(self.lane_mut(class).add_ballot_with(ballot, signals)?)
     }
 
     /// Add voluntary details at a random position among the others.
     pub fn add_voluntary(&mut self, details: Vec<Voluntary>) -> Result<()> {
-        insert_random(&mut self.voluntary, details)
+        Ok(fs_ballot::random::insert_random(
+            &mut self.voluntary,
+            details,
+        )?)
     }
 
     /// The voluntary details given so far.
@@ -138,9 +105,9 @@ impl BallotBox {
     /// Pattern counts of the released batches of `class` and `stage` (`0xFFFF` = all).
     pub fn released_signals(&self, class: Class, stage: u16) -> Signals {
         let mut total = Signals::default();
-        for b in &self.lane(class).batches {
-            if stage == crate::model::ALL_STAGES || b.stage == stage {
-                total.add(&b.signals);
+        for b in self.lane(class).batches() {
+            if only(stage).is_none_or(|s| b.stage() == s) {
+                total.add(b.meta());
             }
         }
         total
@@ -149,18 +116,14 @@ impl BallotBox {
     /// Keep a token hash in the lane of the class it was issued to (sorted, so the order says nothing
     /// about who was invited when).
     pub fn add_token(&mut self, class: Class, hash: String) {
-        let tokens = &mut self.lane_mut(class).tokens;
-        if let Err(at) = tokens.binary_search(&hash) {
-            tokens.insert(at, hash);
-        }
+        self.lane_mut(class).add_token(hash);
     }
 
     /// The class a token hash was issued to; none if it is spent or was never issued.
     pub fn token_class(&self, hash: &str) -> Option<Class> {
-        Class::BOTH.into_iter().find(|c| {
-            let t = &self.lane(*c).tokens;
-            t.binary_search_by(|x| x.as_str().cmp(hash)).is_ok()
-        })
+        Class::BOTH
+            .into_iter()
+            .find(|c| self.lane(*c).has_token(hash))
     }
 
     /// Remove a token hash from either lane; false if it is not there (spent or never issued).
@@ -168,11 +131,7 @@ impl BallotBox {
         let Some(class) = self.token_class(hash) else {
             return false;
         };
-        let tokens = &mut self.lane_mut(class).tokens;
-        tokens
-            .binary_search_by(|t| t.as_str().cmp(hash))
-            .map(|at| tokens.remove(at))
-            .is_ok()
+        self.lane_mut(class).spend(hash)
     }
 
     /// Release the pending ballots of each class as one shuffled batch of `stage`, if there are at
@@ -186,22 +145,16 @@ impl BallotBox {
 
     /// Released ballots of `class` and `stage` (`0xFFFF` = all), each with the number of its batch.
     pub fn released(&self, class: Class, stage: u16) -> Vec<(usize, &Ballot)> {
-        self.lane(class)
-            .batches
-            .iter()
-            .enumerate()
-            .filter(|(_, b)| stage == crate::model::ALL_STAGES || b.stage == stage)
-            .flat_map(|(i, b)| b.ballots.iter().map(move |x| (i, x)))
-            .collect()
+        self.lane(class).released(only(stage))
     }
 
     /// Ballots of `class` not released yet.
     pub fn held_back(&self, class: Class) -> usize {
-        self.lane(class).pending.len()
+        self.lane(class).held_back()
     }
 
     /// Whether the AI lane holds any ballot, released or not.
     pub fn has_ai_ballots(&self) -> bool {
-        !self.ai.pending.is_empty() || !self.ai.batches.is_empty()
+        self.ai.has_ballots()
     }
 }

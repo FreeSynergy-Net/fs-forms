@@ -1366,6 +1366,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa9a19cbb55df58761df49b23516a86d432839add4af60fc256da840f66ed35b"
 
 [[package]]
+name = "fs-ballot"
+version = "0.0.1"
+source = "git+https://github.com/FreeSynergy/fs-ballot?rev=2431cfca7e72b344b8e69aea868148099f9f648d#2431cfca7e72b344b8e69aea868148099f9f648d"
+dependencies = [
+ "getrandom 0.3.4",
+ "serde",
+ "sha2 0.10.9",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "fs-components"
 version = "0.0.25"
 source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.25#7bf826c9ffa9e470802e69f97fdf07569bfff06c"
@@ -1491,22 +1502,16 @@ version = "0.0.2"
 dependencies = [
  "async-trait",
  "chrono",
- "fs-forms-methods",
+ "fs-ballot",
  "fs-interfaces",
  "fs-objects",
+ "fs-tally",
  "getrandom 0.3.4",
  "serde",
  "serde_json",
  "sha2 0.10.9",
  "thiserror 2.0.21",
  "tokio",
-]
-
-[[package]]
-name = "fs-forms-methods"
-version = "0.0.2"
-dependencies = [
- "thiserror 2.0.21",
 ]
 
 [[package]]
@@ -1579,6 +1584,14 @@ dependencies = [
  "tokio-util",
  "uuid",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "fs-tally"
+version = "0.0.1"
+source = "git+https://github.com/FreeSynergy/fs-tally?rev=2be03abda51a1f46e1ae31f05f83192d8548729d#2be03abda51a1f46e1ae31f05f83192d8548729d"
+dependencies = [
+ "thiserror 2.0.21",
 ]
 
 [[package]]

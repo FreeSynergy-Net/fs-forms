@@ -3,8 +3,8 @@
 //! Pattern: Repository (interface) + Null Object — reads required, writes default to `Unsupported`.
 
 use async_trait::async_trait;
-use fs_forms_methods::Method;
 use fs_objects::ObjectId;
+use fs_tally::Method;
 
 use crate::error::Result;
 use crate::model::{Cursor, Decision, Page};

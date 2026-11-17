@@ -1,6 +1,6 @@
 # fs-forms – Design
 
-`fs-forms` is the forms program of FreeSynergy. This repo holds the **program core** (`fs-forms-core`, `fs-forms-methods`: no GUI, no RPC) and, since 0.0.2, the server, client, frontend and command of the basics (see "The basics"). Contract: `surveys.capnp` in
+`fs-forms` is the forms program of FreeSynergy. This repo holds the **program core** (`fs-forms-core`: no GUI, no RPC; the counting methods are the library `fs-tally`, the box logic the library `fs-ballot`) and, since 0.0.2, the server, client, frontend and command of the basics (see "The basics"). Contract: `surveys.capnp` in
 `fs-interfaces` v0.0.27 (draft, provisional: no survey frontends are analysed yet). Program docs:
 `fs-documentation/docs/en/programs/apps/surveys/`.
 
@@ -160,10 +160,17 @@ It can be edited in `draft` only. Widening has no such parameter, so it cannot g
 Store type `Decision` (AS2 has none), main store, `context=surveys`, content in `fs:` members; index `survey`, `task` (multi-valued). A decision names survey, question, method, threshold, stage, outcome, note and task IRIs. The task itself stays in fs-tasks; `record` does not require the method's own winner, because people decide. It is refused if a choice id does not exist.
 
 ### Methods are a separate crate
-`fs-forms-methods` is pure: ballots in, `Tally` out, one strategy per method, a registry from `Method` to strategy. The same ballots can be evaluated by every method whose ballot form fits; a form that does not fit is an error, not a guess.
+`fs-tally` (a library of its own since this change; it was the crate `fs-forms-methods`) is pure: ballots in, `Tally` out, one strategy per method, a registry from `Method` to strategy. The same ballots can be evaluated by every method whose ballot form fits; a form that does not fit is an error, not a guess.
 Not in the contract yet, so not built: quadratic voting, delegation, clustering, matrix questions.
 
 ### Not built in this version
 Each answers `Unsupported` where the contract has a method, and is listed in `capabilities`: `survey.publicLink` (next step in this repo: adaptive proof of work bound to the survey, global limit, quality score, "all" beside "checked"). DDI export. No contract method yet, nothing here: `poll.date`, `poll.federate`, `template.use`, `survey.translate`.
 
 **Data from 0.1.0 (provisional).** Ballots and token hashes stored without a class count as AI, like named answers without `fs:ai`: in doubt never among people. No server existed, so no real data is affected (`tests/ai_legacy.rs`).
+
+## Libraries `fs-tally` and `fs-ballot` (branch `unreviewed/forms-d1-tally-ballot`, plan D1 and D2)
+
+The ten counting methods moved to the repo `fs-tally` (pure, with their tests); the logic of the anonymous box (random insertion, shuffled release in batches of at least `min_group`, sorted token hashes, one-time tokens, the OS randomness) moved to the repo `fs-ballot` as `Lane` and `hash_token`. Here `BallotBox` keeps its two lanes (people, AI) as `fs_ballot::Lane<Ballot, Signals>`; the pattern counts of open surveys travel with the batches through `fs_ballot::Meta`. Behaviour and the stored JSON field names are unchanged. One difference: the legacy single lane of box 0.1.0 now also carries its pending pattern counts over to the AI lane (before they were dropped).
+
+- **Pins by `rev`, honestly:** both libraries are pinned here to a commit of their branches (`unreviewed/tally-d1`, `unreviewed/ballot-d2`) because the tags `v0.0.1` do not exist yet. With the tags the pins become `tag = "v0.0.1"`. Until then `.fs-lock-sources.toml` stays strict (one source per library holds).
+- **Still a blob (open, own step D2b):** the box is still ONE JSON document in `fs-objects`. The user decided on typed columns; `fs-ballot` already offers the typed view (`Urn::rows`: pending, batch, token rows), but the backend on `fs-objects` is not written. Not hidden: this repo does not become more JSON-bound by this change, and does not become less either.

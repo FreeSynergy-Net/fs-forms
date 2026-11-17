@@ -1,12 +1,6 @@
 //! Hashing of tokens.
 //!
-//! Pattern: Facade — the one place that turns a token into what the box keeps: `sha256(token)` in hex.
+//! Pattern: Facade. The one place that turns a token into what the box keeps is `fs_ballot::hash_token`
+//! (`sha256(token)` in hex); this module only names it for the program.
 
-use sha2::{Digest, Sha256};
-
-use crate::random::hex;
-
-/// What the box keeps of a token.
-pub fn hash_token(token: &str) -> String {
-    hex(&Sha256::digest(token.as_bytes()))
-}
+pub use fs_ballot::hash_token;

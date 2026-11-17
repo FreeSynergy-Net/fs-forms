@@ -2,8 +2,8 @@
 //!
 //! Pattern: Value objects (plain data) — what `Results` hands out.
 
-use fs_forms_methods::{Method, OptionResult};
 use fs_objects::ObjectId;
+use fs_tally::{Method, OptionResult};
 
 /// A choice (or scale value) and how often it was given.
 #[derive(Clone, Debug, PartialEq, Eq)]

@@ -73,3 +73,9 @@ pub struct Voluntary {
     /// Its value.
     pub value: String,
 }
+
+impl fs_ballot::Meta for Signals {
+    fn absorb(&mut self, other: &Self) {
+        self.add(other);
+    }
+}

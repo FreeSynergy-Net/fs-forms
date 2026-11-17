@@ -2,7 +2,7 @@
 //!
 //! Pattern: Adapter — maps the methods crate's `Method` (no serde there) to `name[:threshold]`.
 
-use fs_forms_methods::Method;
+use fs_tally::Method;
 use serde::{Deserialize, Deserializer, Serializer};
 
 /// `plurality`, ..., `supermajority:60`.

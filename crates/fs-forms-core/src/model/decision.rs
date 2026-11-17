@@ -2,8 +2,8 @@
 //!
 //! Pattern: Value objects (plain data). Paging is an Iterator over opaque cursors.
 
-use fs_forms_methods::Method;
 use fs_objects::{Envelope, ObjectId};
+use fs_tally::Method;
 
 /// Stage value meaning "all stages".
 pub const ALL_STAGES: u16 = 0xFFFF;

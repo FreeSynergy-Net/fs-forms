@@ -3,8 +3,8 @@
 //! Pattern: Repository — a `Decision` object in the main store, index fields `survey` and `task`
 //! (multi-valued). The task itself stays in fs-tasks; only its IRI is kept here.
 
-use fs_forms_methods::Method;
 use fs_objects::{ObjectId, Order, Query, StoredObject};
+use fs_tally::Method;
 use serde_json::json;
 
 use super::consts::{CONTEXT, DECISION_TYPE};

@@ -3,8 +3,8 @@
 //! Pattern: Repository (interface) — reads are required; the AI export defaults to `Unsupported`.
 
 use async_trait::async_trait;
-use fs_forms_methods::Method;
 use fs_objects::ObjectId;
+use fs_tally::Method;
 
 use crate::error::Result;
 use crate::model::{Evaluation, Summary};

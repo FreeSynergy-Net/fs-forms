@@ -47,3 +47,27 @@ async fn old_token_hashes_are_ai_tokens() {
     assert!(matches!(r, Err(Error::AiNotAllowed)), "{r:?}");
     let _: Value = box_json(&e, &s).await;
 }
+
+/// The pattern counts that wait beside the pending ballots of a 0.1.0 box (`pending_signals`) are
+/// carried over to the AI lane, so they show up with the batch when it is released.
+#[allow(clippy::many_single_char_names)] // short fixture names (env, survey, question)
+#[tokio::test]
+async fn old_waiting_pattern_counts_are_carried_over_to_the_ai_lane() {
+    let e = env().await;
+    let (s, q) = survey(&e, Anonymity::AnonymousOpen, true).await;
+    submit_open(&e, &s, q, "a", 3).await;
+    let mut o = e.ballots.read_unlogged(s.id()).await.unwrap().unwrap();
+    let lane = o.content["people"].clone();
+    o.content = json!({
+        "pending": lane["pending"], "batches": lane["batches"], "tokens": lane["tokens"],
+        "pending_signals": {"ballots": 3, "too_fast": 2},
+    });
+    e.ballots.put_unlogged(o).await.unwrap();
+    e.repo.close(s.id()).await.unwrap();
+    let sum = e.repo.summary(s.id(), ALL_STAGES).await.unwrap();
+    let ai = sum.ai.expect("shown apart");
+    assert_eq!(ai.ballots, 3, "released with the batch");
+    let p = ai.patterns.expect("open survey shows patterns");
+    assert_eq!(p.signals.too_fast, 2, "the waiting counts came along");
+    assert_eq!(sum.patterns.expect("people lane").signals.too_fast, 0);
+}

@@ -168,9 +168,9 @@ Each answers `Unsupported` where the contract has a method, and is listed in `ca
 
 **Data from 0.1.0 (provisional).** Ballots and token hashes stored without a class count as AI, like named answers without `fs:ai`: in doubt never among people. No server existed, so no real data is affected (`tests/ai_legacy.rs`).
 
-## Libraries `fs-tally` and `fs-ballot` (branch `unreviewed/forms-d1-tally-ballot`, plan D1 and D2)
+## Libraries `fs-tally` and `fs-ballot` (plan D1 and D2)
 
 The ten counting methods moved to the repo `fs-tally` (pure, with their tests); the logic of the anonymous box (random insertion, shuffled release in batches of at least `min_group`, sorted token hashes, one-time tokens, the OS randomness) moved to the repo `fs-ballot` as `Lane` and `hash_token`. Here `BallotBox` keeps its two lanes (people, AI) as `fs_ballot::Lane<Ballot, Signals>`; the pattern counts of open surveys travel with the batches through `fs_ballot::Meta`. Behaviour and the stored JSON field names are unchanged. One difference: the legacy single lane of box 0.1.0 now also carries its pending pattern counts over to the AI lane (before they were dropped).
 
-- **Pins by `rev`, honestly:** both libraries are pinned here to a commit of their branches (`unreviewed/tally-d1`, `unreviewed/ballot-d2`) because the tags `v0.0.1` do not exist yet. With the tags the pins become `tag = "v0.0.1"`. Until then `.fs-lock-sources.toml` stays strict (one source per library holds).
+- **Pins by `rev`, honestly:** both libraries are pinned here to a commit (`rev`) because their tags `v0.0.1` do not exist yet. With the tags the pins become `tag = "v0.0.1"`. Until then `.fs-lock-sources.toml` stays strict (one source per library holds).
 - **Still a blob (open, own step D2b):** the box is still ONE JSON document in `fs-objects`. The user decided on typed columns; `fs-ballot` already offers the typed view (`Urn::rows`: pending, batch, token rows), but the backend on `fs-objects` is not written. Not hidden: this repo does not become more JSON-bound by this change, and does not become less either.

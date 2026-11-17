@@ -6,15 +6,11 @@
 use crate::apply::apply;
 use crate::codes::LayoutCode;
 use crate::elems::{find, get};
-use crate::ids::{ElemId, LayoutId, OverlayId, PackageRef, Rev, Who};
-use crate::memory::{MemoryLayoutStore, Res, State, ready, rev_changed, unknown};
-use crate::overlay::{
-    Conflict, Op, OpKind, Overlay, OverlayScope, OverlayState, Resolution, Value,
-};
-use crate::port::{OverlayWrite, Pending};
+use crate::ids::{LayoutId, OverlayId, PackageRef, Rev, Who};
+use crate::memory::{MemoryLayoutStore, Res, State, rev_changed, unknown};
+use crate::overlay::{Conflict, Op, OpKind, Overlay, OverlayScope, OverlayState, Value};
 use crate::shim::{Coded, Utc};
-use crate::types::{LogAction, Mode, Origin, OverlayDoc, Report};
-
+use crate::types::{LogAction, Origin, Report};
 impl MemoryLayoutStore {
     /// Creates an overlay on a live package original. `scope` is the person (default) or the instance (admin port).
     pub(crate) fn create_in(

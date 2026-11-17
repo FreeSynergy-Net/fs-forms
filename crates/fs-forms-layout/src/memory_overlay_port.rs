@@ -2,15 +2,14 @@
 //!
 //! Pattern: Unit of work (see `memory.rs`); Command (the stored ops).
 
-use crate::apply::apply;
 use crate::codes::LayoutCode;
 use crate::elems::{find, get};
-use crate::ids::{ElemId, LayoutId, OverlayId, PackageRef, Rev, Who};
-use crate::memory::{MemoryLayoutStore, Res, State, ready, rev_changed, unknown};
-use crate::overlay::{
-    Conflict, Op, OpKind, Overlay, OverlayScope, OverlayState, Resolution, Value,
-};
+use crate::ids::{ElemId, LayoutId, OverlayId, Rev, Who};
+use crate::memory::{MemoryLayoutStore, Res, ready, rev_changed, unknown};
+use crate::overlay::{OpKind, OverlayScope, OverlayState, Resolution, Value};
 use crate::port::{OverlayWrite, Pending};
+use crate::shim::Coded;
+use crate::types::{LogAction, Mode, OverlayDoc, Report};
 
 impl OverlayWrite for MemoryLayoutStore {
     fn create_overlay<'a>(

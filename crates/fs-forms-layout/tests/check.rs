@@ -172,8 +172,8 @@ fn schemes_rule_is_one_source() {
 #[test]
 fn k68_limits_report_their_source() {
     let tight = Limits {
-        elements_max: 4,
-        text_bytes_max: 8,
+        elements_max: 3,
+        text_bytes_max: 4,
         ..Limits::declared()
     };
     let e = doc("board").check(&OpenCatalog, &tight).unwrap_err();

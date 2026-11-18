@@ -151,45 +151,112 @@ fn a_clash_with_a_hidden_command_runs_neither() {
     assert_eq!(out, Outcome::NoMatch);
 }
 
-fn reserved_text(t: &str) -> bool {
-    reserved(&Shortcut::parse(t).expect("a readable key"))
+fn reserved_on(t: &str, platform: Platform) -> bool {
+    reserved(&Shortcut::parse(t).expect("a readable key"), platform)
 }
 
+fn reserved_text(t: &str) -> bool {
+    reserved_on(t, Platform::Linux)
+}
+
+const ALL: [Platform; 3] = [Platform::Linux, Platform::Windows, Platform::Mac];
+
 /// P3 + Q11 (c0): exactly the listed keys without further modifiers; Shift+Tab and Shift+F6 too; Shift+F1, Ctrl+F6 and the
-/// like are free.
+/// like are free, on every platform.
 #[test]
 fn p3_reserved_spellings_and_free_modified_keys() {
-    for t in [
-        "ctrl+q",
-        "Primary+Q",
-        "f1",
-        "F10",
-        "escape",
-        "F6",
-        "Shift+F6",
-        "tab",
-        "Shift+Tab",
-    ] {
-        assert!(reserved_text(t), "{t}");
+    for p in ALL {
+        for t in [
+            "Primary+Q",
+            "f1",
+            "F10",
+            "escape",
+            "F6",
+            "Shift+F6",
+            "tab",
+            "Shift+Tab",
+        ] {
+            assert!(reserved_on(t, p), "{t} on {p:?}");
+        }
+        for t in [
+            "Ctrl+Escape",
+            "Ctrl+F1",
+            "Ctrl+F10",
+            "Ctrl+Tab",
+            "Ctrl+F6",
+            "Shift+F1",
+            "Shift+F10",
+            "Shift+Escape",
+            "Alt+F1",
+            "Ctrl+Shift+Q",
+            "Alt+Q",
+            "Ctrl+Alt+Q",
+            "Ctrl+Meta+Q",
+            "Primary+Shift+Q",
+            "Primary+Alt+Q",
+            "Ctrl+Shift+F6",
+            "Alt+Shift+Tab",
+            "F7",
+            "Delete",
+            "ctrl+n",
+        ] {
+            assert!(!reserved_on(t, p), "{t} on {p:?}");
+        }
     }
-    for t in [
-        "Ctrl+Escape",
-        "Ctrl+F1",
-        "Ctrl+F10",
-        "Ctrl+Tab",
-        "Ctrl+F6",
-        "Shift+F1",
-        "Shift+F10",
-        "Shift+Escape",
-        "Alt+F1",
-        "Ctrl+Shift+Q",
-        "Alt+Q",
-        "F7",
-        "Delete",
-        "ctrl+n",
-    ] {
-        assert!(!reserved_text(t), "{t}");
-    }
+}
+
+/// K10 (c0): Primary is Ctrl on Linux and Windows, Cmd (Meta) on the Mac; only exactly Primary+Q is reserved.
+#[test]
+fn q11m_primary_q_follows_the_platform() {
+    assert!(reserved_on("Ctrl+Q", Platform::Linux));
+    assert!(reserved_on("Ctrl+Q", Platform::Windows));
+    assert!(!reserved_on("Ctrl+Q", Platform::Mac), "Ctrl+Q is not Cmd+Q");
+    assert!(reserved_on("Meta+Q", Platform::Mac), "Cmd+Q on the Mac");
+    assert!(!reserved_on("Meta+Q", Platform::Linux));
+    assert!(!reserved_on("Meta+Q", Platform::Windows));
+}
+
+fn two_clash(k1: &str, k2: &str) -> Resolved {
+    let mut r = tasks_resolved();
+    let rec = |elem: &str, name: &str, key: &str| MenuIn {
+        elem: elem.into(),
+        kind: MenuKind::Command {
+            command: cmd(name, true, false, true),
+            on_selected: true,
+            shortcut: Some(key.into()),
+        },
+        children: vec![],
+    };
+    r.menu = vec![rec("m-a", "alpha", k1), rec("m-b", "beta", k2)];
+    r
+}
+
+/// K6m: on the Mac Primary+K and Meta+K are one key: with beta hidden, alpha must not run alone (the REAL platform counts).
+#[test]
+fn k6m_clash_on_the_mac_with_a_hidden_command() {
+    let r = two_clash("Primary+K", "Meta+K");
+    let p = Bind::build(
+        &r,
+        &TestCatalog::new(),
+        &Providers {
+            records: &tasks_facts(),
+            settings: &settings(),
+            host: host(),
+            platform: Platform::Mac,
+            standard: &standard(),
+        },
+    );
+    assert!(
+        p.menu
+            .locks
+            .iter()
+            .any(|l| code_of(l) == "bind-error-shortcut-conflict")
+    );
+    let out = p
+        .keys
+        .keymap_for(&p.menu, Some(&view(&["alpha"])), Platform::Mac)
+        .dispatch(&press("Meta+K"), FocusContext::Global);
+    assert!(!matches!(out, Outcome::Run(_)), "{out:?}");
 }
 
 /// P4: the stored list and the function say the same (one list); every stored key parses and is reserved.

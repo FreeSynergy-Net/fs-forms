@@ -96,3 +96,27 @@ fn p5_type_right_beats_coming_with_a_locked_source() {
     let p = build_with(&r, &TestCatalog::new(), &FakeFacts(vec![]), host());
     assert_eq!(command_state(p.menu.commands()[0], None), Shown::Hidden);
 }
+
+/// C4 (B5): a condition chip whose component is not built is visible, with the chip block and the schema names.
+#[test]
+fn c4_condition_chip_not_built_is_visible() {
+    let mut r = tasks_resolved();
+    r.pages[0].places[0].bindings[1].kind = BindKind::Condition {
+        path: vec!["done".into()],
+        basic: Basic::Bool,
+    };
+    let mut cat = TestCatalog::new();
+    cat.unbuilt.push("field-bool".into());
+    let p = build_with(&r, &cat, &tasks_facts(), host());
+    let l = p
+        .locks()
+        .into_iter()
+        .find(|l| l.cause.coded().param("block") == Some("field-bool"))
+        .unwrap_or_else(|| panic!("{:?}", all_codes(&p)));
+    assert_eq!(code_of(l), "bind-error-field-component-missing");
+    assert_eq!(l.cause.coded().param("basic"), Some("bool"));
+    assert_eq!(l.cause.coded().param("role"), Some("chip"));
+    // A built chip stays silent.
+    let p = build_with(&r, &TestCatalog::new(), &tasks_facts(), host());
+    assert!(!has(&p, "bind-error-field-component-missing"));
+}

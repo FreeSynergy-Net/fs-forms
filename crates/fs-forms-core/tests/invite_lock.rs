@@ -113,7 +113,16 @@ async fn parallel_invites_of_one_person_send_one_token() {
     let p2 = p.clone();
     let a = tokio::spawn(async move { r1.invite(id, &p, &[]).await.unwrap() });
     let b = tokio::spawn(async move { r2.invite(id, &p2, &[]).await.unwrap() });
-    let (a, b) = (a.await.unwrap(), b.await.unwrap());
+    let (a, b) = (
+        tokio::time::timeout(BLOCKED, a)
+            .await
+            .expect("the first invite never finished: a lock was not given back")
+            .unwrap(),
+        tokio::time::timeout(BLOCKED, b)
+            .await
+            .expect("the second invite never finished: a lock was not given back")
+            .unwrap(),
+    );
     assert_eq!(a.invited.len() + b.invited.len(), 1);
     assert_eq!(d.sent.load(Ordering::SeqCst), 1);
 }
@@ -127,11 +136,14 @@ async fn a_failed_delivery_frees_the_person_and_keeps_no_hash() {
         .with_delivery(d.clone());
     let (s, _) = open_survey(&e, Anonymity::AnonymousOnce).await;
     let p = vec![person("ada")];
-    assert!(matches!(
-        repo.invite(s.id(), &p, &[]).await,
-        Err(Error::Delivery { .. })
-    ));
+    let first = tokio::time::timeout(BLOCKED, repo.invite(s.id(), &p, &[]))
+        .await
+        .expect("the failed invite never finished: a lock was not given back");
+    assert!(matches!(first, Err(Error::Delivery { .. })));
     assert!(e.ballots_empty_tokens(&s).await, "no usable hash");
-    let again = repo.invite(s.id(), &p, &[]).await.unwrap();
+    let again = tokio::time::timeout(BLOCKED, repo.invite(s.id(), &p, &[]))
+        .await
+        .expect("the second invite never finished: the person was not freed")
+        .unwrap();
     assert_eq!(again.invited, p, "the in-flight mark was cleared");
 }

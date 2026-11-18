@@ -114,6 +114,9 @@ fn dates_in_sees_every_form_of_a_date_in_any_year_and_no_random_id() {
     assert_eq!(dates_in("\"1970-01-01T00:00:00Z\""), (1, 0));
     assert_eq!(dates_in("\"1970-01-01\" \"1970-01-02\""), (1, 1));
     assert_eq!(dates_in("\"1970-01\" \"1970-1-1\""), (0, 2));
+    // a date at the very end of the text is seen too
+    assert_eq!(dates_in("x2026-1"), (0, 1));
+    assert_eq!(dates_in("x1970-01-01"), (1, 0));
 }
 
 #[tokio::test]

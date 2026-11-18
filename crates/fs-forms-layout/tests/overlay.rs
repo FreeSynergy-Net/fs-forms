@@ -235,3 +235,44 @@ fn apply_is_pure_and_off_overlays_do_nothing() {
     assert_eq!(a.layout, layout);
     assert!(a.effects.is_empty());
 }
+
+#[test]
+fn k78_an_ai_acting_on_behalf_is_refused_for_now() {
+    let s = store().as_instance();
+    let id = install(&s, doc("board"), "1.0");
+    let ai = Who {
+        actor: Reference("https://example.org/ai/helper".to_owned()),
+        author: who().author,
+    };
+    let no = |e: Coded<LayoutCode>| (e.code, e.param("what").map(str::to_owned));
+    let want = (LayoutCode::Unsupported, Some("on-behalf".to_owned()));
+    assert_eq!(
+        no(block_on(s.create_overlay(&id, None, None, &ai)).unwrap_err()),
+        want
+    );
+    assert_eq!(
+        no(block_on(s.lock(&id, None, "why", &ai)).unwrap_err()),
+        want
+    );
+    assert_eq!(no(block_on(s.create(doc("x"), &ai)).unwrap_err()), want);
+    assert_eq!(block_on(s.stamp()).unwrap(), Stamp(1)); // nothing changed
+}
+
+#[test]
+fn natural_menu_ids_are_zero_based_on_every_level() {
+    let entry = |kids: Vec<Item<MenuDoc>>| MenuDoc {
+        kind: MenuKind::Menu,
+        label_key: None,
+        command: None,
+        on: None,
+        shortcut: None,
+        view: None,
+        children: kids,
+    };
+    let mut d = doc("board");
+    d.format = 1;
+    d.menu = vec![bare(entry(vec![bare(entry(vec![]))]))];
+    let l = d.check(&OpenCatalog, &Limits::declared()).unwrap();
+    assert_eq!(l.doc().menu[0].elem, Some(elem("menu:0")));
+    assert_eq!(l.doc().menu[0].v.children[0].elem, Some(elem("menu:0.0")));
+}

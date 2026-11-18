@@ -1519,7 +1519,7 @@ version = "0.0.2"
 dependencies = [
  "fs-forms-layout",
  "serde_json",
- "toml",
+ "toml_edit 0.22.27",
 ]
 
 [[package]]

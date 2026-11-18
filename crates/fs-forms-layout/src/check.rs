@@ -180,7 +180,13 @@ fn check_bindings(
             out.push(bad("bound-twice"));
         }
         if b.v.nth >= Technical::NTH_BELOW {
-            out.push(bad("nth-too-high").with("by", "technical"));
+            out.push(
+                Coded::new(LayoutCode::TooMany)
+                    .with("what", "binding-nth")
+                    .with("max", Technical::NTH_BELOW)
+                    .with("by", "technical")
+                    .with("elem", elem),
+            );
         }
         if !used.insert((b.v.slot.as_str(), b.v.nth)) {
             out.push(

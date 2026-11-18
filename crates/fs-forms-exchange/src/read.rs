@@ -178,7 +178,7 @@ fn scheme_items(f: &mut Fields<'_>, cx: &mut Ctx<'_>) -> Vec<Item<String>> {
                 line: cx.line_of(&format!("\"{s}\"")),
                 v: s.clone(),
             }),
-            Tree::Obj(_) => out.extend(items(std::slice::from_ref(t), "schemes", cx, |f, cx| {
+            Tree::Obj(..) => out.extend(items(std::slice::from_ref(t), "schemes", cx, |f, cx| {
                 f.req_str(cx, "scheme")
             })),
             _ => cx.bad("type", "schemes"),

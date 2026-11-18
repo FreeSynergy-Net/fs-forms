@@ -93,6 +93,20 @@ impl MemoryLayoutStore {
         (self.clock)()
     }
 
+    /// Like [`tx`](Self::tx) for writes of a person: an acting party that is not the person it acts for (an AI on behalf)
+    /// is refused until the commission can be checked (`unsupported{what=on-behalf}`); an AI is never the owner.
+    pub(crate) fn tx_for<T>(
+        &self,
+        who: &Who,
+        apply: bool,
+        f: impl FnOnce(&mut State, Utc) -> Res<(T, bool)>,
+    ) -> Res<T> {
+        if who.actor != who.author {
+            return Err(Coded::new(LayoutCode::Unsupported).with("what", "on-behalf"));
+        }
+        self.tx(apply, f)
+    }
+
     /// Runs a change on a copy. Commits (stamp + 1) only when `f` returns `Ok((value, true))` and `apply` is set.
     pub(crate) fn tx<T>(
         &self,

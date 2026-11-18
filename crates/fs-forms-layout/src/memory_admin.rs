@@ -39,7 +39,7 @@ impl MemoryLayoutStore {
         if reason.is_empty() {
             return Err(Coded::new(LayoutCode::ReasonMissing).with("what", what));
         }
-        self.tx(true, |st, now| {
+        self.tx_for(who, true, |st, now| {
             let i = st
                 .live(layout)
                 .ok_or_else(|| unknown("layout", &layout.0.0))?;
@@ -108,7 +108,7 @@ impl LayoutAdmin for MemoryLayoutStore {
         who: &'a Who,
     ) -> Pending<'a, OverlayId> {
         ready(self.admin_gate().and_then(|()| {
-            self.tx(true, |st, now| {
+            self.tx_for(who, true, |st, now| {
                 Ok((
                     self.create_in(
                         st,

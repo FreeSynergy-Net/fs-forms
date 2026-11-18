@@ -24,6 +24,23 @@ impl Ctx<'_> {
             .map_or(0, |i| i + 1);
         u32::try_from(n).unwrap_or(u32::MAX)
     }
+    /// Line of the first line at or after `start` that mentions `needle` (a table's own line when it is not found).
+    fn line_from(&self, start: u32, needle: &str) -> u32 {
+        let skip = (start.max(1) - 1) as usize;
+        match self.src.lines().skip(skip).position(|l| l.contains(needle)) {
+            Some(i) => u32::try_from(skip + i + 1).unwrap_or(u32::MAX),
+            None => start,
+        }
+    }
+    pub(crate) fn bad_at(&mut self, start: u32, cause: &str, needle: &str) {
+        let line = self.line_from(start, needle);
+        self.errs.push(
+            Coded::new(LayoutCode::ImportInvalid)
+                .with("file", self.file)
+                .with("line", line)
+                .with("cause", cause),
+        );
+    }
     pub(crate) fn bad(&mut self, cause: &str, needle: &str) {
         let line = self.line_of(needle);
         self.errs.push(
@@ -39,14 +56,16 @@ impl Ctx<'_> {
 pub(crate) struct Fields<'a> {
     items: Vec<(&'a str, &'a Tree)>,
     what: &'a str,
+    line: u32,
 }
 
 impl<'a> Fields<'a> {
     pub(crate) fn new(t: &'a Tree, what: &'a str, cx: &mut Ctx<'_>) -> Option<Self> {
-        if let Tree::Obj(o) = t {
+        if let Tree::Obj(o, line) = t {
             Some(Self {
                 items: o.iter().map(|(k, v)| (k.as_str(), v)).collect(),
                 what,
+                line: *line,
             })
         } else {
             cx.bad("type", what);
@@ -61,14 +80,14 @@ impl<'a> Fields<'a> {
         match self.take(key)? {
             Tree::Str(s) => Some(s.clone()),
             _ => {
-                cx.bad("type", key);
+                cx.bad_at(self.line, "type", key);
                 None
             }
         }
     }
     pub(crate) fn req_str(&mut self, cx: &mut Ctx<'_>, key: &str) -> String {
         if !self.has_list(key) {
-            cx.bad("key-missing", self.what);
+            cx.bad_at(self.line, "key-missing", "");
         }
         self.str(cx, key).unwrap_or_default()
     }
@@ -76,7 +95,7 @@ impl<'a> Fields<'a> {
         match self.take(key)? {
             Tree::Int(i) => Some(*i),
             _ => {
-                cx.bad("type", key);
+                cx.bad_at(self.line, "type", key);
                 None
             }
         }
@@ -86,13 +105,16 @@ impl<'a> Fields<'a> {
     }
     pub(crate) fn uint(&mut self, cx: &mut Ctx<'_>, key: &str) -> Option<u32> {
         let v = self.int(cx, key)?;
-        u32::try_from(v).map_err(|_| cx.bad("type", key)).ok()
+        let line = self.line;
+        u32::try_from(v)
+            .map_err(|_| cx.bad_at(line, "type", key))
+            .ok()
     }
     pub(crate) fn bool(&mut self, cx: &mut Ctx<'_>, key: &str) -> Option<bool> {
         match self.take(key)? {
             Tree::Bool(b) => Some(*b),
             _ => {
-                cx.bad("type", key);
+                cx.bad_at(self.line, "type", key);
                 None
             }
         }
@@ -102,7 +124,7 @@ impl<'a> Fields<'a> {
             None => &[],
             Some(Tree::Arr(a)) => a,
             Some(_) => {
-                cx.bad("type", key);
+                cx.bad_at(self.line, "type", key);
                 &[]
             }
         }
@@ -112,7 +134,11 @@ impl<'a> Fields<'a> {
         let Some(text) = self.str(cx, "elem") else {
             return (None, 0);
         };
-        let line = cx.line_of(&format!("\"{text}\""));
+        let line = if self.line > 0 {
+            self.line
+        } else {
+            cx.line_of(&format!("\"{text}\""))
+        };
         match ElemId::parse(&text) {
             Ok(e) => (Some(e), line),
             Err(c) => {
@@ -124,7 +150,7 @@ impl<'a> Fields<'a> {
     /// Reports every key nobody asked for.
     pub(crate) fn done(self, cx: &mut Ctx<'_>) {
         for (k, _) in self.items {
-            cx.bad("key-unknown", k);
+            cx.bad_at(self.line, "key-unknown", k);
         }
     }
 }

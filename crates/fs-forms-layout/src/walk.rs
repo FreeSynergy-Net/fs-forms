@@ -85,7 +85,7 @@ fn binding(bd: &mut Item<BindingDoc>, page: &str, place: &str, f: &mut Visitor<'
 fn menu(items: &mut [Item<MenuDoc>], path: &str, f: &mut Visitor<'_>) {
     for (i, m) in items.iter_mut().enumerate() {
         let here = if path.is_empty() {
-            (i + 1).to_string()
+            i.to_string()
         } else {
             format!("{path}.{i}")
         };

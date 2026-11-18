@@ -85,6 +85,8 @@ impl Technical {
     /// (`capnp-0.27.3/src/message.rs:117-120`). A wire message of a description stays far below it at the declared defaults;
     /// whether fs-rpc changes the options is not read yet.
     pub const WIRE_TRAVERSAL_WORDS: usize = 8 * 1024 * 1024;
+    /// capnp-rust 0.27.3 nesting limit of one wire message (same source line).
+    pub const WIRE_NESTING_LIMIT: i32 = 64;
 }
 
 fn clamp(person: u32, ceiling: Option<u32>, by: LimitSource) -> (u32, LimitSource) {

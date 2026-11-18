@@ -40,22 +40,17 @@ fn problem(file: &Path, line: u32, cause: &str) -> Coded<LayoutCode> {
         .with("cause", cause)
 }
 
-fn line_at(text: &str, byte: usize) -> u32 {
-    let n = text[..byte.min(text.len())]
-        .bytes()
-        .filter(|b| *b == b'\n')
-        .count()
-        + 1;
-    u32::try_from(n).unwrap_or(u32::MAX)
-}
-
 fn parse(text: &str, file: &Path, format: Format) -> Result<Tree, Coded<LayoutCode>> {
     match format {
         Format::Toml => {
-            let v: toml::Table = toml::from_str(text).map_err(|e| {
-                problem(file, e.span().map_or(0, |s| line_at(text, s.start)), "toml")
+            let doc = toml_edit::ImDocument::parse(text).map_err(|e| {
+                problem(
+                    file,
+                    e.span().map_or(0, |s| tree::line_at(text, s.start)),
+                    "toml",
+                )
             })?;
-            tree::from_toml(toml::Value::Table(v)).map_err(|c| problem(file, 0, c))
+            tree::from_item(doc.as_item(), text).map_err(|c| problem(file, 0, c))
         }
         #[cfg(feature = "json")]
         Format::Json => {

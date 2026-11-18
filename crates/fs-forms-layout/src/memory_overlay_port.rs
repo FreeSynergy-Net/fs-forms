@@ -20,7 +20,7 @@ impl OverlayWrite for MemoryLayoutStore {
         who: &'a Who,
     ) -> Pending<'a, OverlayId> {
         let scope = OverlayScope::Person(who.author.clone());
-        ready(self.tx(true, |st, now| {
+        ready(self.tx_for(who, true, |st, now| {
             Ok((
                 self.create_in(st, now, layout, scope, lang, title_key, who)?,
                 true,
@@ -35,7 +35,7 @@ impl OverlayWrite for MemoryLayoutStore {
         who: &'a Who,
     ) -> Pending<'a, Report> {
         let mut report = None;
-        let r = self.tx(true, |st, now| {
+        let r = self.tx_for(who, true, |st, now| {
             let (r, ok) = self.ops_in(st, now, id, expected, ops, who)?;
             report = Some(r);
             Ok(((), ok))
@@ -49,7 +49,7 @@ impl OverlayWrite for MemoryLayoutStore {
         on: bool,
         who: &'a Who,
     ) -> Pending<'a, Rev> {
-        ready(self.tx(true, |st, now| {
+        ready(self.tx_for(who, true, |st, now| {
             let open = st.conflicts.iter().any(|c| &c.overlay == id && c.open);
             let o = st
                 .overlays
@@ -80,7 +80,7 @@ impl OverlayWrite for MemoryLayoutStore {
         expected: Rev,
         who: &'a Who,
     ) -> Pending<'a, ()> {
-        ready(self.tx(true, |st, now| {
+        ready(self.tx_for(who, true, |st, now| {
             let i = st
                 .overlays
                 .iter()
@@ -103,7 +103,7 @@ impl OverlayWrite for MemoryLayoutStore {
         who: &'a Who,
     ) -> Pending<'a, Report> {
         let mut report = None;
-        let r = self.tx(mode == Mode::Apply, |st, now| {
+        let r = self.tx_for(who, mode == Mode::Apply, |st, now| {
             let key = crate::ids::FrontendKey {
                 extends: doc.extends.clone(),
                 frontend: doc.frontend.clone(),
@@ -144,7 +144,7 @@ impl OverlayWrite for MemoryLayoutStore {
         how: Resolution,
         who: &'a Who,
     ) -> Pending<'a, Rev> {
-        ready(self.tx(true, |st, now| {
+        ready(self.tx_for(who, true, |st, now| {
             let ci = st.conflicts.iter().position(|c| {
                 &c.overlay == id && c.seq == seq && c.base_version == base_version && c.open
             });

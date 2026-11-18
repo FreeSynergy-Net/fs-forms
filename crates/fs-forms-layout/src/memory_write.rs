@@ -43,7 +43,7 @@ impl MemoryLayoutStore {
         action: LogAction,
     ) -> Res<Report> {
         let key = doc.key.clone();
-        self.tx(mode == Mode::Apply, |st, now| {
+        self.tx_for(who, mode == Mode::Apply, |st, now| {
             let layout = match self.checked(doc) {
                 Ok(l) => l,
                 Err(p) => return refused(p),
@@ -147,7 +147,7 @@ impl LayoutWrite for MemoryLayoutStore {
         doc: LayoutDoc,
         who: &'a Who,
     ) -> Pending<'a, Report> {
-        ready(self.tx(true, |st, now| {
+        ready(self.tx_for(who, true, |st, now| {
             let i = Self::own_row(st, id, expected)?;
             let key = doc.key.clone();
             let layout = match self.checked(doc) {
@@ -174,7 +174,7 @@ impl LayoutWrite for MemoryLayoutStore {
         }))
     }
     fn delete<'a>(&'a self, id: &'a LayoutId, expected: Rev, who: &'a Who) -> Pending<'a, ()> {
-        ready(self.tx(true, |st, now| {
+        ready(self.tx_for(who, true, |st, now| {
             let i = Self::own_row(st, id, expected)?;
             let s = &mut st.layouts[i];
             (s.layout, s.deleted, s.updated, s.rev) = (None, Some(now), now, Rev(expected.0 + 1));

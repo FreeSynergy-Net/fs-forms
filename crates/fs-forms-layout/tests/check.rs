@@ -249,7 +249,17 @@ fn technical_nth_limit() {
     first_binding(&mut d).nth = 16;
     let e = d.check(&OpenCatalog, &Limits::declared()).unwrap_err();
     assert_eq!(
-        (e[0].code, e[0].param("by")),
-        (LayoutCode::BindingInvalid, Some("technical"))
+        (
+            e[0].code,
+            e[0].param("what"),
+            e[0].param("by"),
+            e[0].param("max")
+        ),
+        (
+            LayoutCode::TooMany,
+            Some("binding-nth"),
+            Some("technical"),
+            Some("16")
+        )
     );
 }

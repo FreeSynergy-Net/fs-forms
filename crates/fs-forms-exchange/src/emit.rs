@@ -34,7 +34,7 @@ fn scalar(t: &Tree, out: &mut String) -> bool {
             let _ = write!(out, "{i}");
         }
         Tree::Bool(b) => out.push_str(if *b { "true" } else { "false" }),
-        Tree::Arr(a) if a.iter().all(|x| !matches!(x, Tree::Obj(_) | Tree::Arr(_))) => {
+        Tree::Arr(a) if a.iter().all(|x| !matches!(x, Tree::Obj(..) | Tree::Arr(_))) => {
             out.push('[');
             for (i, x) in a.iter().enumerate() {
                 if i > 0 {
@@ -50,7 +50,7 @@ fn scalar(t: &Tree, out: &mut String) -> bool {
 }
 
 fn is_tables(t: &Tree) -> bool {
-    matches!(t, Tree::Arr(a) if !a.is_empty() && a.iter().all(|x| matches!(x, Tree::Obj(_))))
+    matches!(t, Tree::Arr(a) if !a.is_empty() && a.iter().all(|x| matches!(x, Tree::Obj(..))))
 }
 
 fn table(path: &str, items: &[(String, Tree)], out: &mut String) {
@@ -65,7 +65,7 @@ fn table(path: &str, items: &[(String, Tree)], out: &mut String) {
     for (k, v) in items {
         if let (true, Tree::Arr(list)) = (is_tables(v), v) {
             for o in list {
-                if let Tree::Obj(inner) = o {
+                if let Tree::Obj(inner, _) = o {
                     let here = if path.is_empty() {
                         k.clone()
                     } else {
@@ -82,7 +82,7 @@ fn table(path: &str, items: &[(String, Tree)], out: &mut String) {
 /// Canonical TOML of an object tree.
 pub(crate) fn to_toml(root: &Tree) -> String {
     let mut out = String::new();
-    if let Tree::Obj(items) = root {
+    if let Tree::Obj(items, _) = root {
         table("", items, &mut out);
     }
     format!("{}\n", out.trim_end())
@@ -133,7 +133,7 @@ fn json(t: &Tree, out: &mut String) {
             }
             out.push(']');
         }
-        Tree::Obj(o) => {
+        Tree::Obj(o, _) => {
             let mut sorted: Vec<&(String, Tree)> = o.iter().collect();
             sorted.sort_by(|a, b| a.0.encode_utf16().cmp(b.0.encode_utf16()));
             out.push('{');

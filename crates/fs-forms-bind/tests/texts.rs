@@ -35,32 +35,35 @@ fn no_toml_json_or_file_access() {
         !deps.contains("toml") && !deps.contains("serde"),
         "no runtime dependency at all"
     );
-    for f in [
-        "build",
-        "build_menu",
-        "build_place",
-        "catalog",
-        "coded",
-        "codes",
-        "commands",
-        "keys",
-        "menu",
-        "model",
-        "plan",
-        "providers",
-        "runtime",
-        "types",
-    ] {
-        let src =
-            std::fs::read_to_string(format!("{}/src/{f}.rs", env!("CARGO_MANIFEST_DIR"))).unwrap();
+    // EVERY source file, found by walking the directory (no hand-kept list: new modules are covered automatically).
+    let mut files = Vec::new();
+    rust_files(
+        &std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src"),
+        &mut files,
+    );
+    assert!(files.len() >= 20, "walk found only {files:?}");
+    for f in files {
+        let src = std::fs::read_to_string(&f).unwrap();
         for bad in [
             "std::fs",
             "File::open",
             "read_to_string",
             "toml::",
             "serde_json",
+            "std::io::Read",
         ] {
-            assert!(!src.contains(bad), "{f}.rs uses {bad}");
+            assert!(!src.contains(bad), "{} uses {bad}", f.display());
+        }
+    }
+}
+
+fn rust_files(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
+    for e in std::fs::read_dir(dir).unwrap() {
+        let p = e.unwrap().path();
+        if p.is_dir() {
+            rust_files(&p, out);
+        } else if p.extension().is_some_and(|x| x == "rs") {
+            out.push(p);
         }
     }
 }

@@ -77,11 +77,11 @@ pub fn command_plan(c: &CommandIn, host: HostCaps, source_lock: Option<&PartLock
 /// Decides how a command appears. Order (decided c0, question 85: the RIGHT comes first): (1) a record command with a selection that
 /// is not in `may` is `Hidden`, even when it is "coming" (hiding by right is rights management, not a silent fault); (2) unsupported
 /// -> `Coming`; (3) record command without selection -> `Locked(no-selection)`; (4) other fixed lock -> `Locked`; (5) `Enabled`.
-/// A type command (`create`) is hidden when the provider says `Shape.may` is false, else shown (`None` = provider answers `forbidden`).
+/// A type command (`create`) is hidden when its name is not in `Shape.may` (`type_may == false`; c0 86: the right comes first).
 /// `may` names rights only, independent of `supported` (provider side).
 #[must_use]
 pub fn command_state(cmd: &CommandPlan, selection: Option<&RecordView>) -> Shown {
-    if !cmd.on_record && cmd.description.type_may == Some(false) {
+    if !cmd.on_record && !cmd.description.type_may {
         return Shown::Hidden;
     }
     if cmd.on_record

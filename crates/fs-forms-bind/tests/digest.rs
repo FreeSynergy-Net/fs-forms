@@ -1,0 +1,84 @@
+//! The digest (A-P2): fixed bytes (golden values), and every part of the plan takes part in it.
+mod common;
+use common::*;
+use fs_forms_bind::testing::*;
+use fs_forms_bind::*;
+
+fn hex(d: [u8; 32]) -> String {
+    d.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+/// A plan with notices, menu locks, a locked source and a locked placement.
+fn rich() -> Plan {
+    let mut r = tasks_resolved();
+    r.warnings
+        .push(problem("pl-board-main", "layout-error-warn"));
+    r.problems.push(problem("m-note", "layout-error-menu"));
+    r.menu[1].children.push(MenuIn {
+        elem: "m-dup".into(),
+        kind: MenuKind::Command {
+            command: cmd("dup", true, false, false),
+            on_selected: false,
+            shortcut: Some("ctrl+n".into()),
+        },
+        children: vec![],
+    });
+    build_with(&r, &TestCatalog::new(), &FakeFacts(vec![]), host())
+}
+
+#[test]
+fn golden_digest_of_the_tasks_plan() {
+    assert_eq!(
+        hex(tasks_plan().digest_without_style()),
+        "89c84020d41eae2f0237909ccc6602e9f6fdcf192f703e3056a0e73286289553"
+    );
+}
+
+#[test]
+fn golden_digest_of_a_plan_with_notices_and_locks() {
+    let p = rich();
+    assert!(!p.notices.is_empty() && !p.menu.locks.is_empty() && p.sources[0].status.is_err());
+    assert_eq!(
+        hex(p.digest_without_style()),
+        "a72023334e12894ae4086d8d04a2e4af06d6101d0faf867aabc9777c279cf5ee"
+    );
+}
+
+/// The wire format of A-P2: `label (u16 BE) + length (u32 BE) + payload`, numbers u64 BE, in declaration order.
+#[test]
+fn first_fields_follow_the_a_p2_encoding() {
+    let p = tasks_plan();
+    let b = p.canonical_bytes_without_style();
+    let key = p.key.as_bytes();
+    assert_eq!(&b[0..2], &[0, 0]);
+    assert_eq!(&b[2..6], &u32::try_from(key.len()).unwrap().to_be_bytes());
+    assert_eq!(&b[6..6 + key.len()], key);
+    let at = 6 + key.len();
+    assert_eq!(&b[at..at + 6], &[0, 1, 0, 0, 0, 8]);
+    assert_eq!(&b[at + 6..at + 14], &p.stamp.to_be_bytes());
+}
+
+#[test]
+fn every_part_changes_the_digest() {
+    let base = rich();
+    let d = base.digest_without_style();
+    let mut p = base.clone();
+    p.notices.pop();
+    assert_ne!(p.digest_without_style(), d, "notices");
+    let mut p = base.clone();
+    p.menu.locks.pop();
+    assert_ne!(p.digest_without_style(), d, "menu locks");
+    let mut p = base.clone();
+    p.state = PlanState::Refused;
+    assert_ne!(p.digest_without_style(), d, "state");
+    let mut p = base.clone();
+    p.keys.reserved.pop();
+    assert_ne!(p.digest_without_style(), d, "reserved keys");
+    let mut p = base.clone();
+    p.stamp += 1;
+    assert_ne!(p.digest_without_style(), d, "stamp");
+    let mut p = base.clone();
+    p.style = Some("x".into());
+    assert_eq!(p.digest_without_style(), d, "style is not part of it");
+    assert_ne!(tasks_plan().digest_without_style(), d);
+}

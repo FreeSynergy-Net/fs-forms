@@ -44,7 +44,39 @@ pub enum Basic {
     Unknown,
 }
 
+impl Role {
+    /// The schema name (code parameter), never a `Debug` text.
+    #[must_use]
+    pub fn name(self) -> &'static str {
+        match self {
+            Role::Input => "input",
+            Role::Display => "display",
+            Role::Compact => "compact",
+            Role::Chip => "chip",
+        }
+    }
+}
+
 impl Basic {
+    /// The schema name (code parameter), never a `Debug` text.
+    #[must_use]
+    pub fn name(self) -> &'static str {
+        match self {
+            Basic::Text => "text",
+            Basic::Email => "email",
+            Basic::Number => "number",
+            Basic::Bool => "bool",
+            Basic::Date => "date",
+            Basic::DateTime => "date-time",
+            Basic::Choice => "choice",
+            Basic::Reference => "reference",
+            Basic::Keywords => "keywords",
+            Basic::Link => "link",
+            Basic::Image => "image",
+            Basic::Unknown => "unknown",
+        }
+    }
+
     /// Basics that carry a per-use list of allowed address schemes.
     #[must_use]
     pub fn has_schemes(self) -> bool {
@@ -74,9 +106,9 @@ pub struct CommandDesc {
     pub writes: bool,
     /// Acts on one record (needs a selection).
     pub on_record: bool,
-    /// Type-level right (`Shape.may`, c0 86) for a type command such as `create`: `Some(false)` = no right = hidden;
-    /// `None` = the provider does not say, the command is shown (the provider answers `forbidden` visibly).
-    pub type_may: Option<bool>,
+    /// Type-level right (c0 86): the command name is in `Shape.may` (the list; a missing entry means NO right). A type command
+    /// such as `create` without this right is hidden, even when it is "coming"; there is no "shown, the provider answers forbidden".
+    pub type_may: bool,
 }
 
 /// Why a field is hidden for this person.

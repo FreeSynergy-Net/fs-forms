@@ -12,13 +12,18 @@ use crate::commands::{Shown, command_id, command_state};
 use crate::menu::{MenuEntry, MenuPlan};
 use crate::types::RecordView;
 
-/// Keys a description may not bind (owner wins). Until the commands crate carries the constant `RESERVED` (decided in the draft,
-/// section 13) this is the local copy: Tab and Shift+Tab leave the field, F6 changes the area.
+/// Keys a description may not bind (owner wins; c0, 18.11.): the global, fixed shortcuts Primary+Q (quit), F1 (help), F6 (area
+/// change), F10 (menu), Escape, plus Tab and Shift+Tab (focus). `delete` is NOT reserved: it is an ordinary command that runs only in a list.
+/// Until the commands crate carries the one constant `RESERVED` this is the local copy.
 #[must_use]
 pub fn reserved(sc: &Shortcut) -> bool {
     let m = sc.modifiers();
     let plain = !(m.primary || m.control || m.alt || m.meta);
-    (sc.key() == "Tab" && plain) || sc.key() == "F6"
+    let key = sc.key();
+    (key == "Tab" && plain)
+        || key == "F6"
+        || (["F1", "F10", "Escape"].contains(&key) && plain)
+        || ((m.primary || m.control || m.meta) && key == "Q")
 }
 
 /// Editing keys of a text field: bound without a modifier they run only in a list, never while typing.
@@ -49,7 +54,7 @@ pub struct KeyPlan {
 impl Default for KeyPlan {
     fn default() -> Self {
         Self {
-            reserved: ["Tab", "Shift+Tab", "F6"]
+            reserved: ["Tab", "Shift+Tab", "F6", "F1", "F10", "Escape", "Primary+Q"]
                 .iter()
                 .map(|s| (*s).to_owned())
                 .collect(),

@@ -32,6 +32,7 @@ mod overlay;
 mod port;
 mod providers;
 mod resolved;
+mod rules;
 mod schemes;
 pub mod shim;
 mod types;
@@ -55,7 +56,9 @@ pub use overlay::{
 pub use port::{
     LayoutAdmin, LayoutRead, LayoutStore, LayoutWrite, OverlayWrite, PackageLayouts, Pending,
 };
-pub use providers::{ProviderCatalogs, check_providers, split_provider_codes};
+pub use providers::{
+    ProviderCatalogs, check_providers, split_provider_codes, unchecked_capabilities,
+};
 pub use resolved::{Applied, Effect, Layer, LayerInfo, Resolved};
 pub use schemes::{scheme_names_rule, schemes_rule};
 pub use shim::{Coded, ErrorCode, ObjectId, Reference, Utc};

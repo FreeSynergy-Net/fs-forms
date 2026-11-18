@@ -107,11 +107,8 @@ pub(crate) fn layout_tree(l: &Layout, own_views: bool) -> Result<Tree, Coded<Lay
         views.push(obj(q));
     }
     p.push(("view", Tree::Arr(views)));
-    let mut msgs: Vec<&Item<_>> = d.messages.iter().collect();
-    msgs.sort_by(|a, b| {
-        (a.v.key.as_bytes(), a.v.lang.as_bytes()).cmp(&(b.v.key.as_bytes(), b.v.lang.as_bytes()))
-    });
-    let msgs = msgs.into_iter().map(|i| {
+    // messages are in (key, lang) order by the invariant of `Layout`
+    let msgs = d.messages.iter().map(|i| {
         obj(vec![
             elem(i),
             ("key", Tree::s(&i.v.key)),
@@ -163,9 +160,8 @@ fn block(i: &Item<BlockDoc>) -> Tree {
     }
     opt(&mut q, "title", b.title_key.as_ref());
     opt(&mut q, "text", b.text_key.as_ref());
-    let mut binds: Vec<&Item<BindingDoc>> = b.bindings.iter().collect();
-    binds.sort_by(|x, y| (x.v.slot.as_bytes(), x.v.nth).cmp(&(y.v.slot.as_bytes(), y.v.nth)));
-    q.push(("bind", Tree::Arr(binds.into_iter().map(binding).collect())));
+    // order of bindings: (slot, nth), kept by the invariant of `Layout` (see there), not sorted a second time here
+    q.push(("bind", list(&b.bindings, binding)));
     obj(q)
 }
 

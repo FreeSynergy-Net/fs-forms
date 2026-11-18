@@ -6,10 +6,12 @@ use crate::doc::LayoutDoc;
 use crate::elems::{Node, find, get, remove, set};
 use crate::ids::ElemRef;
 use crate::layout::Layout;
+use crate::limits::Limits;
 use crate::overlay::{
     Cause, ElemLock, Field, Op, OpKind, Overlay, OverlayScope, OverlayState, Value,
 };
 use crate::resolved::{Applied, Effect, Layer};
+use crate::rules::doc_rules;
 
 /// Applies the overlays. Order: instance overlays before person overlays, each by `seq` (never by time). Overlays that are
 /// `Off` or `Orphaned` do nothing. Per op: target present, lock (person ops only), field allowed and typed, `expect` equal,
@@ -124,17 +126,16 @@ fn apply_op(doc: &mut LayoutDoc, op: &Op, person: bool, locks: &[ElemLock]) -> R
         }
         OpKind::Insert { .. } | OpKind::Move { .. } => return Err(Cause::FieldUnknown), // not applied yet in this cut
     }
-    if empty_schemes(doc) && !empty_schemes(&before) {
+    if !result_rules_hold(doc) {
         *doc = before;
         return Err(Cause::ResultInvalid);
     }
     Ok(())
 }
 
-fn empty_schemes(doc: &LayoutDoc) -> bool {
-    doc.pages
-        .iter()
-        .flat_map(|p| &p.v.blocks)
-        .flat_map(|b| &b.v.bindings)
-        .any(|b| b.v.schemes.as_ref().is_some_and(Vec::is_empty))
+/// D9: after every op the local rules of the description hold again (the same rules `check` runs), else the op is reverted.
+fn result_rules_hold(doc: &LayoutDoc) -> bool {
+    let mut problems = Vec::new();
+    doc_rules(doc, &Limits::unbounded(), &mut problems);
+    problems.is_empty()
 }

@@ -132,7 +132,7 @@ pub fn validate(rows: &Rows) -> Vec<String> {
                 continue;
             }
             for (col, cell) in t.cols.iter().zip(row) {
-                out.extend(check_cell(name, n, col.name, col.null, col.ty, cell));
+                out.extend(check_cell(name, n, col.name, col.null, col.logical, cell));
             }
         }
     }

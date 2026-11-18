@@ -50,7 +50,10 @@ fn missing_list_blocks() {
 #[test]
 fn unexpected_list_blocks_and_plain_field_is_clean() {
     assert!(resolved(Fake(Ok(Some(false)))).problems.is_empty());
-    assert!(resolved(Fake(Ok(None))).problems.is_empty());
+    // the provider does not know the field: said as a warning, never silent
+    let unknown = resolved(Fake(Ok(None)));
+    assert!(unknown.problems.is_empty());
+    assert_eq!(unknown.warnings[0].code, LayoutCode::ProviderUnchecked);
 }
 
 #[test]

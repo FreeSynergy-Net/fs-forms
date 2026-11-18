@@ -5,17 +5,18 @@
 //! Pattern: Adapter (rows to model).
 
 use fs_forms_layout::{
-    ActionDoc, ActionTarget, BindFrom, BindingDoc, BlockDoc, Coded, ElemId, FrontendKey, Item,
-    Layout, LayoutCode, LayoutDoc, LayoutId, Limits, MenuDoc, MenuKind, MenuStandard, MessageDoc,
-    OpenCatalog, OrderDoc, PageDoc, Reference, RequiresDoc, SourceDoc, ViewDoc, Words,
+    BindFrom, BindingDoc, BlockDoc, Coded, ElemId, FrontendKey, Item, Layout, LayoutCode,
+    LayoutDoc, LayoutId, Limits, MenuDoc, MenuKind, MenuStandard, MessageDoc, OpenCatalog, PageDoc,
+    RequiresDoc, SourceDoc, Words,
 };
 
-use crate::rows::{Row, RowReader, Rows};
+use crate::from_rows_parts::{actions, views};
+use crate::rows::{Row, RowReader, Rows, validate};
 use crate::spec::Table;
 use crate::tables as t;
 use crate::to_rows::range_text;
 
-fn each<'a>(rows: &'a Rows, table: &'a Table) -> impl Iterator<Item = RowReader<'a>> {
+pub(crate) fn each<'a>(rows: &'a Rows, table: &'a Table) -> impl Iterator<Item = RowReader<'a>> {
     rows.tables
         .get(table.name)
         .into_iter()
@@ -23,7 +24,7 @@ fn each<'a>(rows: &'a Rows, table: &'a Table) -> impl Iterator<Item = RowReader<
         .map(move |r: &'a Row| RowReader::new(table, r))
 }
 
-fn item<T>(r: &RowReader<'_>, v: T) -> Item<T> {
+pub(crate) fn item<T>(r: &RowReader<'_>, v: T) -> Item<T> {
     Item {
         elem: r.text("elem").and_then(|e| ElemId::parse(&e).ok()),
         line: 0,
@@ -31,7 +32,7 @@ fn item<T>(r: &RowReader<'_>, v: T) -> Item<T> {
     }
 }
 
-fn same(r: &RowReader<'_>, id: &str) -> bool {
+pub(crate) fn same(r: &RowReader<'_>, id: &str) -> bool {
     r.text("layout").as_deref() == Some(id)
 }
 
@@ -46,6 +47,20 @@ fn limits_off() -> Limits {
 /// # Errors
 /// `unknown` when there is no such row; the problems of `check` when the rows do not form a valid layout.
 pub fn from_rows(rows: &Rows, id: &LayoutId) -> Result<Layout, Vec<Coded<LayoutCode>>> {
+    // every cell must fit its column (type, NULL rule, closed word list) BEFORE anything is read: a word the code does not know is a
+    // code, never a substitute value
+    let broken: Vec<Coded<LayoutCode>> = validate(rows)
+        .into_iter()
+        .map(|d| {
+            Coded::new(LayoutCode::StoreBroken)
+                .with("file", "forms.db")
+                .with("cause", "rows")
+                .with("detail", d)
+        })
+        .collect();
+    if !broken.is_empty() {
+        return Err(broken);
+    }
     let key = &id.0.0;
     let head = each(rows, &t::LAYOUT).find(|r| r.text("id").as_deref() == Some(key));
     let Some(head) = head else {
@@ -56,7 +71,7 @@ pub fn from_rows(rows: &Rows, id: &LayoutId) -> Result<Layout, Vec<Coded<LayoutC
         ]);
     };
     let mut doc = LayoutDoc {
-        format: head.uint("format").unwrap_or(2),
+        format: 2, // rows always carry their ids; a broken one is `elem-missing`, never replaced by a natural id
         key: FrontendKey {
             extends: head.text("extends").unwrap_or_default(),
             frontend: head.text("frontend").unwrap_or_default(),
@@ -207,7 +222,7 @@ fn binding(
     at: &dyn Fn(&RowReader<'_>) -> bool,
 ) -> Item<BindingDoc> {
     let name = || r.text("name").unwrap_or_default();
-    let from = match r.text("from").as_deref() {
+    let from = match r.text("bind_from").as_deref() {
         Some("field") => BindFrom::Field {
             path: r.text("path").unwrap_or_default(),
             role: r.text("role").unwrap_or_default(),
@@ -237,63 +252,4 @@ fn binding(
             schemes,
         },
     )
-}
-
-fn actions(rows: &Rows, id: &str) -> Vec<Item<ActionDoc>> {
-    let mut list: Vec<_> = each(rows, &t::ACTION).filter(|r| same(r, id)).collect();
-    list.sort_by_key(|r| r.int("action"));
-    list.iter()
-        .map(|r| {
-            let target = match (r.uint("source"), r.text("command"), r.text("workflow")) {
-                (Some(source), Some(command), _) => ActionTarget::Command { source, command },
-                (_, _, w) => ActionTarget::Workflow(Reference(w.unwrap_or_default())),
-            };
-            let a = ActionDoc {
-                trigger: r
-                    .text("trigger")
-                    .and_then(|w| Words::from_word(&w))
-                    .unwrap_or(fs_forms_layout::Trigger::Button),
-                target,
-                confirm: r.text("confirm").and_then(|w| Words::from_word(&w)),
-            };
-            item(r, a)
-        })
-        .collect()
-}
-
-fn views(rows: &Rows, id: &str) -> Vec<Item<ViewDoc>> {
-    let mut list: Vec<_> = each(rows, &t::VIEW).filter(|r| same(r, id)).collect();
-    list.sort_by_key(|r| (r.text("view"), r.text("owner")));
-    list.iter()
-        .map(|v| {
-            let (name, owner) = (v.text("view"), v.text("owner"));
-            let mut ord: Vec<_> = each(rows, &t::VIEW_ORDER)
-                .filter(|o| same(o, id) && o.text("view") == name && o.text("owner") == owner)
-                .collect();
-            ord.sort_by_key(|o| o.int("seq"));
-            let orders = ord
-                .iter()
-                .map(|o| {
-                    let d = OrderDoc {
-                        by: o
-                            .text("by")
-                            .and_then(|w| Words::from_word(&w))
-                            .unwrap_or(fs_forms_layout::OrderBy::Field),
-                        name: o.text("name").unwrap_or_default(),
-                        descending: o.int("descending") == Some(1),
-                    };
-                    item(o, d)
-                })
-                .collect();
-            let doc = ViewDoc {
-                view: name.unwrap_or_default(),
-                owner: owner.filter(|o| !o.is_empty()).map(Reference),
-                grouping: v.text("grouping"),
-                orders,
-                filter: None,
-                search_kind: v.text("search_kind"),
-            };
-            item(v, doc)
-        })
-        .collect()
 }

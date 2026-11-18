@@ -29,7 +29,7 @@ fn natural_ids_are_deterministic_and_valid() {
 
 #[test]
 fn k59_codes_are_unique_kebab_and_round_trip() {
-    assert_eq!(LayoutCode::ALL.len(), 43);
+    assert_eq!(LayoutCode::ALL.len(), 45);
     let mut seen = std::collections::HashSet::new();
     for c in LayoutCode::ALL {
         let name = c.as_str();

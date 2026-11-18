@@ -64,7 +64,7 @@ pub const BINDING: Table = Table {
         Col::req("slot", Text),
         Col::req("nth", Int),
         ELEM,
-        Col::req("from", Enum(FROM)),
+        Col::req("bind_from", Enum(FROM)),
         Col::opt("path", Text),
         Col::opt("role", Enum(ROLE)),
         Col::opt("name", Text),
@@ -75,8 +75,9 @@ pub const BINDING: Table = Table {
         "FOREIGN KEY (layout, page, place) REFERENCES forms_block(layout, page, place)",
         "CHECK (nth >= 0 AND nth < 16)", // technical, with evidence: accepts `repeat` 1..16 (F1 ENTWURF §3.1 Z. 63)
         // `from` is an SQL keyword: quoted (found by running the DDL on SQLite 3.53; the sketch had it bare)
-        "CHECK ((\"from\" = 'field') = (path IS NOT NULL AND role IS NOT NULL))",
-        "CHECK ((\"from\" IN ('grouping','order','command')) = (name IS NOT NULL))",
+        // `bind_from`, not `from`: `from` is an SQL keyword and the fs-objects v5 renderer does not quote column names
+        "CHECK ((bind_from = 'field') AND (path IS NOT NULL AND role IS NOT NULL) OR NOT (bind_from = 'field') AND NOT (path IS NOT NULL AND role IS NOT NULL))",
+        "CHECK ((bind_from IN ('grouping','order','command')) AND (name IS NOT NULL) OR NOT (bind_from IN ('grouping','order','command')) AND NOT (name IS NOT NULL))",
     ],
     indexes: &[],
 };
@@ -124,8 +125,8 @@ pub const ACTION: Table = Table {
         "PRIMARY KEY (layout, action)",
         ELEM_UNIQUE,
         "FOREIGN KEY (layout) REFERENCES forms_layout(id)",
-        "CHECK ((target = 'command') = (command IS NOT NULL AND source IS NOT NULL AND workflow IS NULL))",
-        "CHECK ((target = 'workflow') = (workflow IS NOT NULL))",
+        "CHECK ((target = 'command') AND (command IS NOT NULL AND source IS NOT NULL AND workflow IS NULL) OR NOT (target = 'command') AND NOT (command IS NOT NULL AND source IS NOT NULL AND workflow IS NULL))",
+        "CHECK ((target = 'workflow') AND (workflow IS NOT NULL) OR NOT (target = 'workflow') AND NOT (workflow IS NOT NULL))",
     ],
     indexes: &[],
 };
@@ -147,7 +148,7 @@ pub const VIEW: Table = Table {
         "PRIMARY KEY (layout, view, owner)",
         ELEM_UNIQUE,
         "FOREIGN KEY (layout) REFERENCES forms_layout(id)",
-        "CHECK ((scope = 'all') = (owner = ''))",
+        "CHECK ((scope = 'all') AND (owner = '') OR NOT (scope = 'all') AND NOT (owner = ''))",
     ],
     indexes: &[],
 };
@@ -194,7 +195,7 @@ pub const FILTER_NODE: Table = Table {
         "PRIMARY KEY (layout, view, owner, node)",
         ELEM_UNIQUE,
         "FOREIGN KEY (layout, view, owner) REFERENCES forms_view(layout, view, owner)",
-        "CHECK ((op = 'is') = (cond IS NOT NULL))",
+        "CHECK ((op = 'is') AND (cond IS NOT NULL) OR NOT (op = 'is') AND NOT (cond IS NOT NULL))",
     ],
     indexes: &[],
 };

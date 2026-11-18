@@ -1,5 +1,5 @@
 //! Stand-ins for the table description of fs-objects v5 (`spec::{Col, Logical, Table}`, `migrate::Step`), which has not landed.
-//! Same shapes as the settings sketch, so the tables in `tables.rs` move over by changing one `use`. Also renders the DDL, so the
+//! Same shapes as fs-objects v5 `spec` (field `logical`; the renderer does NOT quote column names, so no column may be an SQL keyword), so the tables in `tables.rs` move over by changing one `use`. Also renders the DDL, so the
 //! tables can be checked against a real SQL engine before fs-objects v5 exists.
 //!
 //! Pattern: Value Object (const table specs) with a renderer.
@@ -31,7 +31,7 @@ pub struct Col {
     /// Column name.
     pub name: &'static str,
     /// Logical type.
-    pub ty: Logical,
+    pub logical: Logical,
     /// May be NULL.
     pub null: bool,
 }
@@ -42,7 +42,7 @@ impl Col {
     pub const fn req(name: &'static str, ty: Logical) -> Self {
         Self {
             name,
-            ty,
+            logical: ty,
             null: false,
         }
     }
@@ -51,7 +51,7 @@ impl Col {
     pub const fn opt(name: &'static str, ty: Logical) -> Self {
         Self {
             name,
-            ty,
+            logical: ty,
             null: true,
         }
     }
@@ -79,19 +79,15 @@ pub enum Step {
     Sql(&'static str),
 }
 
-fn q(name: &str) -> String {
-    format!("\"{name}\"")
-}
-
 impl Col {
     fn ddl(&self) -> String {
-        let (sql, check) = match self.ty {
-            Logical::Bool => ("INTEGER", Some(format!("{} IN (0, 1)", q(self.name)))),
+        let (sql, check) = match self.logical {
+            Logical::Bool => ("INTEGER", Some(format!("{} IN (0,1)", self.name))),
             Logical::Enum(words) => {
                 let list: Vec<String> = words.iter().map(|w| format!("'{w}'")).collect();
                 (
                     "TEXT",
-                    Some(format!("{} IN ({})", q(self.name), list.join(", "))),
+                    Some(format!("{} IN ({})", self.name, list.join(","))),
                 )
             }
             Logical::Int | Logical::Utc => ("INTEGER", None),
@@ -99,7 +95,7 @@ impl Col {
         };
         let null = if self.null { "" } else { " NOT NULL" };
         let check = check.map(|c| format!(" CHECK ({c})")).unwrap_or_default();
-        format!("{} {sql}{null}{check}", q(self.name))
+        format!("{} {sql}{null}{check}", self.name)
     }
 }
 

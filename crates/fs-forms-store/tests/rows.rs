@@ -50,7 +50,7 @@ fn layout() -> Layout {
         block: "board".into(),
         source: Some(1),
         title_key: Some("t".into()),
-        text_key: None,
+        text_key: Some("tx".into()),
         bindings: vec![
             it(
                 "binding:a",
@@ -99,6 +99,20 @@ fn layout() -> Layout {
             it(
                 "menu:1",
                 menu(MenuKind::Standard(MenuStandard::Help), vec![]),
+            ),
+            it(
+                "menu:2",
+                MenuDoc {
+                    view: Some("mine".into()),
+                    ..menu(MenuKind::View, vec![])
+                },
+            ),
+            it(
+                "menu:3",
+                MenuDoc {
+                    label_key: None,
+                    ..menu(MenuKind::Separator, vec![])
+                },
             ),
         ],
         pages: vec![it(
@@ -198,7 +212,7 @@ fn rows_fit_the_table_specs() {
         assert!(rows.tables.contains_key(t), "{t}");
     }
     assert_eq!(rows.tables["forms_binding_scheme"].len(), 2);
-    assert_eq!(rows.tables["forms_menu"].len(), 3);
+    assert_eq!(rows.tables["forms_menu"].len(), 5);
 }
 
 #[test]
@@ -222,7 +236,24 @@ fn unknown_id_and_broken_rows_are_reported() {
             .iter()
             .any(|p| p.contains("not in the word list"))
     );
-    let mut nulled = rows;
+    let mut nulled = rows.clone();
     nulled.tables.get_mut("forms_page").unwrap()[0][4] = Cell::Null;
     assert!(validate(&nulled).iter().any(|p| p.contains("NOT NULL")));
+    // N6c: a row with a cell too few is reported
+    let mut short = rows.clone();
+    short.tables.get_mut("forms_page").unwrap()[0].pop();
+    assert!(validate(&short).iter().any(|p| p.contains("cells for")));
+    // an unknown word is a code, never a substitute value
+    let e = from_rows(&bad, &meta().id).unwrap_err();
+    assert_eq!(
+        (e[0].code, e[0].param("cause")),
+        (LayoutCode::StoreBroken, Some("rows"))
+    );
+    assert!(e[0].param("detail").unwrap().contains("sideways"));
+    let mut dead_elem = rows;
+    dead_elem.tables.get_mut("forms_page").unwrap()[0][2] = Cell::Text("Not Valid".into());
+    assert_eq!(
+        from_rows(&dead_elem, &meta().id).unwrap_err()[0].code,
+        LayoutCode::ElemMissing
+    );
 }

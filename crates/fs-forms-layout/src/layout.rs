@@ -21,6 +21,10 @@ pub struct El<T> {
 }
 
 /// A checked description. Lines are zeroed; every `elem` is set.
+///
+/// Invariant (ONE source of the order, `LayoutDoc::check`): bindings of a block are in (slot, nth) byte order, messages in (key, lang),
+/// views in (view, owner). The writer and the rows rely on it. When `apply` gets `Insert` and `Move`, it must restore this order at
+/// its end.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Layout {
     doc: LayoutDoc,

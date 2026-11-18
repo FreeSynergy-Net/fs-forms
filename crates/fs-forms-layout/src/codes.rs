@@ -112,6 +112,10 @@ codes! {
     Orphaned => "orphaned",
     /// `{file, kind}`.
     ExportFailed => "export-failed",
+    /// `{elem, cause}` the pair rules of a menu entry (command, view, separator).
+    MenuInvalid => "menu-invalid",
+    /// `{elem, source}` a source number that the description does not have.
+    SourceUnknown => "source-unknown",
     /// `{name, bytes, max, by}` exchange content over the size limit.
     ContentTooLarge => "content-too-large",
 }

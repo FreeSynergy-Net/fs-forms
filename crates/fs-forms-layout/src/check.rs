@@ -4,13 +4,12 @@
 
 use std::collections::HashSet;
 
-use crate::check_text::{check_messages, check_range};
 use crate::codes::LayoutCode;
 use crate::doc::{BindingDoc, Item, LayoutDoc};
 use crate::ids::{ElemId, ElemKind};
 use crate::layout::{FORMAT_KNOWN, Layout};
 use crate::limits::{Limits, Technical};
-use crate::schemes::scheme_names_rule;
+use crate::rules::doc_rules;
 use crate::shim::Coded;
 use crate::walk::{menu_depth, walk};
 
@@ -83,7 +82,7 @@ impl LayoutDoc {
             );
         }
         self.check_names(catalog, &mut out);
-        check_messages(&self.messages, limits, &mut out);
+        doc_rules(&self, limits, &mut out);
         if out.is_empty() {
             Ok(Layout::from_checked(self))
         } else {
@@ -149,12 +148,6 @@ impl LayoutDoc {
     }
 
     fn check_names(&self, catalog: &dyn CatalogRules, out: &mut Problems) {
-        for r in &self.requires {
-            check_range(&r.v.range, out);
-        }
-        for s in &self.sources {
-            check_range(&s.v.range, out);
-        }
         let mut pages = HashSet::new();
         for p in &self.pages {
             if !pages.insert(p.v.page.as_str()) {
@@ -222,10 +215,6 @@ fn check_bindings(
                     .with("kind", "binding")
                     .with("key", format!("{}/{}", b.v.slot, b.v.nth)),
             );
-        }
-        if let Some(s) = &b.v.schemes {
-            let names: Vec<String> = s.iter().map(|x| x.v.clone()).collect();
-            out.extend(scheme_names_rule(elem, &names));
         }
     }
 }

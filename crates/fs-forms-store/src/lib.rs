@@ -11,6 +11,7 @@
 #![warn(clippy::pedantic)]
 
 mod from_rows;
+mod from_rows_parts;
 mod rows;
 pub mod spec;
 /// The table specs are self-describing data: name, columns and constraints are the documentation.

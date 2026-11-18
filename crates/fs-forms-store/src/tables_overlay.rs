@@ -38,7 +38,7 @@ pub const OVERLAY: Table = Table {
     constraints: &[
         "PRIMARY KEY (id)",
         "FOREIGN KEY (layout) REFERENCES forms_layout(id)",
-        "CHECK ((scope = 'person') = (owner IS NOT NULL))",
+        "CHECK ((scope = 'person') AND (owner IS NOT NULL) OR NOT (scope = 'person') AND NOT (owner IS NOT NULL))",
         "CHECK (rev >= 0)",
     ],
     indexes: &[
@@ -72,12 +72,14 @@ pub const OVERLAY_OP: Table = Table {
         "PRIMARY KEY (overlay, seq)",
         "FOREIGN KEY (overlay) REFERENCES forms_overlay(id)",
         // set <=> field + at most one value (none = set to empty, only for optional fields; checked in code against the model)
-        "CHECK ((op = 'set') = (field IS NOT NULL))",
-        "CHECK ((value_text IS NOT NULL) + (value_int IS NOT NULL) + (value_bool IS NOT NULL) <= 1)",
-        "CHECK ((expect_text IS NOT NULL) + (expect_int IS NOT NULL) + (expect_bool IS NOT NULL) <= 1)",
+        "CHECK ((op = 'set') AND (field IS NOT NULL) OR NOT (op = 'set') AND NOT (field IS NOT NULL))",
+        // at most one of the three is set (a sum of booleans is not typed for the engine: written out)
+        "CHECK ((value_text IS NULL AND value_int IS NULL) OR (value_text IS NULL AND value_bool IS NULL) OR (value_int IS NULL AND value_bool IS NULL))",
+        // at most one of the three is set (a sum of booleans is not typed for the engine: written out)
+        "CHECK ((expect_text IS NULL AND expect_int IS NULL) OR (expect_text IS NULL AND expect_bool IS NULL) OR (expect_int IS NULL AND expect_bool IS NULL))",
         "CHECK (op <> 'remove' OR (field IS NULL AND anchor_elem IS NULL AND position IS NULL AND new_elem IS NULL))",
-        "CHECK ((op = 'insert') = (new_elem IS NOT NULL))",
-        "CHECK ((op IN ('insert','move')) = (anchor_elem IS NOT NULL AND position IS NOT NULL))",
+        "CHECK ((op = 'insert') AND (new_elem IS NOT NULL) OR NOT (op = 'insert') AND NOT (new_elem IS NOT NULL))",
+        "CHECK ((op IN ('insert','move')) AND (anchor_elem IS NOT NULL AND position IS NOT NULL) OR NOT (op IN ('insert','move')) AND NOT (anchor_elem IS NOT NULL AND position IS NOT NULL))",
     ],
     indexes: &[],
 };
@@ -99,7 +101,7 @@ pub const OVERLAY_CONFLICT: Table = Table {
     constraints: &[
         "PRIMARY KEY (overlay, seq, base_version)",
         "FOREIGN KEY (overlay, seq) REFERENCES forms_overlay_op(overlay, seq)",
-        "CHECK ((resolution = 'open') = (resolved_by IS NULL AND resolved_at IS NULL))",
+        "CHECK ((resolution = 'open') AND (resolved_by IS NULL AND resolved_at IS NULL) OR NOT (resolution = 'open') AND NOT (resolved_by IS NULL AND resolved_at IS NULL))",
     ],
     indexes: &[],
 };

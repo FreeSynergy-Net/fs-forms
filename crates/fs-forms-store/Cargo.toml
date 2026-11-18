@@ -12,3 +12,8 @@ rust-version.workspace = true
 fs-forms-layout = { path = "../fs-forms-layout" }
 # Edge to fs-objects v5 (spec::{Col, Logical, Table}, migrate::Step, registry::Domain, Store::inspect): NOT pinned yet.
 # The stand-ins live in src/spec.rs; at the lift `use crate::spec::*` becomes `use fs_objects::v5::spec::*`.
+
+[dev-dependencies]
+# The real engine of fs-objects (same version, same features, already in Cargo.lock): the tables are run against it, not only against a model.
+turso = { version = "=0.8.3", default-features = false }
+tokio = { version = "1", features = ["rt", "time"] }

@@ -100,7 +100,7 @@ fn binding(
     };
     key(RowBuilder::new(&t::BINDING))
         .set("elem", elem(bd))
-        .set("from", text(from))
+        .set("bind_from", text(from))
         .set("path", path)
         .set("role", role)
         .set("name", name)

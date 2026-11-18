@@ -9,7 +9,7 @@ use crate::layout::Layout;
 use crate::memory::{MemoryLayoutStore, State, Stored, ready};
 use crate::overlay::{Conflict, Overlay, OverlayScope};
 use crate::port::{LayoutRead, Pending};
-use crate::providers::{check_providers, split_provider_codes};
+use crate::providers::{check_providers, split_provider_codes, unchecked_capabilities};
 use crate::resolved::{LayerInfo, Resolved};
 use crate::shim::{Coded, ObjectId};
 use crate::types::{Health, LayoutFilter, LogEntry, Page, Summary};
@@ -160,10 +160,11 @@ impl LayoutRead for MemoryLayoutStore {
             let Some(mut r) = self.resolve_now(key) else {
                 return Ok(None);
             };
-            if let Some(p) = &self.providers {
-                let codes = check_providers(&r.layout, &**p).await?;
-                (r.problems, r.warnings) = split_provider_codes(codes);
-            }
+            let codes = match &self.providers {
+                Some(p) => check_providers(&r.layout, &**p).await?,
+                None => unchecked_capabilities(&r.layout),
+            };
+            (r.problems, r.warnings) = split_provider_codes(codes);
             Ok(Some(r))
         })
     }

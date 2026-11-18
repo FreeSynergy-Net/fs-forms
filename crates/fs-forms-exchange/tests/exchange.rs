@@ -173,3 +173,13 @@ fn k70_json_is_canonical_and_round_trips() {
     let again = back.check(&OpenCatalog, &Limits::declared()).unwrap();
     assert_eq!(export(&again, Format::Json, true), j);
 }
+
+#[test]
+fn elem_missing_names_the_line_of_its_table() {
+    let text = FILE.replace("elem = \"page:board\"\n", "");
+    let page_line = 1 + text.lines().position(|l| l == "[[page]]").unwrap();
+    let doc = read(&text, Format::Toml).unwrap();
+    let e = doc.check(&OpenCatalog, &Limits::declared()).unwrap_err();
+    assert_eq!(e[0].code, LayoutCode::ElemMissing);
+    assert_eq!(e[0].param("line"), Some(page_line.to_string().as_str()));
+}

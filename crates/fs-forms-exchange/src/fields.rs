@@ -127,7 +127,7 @@ impl<'a> Fields<'a> {
     /// The `elem` key: parsed id and the line of it.
     pub(crate) fn elem(&mut self, cx: &mut Ctx<'_>) -> (Option<ElemId>, u32) {
         let Some(text) = self.str(cx, "elem") else {
-            return (None, 0);
+            return (None, self.line); // a missing id is reported with the line of its table
         };
         let line = if self.line > 0 {
             self.line

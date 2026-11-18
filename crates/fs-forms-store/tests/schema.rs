@@ -100,7 +100,7 @@ fn every_table_is_strict_and_enums_have_checks() {
     for t in &ALL {
         assert!(t.ddl().ends_with("STRICT"), "{}", t.name);
         for c in t.cols {
-            if let Logical::Enum([first, ..]) = c.ty {
+            if let Logical::Enum([first, ..]) = c.logical {
                 assert!(t.ddl().contains(&format!("'{first}'")));
             }
         }

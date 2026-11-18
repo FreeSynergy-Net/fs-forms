@@ -158,6 +158,27 @@ impl Limits {
     }
 }
 
+impl Limits {
+    /// No limits: for the rules that run on the result of an overlay op (the limits were checked on the original).
+    pub(crate) fn unbounded() -> Self {
+        let d = LimitSource::Default;
+        Self {
+            elements_max: u32::MAX,
+            menu_depth_max: u32::MAX,
+            text_bytes_max: u32::MAX,
+            ops_max: u32::MAX,
+            overlays_max: u32::MAX,
+            by: LimitSources {
+                elements: d,
+                menu_depth: d,
+                text_bytes: d,
+                ops: d,
+                overlays: d,
+            },
+        }
+    }
+}
+
 impl Default for Limits {
     fn default() -> Self {
         Self::declared()

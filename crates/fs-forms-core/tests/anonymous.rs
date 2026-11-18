@@ -27,6 +27,33 @@ async fn small(e: &Env, a: Anonymity) -> (fs_forms_core::Survey, fs_objects::Obj
     (e.repo.publish(s.id()).await.unwrap(), q)
 }
 
+/// Counts the timestamps in a raw text: (the epoch, any other time). Every JSON string that reads as
+/// an RFC 3339 time is one; ids and hashes never do. This replaces a search for the current year,
+/// which said nothing in any other year and could hit a random id.
+fn times_in(text: &str) -> (usize, usize) {
+    let found = text
+        .split('"')
+        .filter_map(|w| chrono::DateTime::parse_from_rfc3339(w).ok());
+    found.fold((0, 0), |(e, o), t| {
+        if t.timestamp() == 0 {
+            (e + 1, o)
+        } else {
+            (e, o + 1)
+        }
+    })
+}
+
+#[test]
+fn times_in_sees_a_time_of_any_year_and_no_random_id() {
+    let uuid = "\"2026-0000-ada0-4000-8000-000000000001\"";
+    assert_eq!(times_in(uuid), (0, 0), "an id is not a time");
+    for year in [2025, 2026, 2027, 2040] {
+        let t = format!("\"{year}-05-05T10:00:00Z\"");
+        assert_eq!(times_in(&t), (0, 1), "{year}");
+    }
+    assert_eq!(times_in("\"1970-01-01T00:00:00Z\""), (1, 0));
+}
+
 #[tokio::test]
 async fn submits_leave_nothing_in_main_store_log_or_feed() {
     let e = env().await;
@@ -74,15 +101,9 @@ async fn box_holds_no_person_time_or_ballot_id() {
     }
     let all = raw_box(&e, &s).await;
     assert!(!all.contains("people/") && !all.contains(ME));
-    let year = chrono::Utc::now().format("%Y-").to_string();
-    assert!(
-        !all.contains(&year),
-        "no real time in the ballot store: {all}"
-    );
-    assert!(
-        all.contains("1970-01-01T00:00:00"),
-        "the box carries the epoch"
-    );
+    let (epoch, other) = times_in(&all);
+    assert_eq!(other, 0, "no real time in the ballot store: {all}");
+    assert!(epoch > 0, "the box carries the epoch: {all}");
 }
 
 #[tokio::test]

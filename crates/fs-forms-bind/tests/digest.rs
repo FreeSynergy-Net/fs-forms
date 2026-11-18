@@ -18,11 +18,14 @@ fn rich() -> Plan {
     r.warnings
         .push(problem("pl-board-main", "layout-error-warn"));
     r.problems.push(problem("m-note", "layout-error-menu"));
+    // `type_may = false` (no type right) and an unsupported, writing, record command: every flag of a command takes part.
+    let mut c = cmd("dup", false, true, true);
+    c.desc.type_may = false;
     r.menu[1].children.push(MenuIn {
         elem: "m-dup".into(),
         kind: MenuKind::Command {
-            command: cmd("dup", true, false, false),
-            on_selected: false,
+            command: c,
+            on_selected: true,
             shortcut: Some("ctrl+n".into()),
         },
         children: vec![],
@@ -44,7 +47,7 @@ fn golden_digest_of_a_plan_with_notices_and_locks() {
     assert!(!p.notices.is_empty() && !p.menu.locks.is_empty() && p.sources[0].status.is_err());
     assert_eq!(
         hex(p.digest_without_style()),
-        "a72023334e12894ae4086d8d04a2e4af06d6101d0faf867aabc9777c279cf5ee"
+        "f643ee8d23863f9bea180851af05e3f3d6d13e4e17578d568048db6c21934409"
     );
 }
 

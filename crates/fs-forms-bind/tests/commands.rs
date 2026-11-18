@@ -1,4 +1,6 @@
 //! H-K5: one decision for menu, context menu, button and key.
+// The table test names the three surfaces m (menu), d (direct), k (key) on purpose.
+#![allow(clippy::many_single_char_names)]
 mod common;
 use common::*;
 use fs_forms_bind::testing::*;

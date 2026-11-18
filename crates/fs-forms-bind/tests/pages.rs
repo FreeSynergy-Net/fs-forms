@@ -20,7 +20,7 @@ fn gate(page: RecordPage, size: usize) -> Admitted {
         &Limits::default(),
         size,
         page,
-        Part::Place {
+        &Part::Place {
             page: "board".into(),
             place: "main".into(),
         },

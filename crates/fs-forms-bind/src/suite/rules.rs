@@ -1,4 +1,6 @@
 //! The twelve rule checks of `PlanSuite`. Each returns `Err(reason)` on the first violation.
+//!
+//! Pattern: Specification (one predicate per rule).
 
 use super::PlanFixture;
 use crate::coded::Family;

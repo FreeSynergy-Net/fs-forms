@@ -6,12 +6,16 @@ Version = tag; all crates of the workspace carry the same version.
 
 ### English
 
+- New crate `fs-forms-bind` (draft): the pure build plan `Bind::build(&Resolved, &dyn Catalog, &Providers) -> Plan`; every problem is a `PartLock` on the smallest part (`bind-error-locked`) or a window notice. Commands decide visibility by right first (hidden without right, "coming" only with right), the keymap is the real `fs_components_commands::Keymap`, the standard menus are an input of the host, the plan digest is SHA-256 over a fixed byte form (`sha2 0.10`, same version as in the lock). PlanSuite with 12 rules and 12 mutants; MF2 texts de + en for 18 codes; Windows job for the crate.
+- **Transition (falls away with the cascade):** `reserved()` and `list_only()` in `fs-forms-bind` are a local copy; `RESERVED` becomes a constant in `fs-components-commands` and bind uses it. Until then the probe pins `fs-components-commands` to tag `v0.0.29`; the cascade lifts all fs-components crates to one tag.
 - The crate `fs-forms-methods` is gone: the ten counting methods are the library `fs-tally` (own repo, tests moved with it). The box logic (`Lane`, token hash, OS randomness) is the library `fs-ballot`; `fs-forms-core` keeps its two lanes as `fs_ballot::Lane<Ballot, Signals>` (`Signals` implements `fs_ballot::Meta`). Behaviour and stored JSON field names are unchanged; the legacy single lane of box 0.1.0 now also keeps its pending pattern counts.
 - **Pins:** `fs-tally` and `fs-ballot` are pinned to their tag `v0.0.1`. `.fs-lock-sources.toml` stays strict.
 - Still open: the box is one JSON document in `fs-objects` (typed columns are the separate step D2b).
 
 ### Deutsch
 
+- Neues Crate `fs-forms-bind` (Entwurf): der reine Bauplan `Bind::build(&Resolved, &dyn Catalog, &Providers) -> Plan`; jedes Problem ist eine `PartLock` am kleinsten Teil (`bind-error-locked`) oder ein Hinweis am Fenster. Befehle entscheiden die Sichtbarkeit zuerst nach Recht (ohne Recht unsichtbar, „kommt“ nur mit Recht), die Tastentabelle ist die echte `fs_components_commands::Keymap`, die Standardmenüs sind ein Eingang des Hosts, der Digest des Plans ist SHA-256 über eine feste Bytefolge (`sha2 0.10`, gleiche Version wie im Lock). PlanSuite mit 12 Regeln und 12 Mutanten; MF2-Texte de + en für 18 Codes; Windows-Job für das Crate.
+- **Übergang (fällt mit der Kaskade weg):** `reserved()` und `list_only()` in `fs-forms-bind` sind eine lokale Kopie; `RESERVED` wird Konstante in `fs-components-commands`, bind nutzt sie. Bis dahin hängt die Probe an `fs-components-commands` Tag `v0.0.29`; die Kaskade hebt alle fs-components-Crates auf einen gemeinsamen Tag.
 - Das Crate `fs-forms-methods` entfällt: die zehn Zählverfahren sind die Bibliothek `fs-tally` (eigenes Repo, Tests mitgezogen). Die Urnen-Logik (`Lane`, Token-Hash, Zufall des Systems) ist die Bibliothek `fs-ballot`; `fs-forms-core` hält seine zwei Bahnen als `fs_ballot::Lane<Ballot, Signals>` (`Signals` setzt `fs_ballot::Meta` um). Verhalten und gespeicherte JSON-Feldnamen unverändert; die alte Einzelbahn der Urne 0.1.0 behält jetzt auch ihre wartenden Muster-Zählwerte.
 - **Pins:** `fs-tally` und `fs-ballot` hängen an ihrem Tag `v0.0.1`. `.fs-lock-sources.toml` bleibt streng.
 - Noch offen: die Urne ist ein JSON-Dokument in `fs-objects` (typisierte Spalten sind der eigene Schritt D2b).

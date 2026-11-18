@@ -42,7 +42,9 @@ impl Enc {
     }
     fn seq<T>(&mut self, v: &[T], mut f: impl FnMut(&mut Self, &T)) {
         self.u(v.len() as u64);
-        v.iter().for_each(|x| f(self, x));
+        for x in v {
+            f(self, x);
+        }
     }
     fn strs(&mut self, v: &[String]) {
         self.seq(v, |e, x| e.s(x));

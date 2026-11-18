@@ -116,7 +116,7 @@ impl Walk<'_> {
                     .as_deref()
                     .and_then(|t| self.shortcut(&n.elem, t, &id));
                 MenuEntry::Command {
-                    command: cmd,
+                    command: Box::new(cmd),
                     on_selected: *on_selected,
                     shortcut,
                 }

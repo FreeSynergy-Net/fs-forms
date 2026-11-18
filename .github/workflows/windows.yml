@@ -1,4 +1,4 @@
-# Small Windows gate for the pure crates (no Blinc, no GPU, no sockets): built, linted and tested on the Windows runner.
+# Windows gate for the whole workspace: clippy and tests on the Windows runner. The GPU/Blinc crates (the frontend builds on fs-components) are built too, and the tests that talk over a local socket (named pipe on Windows) run; there is no GPU adapter on the runner, so picture tests may be ignored there.
 name: windows
 on:
   push:

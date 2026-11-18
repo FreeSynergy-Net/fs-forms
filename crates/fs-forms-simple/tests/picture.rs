@@ -32,6 +32,10 @@ fn picture(screen: &str, path: &std::path::Path) -> Option<(u32, u32, Vec<u8>)> 
 }
 
 #[test]
+#[cfg_attr(
+    windows,
+    ignore = "wgpu Validation Error (wgpu 26.0.1) on windows-2022 without a GPU adapter; comes back when the runner offers a software adapter"
+)]
 fn both_pages_are_drawn_at_the_size_asked_and_differ() {
     let dir = tempfile::tempdir().unwrap();
     let Some((w, h, start)) = picture("start", &dir.path().join("start.png")) else {

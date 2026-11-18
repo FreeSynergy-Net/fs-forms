@@ -99,6 +99,8 @@ pub struct FieldDesc {
 
 /// A command as described by the type catalog.
 #[derive(Clone, Debug, PartialEq, Eq)]
+// Four independent facts of one command in the type catalog (a mirror of F1); a state machine would hide them.
+#[allow(clippy::struct_excessive_bools)]
 pub struct CommandDesc {
     /// `false`: shown as "coming".
     pub supported: bool,

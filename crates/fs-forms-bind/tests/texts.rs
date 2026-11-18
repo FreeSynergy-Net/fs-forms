@@ -1,4 +1,6 @@
 //! MF2 texts de + en exist for all 18 codes (ADR 0057); H-K17: no toml / JSON / file access in the crate.
+// The scan of the sources is a TEST tool: file access is allowed here, never in `src` (H-K17).
+#![allow(clippy::disallowed_methods)]
 use fs_forms_bind::BindCode;
 
 fn keys(text: &str) -> Vec<&str> {

@@ -203,7 +203,7 @@ fn type_right_hides_menu_entry_and_key_on_every_surface() {
         children: vec![],
     }];
     let plan = build_with(&r, &TestCatalog::new(), &tasks_facts(), host());
-    assert!(plan.menu.arrangement(None).is_empty());
+    assert_eq!(plan.menu.arrangement(None), vec![]);
     assert_eq!(
         plan.keys
             .keymap_for(&plan.menu, None, Platform::Linux)

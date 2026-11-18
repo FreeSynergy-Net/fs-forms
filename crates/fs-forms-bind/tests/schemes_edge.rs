@@ -20,8 +20,23 @@ fn fill(basic: Basic, schemes: Option<Vec<&str>>) -> FieldFill {
 fn k2_edges_are_refused() {
     let f = fill(Basic::Link, Some(vec!["https", "mailto"]));
     for s in [
-        " https", "https ", "https:", "HTTPS:", "httpsx", "http", "", "\u{0443}https", "j\u{0430}vascript", "\u{0455}sh", "JavaScript:",
-        "java\nscript", "javascript", "JAVASCRIPT", "mail to", "mailto:", "\u{212A}https",
+        " https",
+        "https ",
+        "https:",
+        "HTTPS:",
+        "httpsx",
+        "http",
+        "",
+        "\u{0443}https",
+        "j\u{0430}vascript",
+        "\u{0455}sh",
+        "JavaScript:",
+        "java\nscript",
+        "javascript",
+        "JAVASCRIPT",
+        "mail to",
+        "mailto:",
+        "\u{212A}https",
     ] {
         assert!(!f.allows_scheme(s), "{s:?}");
     }
@@ -35,8 +50,17 @@ fn k2_edges_are_refused() {
             }
         }
     }
-    for b in [Basic::Text, Basic::Email, Basic::Reference, Basic::Number, Basic::Unknown] {
-        assert!(!fill(b, Some(vec!["https"])).allows_scheme("https"), "{b:?}");
+    for b in [
+        Basic::Text,
+        Basic::Email,
+        Basic::Reference,
+        Basic::Number,
+        Basic::Unknown,
+    ] {
+        assert!(
+            !fill(b, Some(vec!["https"])).allows_scheme("https"),
+            "{b:?}"
+        );
     }
 }
 

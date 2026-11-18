@@ -4,12 +4,13 @@ mod common;
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use async_trait::async_trait;
 use common::*;
 use fs_forms_core::{Anonymity, Credential, Error, Result, SurveyRepo, TokenDelivery};
 use fs_objects::ObjectId;
+use tokio::sync::Semaphore;
 
 /// Takes 300 ms per send, counts sends, and fails the first one when asked.
 struct Slow {
@@ -30,6 +31,27 @@ impl TokenDelivery for Slow {
     }
 }
 
+/// A delivery that stays inside `send` until the test opens it: `entered` gets a permit when a send
+/// has begun, `go` is what the send waits for. No clock: the test knows by events where the delivery is.
+struct Held {
+    entered: Semaphore,
+    go: Semaphore,
+    sent: AtomicUsize,
+}
+
+#[async_trait]
+impl TokenDelivery for Held {
+    async fn send(&self, _p: &str, _s: ObjectId, _t: &str) -> Result<()> {
+        self.entered.add_permits(1);
+        self.go.acquire().await.unwrap().forget();
+        self.sent.fetch_add(1, Ordering::SeqCst);
+        Ok(())
+    }
+}
+
+/// Far longer than anything a healthy run needs; only a blocked submit (the bug) ever reaches it.
+const BLOCKED: Duration = Duration::from_secs(30);
+
 fn slow(fail_first: bool) -> Arc<Slow> {
     Arc::new(Slow {
         sent: AtomicUsize::new(0),
@@ -42,7 +64,11 @@ fn slow(fail_first: bool) -> Arc<Slow> {
 #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
 async fn a_submit_does_not_wait_for_slow_deliveries() {
     let e = env().await;
-    let d = slow(false);
+    let d = Arc::new(Held {
+        entered: Semaphore::new(0),
+        go: Semaphore::new(0),
+        sent: AtomicUsize::new(0),
+    });
     let repo = SurveyRepo::new(e.main.clone(), e.ballots.clone(), ME)
         .with_ai_marking(std::sync::Arc::new(common::ai::Marks))
         .with_delivery(d.clone());
@@ -50,19 +76,26 @@ async fn a_submit_does_not_wait_for_slow_deliveries() {
     let people: Vec<String> = (0..5).map(|n| person(&n.to_string())).collect();
     let (r, id) = (repo.clone(), s.id());
     let inviting = tokio::spawn(async move { r.invite(id, &people, &[]).await.unwrap() });
-    tokio::time::sleep(Duration::from_millis(50)).await;
-    let mine = repo.clone();
-    let t = Instant::now();
-    let r = mine
-        .submit(id, Credential::Token("0".repeat(64)), choice(q, "a"))
-        .await;
+    // The invite is now inside a delivery, and stays there until the test opens it.
+    d.entered.acquire().await.unwrap().forget();
+    let r = tokio::time::timeout(
+        BLOCKED,
+        repo.submit(id, Credential::Token("0".repeat(64)), choice(q, "a")),
+    )
+    .await
+    .expect("the submit waited for a delivery: the survey lock is held while sending");
     assert!(matches!(r, Err(Error::InvalidToken)));
-    assert!(
-        t.elapsed() < Duration::from_millis(250),
-        "waited {:?}",
-        t.elapsed()
+    assert_eq!(
+        d.sent.load(Ordering::SeqCst),
+        0,
+        "still inside the delivery"
     );
-    assert_eq!(inviting.await.unwrap().invited.len(), 5);
+    d.go.add_permits(5);
+    let report = tokio::time::timeout(BLOCKED, inviting)
+        .await
+        .expect("the invite never finished: a lock was not given back")
+        .unwrap();
+    assert_eq!(report.invited.len(), 5);
     assert_eq!(d.sent.load(Ordering::SeqCst), 5);
 }
 

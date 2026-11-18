@@ -76,7 +76,7 @@ async fn min_group_floor_holds_everywhere() {
 async fn filter_and_rows_are_refused_and_numbers_are_hidden() {
     let e = env().await;
     let (s, q, n) = with_number(&e, Anonymity::AnonymousOpen).await;
-    for (c, v) in [("a", 100.0), ("a", 200.0), ("b", 300.0)] {
+    for (c, v) in [("a", 1100.25), ("a", 2200.25), ("b", 3300.25)] {
         let mut ans = choice(q, c);
         ans.push(fs_forms_core::Answer {
             question: n,
@@ -90,9 +90,14 @@ async fn filter_and_rows_are_refused_and_numbers_are_hidden() {
     let sum = e.repo.summary(s.id(), ALL_STAGES).await.unwrap();
     let num = &sum.questions[1];
     assert!(num.counts.is_empty(), "no number values or counts");
-    assert_eq!(num.mean, Some(200.0));
+    assert_eq!(num.mean, Some(2200.25));
     let csv = String::from_utf8(e.repo.export(s.id(), "text/csv").await.unwrap()).unwrap();
-    assert!(!csv.contains("300") && !csv.contains("person"));
+    // The needles are values with a decimal point: no id, hash or counter text can contain them.
+    assert!(
+        !csv.contains("3300.25") && !csv.contains("1100.25"),
+        "{csv}"
+    );
+    assert!(!csv.contains("person"), "{csv}");
     assert!(raw(&e.main).await.contains("\"fs:state\":\"closed\""));
 }
 

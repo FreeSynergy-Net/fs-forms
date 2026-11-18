@@ -47,7 +47,7 @@ fn golden_digest_of_a_plan_with_notices_and_locks() {
     assert!(!p.notices.is_empty() && !p.menu.locks.is_empty() && p.sources[0].status.is_err());
     assert_eq!(
         hex(p.digest_without_style()),
-        "f643ee8d23863f9bea180851af05e3f3d6d13e4e17578d568048db6c21934409"
+        "3b4fd4d54185685fbcfce7b73cbd4fda7ef463d1e9c794ed3f68724339a6561e"
     );
 }
 

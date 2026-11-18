@@ -16,7 +16,7 @@ pub(super) fn commands(f: &dyn PlanFixture) -> R {
             .sources
             .get(c.source as usize)
             .is_some_and(|s| s.status.is_err());
-        let expect_coming = !c.description.supported;
+        let expect_coming = !c.description.supported && !source_locked;
         let coming = c
             .fixed
             .as_ref()

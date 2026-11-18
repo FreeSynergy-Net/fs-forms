@@ -5,9 +5,9 @@
 
 use crate::catalog::{BlockSpec, Catalog, SlotSpec};
 use crate::coded::Coded;
-use crate::model::*;
+use crate::model::{CommandIn, Target};
 use crate::providers::{Offer, Provider, ProviderFacts, SettingsFacts, SettingsHealth};
-use crate::types::*;
+use crate::types::{Basic, CommandDesc, FieldDesc, Limits, Role};
 
 /// Catalog with a fixed table; `unbuilt` blocks are known but not built.
 pub struct TestCatalog {

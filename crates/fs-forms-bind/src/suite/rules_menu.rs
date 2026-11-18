@@ -1,4 +1,6 @@
 //! Rule checks `plan.commands` and `plan.menu-from-layout`.
+//!
+//! Pattern: Specification (one predicate per rule).
 
 use super::PlanFixture;
 use super::rules::{R, plan_commands};

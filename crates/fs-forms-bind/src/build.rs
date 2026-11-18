@@ -110,35 +110,7 @@ impl Bind {
             standard: providers.standard,
         };
         let menu = build_menu(&layout.menu, &ctx, &mut pool);
-        let mut notices = std::mem::take(&mut pool.notices);
-        notices.extend(
-            layout
-                .warnings
-                .iter()
-                .chain(&layout.conflicts)
-                .map(|p| Notice::new(coded(p))),
-        );
-        for (i, p) in layout.problems.iter().enumerate() {
-            match (&p.elem, pool.used[i]) {
-                (None, _) => notices.push(Notice::new(coded(p))),
-                (Some(e), false) => {
-                    notices.push(Notice::new(
-                        BindCode::ElemOrphan
-                            .coded()
-                            .with("elem", e.clone())
-                            .with("cause", p.code.clone()),
-                    ));
-                }
-                _ => {}
-            }
-        }
-        if let SettingsHealth::Defaults { cause } = &providers.settings.health {
-            notices.push(Notice::new(
-                BindCode::SettingsDefaults
-                    .coded()
-                    .with("setting", cause.clone()),
-            ));
-        }
+        let notices = collect_notices(layout, providers, &mut pool);
         let style = providers
             .settings
             .style
@@ -161,6 +133,44 @@ impl Bind {
     }
 }
 
+/// Window notices: open conflicts, warnings, layout problems without an element (or whose element is not in the plan), settings.
+fn collect_notices(
+    layout: &Resolved,
+    providers: &Providers<'_>,
+    pool: &mut Pool<'_>,
+) -> Vec<Notice> {
+    let mut notices = std::mem::take(&mut pool.notices);
+    notices.extend(
+        layout
+            .warnings
+            .iter()
+            .chain(&layout.conflicts)
+            .map(|p| Notice::new(coded(p))),
+    );
+    for (i, p) in layout.problems.iter().enumerate() {
+        match (&p.elem, pool.used[i]) {
+            (None, _) => notices.push(Notice::new(coded(p))),
+            (Some(e), false) => {
+                notices.push(Notice::new(
+                    BindCode::ElemOrphan
+                        .coded()
+                        .with("elem", e.clone())
+                        .with("cause", p.code.clone()),
+                ));
+            }
+            _ => {}
+        }
+    }
+    if let SettingsHealth::Defaults { cause } = &providers.settings.health {
+        notices.push(Notice::new(
+            BindCode::SettingsDefaults
+                .coded()
+                .with("setting", cause.clone()),
+        ));
+    }
+    notices
+}
+
 fn build_sources(layout: &Resolved, providers: &Providers<'_>) -> Vec<SourcePlan> {
     let search = providers.settings.search.unwrap_or_default();
     let mut out = Vec::new();
@@ -177,18 +187,19 @@ fn build_sources(layout: &Resolved, providers: &Providers<'_>) -> Vec<SourcePlan
         let status = match providers.records.offer(&s.capability) {
             Offer::NotInstalled => Err(lock(missing(""))),
             Offer::Unreachable { cause } => Err(lock(cause)),
-            Offer::Reached(list) => match list
-                .iter()
-                .map(|p| p.version)
-                .filter(|v| s.range.contains(*v))
-                .max()
-            {
-                Some(version) => Ok(SourceReady {
-                    capability: s.capability.clone(),
-                    version,
-                    search,
-                }),
-                None => {
+            Offer::Reached(list) => {
+                let best = list
+                    .iter()
+                    .map(|p| p.version)
+                    .filter(|v| s.range.contains(*v))
+                    .max();
+                if let Some(version) = best {
+                    Ok(SourceReady {
+                        capability: s.capability.clone(),
+                        version,
+                        search,
+                    })
+                } else {
                     let have = list
                         .iter()
                         .map(|p| p.version)
@@ -196,7 +207,7 @@ fn build_sources(layout: &Resolved, providers: &Providers<'_>) -> Vec<SourcePlan
                         .map_or(String::new(), |v| format!("{}.{}", v.0, v.1));
                     Err(lock(missing(&have)))
                 }
-            },
+            }
         };
         out.push(SourcePlan {
             idx,

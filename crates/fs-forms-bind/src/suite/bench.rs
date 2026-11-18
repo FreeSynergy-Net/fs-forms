@@ -1,6 +1,8 @@
 //! `BindBench`: the real `Bind::build` on a rich fixture, with one flaw switch per rule (only for `prove`).
 //!
 //! Each flaw changes the built plan the way the named mistake would; the matching rule must turn red.
+//!
+//! Pattern: Test Double with flaw switches (mutants for `prove`).
 
 use std::cell::Cell;
 
@@ -10,7 +12,9 @@ use crate::catalog::Catalog;
 use crate::coded::Coded;
 use crate::codes::{Cause, Severity};
 use crate::menu::{MenuEntry, MenuNode};
-use crate::model::*;
+use crate::model::{
+    BindKind, BindingIn, MenuIn, MenuKind, PageIn, PlaceIn, Problem, Range, Resolved, SourceIn,
+};
 use crate::plan::{CommandPlan, Fill, PlaceStatus, Plan, PlanState, ReadyPlace};
 use crate::providers::{HostCaps, Offer, Providers};
 use crate::testing::{FakeFacts, TestCatalog, cmd, field, settings, tasks_facts, tasks_resolved};
@@ -49,20 +53,20 @@ pub enum Flaw {
 /// The 12 mutants with the rule each must turn red.
 #[must_use]
 pub fn bench_mutants() -> Vec<(Flaw, &'static str)> {
-    use Flaw::*;
+    use Flaw as F;
     vec![
-        (PlaceDropped, "plan.every-place"),
-        (LockUncoded, "plan.lock-coded"),
-        (SourceLockLocal, "plan.source-lock-spreads"),
-        (HostPicksText, "plan.chosen"),
-        (SchemesDefaulted, "plan.schemes"),
-        (ComingHidden, "plan.commands"),
-        (MenuSortedByLabel, "plan.menu-from-layout"),
-        (NthIgnored, "plan.bindings-ordered"),
-        (StylePicksBlock, "plan.style-blind"),
-        (HashOrder, "plan.deterministic"),
-        (PartialAsReady, "plan.state"),
-        (ConflictSwallowed, "plan.notices"),
+        (F::PlaceDropped, "plan.every-place"),
+        (F::LockUncoded, "plan.lock-coded"),
+        (F::SourceLockLocal, "plan.source-lock-spreads"),
+        (F::HostPicksText, "plan.chosen"),
+        (F::SchemesDefaulted, "plan.schemes"),
+        (F::ComingHidden, "plan.commands"),
+        (F::MenuSortedByLabel, "plan.menu-from-layout"),
+        (F::NthIgnored, "plan.bindings-ordered"),
+        (F::StylePicksBlock, "plan.style-blind"),
+        (F::HashOrder, "plan.deterministic"),
+        (F::PartialAsReady, "plan.state"),
+        (F::ConflictSwallowed, "plan.notices"),
     ]
 }
 
@@ -207,8 +211,9 @@ fn apply(flaw: Flaw, plan: &mut Plan, style: Option<&str>, call: u32) {
         Flaw::LockUncoded => {
             for pl in plan.pages.iter_mut().flat_map(|p| &mut p.places) {
                 if let PlaceStatus::Locked(v) = &mut pl.status {
-                    v.iter_mut()
-                        .for_each(|l| l.cause = Cause::Bind(Coded::new("oops")));
+                    for l in v.iter_mut() {
+                        l.cause = Cause::Bind(Coded::new("oops"));
+                    }
                 }
             }
         }
@@ -241,7 +246,7 @@ fn apply(flaw: Flaw, plan: &mut Plan, style: Option<&str>, call: u32) {
         Flaw::NthIgnored => {
             for pl in plan.pages.iter_mut().flat_map(|p| &mut p.places) {
                 if let PlaceStatus::Ready(r) = &mut pl.status {
-                    r.slots.sort_by(|a, b| b.nth.cmp(&a.nth));
+                    r.slots.sort_by_key(|s| std::cmp::Reverse(s.nth));
                 }
             }
         }
@@ -251,7 +256,7 @@ fn apply(flaw: Flaw, plan: &mut Plan, style: Option<&str>, call: u32) {
             }
         }
         Flaw::HashOrder => {
-            if call % 2 == 0 {
+            if call.is_multiple_of(2) {
                 plan.pages.reverse();
             }
         }

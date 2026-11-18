@@ -2,9 +2,11 @@
 //!
 //! Pattern: Object Mother.
 
-use crate::model::*;
+use crate::model::{
+    BindKind, BindingIn, MenuIn, MenuKind, PageIn, PlaceIn, Range, Resolved, SourceIn,
+};
 use crate::testing::{cmd, field};
-use crate::types::*;
+use crate::types::{Basic, FieldDesc, Role};
 
 fn bind(elem: &str, slot: &str, nth: u32, kind: BindKind) -> BindingIn {
     BindingIn {

@@ -46,7 +46,7 @@ pub enum MenuEntry {
     /// A command.
     Command {
         /// The command.
-        command: CommandPlan,
+        command: Box<CommandPlan>,
         /// Needs a selection.
         on_selected: bool,
         /// Usable shortcut (invalid or reserved ones are dropped and locked).
@@ -93,7 +93,7 @@ impl MenuPlan {
             .into_iter()
             .filter_map(|e| {
                 if let MenuEntry::Command { command, .. } = e {
-                    Some(command)
+                    Some(&**command)
                 } else {
                     None
                 }

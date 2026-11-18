@@ -86,7 +86,7 @@ pub fn command_state(cmd: &CommandPlan, selection: Option<&RecordView>) -> Shown
     }
     if cmd.on_record
         && let Some(r) = selection
-        && !r.may.iter().any(|m| *m == cmd.name)
+        && !r.may.contains(&cmd.name)
     {
         return Shown::Hidden;
     }

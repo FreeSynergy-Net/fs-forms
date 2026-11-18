@@ -1,5 +1,6 @@
 //! Shared helpers of the integration tests.
-#![allow(dead_code)]
+// Test helpers: not part of any API, so `must_use` and `# Panics` notes would be noise.
+#![allow(dead_code, clippy::must_use_candidate, clippy::missing_panics_doc)]
 
 use fs_forms_bind::testing::{TestCatalog, settings, standard, tasks_facts, tasks_resolved};
 use fs_forms_bind::*;

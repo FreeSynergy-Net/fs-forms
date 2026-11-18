@@ -66,7 +66,7 @@ pub enum Admitted {
 /// A page from the records service is admitted only if it keeps the limits (`page-too-long`, `value-too-large`,
 /// `hidden-has-value`, `estimate-mixed`). Refused: the lock sits on the placement (`part`).
 #[must_use]
-pub fn admit_page(limits: &Limits, size: usize, page: RecordPage, part: Part) -> Admitted {
+pub fn admit_page(limits: &Limits, size: usize, page: RecordPage, part: &Part) -> Admitted {
     // The cause of the placement lock is `bind-error-page-refused{kind}` with the records code as `kind` (draft section 13).
     let refuse = |c: Coded| {
         let mut r = BindCode::PageRefused.coded().with("kind", c.code.clone());

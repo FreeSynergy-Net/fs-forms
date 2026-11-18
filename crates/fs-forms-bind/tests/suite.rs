@@ -1,4 +1,4 @@
-//! The PlanSuite proves itself: green base, 12 of 12 mutants caught, codes unique.
+//! The `PlanSuite` proves itself: green base, 12 of 12 mutants caught, codes unique.
 #![cfg(feature = "conformance")]
 use fs_forms_bind::suite::*;
 use fs_forms_bind::*;

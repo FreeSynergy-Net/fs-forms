@@ -27,31 +27,57 @@ async fn small(e: &Env, a: Anonymity) -> (fs_forms_core::Survey, fs_objects::Obj
     (e.repo.publish(s.id()).await.unwrap(), q)
 }
 
-/// Counts the timestamps in a raw text: (the epoch, any other time). Every JSON string that reads as
-/// an RFC 3339 time is one; ids and hashes never do. This replaces a search for the current year,
-/// which said nothing in any other year and could hit a random id.
-fn times_in(text: &str) -> (usize, usize) {
-    let found = text
-        .split('"')
-        .filter_map(|w| chrono::DateTime::parse_from_rfc3339(w).ok());
-    found.fold((0, 0), |(e, o), t| {
-        if t.timestamp() == 0 {
-            (e + 1, o)
+/// Counts the dates in a raw text: (the epoch day `1970-01-01`, any other date). A date is any
+/// `dddd-dd-dd` (digits only) anywhere: with or without a time or zone, alone or inside a longer
+/// string. Ids and hashes never match: the groups of a UUID are 8, 4, 4, 4 and 12 characters, never
+/// two, so `dddd-dd-dd` cannot be cut from one. This replaces a search for the current year, which
+/// said nothing in any other year and could hit a random id.
+fn dates_in(text: &str) -> (usize, usize) {
+    let b = text.as_bytes();
+    let shape = |w: &[u8]| {
+        w.len() == 10
+            && w.iter().enumerate().all(|(i, c)| {
+                if matches!(i, 4 | 7) {
+                    *c == b'-'
+                } else {
+                    c.is_ascii_digit()
+                }
+            })
+    };
+    let mut counts = (0, 0);
+    for w in b.windows(10).filter(|w| shape(w)) {
+        if w == b"1970-01-01" {
+            counts.0 += 1;
         } else {
-            (e, o + 1)
+            counts.1 += 1;
         }
-    })
+    }
+    counts
 }
 
 #[test]
-fn times_in_sees_a_time_of_any_year_and_no_random_id() {
-    let uuid = "\"2026-0000-ada0-4000-8000-000000000001\"";
-    assert_eq!(times_in(uuid), (0, 0), "an id is not a time");
-    for year in [2025, 2026, 2027, 2040] {
-        let t = format!("\"{year}-05-05T10:00:00Z\"");
-        assert_eq!(times_in(&t), (0, 1), "{year}");
+fn dates_in_sees_every_form_of_a_date_in_any_year_and_no_random_id() {
+    // ids: not a date, whatever digits they hold
+    for id in [
+        "2026-0000-ada0-4000-8000-000000000001",
+        "0a1b2c3d-2026-1234-5678-123456789012",
+        "20260101-2026-0101-2026-202601012026",
+    ] {
+        assert_eq!(dates_in(&format!("\"{id}\"")), (0, 0), "{id}");
     }
-    assert_eq!(times_in("\"1970-01-01T00:00:00Z\""), (1, 0));
+    for year in [2025, 2026, 2027, 2040] {
+        for form in [
+            format!("\"{year}-05-05T10:00:00Z\""), // time with zone
+            format!("\"{year}-05-05T10:00:00\""),  // time without zone
+            format!("\"{year}-05-05\""),           // plain date
+            format!("\"seen at x{year}-05-05T10:00:00Zy\""), // inside a longer string
+            format!("{{\"at\":{year}-05-05}}"),    // bare in the JSON
+        ] {
+            assert_eq!(dates_in(&form), (0, 1), "{form}");
+        }
+    }
+    assert_eq!(dates_in("\"1970-01-01T00:00:00Z\""), (1, 0));
+    assert_eq!(dates_in("\"1970-01-01\" \"1970-01-02\""), (1, 1));
 }
 
 #[tokio::test]
@@ -101,8 +127,8 @@ async fn box_holds_no_person_time_or_ballot_id() {
     }
     let all = raw_box(&e, &s).await;
     assert!(!all.contains("people/") && !all.contains(ME));
-    let (epoch, other) = times_in(&all);
-    assert_eq!(other, 0, "no real time in the ballot store: {all}");
+    let (epoch, other) = dates_in(&all);
+    assert_eq!(other, 0, "no real date in the ballot store: {all}");
     assert!(epoch > 0, "the box carries the epoch: {all}");
 }
 

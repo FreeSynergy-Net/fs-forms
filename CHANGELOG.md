@@ -8,12 +8,14 @@ Version = tag; all crates of the workspace carry the same version.
 
 - The crate `fs-forms-methods` is gone: the ten counting methods are the library `fs-tally` (own repo, tests moved with it). The box logic (`Lane`, token hash, OS randomness) is the library `fs-ballot`; `fs-forms-core` keeps its two lanes as `fs_ballot::Lane<Ballot, Signals>` (`Signals` implements `fs_ballot::Meta`). Behaviour and stored JSON field names are unchanged; the legacy single lane of box 0.1.0 now also keeps its pending pattern counts.
 - **Pins:** `fs-tally` and `fs-ballot` are pinned to their tag `v0.0.1`. `.fs-lock-sources.toml` stays strict.
+- **Test note (49.7-day trap, fixed):** `tests/anonymous.rs` used to search the raw box for the current year (`2026-`). The ids of the box are UUIDv7, whose first hex digits are the millisecond clock; in a window of 65.5 s every 49.7 days (next: 2026-11-28 03:14:51 UTC) such an id contained `2026-` and the test was always red, otherwise by chance about once in 33,000 runs. It now reads every `dddd-dd-dd` date in the box and requires `1970-01-01`; ids can never match.
 - Still open: the box is one JSON document in `fs-objects` (typed columns are the separate step D2b).
 
 ### Deutsch
 
 - Das Crate `fs-forms-methods` entfällt: die zehn Zählverfahren sind die Bibliothek `fs-tally` (eigenes Repo, Tests mitgezogen). Die Urnen-Logik (`Lane`, Token-Hash, Zufall des Systems) ist die Bibliothek `fs-ballot`; `fs-forms-core` hält seine zwei Bahnen als `fs_ballot::Lane<Ballot, Signals>` (`Signals` setzt `fs_ballot::Meta` um). Verhalten und gespeicherte JSON-Feldnamen unverändert; die alte Einzelbahn der Urne 0.1.0 behält jetzt auch ihre wartenden Muster-Zählwerte.
 - **Pins:** `fs-tally` und `fs-ballot` hängen an ihrem Tag `v0.0.1`. `.fs-lock-sources.toml` bleibt streng.
+- **Testhinweis (49,7-Tage-Falle, behoben):** `tests/anonymous.rs` suchte im Rohtext der Urne das laufende Jahr (`2026-`). Die Ids der Urne sind UUIDv7, deren erste Hexziffern die Millisekundenuhr sind; in einem 65,5-s-Fenster alle 49,7 Tage (nächstes: 2026-11-28 03:14:51 UTC) enthielt eine solche Id `2026-` und der Test war immer rot, sonst zufällig etwa einmal in 33.000 Läufen. Jetzt wird jedes `dddd-dd-dd`-Datum der Urne gelesen und muss `1970-01-01` sein; Ids können nie passen.
 - Noch offen: die Urne ist ein JSON-Dokument in `fs-objects` (typisierte Spalten sind der eigene Schritt D2b).
 
 ## 0.0.2

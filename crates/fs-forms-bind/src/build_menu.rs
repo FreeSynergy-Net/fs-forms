@@ -17,6 +17,7 @@ use crate::providers::HostCaps;
 struct Walk<'a> {
     sources: &'a [SourcePlan],
     host: HostCaps,
+    platform: Platform,
     locks: Vec<PartLock>,
     keys: Vec<(String, Shortcut, String)>,
     standards: Vec<String>,
@@ -33,6 +34,7 @@ pub(crate) fn build_menu(menu: &[MenuIn], ctx: &MenuCtx<'_>, pool: &mut Pool<'_>
     let mut w = Walk {
         sources: ctx.sources,
         host: ctx.host,
+        platform: ctx.platform,
         locks: Vec::new(),
         keys: Vec::new(),
         standards: Vec::new(),
@@ -139,7 +141,7 @@ impl Walk<'_> {
             self.locks.push(PartLock::locked(part, c));
             return None;
         };
-        if reserved(&sc) {
+        if reserved(&sc, self.platform) {
             let c = BindCode::KeyReserved
                 .coded()
                 .with("elem", elem)

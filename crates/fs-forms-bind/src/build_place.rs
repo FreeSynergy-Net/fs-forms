@@ -121,6 +121,20 @@ fn keep_slot_locks(slots: &[SlotFill], locks: &mut Vec<PartLock>) {
     }
 }
 
+/// A slot shows ONE lock; every further one becomes a placement lock (nothing silent).
+fn keep_second(
+    slot_lock: &mut Option<PartLock>,
+    l: PartLock,
+    locks: &mut Vec<PartLock>,
+    place: &Part,
+) {
+    if slot_lock.is_none() {
+        *slot_lock = Some(l);
+    } else {
+        locks.push(PartLock::locked(place.clone(), l.cause.coded().clone()));
+    }
+}
+
 fn slot(
     env: &Env<'_>,
     page: &PageIn,
@@ -166,10 +180,25 @@ fn slot(
                 target: None,
                 read_only: false,
             };
+            let chip = env.catalog.choose(&desc, Role::Chip);
+            // The chip component must be built, like a field component (B5, nothing silent).
+            if !env.catalog.built(&chip) {
+                let code = BindCode::FieldComponentMissing
+                    .coded()
+                    .with("block", chip.clone())
+                    .with("basic", basic.name())
+                    .with("role", Role::Chip.name());
+                keep_second(
+                    &mut slot_lock,
+                    PartLock::locked(spart.clone(), code),
+                    locks,
+                    place,
+                );
+            }
             Fill::Condition(ConditionFill {
                 path: path.clone(),
                 basic: *basic,
-                chip: env.catalog.choose(&desc, Role::Chip),
+                chip,
             })
         }
         BindKind::Field {
@@ -192,12 +221,8 @@ fn slot(
             let (f, l) = field_fill(env, field, *role, schemes.clone(), &spart);
             // ONE lock per slot; a second one (a layout problem AND a missing component) stays visible as a placement
             // lock, like the other further problems above (nothing silent).
-            match (slot_lock.is_none(), l) {
-                (true, l) => slot_lock = l,
-                (false, Some(l)) => {
-                    locks.push(PartLock::locked(place.clone(), l.cause.coded().clone()));
-                }
-                (false, None) => {}
+            if let Some(l) = l {
+                keep_second(&mut slot_lock, l, locks, place);
             }
             Fill::Field(f)
         }

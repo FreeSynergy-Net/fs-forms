@@ -18,6 +18,9 @@ fn rich() -> Plan {
     r.warnings
         .push(problem("pl-board-main", "layout-error-warn"));
     r.problems.push(problem("m-note", "layout-error-menu"));
+    // A code without a known prefix (K8): its digest name `unknown` is part of the golden value.
+    r.problems
+        .push(problem("pl-detail-props", "oops-no-prefix"));
     // `type_may = false` (no type right) and an unsupported, writing, record command: every flag of a command takes part.
     let mut c = cmd("dup", false, true, true);
     c.desc.type_may = false;
@@ -44,10 +47,16 @@ fn golden_digest_of_the_tasks_plan() {
 #[test]
 fn golden_digest_of_a_plan_with_notices_and_locks() {
     let p = rich();
+    assert!(
+        p.locks()
+            .iter()
+            .any(|l| matches!(l.cause, Cause::Unknown(_))),
+        "K8 code in the plan"
+    );
     assert!(!p.notices.is_empty() && !p.menu.locks.is_empty() && p.sources[0].status.is_err());
     assert_eq!(
         hex(p.digest_without_style()),
-        "cb10d324a069cd37034d60c89ac55cb5c13548858b2d0ff85cac896ae90dd393"
+        "d67312a8872f0ffc02f9e4115eac2174994fd66e951eb7f21f0aa783e45d9b9b"
     );
 }
 

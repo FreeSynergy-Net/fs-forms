@@ -13,6 +13,12 @@ disallowed-methods = [
     { path = "std::path::Path::exists", reason = "bind does no I/O (H-K17)" },
     { path = "std::process::Command::new", reason = "bind starts no process (H-K17)" },
     { path = "std::env::var", reason = "bind reads no environment (H-K17)" },
+    { path = "std::env::var_os", reason = "bind reads no environment (H-K17)" },
+    { path = "std::path::Path::is_file", reason = "bind does no I/O (H-K17)" },
+    { path = "std::path::Path::is_dir", reason = "bind does no I/O (H-K17)" },
+    { path = "std::path::Path::try_exists", reason = "bind does no I/O (H-K17)" },
+    { path = "std::fs::canonicalize", reason = "bind does no I/O (H-K17)" },
+    { path = "std::fs::symlink_metadata", reason = "bind does no I/O (H-K17)" },
 ]
 disallowed-types = [
     { path = "std::fs::File", reason = "bind does no I/O (H-K17)" },

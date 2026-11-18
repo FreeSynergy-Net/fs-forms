@@ -13,26 +13,17 @@ use crate::menu::{MenuEntry, MenuPlan};
 use crate::types::RecordView;
 
 /// Keys a description may not bind (owner wins; c0, 18.11.): exactly these, WITHOUT further modifiers: Tab, F1, F6, F10, Escape,
-/// Primary+Q, plus Shift+Tab and Shift+F6 (backwards, for accessibility). Shift+F1, Ctrl+F6 and the like are free. `delete` is
+/// Primary+Q (Primary = Ctrl on Linux/Windows, Cmd on the Mac), plus Shift+Tab and Shift+F6 (backwards, for accessibility). Shift+F1, Ctrl+F6 and the like are free. `delete` is
 /// NOT reserved: it is an ordinary command that runs only in a list. The list exists ONCE: [`RESERVED`]; this function and the
 /// stored `KeyPlan.reserved` both follow it. Until the commands crate carries the constant, this is the local copy.
 #[must_use]
-pub fn reserved(sc: &Shortcut) -> bool {
-    // Primary, Control and Meta count as one "command" modifier (Primary resolves per platform).
-    let norm = |s: &Shortcut| {
-        let m = s.modifiers();
-        (
-            s.key().to_owned(),
-            m.primary || m.control || m.meta,
-            m.alt,
-            m.shift,
-        )
-    };
-    let me = norm(sc);
+pub fn reserved(sc: &Shortcut, platform: Platform) -> bool {
+    // `Primary` is Ctrl on Linux and Windows and Cmd (Meta) on the Mac; every other modifier counts as itself, so
+    // Ctrl+Meta+Q is free everywhere and Meta+Q is reserved on the Mac only.
     RESERVED
         .iter()
         .filter_map(|t| Shortcut::parse(t).ok())
-        .any(|r| norm(&r) == me)
+        .any(|r| r.same_as(sc, platform))
 }
 
 /// The one list of reserved keys, as text.

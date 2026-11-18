@@ -1,4 +1,5 @@
 //! K54, K55, K79, K80, K81, K82, K84 and overlay rules on the memory store.
+#![allow(clippy::assert_is_empty, clippy::many_single_char_names)] // tests: short names and plain asserts read best
 mod support;
 
 use fs_forms_layout::*;

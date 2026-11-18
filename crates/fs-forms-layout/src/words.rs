@@ -1,13 +1,13 @@
-//! The closed format words of the exchange file, one table per enum, read and written from the same place.
+//! The closed text words of the model enums (the words of the exchange file), one table per enum, read and written from one place.
 //!
 //! Pattern: Value Object with a 1:1 text form.
 
-use fs_forms_layout::{
+use crate::doc::{
     Confirm, MenuKind, MenuStandard, Navigation, OnWhat, OrderBy, SourceScope, Trigger,
 };
 
 /// A closed word list: every variant has exactly one word.
-pub(crate) trait Words: Sized + Copy {
+pub trait Words: Sized + Copy {
     /// The word of a variant.
     fn word(self) -> &'static str;
     /// The variant of a word.

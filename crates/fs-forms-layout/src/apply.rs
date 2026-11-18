@@ -36,16 +36,14 @@ pub fn apply(
         ops.sort_by_key(|op| op.seq);
         for op in ops {
             let result = apply_op(layout.doc_mut(), op, person, locks);
-            if result.is_ok() {
-                if let Some(t) = target(&op.kind) {
-                    let layer = if person {
-                        Layer::Person(o.id.clone())
-                    } else {
-                        Layer::Instance(o.id.clone())
-                    };
-                    provenance.retain(|(r, _)| r != t);
-                    provenance.push((t.clone(), layer));
-                }
+            if let (Ok(()), Some(t)) = (&result, target(&op.kind)) {
+                let layer = if person {
+                    Layer::Person(o.id.clone())
+                } else {
+                    Layer::Instance(o.id.clone())
+                };
+                provenance.retain(|(r, _)| r != t);
+                provenance.push((t.clone(), layer));
             }
             effects.push(Effect {
                 overlay: o.id.clone(),

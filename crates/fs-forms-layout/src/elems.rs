@@ -20,15 +20,15 @@ pub(crate) enum Node<'a> {
     Other,
 }
 
-fn is(e: &Option<ElemId>, id: &ElemId) -> bool {
-    e.as_ref() == Some(id)
+fn is(e: Option<&ElemId>, id: &ElemId) -> bool {
+    e == Some(id)
 }
 fn has<T>(items: &[Item<T>], id: &ElemId) -> bool {
-    items.iter().any(|i| is(&i.elem, id))
+    items.iter().any(|i| is(i.elem.as_ref(), id))
 }
 fn find_menu<'a>(items: &'a mut [Item<MenuDoc>], id: &ElemId) -> Option<&'a mut MenuDoc> {
     for m in items {
-        if is(&m.elem, id) {
+        if is(m.elem.as_ref(), id) {
             return Some(&mut m.v);
         }
         if let Some(x) = find_menu(&mut m.v.children, id) {
@@ -47,25 +47,25 @@ pub(crate) fn find<'a>(doc: &'a mut LayoutDoc, r: &ElemRef) -> Option<Node<'a>> 
         ElemKind::Page => doc
             .pages
             .iter_mut()
-            .find(|p| is(&p.elem, id))
+            .find(|p| is(p.elem.as_ref(), id))
             .map(|p| Node::Page(&mut p.v)),
         ElemKind::Block => doc
             .pages
             .iter_mut()
             .flat_map(|p| p.v.blocks.iter_mut())
-            .find(|b| is(&b.elem, id))
+            .find(|b| is(b.elem.as_ref(), id))
             .map(|b| Node::Block(&mut b.v)),
         ElemKind::Binding => bindings(doc)
-            .find(|b| is(&b.elem, id))
+            .find(|b| is(b.elem.as_ref(), id))
             .map(|b| Node::Binding(&mut b.v)),
         ElemKind::BindingScheme => bindings(doc)
             .flat_map(|b| b.v.schemes.iter_mut().flatten())
-            .find(|s| is(&s.elem, id))
+            .find(|s| is(s.elem.as_ref(), id))
             .map(|s| Node::Scheme(&mut s.v)),
         ElemKind::Message => doc
             .messages
             .iter_mut()
-            .find(|m| is(&m.elem, id))
+            .find(|m| is(m.elem.as_ref(), id))
             .map(|m| Node::Message(&mut m.v)),
         ElemKind::Requires => has(&doc.requires, id).then_some(Node::Other),
         ElemKind::Source => has(&doc.sources, id).then_some(Node::Other),
@@ -86,11 +86,12 @@ fn bindings(doc: &mut LayoutDoc) -> impl Iterator<Item = &mut Item<BindingDoc>> 
 fn opt(v: Option<&String>) -> Value {
     v.map_or(Value::None, |s| Value::Text(s.clone()))
 }
-fn text(v: &Value) -> Option<Option<String>> {
+/// `Err` when the value is not text; `Ok(None)` for "unset".
+fn text(v: &Value) -> Result<Option<String>, ()> {
     match v {
-        Value::None => Some(None),
-        Value::Text(s) => Some(Some(s.clone())),
-        _ => None,
+        Value::None => Ok(None),
+        Value::Text(s) => Ok(Some(s.clone())),
+        _ => Err(()),
     }
 }
 
@@ -116,9 +117,9 @@ pub(crate) fn get(n: &Node<'_>, f: Field) -> Option<Value> {
 }
 
 /// Sets a field; `false` when the value has the wrong type for it.
-pub(crate) fn set(n: &mut Node<'_>, f: Field, v: &Value) -> bool {
-    let Some(t) = text(v) else { return false };
-    match (n, f, t) {
+pub(crate) fn set(node: &mut Node<'_>, field: Field, value: &Value) -> bool {
+    let Ok(new) = text(value) else { return false };
+    match (node, field, new) {
         (Node::Layout(d), Field::TitleKey, Some(s)) => d.title_key = s,
         (Node::Layout(d), Field::Style, s) => d.style = s,
         (Node::Menu(m), Field::LabelKey, s) => m.label_key = s,
@@ -139,10 +140,10 @@ pub(crate) fn set(n: &mut Node<'_>, f: Field, v: &Value) -> bool {
 }
 
 fn drop_menu(items: &mut Vec<Item<MenuDoc>>, id: &ElemId) {
-    items.retain(|m| !is(&m.elem, id));
-    items
-        .iter_mut()
-        .for_each(|m| drop_menu(&mut m.v.children, id));
+    items.retain(|m| !is(m.elem.as_ref(), id));
+    for m in items {
+        drop_menu(&mut m.v.children, id);
+    }
 }
 
 fn count(doc: &LayoutDoc) -> usize {
@@ -156,27 +157,28 @@ fn count(doc: &LayoutDoc) -> usize {
 pub(crate) fn remove(doc: &mut LayoutDoc, r: &ElemRef) -> bool {
     let (id, before) = (&r.elem, count(doc));
     match r.kind {
-        ElemKind::Layout => return false,
         ElemKind::Menu => drop_menu(&mut doc.menu, id),
-        ElemKind::Page => doc.pages.retain(|p| !is(&p.elem, id)),
+        ElemKind::Page => doc.pages.retain(|p| !is(p.elem.as_ref(), id)),
         ElemKind::Block => doc
             .pages
             .iter_mut()
-            .for_each(|p| p.v.blocks.retain(|b| !is(&b.elem, id))),
-        ElemKind::Binding => bindings_parents(doc, |l| l.retain(|b| !is(&b.elem, id))),
+            .for_each(|p| p.v.blocks.retain(|b| !is(b.elem.as_ref(), id))),
+        ElemKind::Binding => bindings_parents(doc, |l| l.retain(|b| !is(b.elem.as_ref(), id))),
         ElemKind::BindingScheme => {
             bindings(doc).for_each(|b| {
                 if let Some(s) = b.v.schemes.as_mut() {
-                    s.retain(|x| !is(&x.elem, id));
+                    s.retain(|x| !is(x.elem.as_ref(), id));
                 }
             });
         }
-        ElemKind::Message => doc.messages.retain(|m| !is(&m.elem, id)),
-        ElemKind::Requires => doc.requires.retain(|x| !is(&x.elem, id)),
-        ElemKind::Source => doc.sources.retain(|x| !is(&x.elem, id)),
-        ElemKind::Action => doc.actions.retain(|x| !is(&x.elem, id)),
-        ElemKind::View => doc.views.retain(|x| !is(&x.elem, id)),
-        ElemKind::ViewOrder | ElemKind::FilterNode | ElemKind::FilterValue => return false,
+        ElemKind::Message => doc.messages.retain(|m| !is(m.elem.as_ref(), id)),
+        ElemKind::Requires => doc.requires.retain(|x| !is(x.elem.as_ref(), id)),
+        ElemKind::Source => doc.sources.retain(|x| !is(x.elem.as_ref(), id)),
+        ElemKind::Action => doc.actions.retain(|x| !is(x.elem.as_ref(), id)),
+        ElemKind::View => doc.views.retain(|x| !is(x.elem.as_ref(), id)),
+        ElemKind::Layout | ElemKind::ViewOrder | ElemKind::FilterNode | ElemKind::FilterValue => {
+            return false;
+        }
     }
     count(doc) < before
 }

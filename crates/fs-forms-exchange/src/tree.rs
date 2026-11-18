@@ -1,5 +1,5 @@
 //! A format-neutral tree: what a TOML or JSON file says, with keys in document or canonical order. Readers turn a file into
-//! a [`Tree`], the model reader turns a tree into a description; writers do the opposite. Only this crate links toml/serde_json.
+//! a [`Tree`], the model reader turns a tree into a description; writers do the opposite. Only this crate links `toml_edit` and `serde_json`.
 //!
 //! Pattern: Adapter (file formats to one tree).
 
@@ -64,13 +64,13 @@ fn from_value(v: &toml_edit::Value, text: &str) -> Result<Tree, &'static str> {
 
 fn from_table(t: &toml_edit::Table, text: &str) -> Result<Tree, &'static str> {
     let mut items = Vec::new();
-    for (k, item) in t.iter() {
+    for (k, item) in t {
         items.push((k.to_owned(), from_item(item, text)?));
     }
     Ok(Tree::Obj(items, span_line(t.span(), text)))
 }
 
-/// Converts a parsed TOML item, keeping the line of every table (spans of toml_edit 0.22).
+/// Converts a parsed TOML item, keeping the line of every table (spans of `toml_edit` 0.22).
 pub(crate) fn from_item(item: &toml_edit::Item, text: &str) -> Result<Tree, &'static str> {
     match item {
         toml_edit::Item::Value(v) => from_value(v, text),

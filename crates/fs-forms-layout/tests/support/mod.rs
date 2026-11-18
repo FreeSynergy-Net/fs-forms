@@ -4,19 +4,12 @@
 use std::cell::Cell;
 use std::future::Future;
 use std::pin::pin;
-use std::sync::Arc;
-use std::task::{Context, Poll, Wake, Waker};
+use std::task::{Context, Poll, Waker};
 
 use fs_forms_layout::*;
 
-struct Noop;
-impl Wake for Noop {
-    fn wake(self: Arc<Self>) {}
-}
-
 pub fn block_on<F: Future>(f: F) -> F::Output {
-    let waker = Waker::from(Arc::new(Noop));
-    let mut cx = Context::from_waker(&waker);
+    let mut cx = Context::from_waker(Waker::noop());
     let mut f = pin!(f);
     loop {
         if let Poll::Ready(v) = f.as_mut().poll(&mut cx) {

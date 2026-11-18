@@ -3,7 +3,7 @@
 //!
 //! Pattern: Builder of an error list (collecting parameter).
 
-use fs_forms_layout::{Coded, ElemId, ErrorCode, LayoutCode};
+use fs_forms_layout::{Coded, ElemId, LayoutCode};
 
 use crate::tree::Tree;
 
@@ -55,7 +55,6 @@ impl Ctx<'_> {
 /// One table with the keys not yet asked for.
 pub(crate) struct Fields<'a> {
     items: Vec<(&'a str, &'a Tree)>,
-    what: &'a str,
     line: u32,
 }
 
@@ -64,7 +63,6 @@ impl<'a> Fields<'a> {
         if let Tree::Obj(o, line) = t {
             Some(Self {
                 items: o.iter().map(|(k, v)| (k.as_str(), v)).collect(),
-                what,
                 line: *line,
             })
         } else {
@@ -77,12 +75,11 @@ impl<'a> Fields<'a> {
         Some(self.items.remove(i).1)
     }
     pub(crate) fn str(&mut self, cx: &mut Ctx<'_>, key: &str) -> Option<String> {
-        match self.take(key)? {
-            Tree::Str(s) => Some(s.clone()),
-            _ => {
-                cx.bad_at(self.line, "type", key);
-                None
-            }
+        if let Tree::Str(s) = self.take(key)? {
+            Some(s.clone())
+        } else {
+            cx.bad_at(self.line, "type", key);
+            None
         }
     }
     pub(crate) fn req_str(&mut self, cx: &mut Ctx<'_>, key: &str) -> String {
@@ -92,12 +89,11 @@ impl<'a> Fields<'a> {
         self.str(cx, key).unwrap_or_default()
     }
     pub(crate) fn int(&mut self, cx: &mut Ctx<'_>, key: &str) -> Option<i64> {
-        match self.take(key)? {
-            Tree::Int(i) => Some(*i),
-            _ => {
-                cx.bad_at(self.line, "type", key);
-                None
-            }
+        if let Tree::Int(i) = self.take(key)? {
+            Some(*i)
+        } else {
+            cx.bad_at(self.line, "type", key);
+            None
         }
     }
     pub(crate) fn has_list(&self, key: &str) -> bool {
@@ -111,12 +107,11 @@ impl<'a> Fields<'a> {
             .ok()
     }
     pub(crate) fn bool(&mut self, cx: &mut Ctx<'_>, key: &str) -> Option<bool> {
-        match self.take(key)? {
-            Tree::Bool(b) => Some(*b),
-            _ => {
-                cx.bad_at(self.line, "type", key);
-                None
-            }
+        if let Tree::Bool(b) = self.take(key)? {
+            Some(*b)
+        } else {
+            cx.bad_at(self.line, "type", key);
+            None
         }
     }
     pub(crate) fn list(&mut self, cx: &mut Ctx<'_>, key: &str) -> &'a [Tree] {
@@ -153,10 +148,4 @@ impl<'a> Fields<'a> {
             cx.bad_at(self.line, "key-unknown", k);
         }
     }
-}
-
-/// The message key of a code, for callers that print it.
-#[must_use]
-pub fn message_key(c: LayoutCode) -> String {
-    c.message_key()
 }

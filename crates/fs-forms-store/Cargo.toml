@@ -1,0 +1,14 @@
+[package]
+name = "fs-forms-store"
+description = "Domain `forms` of fs-forms: the 20 typed tables forms_*, their migration steps and the mapping between a layout and its rows"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+fs-forms-layout = { path = "../fs-forms-layout" }
+# Edge to fs-objects v5 (spec::{Col, Logical, Table}, migrate::Step, registry::Domain, Store::inspect): NOT pinned yet.
+# The stand-ins live in src/spec.rs; at the lift `use crate::spec::*` becomes `use fs_objects::v5::spec::*`.

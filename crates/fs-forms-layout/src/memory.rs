@@ -5,15 +5,17 @@
 //! Pattern: Fake (a second adapter of the port) with a unit of work (copy, change, swap).
 
 use std::cell::RefCell;
+use std::rc::Rc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::check::CatalogRules;
 use crate::codes::LayoutCode;
-use crate::ids::{ElemId, FrontendKey, LayoutId, OverlayId, PackageRef, Rev, Who};
+use crate::ids::{FrontendKey, LayoutId, OverlayId, PackageRef, Rev, Who};
 use crate::layout::Layout;
 use crate::limits::Limits;
 use crate::overlay::{Conflict, ElemLock, Overlay};
 use crate::port::Pending;
+use crate::providers::ProviderCatalogs;
 use crate::shim::{Coded, ObjectId, Reference, Utc};
 use crate::types::{LogAction, LogEntry, Origin};
 
@@ -49,6 +51,7 @@ pub struct MemoryLayoutStore {
     pub(crate) limits: Limits,
     pub(crate) actor: Reference,
     pub(crate) instance: bool,
+    pub(crate) providers: Option<Rc<dyn ProviderCatalogs>>,
     clock: Box<dyn Fn() -> Utc>,
 }
 
@@ -74,6 +77,7 @@ impl MemoryLayoutStore {
             limits,
             actor,
             instance: false,
+            providers: None,
             clock: Box::new(clock),
         }
     }
@@ -81,6 +85,12 @@ impl MemoryLayoutStore {
     #[must_use]
     pub fn with_clock(mut self, clock: Box<dyn Fn() -> Utc>) -> Self {
         self.clock = clock;
+        self
+    }
+    /// Gives `resolve` the live check against the data providers.
+    #[must_use]
+    pub fn with_providers(mut self, providers: Rc<dyn ProviderCatalogs>) -> Self {
+        self.providers = Some(providers);
         self
     }
     /// Makes this the instance service: the admin port works.
@@ -183,7 +193,4 @@ pub(crate) fn rev_changed(id: &str, expected: Rev, found: Rev) -> Coded<LayoutCo
         .with("id", id)
         .with("expected", expected.0)
         .with("found", found.0)
-}
-pub(crate) fn elem_str(e: &Option<ElemId>) -> &str {
-    e.as_ref().map_or("", ElemId::as_str)
 }

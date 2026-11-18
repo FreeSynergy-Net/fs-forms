@@ -23,7 +23,6 @@ pub trait ProviderCatalogs {
 }
 
 /// Checks the layout against the providers. A provider that is away gives `provider-unchecked{capability}` once, never silence.
-#[must_use]
 pub fn check_providers<'a>(
     layout: &'a Layout,
     providers: &'a dyn ProviderCatalogs,
@@ -55,7 +54,7 @@ pub fn check_providers<'a>(
                         .await
                     {
                         Ok(Some(carries)) => {
-                            out.extend(schemes_rule(elem, path, carries, list.as_deref()))
+                            out.extend(schemes_rule(elem, path, carries, list.as_deref()));
                         }
                         Err(_) => {
                             let c = Coded::new(LayoutCode::ProviderUnchecked)
@@ -71,4 +70,14 @@ pub fn check_providers<'a>(
         }
         Ok(out)
     })
+}
+
+/// Splits the result of [`check_providers`] into blocking problems and non-blocking warnings (`provider-unchecked`), as `Resolved` has them.
+#[must_use]
+pub fn split_provider_codes(
+    codes: Vec<Coded<LayoutCode>>,
+) -> (Vec<Coded<LayoutCode>>, Vec<Coded<LayoutCode>>) {
+    codes
+        .into_iter()
+        .partition(|c| c.code != LayoutCode::ProviderUnchecked)
 }

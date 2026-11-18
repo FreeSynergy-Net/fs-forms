@@ -36,6 +36,7 @@ mod schemes;
 pub mod shim;
 mod types;
 mod walk;
+mod words;
 
 pub use apply::apply;
 pub use check::{CatalogRules, OpenCatalog};
@@ -54,10 +55,11 @@ pub use overlay::{
 pub use port::{
     LayoutAdmin, LayoutRead, LayoutStore, LayoutWrite, OverlayWrite, PackageLayouts, Pending,
 };
-pub use providers::{ProviderCatalogs, check_providers};
+pub use providers::{ProviderCatalogs, check_providers, split_provider_codes};
 pub use resolved::{Applied, Effect, Layer, LayerInfo, Resolved};
 pub use schemes::{scheme_names_rule, schemes_rule};
 pub use shim::{Coded, ErrorCode, ObjectId, Reference, Utc};
 pub use types::{
     Health, LayoutFilter, LogAction, LogEntry, Mode, Origin, OverlayDoc, Page, Report, Summary,
 };
+pub use words::Words;

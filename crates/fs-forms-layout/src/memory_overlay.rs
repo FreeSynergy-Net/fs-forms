@@ -12,6 +12,7 @@ use crate::overlay::{Conflict, Op, OpKind, Overlay, OverlayScope, OverlayState, 
 use crate::shim::{Coded, Utc};
 use crate::types::{LogAction, Origin, Report};
 impl MemoryLayoutStore {
+    #[allow(clippy::too_many_arguments)] // the unit of work and the overlay's data; a struct would only rename them
     /// Creates an overlay on a live package original. `scope` is the person (default) or the instance (admin port).
     pub(crate) fn create_in(
         &self,

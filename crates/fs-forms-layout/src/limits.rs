@@ -80,13 +80,13 @@ pub struct CeilingSet {
 pub struct Technical;
 impl Technical {
     /// `nth` of a binding must be below this: the catalog's `repeat` is 1..=16 (F1 ENTWURF section 3.1, line 63).
-    pub const NTH_BELOW: u32 = 16;
+    pub const NTH_MAX: u32 = 16;
     /// capnp-rust 0.27.3 `DEFAULT_READER_OPTIONS`: traversal limit 8 * 1024 * 1024 words (64 MiB), nesting limit 64
     /// (`capnp-0.27.3/src/message.rs:117-120`). A wire message of a description stays far below it at the declared defaults;
     /// whether fs-rpc changes the options is not read yet.
-    pub const WIRE_TRAVERSAL_WORDS: usize = 8 * 1024 * 1024;
+    pub const WIRE_TRAVERSAL_WORDS: u64 = 8 * 1024 * 1024;
     /// capnp-rust 0.27.3 nesting limit of one wire message (same source line).
-    pub const WIRE_NESTING_LIMIT: i32 = 64;
+    pub const WIRE_NESTING: i32 = 64;
 }
 
 fn clamp(person: u32, ceiling: Option<u32>, by: LimitSource) -> (u32, LimitSource) {

@@ -37,6 +37,7 @@ impl<C: ErrorCode> Coded<C> {
     }
     /// Adds a parameter.
     #[must_use]
+    #[allow(clippy::needless_pass_by_value)] // callers hand over temporaries; a reference would not be shorter
     pub fn with(mut self, key: &str, value: impl ToString) -> Self {
         self.params.push((key.to_owned(), value.to_string()));
         self

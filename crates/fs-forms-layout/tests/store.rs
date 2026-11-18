@@ -1,4 +1,5 @@
 //! K53, K73, K74, K76, K77, K93, K94 and atomic writes on the memory store.
+#![allow(clippy::assert_is_empty, clippy::many_single_char_names)] // tests: short names and plain asserts read best
 mod support;
 
 use fs_forms_layout::*;

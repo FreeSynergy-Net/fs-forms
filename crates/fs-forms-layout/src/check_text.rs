@@ -12,7 +12,7 @@ use crate::shim::Coded;
 
 type Problems = Vec<Coded<LayoutCode>>;
 
-/// `name >=a.b <c.d` with at least one bound; a lower bound must be below the upper one.
+/// `name >=a.b <c.d`: both bounds (the table holds four integers), the lower one below the upper one.
 pub(crate) fn check_range(text: &str, out: &mut Problems) {
     if !range_ok(text) {
         out.push(Coded::new(LayoutCode::RangeInvalid).with("text", text));
@@ -45,7 +45,7 @@ fn range_ok(text: &str) -> bool {
             return false;
         }
     }
-    name_ok && (low.is_some() || high.is_some()) && low.zip(high).is_none_or(|(l, h)| l < h)
+    name_ok && low.zip(high).is_some_and(|(l, h)| l < h)
 }
 
 fn key_ok(k: &str) -> bool {

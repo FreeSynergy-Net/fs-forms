@@ -61,8 +61,10 @@ pub struct Resolved {
     pub provenance: Vec<(ElemRef, Layer)>,
     /// Digest of the effective layout: the host rebuilds only when it changed.
     pub effective_digest: [u8; 32],
-    /// Live provider checks (schemes missing, provider unchecked).
+    /// Blocking live checks (`schemes-missing`, `schemes-unexpected`): the host locks the part.
     pub problems: Vec<Coded<LayoutCode>>,
+    /// Not blocking (`provider-unchecked`): a notice only.
+    pub warnings: Vec<Coded<LayoutCode>>,
 }
 /// One overlay in a [`Resolved`].
 #[derive(Clone, Debug, PartialEq, Eq)]

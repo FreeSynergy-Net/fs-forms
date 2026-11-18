@@ -6,8 +6,9 @@ use fs_forms_layout::*;
 #[test]
 fn k62_elem_id_rule() {
     let ok = ["a", "block:x/y", &"a".repeat(128)];
-    ok.iter()
-        .for_each(|t| assert!(ElemId::parse(t).is_ok(), "{t}"));
+    for t in ok {
+        assert!(ElemId::parse(t).is_ok(), "{t}");
+    }
     let bad = ["", "-a", "A", "a b", &"a".repeat(129), "\u{e4}"];
     for t in bad {
         assert_eq!(

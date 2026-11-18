@@ -19,14 +19,14 @@ fn exists(key: &FrontendKey) -> Coded<LayoutCode> {
         .with("extends", &key.extends)
         .with("frontend", &key.frontend)
 }
-fn refused(problems: Vec<Coded<LayoutCode>>) -> Res<(Report, bool)> {
-    Ok((
+fn refused(problems: Vec<Coded<LayoutCode>>) -> (Report, bool) {
+    (
         Report {
             problems,
             ..Report::default()
         },
         false,
-    ))
+    )
 }
 
 impl MemoryLayoutStore {
@@ -46,7 +46,7 @@ impl MemoryLayoutStore {
         self.tx_for(who, mode == Mode::Apply, |st, now| {
             let layout = match self.checked(doc) {
                 Ok(l) => l,
-                Err(p) => return refused(p),
+                Err(p) => return Ok(refused(p)),
             };
             if st.live_key(&key).is_some() {
                 return Err(exists(&key));
@@ -152,7 +152,7 @@ impl LayoutWrite for MemoryLayoutStore {
             let key = doc.key.clone();
             let layout = match self.checked(doc) {
                 Ok(l) => l,
-                Err(p) => return refused(p),
+                Err(p) => return Ok(refused(p)),
             };
             if st.live_key(&key).is_some_and(|j| j != i) {
                 return Err(exists(&key));
@@ -198,7 +198,7 @@ impl PackageLayouts for MemoryLayoutStore {
         ready(self.tx(mode == Mode::Apply, |st, now| {
             let layout = match self.checked(doc) {
                 Ok(l) => l,
-                Err(p) => return refused(p),
+                Err(p) => return Ok(refused(p)),
             };
             let same_pkg = |s: &Stored| {
                 s.origin == Origin::Package
@@ -209,13 +209,14 @@ impl PackageLayouts for MemoryLayoutStore {
             let (idx, action) = match st.live_key(&key) {
                 Some(i) if same_pkg(&st.layouts[i]) => (i, LogAction::Update),
                 Some(_) => return Err(exists(&key)),
-                None => match st
-                    .layouts
-                    .iter()
-                    .position(|s| s.deleted.is_some() && s.key == key && same_pkg(s))
-                {
-                    Some(i) => (i, LogAction::Install), // revive the tombstone: same id, overlays attach again
-                    None => {
+                None => {
+                    let tomb = st
+                        .layouts
+                        .iter()
+                        .position(|s| s.deleted.is_some() && s.key == key && same_pkg(s));
+                    if let Some(i) = tomb {
+                        (i, LogAction::Install) // revive the tombstone: same id, overlays attach again
+                    } else {
                         let id = st.new_layout_id();
                         let row = Stored {
                             id,
@@ -231,7 +232,7 @@ impl PackageLayouts for MemoryLayoutStore {
                         st.layouts.push(row);
                         (st.layouts.len() - 1, LogAction::Install)
                     }
-                },
+                }
             };
             let s = &mut st.layouts[idx];
             (s.layout, s.package, s.deleted, s.updated, s.rev) = (

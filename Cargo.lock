@@ -1556,6 +1556,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "fs-forms-store"
+version = "0.0.2"
+dependencies = [
+ "fs-forms-layout",
+]
+
+[[package]]
 name = "fs-interfaces"
 version = "0.0.27"
 source = "git+https://github.com/FreeSynergy/fs-interfaces?tag=v0.0.27#2745e306a13e0b7e7339ffc3f9c09185515fe152"

@@ -22,8 +22,8 @@ pub trait CatalogRules {
     fn block_known(&self, block: &str) -> bool;
     /// Does the block have this slot?
     fn slot_known(&self, block: &str, slot: &str) -> bool;
-    /// May the slot be bound more than once?
-    fn slot_repeats(&self, block: &str, slot: &str) -> bool;
+    /// How many bindings the slot takes (`repeat`, 1..=16); `nth` must be below it.
+    fn slot_repeat(&self, block: &str, slot: &str) -> u32;
 }
 
 /// A catalog that knows everything; for tests and for checks that must not depend on a catalog.
@@ -36,8 +36,8 @@ impl CatalogRules for OpenCatalog {
     fn slot_known(&self, _: &str, _: &str) -> bool {
         true
     }
-    fn slot_repeats(&self, _: &str, _: &str) -> bool {
-        true
+    fn slot_repeat(&self, _: &str, _: &str) -> u32 {
+        Technical::NTH_MAX
     }
 }
 
@@ -65,6 +65,7 @@ impl LayoutDoc {
             return Err(out);
         }
         let count = self.fill_elems(&mut out);
+        self.canonical_order();
         if count > limits.elements_max as usize {
             out.push(
                 Coded::new(LayoutCode::TooMany)
@@ -105,18 +106,46 @@ impl LayoutDoc {
                     *v.elem = Some(ElemId::natural(v.kind, &parts));
                 }
             }
-            if let Some(e) = v.elem.as_ref() {
-                if !seen.insert((v.kind, e.clone())) {
-                    out.push(
-                        Coded::new(LayoutCode::ElemTwice)
-                            .with("elem", e.as_str())
-                            .with("kind", v.kind.as_str()),
-                    );
-                }
+            if let Some(e) = v
+                .elem
+                .as_ref()
+                .filter(|e| !seen.insert((v.kind, (*e).clone())))
+            {
+                out.push(
+                    Coded::new(LayoutCode::ElemTwice)
+                        .with("elem", e.as_str())
+                        .with("kind", v.kind.as_str()),
+                );
             }
             *v.line = 0;
         });
         count
+    }
+
+    /// Lists whose order is not part of the meaning get their canonical order: bindings by (slot, nth), messages by (key, lang),
+    /// views by (view, owner). The table has no sequence column for them and the exchange file writes them this way.
+    fn canonical_order(&mut self) {
+        for p in &mut self.pages {
+            for b in &mut p.v.blocks {
+                b.v.bindings.sort_by(|x, y| {
+                    (x.v.slot.as_bytes(), x.v.nth).cmp(&(y.v.slot.as_bytes(), y.v.nth))
+                });
+            }
+        }
+        self.messages.sort_by(|x, y| {
+            (x.v.key.as_bytes(), x.v.lang.as_bytes())
+                .cmp(&(y.v.key.as_bytes(), y.v.lang.as_bytes()))
+        });
+        self.views.sort_by(|x, y| {
+            (
+                x.v.view.as_bytes(),
+                x.v.owner.as_ref().map(|o| o.0.as_bytes()),
+            )
+                .cmp(&(
+                    y.v.view.as_bytes(),
+                    y.v.owner.as_ref().map(|o| o.0.as_bytes()),
+                ))
+        });
     }
 
     fn check_names(&self, catalog: &dyn CatalogRules, out: &mut Problems) {
@@ -166,7 +195,6 @@ fn check_bindings(
     out: &mut Problems,
 ) {
     let mut used: HashSet<(&str, u32)> = HashSet::new();
-    let mut slots: HashSet<&str> = HashSet::new();
     for b in list {
         let elem = b.elem.as_ref().map_or("", ElemId::as_str);
         let bad = |cause: &str| {
@@ -176,14 +204,14 @@ fn check_bindings(
         };
         if !catalog.slot_known(block, &b.v.slot) {
             out.push(bad("slot-unknown"));
-        } else if !slots.insert(b.v.slot.as_str()) && !catalog.slot_repeats(block, &b.v.slot) {
-            out.push(bad("bound-twice"));
+        } else if b.v.nth < Technical::NTH_MAX && b.v.nth >= catalog.slot_repeat(block, &b.v.slot) {
+            out.push(bad("bound-twice")); // more bindings than the slot's repeat
         }
-        if b.v.nth >= Technical::NTH_BELOW {
+        if b.v.nth >= Technical::NTH_MAX {
             out.push(
                 Coded::new(LayoutCode::TooMany)
                     .with("what", "binding-nth")
-                    .with("max", Technical::NTH_BELOW)
+                    .with("max", Technical::NTH_MAX)
                     .with("by", "technical")
                     .with("elem", elem),
             );

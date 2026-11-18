@@ -67,6 +67,8 @@ macro_rules! kinds {
             $v
         ),* }
         impl ElemKind {
+            /// The names of all kinds, in declaration order.
+            pub const ALL_NAMES: &'static [&'static str] = &[$($s),*];
             /// Kebab-case name.
             #[must_use]
             pub fn as_str(self) -> &'static str { match self { $(Self::$v => $s),* } }
@@ -104,10 +106,10 @@ pub struct Rev(pub u64);
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Stamp(pub u64);
 
-/// (AppStream id of the program, frontend name): unique among the live layouts of one store. Names are free identifiers.
+/// (`AppStream` id of the program, frontend name): unique among the live layouts of one store. Names are free identifiers.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FrontendKey {
-    /// AppStream id of the program.
+    /// `AppStream` id of the program.
     pub extends: String,
     /// Frontend name, freely chosen.
     pub frontend: String,

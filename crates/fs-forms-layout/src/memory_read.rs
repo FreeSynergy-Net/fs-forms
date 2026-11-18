@@ -9,6 +9,7 @@ use crate::layout::Layout;
 use crate::memory::{MemoryLayoutStore, State, Stored, ready};
 use crate::overlay::{Conflict, Overlay, OverlayScope};
 use crate::port::{LayoutRead, Pending};
+use crate::providers::{check_providers, split_provider_codes};
 use crate::resolved::{LayerInfo, Resolved};
 use crate::shim::{Coded, ObjectId};
 use crate::types::{Health, LayoutFilter, LogEntry, Page, Summary};
@@ -46,6 +47,54 @@ impl MemoryLayoutStore {
             OverlayScope::Instance => true,
             OverlayScope::Person(p) => *p == self.actor,
         }
+    }
+}
+
+impl MemoryLayoutStore {
+    /// `resolve` without the live provider check.
+    fn resolve_now(&self, key: &FrontendKey) -> Option<Resolved> {
+        let st = self.st.borrow();
+        let i = st.live_key(key)?;
+        let s = &st.layouts[i];
+        let orig = s.layout.as_ref()?;
+        let overlays: Vec<Overlay> = st
+            .overlays
+            .iter()
+            .filter(|o| o.layout == s.id && self.visible(o))
+            .cloned()
+            .collect();
+        let locks = st.locks_of(&s.id);
+        let version = s.package.as_ref().map_or("", |p| p.version.as_str());
+        let applied = apply(orig, &overlays, &locks, version);
+        let conflicts = st
+            .conflicts
+            .iter()
+            .filter(|c| c.open && overlays.iter().any(|o| o.id == c.overlay))
+            .cloned()
+            .collect();
+        let layers = overlays
+            .iter()
+            .map(|o| LayerInfo {
+                overlay: o.id.clone(),
+                scope: o.scope.clone(),
+                state: o.state,
+                rev: o.rev,
+            })
+            .collect();
+        Some(Resolved {
+            id: s.id.clone(),
+            key: s.key.clone(),
+            rev: s.rev,
+            stamp: Stamp(st.stamp),
+            effective_digest: applied.layout.digest(),
+            layout: applied.layout,
+            layers,
+            conflicts,
+            locks,
+            provenance: applied.provenance,
+            problems: Vec::new(),
+            warnings: Vec::new(),
+        })
     }
 }
 
@@ -107,51 +156,16 @@ impl LayoutRead for MemoryLayoutStore {
         ready(Ok(found))
     }
     fn resolve<'a>(&'a self, key: &'a FrontendKey) -> Pending<'a, Option<Resolved>> {
-        let st = self.st.borrow();
-        let Some(i) = st.live_key(key) else {
-            return ready(Ok(None));
-        };
-        let s = &st.layouts[i];
-        let Some(orig) = s.layout.as_ref() else {
-            return ready(Ok(None));
-        };
-        let overlays: Vec<Overlay> = st
-            .overlays
-            .iter()
-            .filter(|o| o.layout == s.id && self.visible(o))
-            .cloned()
-            .collect();
-        let locks = st.locks_of(&s.id);
-        let version = s.package.as_ref().map_or("", |p| p.version.as_str());
-        let applied = apply(orig, &overlays, &locks, version);
-        let conflicts = st
-            .conflicts
-            .iter()
-            .filter(|c| c.open && overlays.iter().any(|o| o.id == c.overlay))
-            .cloned()
-            .collect();
-        let layers = overlays
-            .iter()
-            .map(|o| LayerInfo {
-                overlay: o.id.clone(),
-                scope: o.scope.clone(),
-                state: o.state,
-                rev: o.rev,
-            })
-            .collect();
-        ready(Ok(Some(Resolved {
-            id: s.id.clone(),
-            key: s.key.clone(),
-            rev: s.rev,
-            stamp: Stamp(st.stamp),
-            effective_digest: applied.layout.digest(),
-            layout: applied.layout,
-            layers,
-            conflicts,
-            locks,
-            provenance: applied.provenance,
-            problems: Vec::new(),
-        })))
+        Box::pin(async move {
+            let Some(mut r) = self.resolve_now(key) else {
+                return Ok(None);
+            };
+            if let Some(p) = &self.providers {
+                let codes = check_providers(&r.layout, &**p).await?;
+                (r.problems, r.warnings) = split_provider_codes(codes);
+            }
+            Ok(Some(r))
+        })
     }
     fn overlays<'a>(&'a self, layout: &'a LayoutId) -> Pending<'a, Vec<Overlay>> {
         let st = self.st.borrow();

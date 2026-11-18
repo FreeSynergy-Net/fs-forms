@@ -10,7 +10,7 @@ use fs_forms_layout::{
 
 use crate::fields::{Ctx, Fields};
 use crate::tree::Tree;
-use crate::words::Words;
+use fs_forms_layout::Words;
 
 fn word<W: Words>(f: &mut Fields<'_>, cx: &mut Ctx<'_>, key: &str) -> Option<W> {
     let w = f.str(cx, key)?;
@@ -48,10 +48,10 @@ pub(crate) fn layout_doc(root: &Tree, cx: &mut Ctx<'_>) -> Option<LayoutDoc> {
         cx.bad("key-missing", "schema");
         0
     });
-    if let Some(k) = f.str(cx, "kind") {
-        if k != "frontend" {
-            cx.bad("type", "kind");
-        }
+    if let Some(k) = f.str(cx, "kind")
+        && k != "frontend"
+    {
+        cx.bad("type", "kind");
     }
     let frontend = f.req_str(cx, "id");
     let extends = f.req_str(cx, "extends");
@@ -107,7 +107,7 @@ pub(crate) fn layout_doc(root: &Tree, cx: &mut Ctx<'_>) -> Option<LayoutDoc> {
 
 fn menus(list: &[Tree], cx: &mut Ctx<'_>) -> Vec<Item<MenuDoc>> {
     // children are read in the same call: the closure cannot recurse, so a helper does it
-    fn one<'a>(f: &mut Fields<'a>, cx: &mut Ctx<'_>) -> MenuDoc {
+    fn one(f: &mut Fields<'_>, cx: &mut Ctx<'_>) -> MenuDoc {
         let kind = word::<MenuKind>(f, cx, "kind").unwrap_or(MenuKind::Menu);
         let source = f.uint(cx, "source");
         let command = f.str(cx, "command");

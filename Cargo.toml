@@ -4,6 +4,7 @@ members = [
     "crates/fs-forms-core",
     "crates/fs-forms-layout",
     "crates/fs-forms-exchange",
+    "crates/fs-forms-store",
     "crates/fs-forms-server",
     "crates/fs-forms-client",
     "crates/fs-forms-simple",

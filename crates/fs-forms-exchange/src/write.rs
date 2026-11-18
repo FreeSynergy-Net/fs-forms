@@ -9,7 +9,7 @@ use fs_forms_layout::{
 };
 
 use crate::tree::Tree;
-use crate::words::Words;
+use fs_forms_layout::Words;
 
 type Pairs = Vec<(&'static str, Tree)>;
 
@@ -31,6 +31,7 @@ fn obj(p: Pairs) -> Tree {
     Tree::obj(p)
 }
 
+#[allow(clippy::many_single_char_names)] // l, d, p, q, v, i: the layout, its doc, the pairs of the table being built
 /// The tree of a layout. `own_views`: include views that have an owner.
 pub(crate) fn layout_tree(l: &Layout, own_views: bool) -> Result<Tree, Coded<LayoutCode>> {
     let d = l.doc();

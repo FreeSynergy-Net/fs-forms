@@ -178,14 +178,13 @@ impl OverlayWrite for MemoryLayoutStore {
                         expect,
                         ..
                     } = &mut op.kind
+                        && let Some(n) = find(original.doc_mut(), target)
                     {
-                        if let Some(n) = find(original.doc_mut(), target) {
-                            *expect = get(&n, *field).unwrap_or(Value::None);
-                        }
+                        *expect = get(&n, *field).unwrap_or(Value::None);
                     }
                 }
                 Resolution::Retarget(elem) => {
-                    retarget(original.doc_mut(), &mut op.kind, elem, id, seq)?
+                    retarget(original.doc_mut(), &mut op.kind, elem, id, seq)?;
                 }
             }
             st.conflicts[ci].open = false;

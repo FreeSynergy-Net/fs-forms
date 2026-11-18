@@ -1,4 +1,5 @@
 //! K60, K61, K63, K65, K66, K68, K68a, K69: checking a raw description.
+#![allow(clippy::assert_is_empty)] // tests: plain asserts read best
 mod support;
 
 use fs_forms_layout::*;
@@ -95,8 +96,8 @@ impl CatalogRules for Cat {
     fn slot_known(&self, _: &str, s: &str) -> bool {
         s == "title"
     }
-    fn slot_repeats(&self, _: &str, _: &str) -> bool {
-        false
+    fn slot_repeat(&self, _: &str, _: &str) -> u32 {
+        1
     }
 }
 

@@ -1,6 +1,4 @@
 //! Scheme list edge cases: the K2 fail-closed check refuses prefix hits, trimmed or empty schemes and a trailing colon.
-mod common;
-use common::*;
 use fs_forms_bind::testing::*;
 use fs_forms_bind::*;
 
@@ -64,7 +62,7 @@ fn k2_edges_are_refused() {
     }
 }
 
-/// Documents (not a requirement of -6): allows_scheme trusts the list; keeping `javascript` out of it is F1b's job (never-list).
+/// Documents: `allows_scheme` trusts the list; keeping `javascript` out of it is F1b's job (never-list).
 #[test]
 fn k2_list_is_trusted() {
     assert!(fill(Basic::Link, Some(vec!["javascript"])).allows_scheme("javascript"));

@@ -6,6 +6,7 @@ members = [
     "crates/fs-forms-client",
     "crates/fs-forms-simple",
     "crates/fs-forms-bin",
+    "crates/fs-forms-run",
 ]
 
 [workspace.package]

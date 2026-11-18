@@ -1,0 +1,15 @@
+# Die Worte des Forms-Hosts, Deutsch (ADR 0057: MessageFormat 2). Jede Id braucht ihr englisches Gegenstück in en.mf2.
+host-title = Formulare
+host-error-no-socket = Kein Socket des Forms-Servers bekannt; der Starter muss einen nennen
+host-error-layouts-unreachable = Der Forms-Server antwortet nicht
+host-error-layouts-contract-missing = Der Forms-Server bietet die Layouts nicht an, die dieser Host spricht
+host-error-layout-missing = Dieses Programm hat kein Layout für dieses Frontend
+host-error-layout-store = Der Layout-Speicher ist im Notbetrieb
+host-error-block-not-built = Dieser Teil kann noch nicht gezeichnet werden: sein Baustein ist in dieser Version nicht gebaut
+host-error-no-pages = Das Layout hat keine Seiten
+host-status-ready = Bereit
+host-status-partial = Einige Teile sind gesperrt; der Rest läuft
+host-status-refused = Nichts kann gezeichnet werden
+host-page-empty = Diese Seite ist leer
+host-menu-coming = kommt noch
+host-screen-error = Problem

@@ -277,3 +277,18 @@ fn natural_menu_ids_are_zero_based_on_every_level() {
     assert_eq!(l.doc().menu[0].elem, Some(elem("menu:0")));
     assert_eq!(l.doc().menu[0].v.children[0].elem, Some(elem("menu:0.0")));
 }
+
+#[test]
+fn k82_update_with_an_op_on_a_locked_element_is_a_locked_conflict() {
+    let s = store().as_instance();
+    let id = install(&s, doc("board"), "1.0");
+    let o = block_on(s.create_overlay(&id, None, None, &who())).unwrap();
+    block_on(s.replace_ops(&o, Rev(1), vec![set_text(Field::TextKey, "mine")], &who())).unwrap();
+    assert!(block_on(s.lock(&id, Some(&block_ref()), "frozen", &who())).unwrap());
+    let r = block_on(s.install(doc("board"), &pkg("2.0"), Mode::Apply, &who())).unwrap();
+    assert_eq!(r.conflicts[0].cause, Cause::Locked);
+    assert_eq!(
+        block_on(s.overlay(&o)).unwrap().unwrap().state,
+        OverlayState::Conflict
+    );
+}

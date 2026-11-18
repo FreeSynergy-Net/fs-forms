@@ -73,6 +73,10 @@ fn check_is_at_least_as_strict_as_the_tables() {
     d.pages[0].v.blocks[0].v.bindings[0].v.schemes =
         Some(vec![item("scheme:b/0", "1http".to_owned())]);
     assert_eq!(codes(check(d)), vec![LayoutCode::SchemeBad]); // N4c: a digit never starts a scheme
+    let mut d = schemes_doc();
+    d.pages[0].v.blocks[0].v.bindings[0].v.schemes =
+        Some(vec![item("scheme:b/0", "hTTps".to_owned())]);
+    assert_eq!(codes(check(d)), vec![LayoutCode::SchemeBad]); // N4e: upper case anywhere in the name
     let mut d = doc("board");
     d.pages[0].v.blocks[0].v.source = Some(9);
     assert_eq!(codes(check(d)), vec![LayoutCode::SourceUnknown]);

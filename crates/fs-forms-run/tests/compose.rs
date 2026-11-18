@@ -8,7 +8,7 @@
 //! M2 a block the catalog does not build is drawn anyway -> `a_block_that_is_not_built_is_locked_with_its_code`; M3 order by creation ->
 //! `tab_order_is_seq`; M4 a page lock is dropped -> `every_lock_of_the_plan_is_in_the_tree`; M5 an empty plan is `Ready` ->
 //! `a_plan_without_pages_is_refused_and_said`; M6 `layout-missing` ends the process -> `the_connection_errors_end_and_the_layout_errors_show`;
-//! M7 a code without a sentence is dropped -> `a_code_without_a_sentence_is_shown_as_its_code`.
+//! M7 a code without a sentence is dropped -> `window::tests::a_code_without_a_sentence_is_shown_as_its_code`.
 
 use fs_forms_run::{
     Blocks, Catalog, Coded, FixtureLink, HostError, HostState, LayoutLink, MenuItem, MenuState,

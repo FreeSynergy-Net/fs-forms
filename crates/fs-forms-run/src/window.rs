@@ -193,3 +193,38 @@ pub fn app(
     widget.set_status(Some(status));
     Ok(widget)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{Part, line, parts};
+    use crate::compose::Node;
+    use crate::view::Coded;
+    use crate::words::words;
+    use fs_components_words::Locale;
+
+    #[test]
+    fn a_code_without_a_sentence_is_shown_as_its_code() {
+        let t = words(&Locale::english());
+        let unknown = Coded::new("bind-error-locked").with("part", "page:board");
+        assert_eq!(line(&t, &unknown), "bind-error-locked part=page:board");
+        let known = Coded::new("host-error-no-pages");
+        let l = line(&t, &known);
+        assert!(
+            l.contains("host-error-no-pages") && l.contains("The layout has no pages"),
+            "{l}"
+        );
+    }
+
+    #[test]
+    fn every_code_of_a_locked_part_is_a_line() {
+        let t = words(&Locale::english());
+        let node = Node::Locked {
+            place: Some("board".into()),
+            codes: vec![Coded::new("a-code"), Coded::new("b-code")],
+        };
+        match &parts(&t, &[node])[0] {
+            Part::Locked { name, lines } => assert_eq!((name.as_str(), lines.len()), ("board", 2)),
+            other => panic!("{other:?}"),
+        }
+    }
+}

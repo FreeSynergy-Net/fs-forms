@@ -3,15 +3,14 @@
 //!
 //! Pattern: Unit of work (see `memory.rs`).
 
-use crate::apply::apply;
 use crate::codes::LayoutCode;
 use crate::doc::LayoutDoc;
 use crate::ids::{FrontendKey, LayoutId, PackageRef, Rev, Who};
 use crate::layout::Layout;
 use crate::memory::{MemoryLayoutStore, Res, State, Stored, ready, rev_changed, unknown};
-use crate::overlay::{Conflict, OverlayState, Value};
+use crate::overlay::OverlayState;
 use crate::port::{LayoutWrite, PackageLayouts, Pending};
-use crate::shim::{Coded, Utc};
+use crate::shim::Coded;
 use crate::types::{LogAction, Mode, Origin, Report};
 
 fn exists(key: &FrontendKey) -> Coded<LayoutCode> {
@@ -89,54 +88,6 @@ impl MemoryLayoutStore {
             return Err(rev_changed(&id.0.0, expected, s.rev));
         }
         Ok(i)
-    }
-
-    /// Applies every overlay of a layout again after its original changed; writes conflicts, never drops one.
-    fn rebase(&self, st: &mut State, idx: usize, base: &PackageRef, now: Utc) -> Vec<Conflict> {
-        let id = st.layouts[idx].id.clone();
-        let Some(orig) = st.layouts[idx].layout.clone() else {
-            return Vec::new();
-        };
-        let locks = st.locks_of(&id);
-        let mut found = Vec::new();
-        for o in st
-            .overlays
-            .iter_mut()
-            .filter(|o| o.layout == id && o.state != OverlayState::Off)
-        {
-            o.state = OverlayState::Applied;
-            o.base = base.clone();
-            let applied = apply(
-                &orig,
-                std::slice::from_ref(&*o),
-                &locks,
-                &base.version,
-                &*self.catalog,
-                &self.limits,
-            );
-            for e in applied.effects {
-                if let Err(cause) = e.result {
-                    found.push(Conflict {
-                        overlay: e.overlay,
-                        seq: e.seq,
-                        base_version: base.version.clone(),
-                        cause,
-                        found: Value::None,
-                        at: now,
-                        open: true,
-                    });
-                    o.state = OverlayState::Conflict;
-                }
-            }
-        }
-        let fresh = |c: &&Conflict| {
-            !st.conflicts.iter().any(|x| {
-                x.overlay == c.overlay && x.seq == c.seq && x.base_version == c.base_version
-            })
-        };
-        let add: Vec<Conflict> = found.iter().filter(fresh).cloned().collect();
-        st.conflicts.extend(add.clone());
-        add
     }
 }
 

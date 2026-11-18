@@ -27,6 +27,7 @@ mod memory_admin;
 mod memory_overlay;
 mod memory_overlay_port;
 mod memory_read;
+mod memory_rebase;
 mod memory_write;
 mod overlay;
 mod port;

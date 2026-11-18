@@ -178,12 +178,27 @@ async fn a_token_handed_to_an_ai_counts_as_the_invited_person_limit() {
     );
 }
 
+/// The name searched for in the raw box. The box holds random ids (UUIDs) and token hashes, all in
+/// hex digits, so a name made only of hex digits (`ada`) is found in them by chance now and then.
+/// This one has letters outside `0-9a-f`: no random id can ever contain it.
+const INVITED_NAME: &str = "grace";
+
+#[test]
+fn the_searched_name_cannot_occur_in_a_random_hex_id() {
+    assert!(
+        INVITED_NAME
+            .chars()
+            .any(|c| !(c.is_ascii_hexdigit() || c == '-')),
+        "a name of hex digits would be found in random ids by chance"
+    );
+}
+
 #[tokio::test]
 async fn nothing_in_the_ballot_box_names_a_person() {
     let e = env().await;
     let (s, q) = survey(&e, Anonymity::AnonymousOnce, true).await;
     e.repo
-        .invite(s.id(), &[person("ada"), bot("1")], &[])
+        .invite(s.id(), &[person(INVITED_NAME), bot("1")], &[])
         .await
         .unwrap();
     let t = e.delivery.token_of(&bot("1"));
@@ -192,8 +207,7 @@ async fn nothing_in_the_ballot_box_names_a_person() {
         .await
         .unwrap();
     let boxed = raw_box(&e, &s).await;
-    assert!(
-        !boxed.contains("bot-1") && !boxed.contains("ada"),
-        "{boxed}"
-    );
+    for needle in [INVITED_NAME, "bot-1", &person(INVITED_NAME), &bot("1")] {
+        assert!(!boxed.contains(needle), "{needle} in {boxed}");
+    }
 }

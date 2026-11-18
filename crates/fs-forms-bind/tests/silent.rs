@@ -107,7 +107,7 @@ fn warning_is_a_notice_and_makes_the_plan_partial() {
         ),
         "a warning must not lock"
     );
-    assert!(p.locks().is_empty());
+    assert_eq!(p.locks(), Vec::<&PartLock>::new());
     assert!(
         p.notices
             .iter()

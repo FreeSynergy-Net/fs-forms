@@ -34,9 +34,10 @@ fn every_global_key_is_reserved_and_the_entry_loses_its_key() {
         };
         assert!(shortcut.is_none(), "{key} dropped");
     }
-    assert!(plan_with_key("F7").menu.locks.is_empty());
-    assert!(
-        plan_with_key("Delete").menu.locks.is_empty(),
+    assert_eq!(plan_with_key("F7").menu.locks, vec![]);
+    assert_eq!(
+        plan_with_key("Delete").menu.locks,
+        vec![],
         "delete is an ordinary command, not reserved"
     );
 }

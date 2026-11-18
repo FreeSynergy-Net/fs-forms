@@ -5,7 +5,11 @@ use fs_forms_bind::testing::*;
 use fs_forms_bind::*;
 
 fn hex(d: [u8; 32]) -> String {
-    d.iter().map(|b| format!("{b:02x}")).collect()
+    use std::fmt::Write;
+    d.iter().fold(String::new(), |mut s, b| {
+        write!(s, "{b:02x}").unwrap();
+        s
+    })
 }
 
 /// A plan with notices, menu locks, a locked source and a locked placement.

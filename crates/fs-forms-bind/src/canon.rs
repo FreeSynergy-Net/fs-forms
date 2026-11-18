@@ -241,12 +241,12 @@ impl Plan {
         e.text(0, &self.key);
         e.num(1, self.stamp);
         e.num(2, self.rev);
-        e.list(3, &self.sources, |e, s| e.source(s));
-        e.list(4, &self.pages, |e, p| e.page(p));
-        e.list(5, &self.menu.roots, |e, n| e.node(n));
+        e.list(3, &self.sources, Enc::source);
+        e.list(4, &self.pages, Enc::page);
+        e.list(5, &self.menu.roots, Enc::node);
         e.locks(6, &self.menu.locks);
         e.strs(7, &self.keys.reserved);
-        e.list(8, &self.notices, |e, n| e.notice(n));
+        e.list(8, &self.notices, Enc::notice);
         e.text(
             9,
             match self.state {

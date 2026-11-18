@@ -22,6 +22,6 @@ jobs:
         with:
           components: clippy
           cache-key: windows
-      - run: cargo clippy -p fs-forms-bind --all-targets --all-features --locked -- -D warnings -W clippy::pedantic
-      - run: cargo test -p fs-forms-bind --all-features --locked --no-fail-fast
+      - run: cargo clippy -p fs-forms-layout -p fs-forms-exchange -p fs-forms-store --all-targets --all-features --locked -- -D warnings -W clippy::pedantic
+      - run: cargo test -p fs-forms-layout -p fs-forms-exchange -p fs-forms-store --all-features --locked --no-fail-fast
         timeout-minutes: 15

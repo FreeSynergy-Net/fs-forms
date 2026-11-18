@@ -7,6 +7,7 @@ Version = tag; all crates of the workspace carry the same version.
 ### English
 
 - Windows-CI (`windows.yml`) taken over from H1 (`unreviewed/probe-forms-h1-bind`), byte for byte, so that merging the two branches has no conflict.
+- `windows.yml` adapted to the crates of this branch (`-p fs-forms-layout -p fs-forms-exchange -p fs-forms-store`); when merging with H1, unite the `-p` list.
 - The crate `fs-forms-methods` is gone: the ten counting methods are the library `fs-tally` (own repo, tests moved with it). The box logic (`Lane`, token hash, OS randomness) is the library `fs-ballot`; `fs-forms-core` keeps its two lanes as `fs_ballot::Lane<Ballot, Signals>` (`Signals` implements `fs_ballot::Meta`). Behaviour and stored JSON field names are unchanged; the legacy single lane of box 0.1.0 now also keeps its pending pattern counts.
 - **Pins:** `fs-tally` and `fs-ballot` are pinned to their tag `v0.0.1`. `.fs-lock-sources.toml` stays strict.
 - Still open: the box is one JSON document in `fs-objects` (typed columns are the separate step D2b).

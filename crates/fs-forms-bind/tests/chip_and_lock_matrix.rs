@@ -12,8 +12,13 @@ fn count(p: &Plan, code: &str) -> usize {
 #[test]
 fn b5_every_combination_is_visible() {
     for bits in 0u32..32 {
-        let (place, field_lock, layout, no_source, chip) =
-            (bits & 1 != 0, bits & 2 != 0, bits & 4 != 0, bits & 8 != 0, bits & 16 != 0);
+        let (place, field_lock, layout, no_source, chip) = (
+            bits & 1 != 0,
+            bits & 2 != 0,
+            bits & 4 != 0,
+            bits & 8 != 0,
+            bits & 16 != 0,
+        );
         let mut r = tasks_resolved();
         r.pages[0].places[0].bindings[1].kind = BindKind::Condition {
             path: vec!["done".into()],
@@ -27,7 +32,8 @@ fn b5_every_combination_is_visible() {
             };
         }
         if layout {
-            r.problems.push(problem("b-card-title-0", "layout-error-b5"));
+            r.problems
+                .push(problem("b-card-title-0", "layout-error-b5"));
         }
         let mut cat = TestCatalog::new();
         if place {
@@ -36,25 +42,49 @@ fn b5_every_combination_is_visible() {
         if chip {
             cat.unbuilt.push("field-bool".into());
         }
-        let facts = if no_source { FakeFacts(vec![]) } else { tasks_facts() };
+        let facts = if no_source {
+            FakeFacts(vec![])
+        } else {
+            tasks_facts()
+        };
         let p = build_with(&r, &cat, &facts, host());
         let c = all_codes(&p);
         let want = usize::from(field_lock) + usize::from(chip);
-        assert_eq!(count(&p, "bind-error-field-component-missing"), want, "bits {bits:05b}: {c:?}");
-        assert_eq!(c.contains(&"layout-error-b5".to_owned()), layout, "bits {bits:05b}: {c:?}");
-        assert_eq!(c.contains(&"bind-error-block-not-built".to_owned()), place, "bits {bits:05b}: {c:?}");
+        assert_eq!(
+            count(&p, "bind-error-field-component-missing"),
+            want,
+            "bits {bits:05b}: {c:?}"
+        );
+        assert_eq!(
+            c.contains(&"layout-error-b5".to_owned()),
+            layout,
+            "bits {bits:05b}: {c:?}"
+        );
+        assert_eq!(
+            c.contains(&"bind-error-block-not-built".to_owned()),
+            place,
+            "bits {bits:05b}: {c:?}"
+        );
         if no_source {
-            assert!(c.contains(&"accepts-error-contract-missing".to_owned()), "bits {bits:05b}: {c:?}");
+            assert!(
+                c.contains(&"accepts-error-contract-missing".to_owned()),
+                "bits {bits:05b}: {c:?}"
+            );
         }
         if chip {
             assert!(
-                p.locks().iter().any(|l| l.cause.coded().param("block") == Some("field-bool")
-                    && l.cause.coded().param("role") == Some("chip")),
+                p.locks()
+                    .iter()
+                    .any(|l| l.cause.coded().param("block") == Some("field-bool")
+                        && l.cause.coded().param("role") == Some("chip")),
                 "bits {bits:05b}: {c:?}"
             );
         }
         if bits == 0 {
-            assert!(c.is_empty() || !c.iter().any(|x| x.starts_with("bind-error-field")), "{c:?}");
+            assert!(
+                c.is_empty() || !c.iter().any(|x| x.starts_with("bind-error-field")),
+                "{c:?}"
+            );
         }
     }
 }

@@ -1,0 +1,27 @@
+# Small Windows gate for the pure crates (no Blinc, no GPU, no sockets): built, linted and tested on the Windows runner.
+name: windows
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+
+jobs:
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: FreeSynergy/fs-release/actions/setup-rust@ceddb45ce0d3ddc97e85c60bb24427806868c81c
+        with:
+          components: clippy
+          cache-key: windows
+      - run: cargo clippy -p fs-forms-layout -p fs-forms-exchange -p fs-forms-store --all-targets --all-features --locked -- -D warnings -W clippy::pedantic
+      - run: cargo test -p fs-forms-layout -p fs-forms-exchange -p fs-forms-store --all-features --locked --no-fail-fast
+        timeout-minutes: 15

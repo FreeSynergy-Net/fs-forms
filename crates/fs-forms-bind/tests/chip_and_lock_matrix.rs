@@ -126,7 +126,7 @@ fn menu_key(key: &str, platform: Platform) -> Vec<String> {
             standard: &standard(),
         },
     );
-    p.menu.locks.iter().map(|l| code_of(l)).collect()
+    p.menu.locks.iter().map(code_of).collect()
 }
 
 /// K10 through the menu: the platform of the build decides.

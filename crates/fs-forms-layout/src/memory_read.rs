@@ -65,7 +65,14 @@ impl MemoryLayoutStore {
             .collect();
         let locks = st.locks_of(&s.id);
         let version = s.package.as_ref().map_or("", |p| p.version.as_str());
-        let applied = apply(orig, &overlays, &locks, version);
+        let applied = apply(
+            orig,
+            &overlays,
+            &locks,
+            version,
+            &*self.catalog,
+            &self.limits,
+        );
         let conflicts = st
             .conflicts
             .iter()

@@ -169,6 +169,8 @@ pub enum Cause {
     Locked,
     /// The result would break a rule of the layout.
     ResultInvalid,
+    /// A person's overlay tried to widen a scheme allowlist (only the instance or the package may).
+    AllowlistWidened,
 }
 impl Cause {
     /// Kebab-case word used as code parameter.
@@ -182,6 +184,7 @@ impl Cause {
             Self::TypeMismatch => "type-mismatch",
             Self::Locked => "locked",
             Self::ResultInvalid => "result-invalid",
+            Self::AllowlistWidened => "allowlist-widened",
         }
     }
 }

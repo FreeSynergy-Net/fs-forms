@@ -26,10 +26,11 @@ fn check(d: LayoutDoc) -> Result<Layout, Vec<Coded<LayoutCode>>> {
 }
 
 /// An overlay op that sets one field; the result must be refused with `result-invalid` and the effective layout stays as it was.
+/// The overlay is the instance's: a person's overlay cannot touch a scheme list at all (`allowlist-widened`, see `rules2.rs`).
 fn refused_set(target: ElemRef, field: Field, value: &str, d: LayoutDoc) -> Resolved {
-    let s = store();
+    let s = store().as_instance();
     let id = install(&s, d, "1.0");
-    let o = block_on(s.create_overlay(&id, None, None, &who())).unwrap();
+    let o = block_on(s.create_instance_overlay(&id, None, None, &who())).unwrap();
     let op = OpKind::Set {
         target,
         field,
@@ -248,10 +249,25 @@ fn n25_off_and_orphaned_overlays_do_nothing() {
     let layout = check(doc("board")).unwrap();
     for state in [OverlayState::Off, OverlayState::Orphaned] {
         let o = manual_overlay(state, OverlayScope::Instance, "x");
-        assert_eq!(apply(&layout, &[o], &[], "1.0").layout, layout, "{state:?}");
+        assert_eq!(
+            apply(&layout, &[o], &[], "1.0", &OpenCatalog, &Limits::declared()).layout,
+            layout,
+            "{state:?}"
+        );
     }
     let on = manual_overlay(OverlayState::Applied, OverlayScope::Instance, "x");
-    assert_ne!(apply(&layout, &[on], &[], "1.0").layout, layout);
+    assert_ne!(
+        apply(
+            &layout,
+            &[on],
+            &[],
+            "1.0",
+            &OpenCatalog,
+            &Limits::declared()
+        )
+        .layout,
+        layout
+    );
 }
 
 #[test]

@@ -232,7 +232,7 @@ fn apply_is_pure_and_off_overlays_do_nothing() {
     let layout = doc("board")
         .check(&OpenCatalog, &Limits::declared())
         .unwrap();
-    let a = apply(&layout, &[], &[], "1.0");
+    let a = apply(&layout, &[], &[], "1.0", &OpenCatalog, &Limits::declared());
     assert_eq!(a.layout, layout);
     assert!(a.effects.is_empty());
 }

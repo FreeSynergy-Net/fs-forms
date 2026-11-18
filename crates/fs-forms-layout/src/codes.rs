@@ -1,5 +1,5 @@
 //! The error codes of the layouts interface (prefix `layout-error-`; MF2 keys de + en live in the program).
-//! Append only, never renamed. Parameters are named in the comment of each code.
+//! Append only, never renamed (new codes go to the END of the list). Parameters are named in the comment of each code.
 //!
 //! Pattern: Value Object: a closed enum with a 1:1 text form.
 
@@ -112,10 +112,15 @@ codes! {
     Orphaned => "orphaned",
     /// `{file, kind}`.
     ExportFailed => "export-failed",
+    /// `{name, bytes, max, by}` exchange content over the size limit.
+    ContentTooLarge => "content-too-large",
     /// `{elem, cause}` the pair rules of a menu entry (command, view, separator).
     MenuInvalid => "menu-invalid",
     /// `{elem, source}` a source number that the description does not have.
     SourceUnknown => "source-unknown",
-    /// `{name, bytes, max, by}` exchange content over the size limit.
-    ContentTooLarge => "content-too-large",
 }
+
+/// The error texts of the layouts interface, German (ADR 0057, `MessageFormat` 2); one line per code: `layout-error-<code> = text`.
+pub const TEXTS_DE: &str = include_str!("texts/de.mf2");
+/// The same texts in English.
+pub const TEXTS_EN: &str = include_str!("texts/en.mf2");

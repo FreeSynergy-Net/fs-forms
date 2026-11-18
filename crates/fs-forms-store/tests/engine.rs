@@ -55,17 +55,36 @@ fn what_the_tables_forbid_is_refused_by_the_engine() {
                 .unwrap()
         };
         // (table, column, bad value): each one must be refused although `check` would never produce it
-        let bad: [(&str, &str, Cell); 4] = [
-            ("forms_binding", "nth", Cell::Int(16)),
-            ("forms_binding", "bind_from", Cell::Text("sideways".into())),
-            ("forms_binding_scheme", "scheme", Cell::Text("SSH".into())),
-            ("forms_block", "source", Cell::Int(9)),
+        // (table, row, column, bad value). Rows: forms_binding is in (slot, nth) order, so 5 is the field binding `value`; forms_menu is
+        // in pre-order, so 1 is the command entry `menu:0.0`.
+        let bad: [(&str, usize, &str, Cell); 8] = [
+            ("forms_binding", 0, "nth", Cell::Int(16)),
+            (
+                "forms_binding",
+                0,
+                "bind_from",
+                Cell::Text("sideways".into()),
+            ),
+            (
+                "forms_binding_scheme",
+                0,
+                "scheme",
+                Cell::Text("SSH".into()),
+            ),
+            ("forms_block", 0, "source", Cell::Int(9)),
+            ("forms_layout", 0, "owner", Cell::Text("someone".into())), // R4d: a package has no owner
+            ("forms_binding", 5, "path", Cell::Null), // R4e: bind_from = 'field' needs path and role
+            ("forms_menu", 1, "source", Cell::Null), // R4f: a command entry needs command and source
+            ("forms_menu", 1, "command", Cell::Null),
         ];
-        for (t, c, v) in bad {
+        for (t, row, c, v) in bad {
             let mut r = rows.clone();
-            r.tables.get_mut(t).unwrap()[0][col(t, c)] = v;
+            r.tables.get_mut(t).unwrap()[row][col(t, c)] = v;
             let conn = open().await;
-            assert!(insert(&conn, &r).await.is_err(), "{t}.{c} must be refused");
+            assert!(
+                insert(&conn, &r).await.is_err(),
+                "{t}[{row}].{c} must be refused"
+            );
         }
         // the same layout without the change goes in (the refusal is the change, nothing else)
         insert(&open().await, &rows).await.unwrap();
@@ -193,6 +212,45 @@ fn each_check_constraint_is_accepted_on_its_own() {
             "the engine refused {} constraint(s):\n{}",
             failed.len(),
             failed.join("\n")
+        );
+    });
+}
+
+/// R4c: an overlay op carries at most one value (and one expected value); the engine refuses two.
+#[test]
+fn an_overlay_op_with_two_values_is_refused_by_the_engine() {
+    run(async {
+        let conn = open().await;
+        insert(&conn, &rows_of(full_doc()).unwrap()).await.unwrap();
+        let overlay = "INSERT INTO forms_overlay (id, layout, scope, author, actor, base_package, base_extends, base_frontend, \
+            base_version, state, rev, created, updated) VALUES ('o1', 'layout-1', 'instance', 'a', 'a', 'net.example.pkg', \
+            'net.example.Tasks', 'board', '1.0', 'applied', 1, 1, 1)";
+        conn.execute(overlay, ()).await.unwrap();
+        let op = |seq: u32, values: &str| {
+            format!(
+                "INSERT INTO forms_overlay_op (overlay, seq, op, target_kind, target_elem, field, {values}, author, actor, at) \
+                 VALUES ('o1', {seq}, 'set', 'block', 'block:main', 'text_key', {}, 'a', 'a', 1)",
+                if values.contains(',') {
+                    "'x', 7"
+                } else {
+                    "'x'"
+                }
+            )
+        };
+        assert!(
+            conn.execute(&op(0, "value_text"), ()).await.is_ok(),
+            "one value is fine"
+        );
+        assert!(
+            conn.execute(&op(1, "value_text, value_int"), ())
+                .await
+                .is_err(),
+            "two values must be refused"
+        );
+        let expect = op(2, "expect_text, expect_int");
+        assert!(
+            conn.execute(&expect, ()).await.is_err(),
+            "two expected values must be refused"
         );
     });
 }

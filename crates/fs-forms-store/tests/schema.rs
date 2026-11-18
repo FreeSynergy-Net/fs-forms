@@ -54,6 +54,7 @@ fn model_words_are_in_the_closed_lists() {
         Cause::TypeMismatch,
         Cause::Locked,
         Cause::ResultInvalid,
+        Cause::AllowlistWidened,
     ] {
         in_list(w::CAUSE, c.as_str());
     }

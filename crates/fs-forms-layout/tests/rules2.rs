@@ -1,0 +1,307 @@
+//! Fix round 4 (review of 18.11., 04:40): sources are never renumbered by an overlay (P2), D9 uses catalog and limits (P1, P3), a person's
+//! overlay never widens a scheme allowlist (P4), and the tests for the surviving mutants of the second review.
+#![allow(clippy::assert_is_empty, clippy::many_single_char_names)] // tests: short names and plain asserts read best
+mod support;
+
+use fs_forms_layout::*;
+use support::*;
+
+fn check(d: LayoutDoc) -> Result<Layout, Vec<Coded<LayoutCode>>> {
+    d.check(&OpenCatalog, &Limits::declared())
+}
+fn codes(r: Result<Layout, Vec<Coded<LayoutCode>>>) -> Vec<LayoutCode> {
+    r.expect_err("must fail").iter().map(|c| c.code).collect()
+}
+fn source(range: &str) -> SourceDoc {
+    SourceDoc {
+        range: range.into(),
+        data_type: "T".into(),
+        scope: None,
+    }
+}
+fn two_sources() -> LayoutDoc {
+    let mut d = doc("board");
+    d.sources = vec![
+        item("source:1", source("tasks >=0.1 <0.2")),
+        item("source:2", source("people >=0.1 <0.2")),
+    ];
+    d.pages[0].v.blocks[0].v.source = Some(1);
+    d
+}
+fn source_ref(n: u32) -> ElemRef {
+    ElemRef {
+        kind: ElemKind::Source,
+        elem: elem(&format!("source:{n}")),
+    }
+}
+
+fn conflict_of(s: &MemoryLayoutStore, ops: Vec<OpKind>) -> Vec<Cause> {
+    let id = block_on(s.list(&LayoutFilter::default(), None, 10))
+        .unwrap()
+        .items[0]
+        .id
+        .clone();
+    let o = block_on(s.create_overlay(&id, None, None, &who())).unwrap();
+    let r = block_on(s.replace_ops(&o, Rev(1), ops, &who())).unwrap();
+    assert!(r.problems.is_empty(), "{:?}", r.problems);
+    r.conflicts.iter().map(|c| c.cause).collect()
+}
+fn resolved(s: &MemoryLayoutStore) -> Resolved {
+    block_on(s.resolve(&key("board"))).unwrap().unwrap()
+}
+fn remove(target: ElemRef) -> OpKind {
+    OpKind::Remove { target }
+}
+
+#[test]
+fn p2_removing_a_source_in_the_middle_is_refused_not_renumbered() {
+    let s = store();
+    install(&s, two_sources(), "1.0");
+    assert_eq!(
+        conflict_of(&s, vec![remove(source_ref(1))]),
+        vec![Cause::ResultInvalid]
+    );
+    let r = resolved(&s);
+    assert_eq!(r.layout.doc().sources.len(), 2);
+    assert_eq!(r.layout.doc().sources[0].v.range, "tasks >=0.1 <0.2"); // the block still points at tasks
+    assert_eq!(r.layout.doc().pages[0].v.blocks[0].v.source, Some(1));
+}
+
+#[test]
+fn p2_the_last_source_can_go_when_nothing_points_at_it() {
+    let s = store();
+    install(&s, two_sources(), "1.0");
+    assert_eq!(
+        conflict_of(&s, vec![remove(source_ref(2))]),
+        Vec::<Cause>::new()
+    );
+    assert_eq!(resolved(&s).layout.doc().sources.len(), 1);
+}
+
+#[test]
+fn p2_the_last_source_stays_when_a_block_points_at_it() {
+    let mut d = two_sources();
+    d.pages[0].v.blocks[0].v.source = Some(2);
+    let s = store();
+    install(&s, d, "1.0");
+    assert_eq!(
+        conflict_of(&s, vec![remove(source_ref(2))]),
+        vec![Cause::ResultInvalid]
+    );
+}
+
+struct BoardOnly;
+impl CatalogRules for BoardOnly {
+    fn block_known(&self, b: &str) -> bool {
+        b == "board"
+    }
+    fn slot_known(&self, _: &str, _: &str) -> bool {
+        true
+    }
+    fn slot_repeat(&self, _: &str, _: &str) -> u32 {
+        16
+    }
+}
+
+#[test]
+fn p1_an_overlay_cannot_set_a_block_the_catalog_does_not_know() {
+    let s = MemoryLayoutStore::new(Box::new(BoardOnly), Limits::declared(), who().actor);
+    install(&s, doc("board"), "1.0");
+    let op = OpKind::Set {
+        target: block_ref(),
+        field: Field::Block,
+        value: Value::Text("evil".into()),
+        expect: Value::None,
+    };
+    assert_eq!(conflict_of(&s, vec![op]), vec![Cause::ResultInvalid]);
+    assert_eq!(
+        resolved(&s).layout.doc().pages[0].v.blocks[0].v.block,
+        "board"
+    );
+}
+
+#[test]
+fn p3_an_overlay_cannot_get_past_the_text_limit() {
+    let limits = Limits {
+        text_bytes_max: 16,
+        ..Limits::declared()
+    };
+    let s = MemoryLayoutStore::new(Box::new(OpenCatalog), limits, who().actor);
+    install(&s, doc("board"), "1.0");
+    let target = ElemRef {
+        kind: ElemKind::Message,
+        elem: elem("message:board-title/de"),
+    };
+    let long = OpKind::Set {
+        target: target.clone(),
+        field: Field::Message,
+        value: Value::Text("x".repeat(100)),
+        expect: Value::None,
+    };
+    assert_eq!(conflict_of(&s, vec![long]), vec![Cause::ResultInvalid]);
+    let fits = OpKind::Set {
+        target,
+        field: Field::Message,
+        value: Value::Text("short".into()),
+        expect: Value::None,
+    };
+    let id = block_on(s.list(&LayoutFilter::default(), None, 10))
+        .unwrap()
+        .items[0]
+        .id
+        .clone();
+    let o = block_on(s.create_overlay(&id, None, None, &who())).unwrap();
+    assert!(
+        block_on(s.replace_ops(&o, Rev(1), vec![fits], &who()))
+            .unwrap()
+            .conflicts
+            .is_empty()
+    );
+}
+
+fn schemes_doc() -> LayoutDoc {
+    let mut d = doc("board");
+    d.pages[0].v.blocks[0].v.bindings[0].v.schemes =
+        Some(vec![item("scheme:b/0", "https".to_owned())]);
+    d
+}
+fn set_scheme(to: &str) -> OpKind {
+    let target = ElemRef {
+        kind: ElemKind::BindingScheme,
+        elem: elem("scheme:b/0"),
+    };
+    OpKind::Set {
+        target,
+        field: Field::Scheme,
+        value: Value::Text(to.into()),
+        expect: Value::None,
+    }
+}
+
+#[test]
+fn p4_a_person_overlay_never_widens_the_allowlist() {
+    let s = store();
+    install(&s, schemes_doc(), "1.0");
+    assert_eq!(
+        conflict_of(&s, vec![set_scheme("file")]),
+        vec![Cause::AllowlistWidened]
+    );
+    let schemes = resolved(&s).layout.bindings("board", "main")[0]
+        .schemes
+        .clone();
+    assert_eq!(schemes, Some(vec!["https".to_owned()]));
+}
+
+#[test]
+fn p4_the_instance_may_widen_but_never_to_a_forbidden_scheme() {
+    let s = store().as_instance();
+    let id = install(&s, schemes_doc(), "1.0");
+    let o = block_on(s.create_instance_overlay(&id, None, None, &who())).unwrap();
+    let ok = block_on(s.replace_ops(&o, Rev(1), vec![set_scheme("ftp")], &who())).unwrap();
+    assert!(ok.conflicts.is_empty());
+    assert_eq!(
+        resolved(&s).layout.bindings("board", "main")[0].schemes,
+        Some(vec!["ftp".to_owned()])
+    );
+    let bad = block_on(s.replace_ops(&o, Rev(2), vec![set_scheme("javascript")], &who())).unwrap();
+    assert_eq!(bad.conflicts[0].cause, Cause::ResultInvalid);
+}
+
+#[test]
+fn r1c_nested_menu_entries_are_checked() {
+    let entry = |kind, label: Option<&str>, kids| MenuDoc {
+        kind,
+        label_key: label.map(str::to_owned),
+        command: None,
+        on: None,
+        shortcut: None,
+        view: None,
+        children: kids,
+    };
+    let mut d = doc("board");
+    let bad_child = item("menu:0.0", entry(MenuKind::Command, None, vec![]));
+    d.menu = vec![item("menu:0", entry(MenuKind::Menu, None, vec![bad_child]))];
+    assert_eq!(codes(check(d)), vec![LayoutCode::MenuInvalid]);
+    let mut d = doc("board");
+    let sep = item("menu:0.0", entry(MenuKind::Separator, Some("x"), vec![]));
+    d.menu = vec![item("menu:0", entry(MenuKind::Menu, None, vec![sep]))];
+    assert_eq!(codes(check(d)), vec![LayoutCode::MenuInvalid]);
+}
+
+#[test]
+fn r1d_r1e_source_numbers_have_exact_bounds() {
+    for n in [0_u32, 2] {
+        let mut d = doc("board");
+        d.sources = vec![item("source:1", source("tasks >=0.1 <0.2"))];
+        d.pages[0].v.blocks[0].v.source = Some(n);
+        assert_eq!(
+            codes(check(d)),
+            vec![LayoutCode::SourceUnknown],
+            "source {n}"
+        );
+    }
+    let mut d = doc("board");
+    d.sources = vec![item("source:1", source("tasks >=0.1 <0.2"))];
+    d.pages[0].v.blocks[0].v.source = Some(1);
+    assert!(check(d).is_ok());
+}
+
+#[test]
+fn r1h_a_view_owner_is_not_empty() {
+    let mut d = doc("board");
+    let view = ViewDoc {
+        view: "v".into(),
+        owner: Some(Reference(String::new())),
+        grouping: None,
+        orders: vec![],
+        filter: None,
+        search_kind: None,
+    };
+    d.views = vec![item("view:v", view)];
+    assert_eq!(codes(check(d)), vec![LayoutCode::KeyInvalid]);
+}
+
+#[test]
+fn r2c_only_blocks_with_a_field_binding_ask_the_provider() {
+    let mut d = doc("board");
+    d.sources = vec![item("source:1", source("tasks >=0.1 <0.2"))];
+    d.pages[0].v.blocks[0].v.source = Some(1);
+    d.pages[0].v.blocks[0].v.bindings[0].v.from = BindFrom::Records; // no field: nothing to ask
+    let s = store();
+    install(&s, d, "1.0");
+    assert!(resolved(&s).warnings.is_empty());
+}
+
+#[test]
+fn m35m_check_puts_messages_in_key_lang_order() {
+    let mut d = doc("board");
+    let m = |k: &str, l: &str| MessageDoc {
+        key: k.into(),
+        lang: l.into(),
+        message: "x".into(),
+    };
+    d.messages = vec![
+        item("message:b/de", m("b", "de")),
+        item("message:a/en", m("a", "en")),
+        item("message:a/de", m("a", "de")),
+    ];
+    let l = check(d).unwrap();
+    let order: Vec<(String, String)> = l
+        .doc()
+        .messages
+        .iter()
+        .map(|x| (x.v.key.clone(), x.v.lang.clone()))
+        .collect();
+    let want = [("a", "de"), ("a", "en"), ("b", "de")].map(|(k, l)| (k.to_owned(), l.to_owned()));
+    assert_eq!(order, want);
+}
+
+#[test]
+fn o1_the_ops_of_one_overlay_run_in_seq_order() {
+    let s = store();
+    install(&s, doc("board"), "1.0");
+    // forward: set the text, then remove the block (both act); reversed, the set would hit a removed block and conflict
+    let ops = vec![set_text(Field::TextKey, "x"), remove(block_ref())];
+    assert_eq!(conflict_of(&s, ops), Vec::<Cause>::new());
+    assert!(resolved(&s).layout.doc().pages[0].v.blocks.is_empty());
+}

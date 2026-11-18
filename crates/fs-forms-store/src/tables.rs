@@ -81,6 +81,7 @@ pub const CAUSE: &[&str] = &[
     "type-mismatch",
     "locked",
     "result-invalid",
+    "allowlist-widened",
 ];
 pub const RESOLUTION: &[&str] = &["open", "keep", "drop", "retarget"];
 pub const LOG_ACTION: &[&str] = &[

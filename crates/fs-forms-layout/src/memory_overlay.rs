@@ -61,6 +61,7 @@ impl MemoryLayoutStore {
     }
 
     /// Replaces the ops of an overlay after checking each against the original. Problems: nothing changes (`ok = false`).
+    #[allow(clippy::too_many_lines)] // one unit of work: check every op, apply, record conflicts, log
     pub(crate) fn ops_in(
         &self,
         st: &mut State,
@@ -133,7 +134,14 @@ impl MemoryLayoutStore {
             rev,
             ..o
         };
-        let applied = apply(&original, std::slice::from_ref(&updated), &locks, &version);
+        let applied = apply(
+            &original,
+            std::slice::from_ref(&updated),
+            &locks,
+            &version,
+            &*self.catalog,
+            &self.limits,
+        );
         let fresh: Vec<Conflict> = applied
             .effects
             .into_iter()

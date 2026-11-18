@@ -1,6 +1,7 @@
 //! K59 (codes), K62 (element ids), natural ids.
 mod support;
 
+#![allow(clippy::assert_is_empty)] // tests: plain asserts read best
 use fs_forms_layout::*;
 
 #[test]
@@ -49,4 +50,33 @@ fn coded_prints_code_and_parameters() {
         .with("id", "x")
         .with("expected", 1);
     assert_eq!(c.to_string(), "layout-error-rev-changed id=x expected=1");
+}
+
+/// K59: texts in German and English for EVERY code, nothing extra, every `{$name}` is closed, and the new codes are at the end.
+#[test]
+fn k59_every_code_has_a_german_and_an_english_text() {
+    let keys = |text: &str| -> Vec<String> {
+        text.lines()
+            .filter(|l| !l.starts_with('#') && !l.trim().is_empty())
+            .map(|l| l.split(" = ").next().unwrap().to_owned())
+            .collect()
+    };
+    let want: Vec<String> = LayoutCode::ALL.iter().map(|c| c.message_key()).collect();
+    assert_eq!(keys(TEXTS_DE), want);
+    assert_eq!(keys(TEXTS_EN), want);
+    for line in TEXTS_DE
+        .lines()
+        .chain(TEXTS_EN.lines())
+        .filter(|l| !l.starts_with('#') && !l.trim().is_empty())
+    {
+        let text = line.split_once(" = ").unwrap().1;
+        assert!(!text.trim().is_empty());
+        assert_eq!(
+            text.matches('{').count(),
+            text.matches('}').count(),
+            "{line}"
+        );
+    }
+    let last_two: Vec<&str> = LayoutCode::ALL[43..].iter().map(|c| c.as_str()).collect();
+    assert_eq!(last_two, ["menu-invalid", "source-unknown"]); // append only
 }

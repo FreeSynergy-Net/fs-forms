@@ -41,7 +41,7 @@ mod words;
 
 pub use apply::apply;
 pub use check::{CatalogRules, OpenCatalog};
-pub use codes::LayoutCode;
+pub use codes::{LayoutCode, TEXTS_DE, TEXTS_EN};
 pub use doc::*;
 pub use ids::{
     ElemId, ElemKind, ElemRef, FrontendKey, LayoutId, OverlayId, PackageRef, Rev, Stamp, Who,

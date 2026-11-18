@@ -92,7 +92,7 @@ impl MemoryLayoutStore {
     }
 
     /// Applies every overlay of a layout again after its original changed; writes conflicts, never drops one.
-    fn rebase(st: &mut State, idx: usize, base: &PackageRef, now: Utc) -> Vec<Conflict> {
+    fn rebase(&self, st: &mut State, idx: usize, base: &PackageRef, now: Utc) -> Vec<Conflict> {
         let id = st.layouts[idx].id.clone();
         let Some(orig) = st.layouts[idx].layout.clone() else {
             return Vec::new();
@@ -106,7 +106,14 @@ impl MemoryLayoutStore {
         {
             o.state = OverlayState::Applied;
             o.base = base.clone();
-            let applied = apply(&orig, std::slice::from_ref(&*o), &locks, &base.version);
+            let applied = apply(
+                &orig,
+                std::slice::from_ref(&*o),
+                &locks,
+                &base.version,
+                &*self.catalog,
+                &self.limits,
+            );
             for e in applied.effects {
                 if let Err(cause) = e.result {
                     found.push(Conflict {
@@ -243,7 +250,7 @@ impl PackageLayouts for MemoryLayoutStore {
                 Rev(s.rev.0 + 1),
             );
             let (id, rev) = (s.id.clone(), s.rev);
-            let conflicts = Self::rebase(st, idx, package, now);
+            let conflicts = self.rebase(st, idx, package, now);
             let e = st.log(now, who, action);
             (e.layout, e.rev_after, e.package) =
                 (Some(id.clone()), Some(rev), Some(package.clone()));

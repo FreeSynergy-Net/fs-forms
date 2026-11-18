@@ -4,6 +4,7 @@
 //! Pattern: Adapter: the composition in, a shell of `fs-components-app` out. The sentences are made before drawing (`Said`), so the
 //! surfaces only draw. A locked part is one `partial-notice` listing every code with its sentence.
 
+use std::fmt::Write as _;
 use std::sync::{Arc, Mutex};
 
 use fs_components::blinc::layout::div::div;
@@ -38,7 +39,7 @@ pub(crate) fn line(texts: &Mf2Texts, c: &Coded) -> String {
         format!("{said} ({})", c.code)
     };
     for (k, v) in &c.params {
-        out.push_str(&format!(" {k}={v}"));
+        let _ = write!(out, " {k}={v}");
     }
     out
 }

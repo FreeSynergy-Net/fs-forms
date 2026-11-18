@@ -24,7 +24,7 @@ Exit codes: 0 done, 1 failed, 2 wrong words, 3 the layouts or their contract are
 pub struct Config {
     /// The key of the frontend.
     pub frontend: String,
-    /// The AppStream id of the program.
+    /// The `AppStream` id of the program.
     pub extends: String,
     /// The socket of `fs-forms serve`, if named.
     pub forms_socket: Option<PathBuf>,

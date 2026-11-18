@@ -1,0 +1,15 @@
+# H-K17 (draft section 3.5): bind does no file access and reads no toml / JSON at run time. This file REPLACES the clippy.toml of
+# the workspace root for this crate, so the proper names of the root list are repeated here.
+doc-valid-idents = ["..", "JSContact", "JSCalendar", "FreeSynergy", "CardDAV", "vCard", "iCalendar", "UUIDv7", "UTCDateTime", "LocalDateTime", "PatchObject", "AsyncAPI", "Kanidm", "AS2", "IRI", "IRIs", "ADR", "UUIDs", "SPN"]
+disallowed-methods = [
+    { path = "std::fs::read", reason = "bind does no I/O (H-K17)" },
+    { path = "std::fs::read_to_string", reason = "bind does no I/O (H-K17)" },
+    { path = "std::fs::write", reason = "bind does no I/O (H-K17)" },
+    { path = "std::fs::File::open", reason = "bind does no I/O (H-K17)" },
+    { path = "std::fs::File::create", reason = "bind does no I/O (H-K17)" },
+    { path = "std::fs::read_dir", reason = "bind does no I/O (H-K17)" },
+]
+disallowed-types = [
+    { path = "std::fs::File", reason = "bind does no I/O (H-K17)" },
+    { path = "std::io::BufReader", reason = "bind does no I/O (H-K17)" },
+]

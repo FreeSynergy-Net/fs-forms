@@ -80,6 +80,9 @@ pub(crate) fn build_place(
     for b in &p.bindings {
         slots.push(slot(env, page, p, b, &part, &mut locks, pool));
     }
+    if !locks.is_empty() {
+        keep_slot_locks(&slots, &mut locks);
+    }
     let status = if locks.is_empty() {
         PlaceStatus::Ready(ReadyPlace { slots })
     } else {
@@ -92,6 +95,28 @@ pub(crate) fn build_place(
         block: p.block.clone(),
         source: p.source,
         status,
+    }
+}
+
+/// A locked placement drops its slots; their locks (layout problem, missing component, locked command) must stay visible.
+fn keep_slot_locks(slots: &[SlotFill], locks: &mut Vec<PartLock>) {
+    let mut add = |l: &PartLock| {
+        if !locks.iter().any(|k| k.cause == l.cause) {
+            locks.push(l.clone());
+        }
+    };
+    let found: Vec<&PartLock> = slots
+        .iter()
+        .flat_map(|s| {
+            let fixed = match &s.fill {
+                Fill::Command(c) => c.fixed.as_ref().filter(|l| l.severity == Severity::Locked),
+                _ => None,
+            };
+            s.lock.iter().chain(fixed)
+        })
+        .collect();
+    for l in found {
+        add(l);
     }
 }
 
@@ -189,12 +214,12 @@ fn field_fill(
     let block = env.catalog.choose(field, role);
     let missing = field.basic == Basic::Unknown || !env.catalog.built(&block);
     let lock = missing.then(|| {
-        let basic = format!("{:?}", field.basic).to_lowercase();
+        let basic = field.basic.name();
         let c = BindCode::FieldComponentMissing
             .coded()
             .with("block", block.clone())
             .with("basic", basic)
-            .with("role", format!("{role:?}").to_lowercase());
+            .with("role", role.name());
         PartLock::locked(part.clone(), c)
     });
     let input = match (role, &lock) {

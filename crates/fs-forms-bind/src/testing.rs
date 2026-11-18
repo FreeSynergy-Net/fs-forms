@@ -164,7 +164,7 @@ pub fn cmd(name: &str, supported: bool, writes: bool, on_record: bool) -> Comman
             supported,
             writes,
             on_record,
-            type_may: None,
+            type_may: true,
         },
         target: Target::Program,
     }

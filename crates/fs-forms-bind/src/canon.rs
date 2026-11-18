@@ -1,238 +1,235 @@
-//! The canonical byte form of a plan and its SHA-256 (A-P2): a fixed encoding, independent of `Debug` and of the compiler.
+//! The canonical byte form of a plan and its SHA-256 (A-P2): a fixed encoding, independent of `Debug`, of the compiler and of
+//! the declaration order of enums.
 //!
-//! Encoding: every value is a tag byte or a length-prefixed field; integers are big-endian; `Option` is `0` or `1` + value; a
-//! sequence is its count (u64) + items; text is its byte length (u64) + UTF-8 bytes. The `style` of the plan is NOT part of it.
+//! Encoding: every field is `label (u16 BE) + length (u32 BE) + payload`. The label is the position of the field in its struct
+//! (declaration order); numbers are u64 BE; text is UTF-8; `bool` is a number 0/1; `Option` is an absent field or the value
+//! field; a list is its items in plan order (never sorted), each item a field. A variant is a field whose payload starts with the
+//! variant NAME (text field, label 0) followed by its fields, so a reordered enum does not change the digest. The `style` of the
+//! plan is NOT part of it.
 //!
 //! Pattern: Visitor-like encoder (one method per value kind).
 
 use sha2::{Digest, Sha256};
 
 use crate::coded::Coded;
-use crate::codes::{Cause, Notice, Part, PartLock};
+use crate::codes::{Cause, Notice, PartLock, Severity};
 use crate::menu::{MenuEntry, MenuNode};
 use crate::model::{Range, Target};
 use crate::plan::{
-    CommandPlan, Fill, InputState, PagePlan, PlaceStatus, Plan, SlotFill, SourcePlan,
+    CommandPlan, Fill, InputState, PagePlan, PlaceStatus, Plan, PlanState, SlotFill, SourcePlan,
 };
+use crate::types::SearchKind;
 
 struct Enc(Vec<u8>);
 
 impl Enc {
-    fn u(&mut self, n: u64) {
-        self.0.extend_from_slice(&n.to_be_bytes());
+    fn field(&mut self, label: u16, body: impl FnOnce(&mut Enc)) {
+        let mut inner = Enc(Vec::new());
+        body(&mut inner);
+        self.0.extend_from_slice(&label.to_be_bytes());
+        let len = u32::try_from(inner.0.len()).unwrap_or(u32::MAX);
+        self.0.extend_from_slice(&len.to_be_bytes());
+        self.0.extend_from_slice(&inner.0);
     }
-    fn tag(&mut self, t: u8) {
-        self.0.push(t);
+    fn text(&mut self, label: u16, t: &str) {
+        self.field(label, |e| e.0.extend_from_slice(t.as_bytes()));
     }
-    fn s(&mut self, t: &str) {
-        self.u(t.len() as u64);
-        self.0.extend_from_slice(t.as_bytes());
+    fn num(&mut self, label: u16, n: u64) {
+        self.field(label, |e| e.0.extend_from_slice(&n.to_be_bytes()));
     }
-    fn b(&mut self, v: bool) {
-        self.tag(u8::from(v));
+    fn flag(&mut self, label: u16, v: bool) {
+        self.num(label, u64::from(v));
     }
-    fn opt<T>(&mut self, v: Option<&T>, f: impl FnOnce(&mut Self, &T)) {
-        match v {
-            Some(x) => {
-                self.tag(1);
-                f(self, x);
+    fn opt<T>(&mut self, label: u16, v: Option<&T>, f: impl FnOnce(&mut Enc, &T)) {
+        if let Some(x) = v {
+            self.field(label, |e| f(e, x));
+        }
+    }
+    fn list<T>(&mut self, label: u16, v: &[T], mut f: impl FnMut(&mut Enc, &T)) {
+        self.field(label, |e| {
+            for x in v {
+                e.field(0, |e| f(e, x));
             }
-            None => self.tag(0),
-        }
+        });
     }
-    fn seq<T>(&mut self, v: &[T], mut f: impl FnMut(&mut Self, &T)) {
-        self.u(v.len() as u64);
-        for x in v {
-            f(self, x);
-        }
+    fn strs(&mut self, label: u16, v: &[String]) {
+        self.list(label, v, |e, x| e.0.extend_from_slice(x.as_bytes()));
     }
-    fn strs(&mut self, v: &[String]) {
-        self.seq(v, |e, x| e.s(x));
+    fn variant(&mut self, label: u16, name: &str, body: impl FnOnce(&mut Enc)) {
+        self.field(label, |e| {
+            e.text(0, name);
+            body(e);
+        });
     }
 
-    fn coded(&mut self, c: &Coded) {
-        self.s(&c.code);
-        self.seq(&c.params, |e, (k, v)| {
-            e.s(k);
-            e.s(v);
+    fn coded(&mut self, label: u16, c: &Coded) {
+        self.field(label, |e| {
+            e.text(0, &c.code);
+            e.list(1, &c.params, |e, (k, v)| {
+                e.text(0, k);
+                e.text(1, v);
+            });
         });
     }
-    fn cause(&mut self, c: &Cause) {
-        self.tag(match c {
-            Cause::Accepts(_) => 0,
-            Cause::Layout(_) => 1,
-            Cause::Records(_) => 2,
-            Cause::Bind(_) => 3,
+    fn cause(&mut self, label: u16, c: &Cause) {
+        let name = match c {
+            Cause::Accepts(_) => "accepts",
+            Cause::Layout(_) => "layout",
+            Cause::Records(_) => "records",
+            Cause::Bind(_) => "bind",
+        };
+        self.variant(label, name, |e| e.coded(1, c.coded()));
+    }
+    fn lock(&mut self, label: u16, l: &PartLock) {
+        self.field(label, |e| {
+            e.text(0, &l.part.text());
+            e.text(
+                1,
+                match l.severity {
+                    Severity::Locked => "locked",
+                    Severity::Coming => "coming",
+                },
+            );
+            e.cause(2, &l.cause);
         });
-        self.coded(c.coded());
     }
-    fn part(&mut self, p: &Part) {
-        self.s(&p.text());
+    fn locks(&mut self, label: u16, v: &[PartLock]) {
+        self.list(label, v, |e, l| e.lock(0, l));
     }
-    fn lock(&mut self, l: &PartLock) {
-        self.part(&l.part);
-        self.tag(l.severity as u8);
-        self.cause(&l.cause);
-    }
-    fn locks(&mut self, v: &[PartLock]) {
-        self.seq(v, Self::lock);
-    }
-    fn range(&mut self, r: &Range) {
-        for n in [r.min.0, r.min.1, r.max.0, r.max.1] {
-            self.u(u64::from(n));
-        }
+    fn range(&mut self, label: u16, r: &Range) {
+        self.field(label, |e| {
+            for (i, n) in [r.min.0, r.min.1, r.max.0, r.max.1].into_iter().enumerate() {
+                e.num(u16::try_from(i).unwrap_or(0), u64::from(n));
+            }
+        });
     }
 
     fn source(&mut self, s: &SourcePlan) {
-        self.u(u64::from(s.idx));
-        self.s(&s.elem);
-        self.range(&s.range);
-        self.s(&s.data_type);
+        self.num(0, u64::from(s.idx));
+        self.text(1, &s.elem);
+        self.range(2, &s.range);
+        self.text(3, &s.data_type);
         match &s.status {
-            Ok(r) => {
-                self.tag(1);
-                self.s(&r.capability);
-                self.u(u64::from(r.version.0));
-                self.u(u64::from(r.version.1));
-                self.tag(r.search as u8);
-            }
-            Err(l) => {
-                self.tag(0);
-                self.lock(l);
-            }
+            Ok(r) => self.variant(4, "ready", |e| {
+                e.text(1, &r.capability);
+                e.num(2, u64::from(r.version.0));
+                e.num(3, u64::from(r.version.1));
+                e.text(
+                    4,
+                    match r.search {
+                        SearchKind::Prefix => "prefix",
+                        SearchKind::Words => "words",
+                    },
+                );
+            }),
+            Err(l) => self.variant(4, "locked", |e| e.lock(1, l)),
         }
     }
 
-    fn command(&mut self, c: &CommandPlan) {
-        self.u(u64::from(c.source));
-        self.s(&c.name);
-        self.b(c.description.supported);
-        self.b(c.description.writes);
-        self.b(c.description.on_record);
-        self.opt(c.description.type_may.as_ref(), |e, v| e.b(*v));
-        self.b(c.on_record);
-        self.opt(c.fixed.as_ref(), Self::lock);
-        match &c.target {
-            Target::Program => self.tag(0),
-            Target::Workflow(w) => {
-                self.tag(1);
-                self.s(w);
+    fn command(&mut self, label: u16, c: &CommandPlan) {
+        self.field(label, |e| {
+            e.num(0, u64::from(c.source));
+            e.text(1, &c.name);
+            e.flag(2, c.description.supported);
+            e.flag(3, c.description.writes);
+            e.flag(4, c.description.on_record);
+            e.flag(5, c.description.type_may);
+            e.flag(6, c.on_record);
+            e.opt(7, c.fixed.as_ref(), |e, l| e.lock(0, l));
+            match &c.target {
+                Target::Program => e.variant(8, "program", |_| {}),
+                Target::Workflow(w) => e.variant(8, "workflow", |e| e.text(1, w)),
             }
-        }
+        });
     }
 
-    fn fill(&mut self, f: &Fill) {
+    fn fill(&mut self, label: u16, f: &Fill) {
         match f {
             Fill::Records { source } => {
-                self.tag(0);
-                self.u(u64::from(*source));
+                self.variant(label, "records", |e| e.num(1, u64::from(*source)));
             }
-            Fill::Field(ff) => {
-                self.tag(1);
-                self.strs(&ff.path);
-                self.tag(ff.role as u8);
-                self.tag(ff.basic as u8);
-                self.strs(&ff.field.path);
-                self.tag(ff.field.basic as u8);
-                self.opt(ff.field.target.as_ref(), |e, t| e.s(t));
-                self.b(ff.field.read_only);
-                self.s(&ff.block);
-                self.opt(ff.schemes.as_ref(), |e, v| e.strs(v));
+            Fill::Field(ff) => self.variant(label, "field", |e| {
+                e.strs(1, &ff.path);
+                e.text(2, ff.role.name());
+                e.text(3, ff.basic.name());
+                e.strs(4, &ff.field.path);
+                e.text(5, ff.field.basic.name());
+                e.opt(6, ff.field.target.as_ref(), |e, t| {
+                    e.0.extend_from_slice(t.as_bytes());
+                });
+                e.flag(7, ff.field.read_only);
+                e.text(8, &ff.block);
+                e.opt(9, ff.schemes.as_ref(), |e, v| e.strs(0, v));
                 match &ff.input {
-                    InputState::NotInput => self.tag(0),
-                    InputState::Open => self.tag(1),
-                    InputState::Locked(l) => {
-                        self.tag(2);
-                        self.lock(l);
-                    }
+                    InputState::NotInput => e.variant(10, "not-input", |_| {}),
+                    InputState::Open => e.variant(10, "open", |_| {}),
+                    InputState::Locked(l) => e.variant(10, "locked", |e| e.lock(1, l)),
                 }
-            }
-            Fill::Grouping(n) => {
-                self.tag(2);
-                self.s(n);
-            }
-            Fill::Order(n) => {
-                self.tag(3);
-                self.s(n);
-            }
-            Fill::Command(c) => {
-                self.tag(4);
-                self.command(c);
-            }
-            Fill::Condition(c) => {
-                self.tag(5);
-                self.strs(&c.path);
-                self.tag(c.basic as u8);
-                self.s(&c.chip);
-            }
+            }),
+            Fill::Grouping(n) => self.variant(label, "grouping", |e| e.text(1, n)),
+            Fill::Order(n) => self.variant(label, "order", |e| e.text(1, n)),
+            Fill::Command(c) => self.variant(label, "command", |e| e.command(1, c)),
+            Fill::Condition(c) => self.variant(label, "condition", |e| {
+                e.strs(1, &c.path);
+                e.text(2, c.basic.name());
+                e.text(3, &c.chip);
+            }),
         }
     }
 
     fn slot(&mut self, s: &SlotFill) {
-        self.s(&s.slot);
-        self.u(u64::from(s.nth));
-        self.s(&s.elem);
-        self.fill(&s.fill);
-        self.opt(s.lock.as_ref(), Self::lock);
+        self.text(0, &s.slot);
+        self.num(1, u64::from(s.nth));
+        self.text(2, &s.elem);
+        self.fill(3, &s.fill);
+        self.opt(4, s.lock.as_ref(), |e, l| e.lock(0, l));
     }
 
     fn page(&mut self, p: &PagePlan) {
-        self.s(&p.page);
-        self.s(&p.elem);
-        self.u(u64::from(p.seq));
-        self.s(&p.frame);
-        self.locks(&p.locks);
-        self.seq(&p.places, |e, pl| {
-            e.s(&pl.place);
-            e.s(&pl.elem);
-            e.u(u64::from(pl.seq));
-            e.s(&pl.block);
-            e.opt(pl.source.as_ref(), |e, s| e.u(u64::from(*s)));
+        self.text(0, &p.page);
+        self.text(1, &p.elem);
+        self.num(2, u64::from(p.seq));
+        self.text(3, &p.frame);
+        self.locks(4, &p.locks);
+        self.list(5, &p.places, |e, pl| {
+            e.text(0, &pl.place);
+            e.text(1, &pl.elem);
+            e.num(2, u64::from(pl.seq));
+            e.text(3, &pl.block);
+            e.opt(4, pl.source.as_ref(), |e, s| {
+                e.0.extend_from_slice(&u64::from(*s).to_be_bytes());
+            });
             match &pl.status {
-                PlaceStatus::Ready(r) => {
-                    e.tag(1);
-                    e.seq(&r.slots, Self::slot);
-                }
-                PlaceStatus::Locked(v) => {
-                    e.tag(0);
-                    e.locks(v);
-                }
+                PlaceStatus::Ready(r) => e.variant(5, "ready", |e| e.list(1, &r.slots, Self::slot)),
+                PlaceStatus::Locked(v) => e.variant(5, "locked", |e| e.locks(1, v)),
             }
         });
     }
 
     fn node(&mut self, n: &MenuNode) {
-        self.s(&n.elem);
+        self.text(0, &n.elem);
         match &n.entry {
-            MenuEntry::Menu { label_key } => {
-                self.tag(0);
-                self.s(label_key);
-            }
-            MenuEntry::Standard { which } => {
-                self.tag(1);
-                self.s(which);
-            }
+            MenuEntry::Menu { label_key } => self.variant(1, "menu", |e| e.text(1, label_key)),
+            MenuEntry::Standard { which } => self.variant(1, "standard", |e| e.text(1, which)),
             MenuEntry::Command {
                 command,
                 on_selected,
                 shortcut,
-            } => {
-                self.tag(2);
-                self.command(command);
-                self.b(*on_selected);
-                self.opt(shortcut.as_ref(), |e, s| e.s(&s.aria()));
-            }
-            MenuEntry::View { view } => {
-                self.tag(3);
-                self.s(view);
-            }
-            MenuEntry::Separator => self.tag(4),
+            } => self.variant(1, "command", |e| {
+                e.command(1, command);
+                e.flag(2, *on_selected);
+                e.opt(3, shortcut.as_ref(), |e, s| {
+                    e.0.extend_from_slice(s.aria().as_bytes());
+                });
+            }),
+            MenuEntry::View { view } => self.variant(1, "view", |e| e.text(1, view)),
+            MenuEntry::Separator => self.variant(1, "separator", |_| {}),
         }
-        self.seq(&n.children, Self::node);
+        self.list(2, &n.children, Self::node);
     }
 
     fn notice(&mut self, n: &Notice) {
-        self.cause(&n.cause);
+        self.cause(0, &n.cause);
     }
 }
 
@@ -241,16 +238,23 @@ impl Plan {
     #[must_use]
     pub fn canonical_bytes_without_style(&self) -> Vec<u8> {
         let mut e = Enc(Vec::new());
-        e.s(&self.key);
-        e.u(self.stamp);
-        e.u(self.rev);
-        e.seq(&self.sources, Enc::source);
-        e.seq(&self.pages, Enc::page);
-        e.seq(&self.menu.roots, Enc::node);
-        e.locks(&self.menu.locks);
-        e.strs(&self.keys.reserved);
-        e.seq(&self.notices, Enc::notice);
-        e.tag(self.state as u8);
+        e.text(0, &self.key);
+        e.num(1, self.stamp);
+        e.num(2, self.rev);
+        e.list(3, &self.sources, |e, s| e.source(s));
+        e.list(4, &self.pages, |e, p| e.page(p));
+        e.list(5, &self.menu.roots, |e, n| e.node(n));
+        e.locks(6, &self.menu.locks);
+        e.strs(7, &self.keys.reserved);
+        e.list(8, &self.notices, |e, n| e.notice(n));
+        e.text(
+            9,
+            match self.state {
+                PlanState::Ready => "ready",
+                PlanState::Partial => "partial",
+                PlanState::Refused => "refused",
+            },
+        );
         e.0
     }
 

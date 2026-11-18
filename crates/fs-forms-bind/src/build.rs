@@ -221,13 +221,16 @@ fn build_sources(layout: &Resolved, providers: &Providers<'_>) -> Vec<SourcePlan
 }
 
 fn lock_sources_with_problems(sources: &mut [SourcePlan], pool: &mut Pool<'_>) {
+    // A source holds ONE lock; every further problem of it (and all of them when the source is locked already) is a notice:
+    // nothing is dropped (rule "nothing silent").
     for s in sources.iter_mut() {
-        let own = pool.take(&s.elem);
+        let mut own = pool.take(&s.elem).into_iter();
         if s.status.is_ok()
-            && let Some(c) = own.into_iter().next()
+            && let Some(c) = own.next()
         {
             s.status = Err(PartLock::locked(Part::Source(s.idx), c));
         }
+        pool.notices.extend(own.map(Notice::new));
     }
 }
 

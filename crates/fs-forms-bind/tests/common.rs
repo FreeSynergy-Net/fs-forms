@@ -65,3 +65,33 @@ pub fn press(text: &str) -> KeyPress {
     let sc = Shortcut::parse(text).expect("a readable key");
     KeyPress::new(sc.modifiers(), sc.key()).expect("a key press")
 }
+
+/// Like `build_with` but with the settings and the standard menus of the host chosen by the test.
+pub fn build_custom(r: &Resolved, s: &SettingsFacts, std_menus: &StandardMenus) -> Plan {
+    Bind::build(
+        r,
+        &TestCatalog::new(),
+        &Providers {
+            records: &tasks_facts(),
+            settings: s,
+            host: host(),
+            platform: Platform::Linux,
+            standard: std_menus,
+        },
+    )
+}
+
+pub fn problem(elem: &str, code: &str) -> Problem {
+    Problem {
+        elem: Some(elem.into()),
+        code: code.into(),
+        params: vec![],
+    }
+}
+
+/// Every code of the plan: locks and window notices.
+pub fn all_codes(p: &Plan) -> Vec<String> {
+    let mut v: Vec<String> = p.locks().iter().map(|l| code_of(l)).collect();
+    v.extend(p.notices.iter().map(|n| n.cause.coded().code.clone()));
+    v
+}

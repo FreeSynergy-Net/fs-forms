@@ -167,17 +167,47 @@ fn workflow_target_is_locked_until_the_runtime_exists() {
 }
 
 #[test]
-fn type_command_is_hidden_only_when_the_type_right_says_no() {
+fn type_command_needs_its_right_and_never_shows_coming_without_it() {
+    // c0 86: the right comes first. `type_may` = the name is in `Shape.may`; no right = hidden, no fallback "shown".
     let mut c = cmd("create", true, true, false);
-    let mut mk = |t: Option<bool>| {
+    let mut mk = |t: bool| {
         c.desc.type_may = t;
         command_plan(&c, host(), None)
     };
-    assert_eq!(command_state(&mk(Some(false)), None), Shown::Hidden);
-    assert_eq!(command_state(&mk(Some(true)), None), Shown::Enabled);
+    assert_eq!(command_state(&mk(false), None), Shown::Hidden);
+    assert_eq!(command_state(&mk(true), None), Shown::Enabled);
+    // An unsupported type command (setColumns) without the right is hidden, not "coming".
+    let mut c = cmd("setColumns", false, false, false);
+    c.desc.type_may = false;
+    let p = command_plan(&c, host(), None);
+    assert_eq!(command_state(&p, None), Shown::Hidden);
+    c.desc.type_may = true;
     assert_eq!(
-        command_state(&mk(None), None),
-        Shown::Enabled,
-        "unknown: shown, the provider answers forbidden"
+        command_state(&command_plan(&c, host(), None), None),
+        Shown::Coming
+    );
+}
+
+#[test]
+fn type_right_hides_menu_entry_and_key_on_every_surface() {
+    let mut c = cmd("create", true, true, false);
+    c.desc.type_may = false;
+    let mut r = tasks_resolved();
+    r.menu = vec![MenuIn {
+        elem: "m-c".into(),
+        kind: MenuKind::Command {
+            command: c,
+            on_selected: false,
+            shortcut: Some("ctrl+n".into()),
+        },
+        children: vec![],
+    }];
+    let plan = build_with(&r, &TestCatalog::new(), &tasks_facts(), host());
+    assert!(plan.menu.arrangement(None).is_empty());
+    assert_eq!(
+        plan.keys
+            .keymap_for(&plan.menu, None, Platform::Linux)
+            .dispatch(&press("ctrl+n"), FocusContext::Global),
+        Outcome::NoMatch
     );
 }

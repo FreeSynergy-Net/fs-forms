@@ -244,7 +244,8 @@ fn the_socket_without_a_layouts_contract_says_so() {
 
 #[test]
 fn both_languages_have_the_same_ids_and_a_code_has_a_sentence() {
-    assert!(fs_components_mf2::check_pairs(TEXTS).is_empty());
+    let unpaired = fs_components_mf2::check_pairs(TEXTS);
+    assert_eq!(unpaired.len(), 0, "{unpaired:?}");
     let en = words(&fs_components_words::Locale::english()).plain("host-error-block-not-built");
     let de = words(&fs_components_words::Locale::parse("de").unwrap())
         .plain("host-error-block-not-built");

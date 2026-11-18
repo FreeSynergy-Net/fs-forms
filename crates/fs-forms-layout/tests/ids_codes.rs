@@ -1,6 +1,4 @@
 //! K59 (codes), K62 (element ids), natural ids.
-mod support;
-
 #![allow(clippy::assert_is_empty)] // tests: plain asserts read best
 use fs_forms_layout::*;
 

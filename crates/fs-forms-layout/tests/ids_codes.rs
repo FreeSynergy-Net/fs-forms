@@ -78,3 +78,42 @@ fn k59_every_code_has_a_german_and_an_english_text() {
     let last_two: Vec<&str> = LayoutCode::ALL[43..].iter().map(|c| c.as_str()).collect();
     assert_eq!(last_two, ["menu-invalid", "source-unknown"]); // append only
 }
+
+/// Q7: the parameters named in the texts are the parameters of the code: the same set in German, in English and in the doc comment
+/// of the code in `codes.rs`.
+#[test]
+fn k59_texts_name_the_parameters_of_their_code() {
+    let source = include_str!("../src/codes.rs");
+    let braces = |text: &str| -> std::collections::BTreeSet<String> {
+        text.split("{$")
+            .skip(1)
+            .map(|r| r.split('}').next().unwrap().to_owned())
+            .collect()
+    };
+    let mut documented = std::collections::BTreeMap::new();
+    let mut pending: Option<String> = None;
+    for line in source.lines().map(str::trim) {
+        if let Some(rest) = line.strip_prefix("/// `{") {
+            pending = Some(rest.split('}').next().unwrap().to_owned());
+        } else if let (Some(p), Some((_, name))) = (&pending, line.split_once(" => \"")) {
+            let key = format!("layout-error-{}", name.trim_end_matches("\","));
+            let set = p
+                .split(',')
+                .map(|x| x.trim().split('=').next().unwrap().to_owned())
+                .filter(|x| !x.is_empty())
+                .collect();
+            documented.insert(key, set);
+            pending = None;
+        }
+    }
+    assert_eq!(documented.len(), LayoutCode::ALL.len());
+    for (lang, texts) in [("de", TEXTS_DE), ("en", TEXTS_EN)] {
+        for line in texts
+            .lines()
+            .filter(|l| !l.starts_with('#') && !l.trim().is_empty())
+        {
+            let (key, text) = line.split_once(" = ").unwrap();
+            assert_eq!(&braces(text), &documented[key], "{lang} {key}");
+        }
+    }
+}

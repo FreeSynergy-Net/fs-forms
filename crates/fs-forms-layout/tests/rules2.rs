@@ -133,6 +133,8 @@ fn p3_an_overlay_cannot_get_past_the_text_limit() {
         expect: Value::None,
     };
     assert_eq!(conflict_of(&s, vec![long]), vec![Cause::ResultInvalid]);
+    // Q11: the EFFECTIVE layout keeps the short text too (resolve applies overlays in state `conflict` and must hold the limits)
+    assert_eq!(resolved(&s).layout.doc().messages[0].v.message, "Aufgaben");
     let fits = OpKind::Set {
         target,
         field: Field::Message,
@@ -184,6 +186,24 @@ fn p4_a_person_overlay_never_widens_the_allowlist() {
         .schemes
         .clone();
     assert_eq!(schemes, Some(vec!["https".to_owned()]));
+}
+
+/// Q1: not only `file`: every value a person sets is refused, whatever it is.
+#[test]
+fn p4_every_scheme_value_of_a_person_is_refused() {
+    for value in ["http", "ftp", "HTTPS", "", "https", "data", "ssh"] {
+        let s = store();
+        install(&s, schemes_doc(), "1.0");
+        assert_eq!(
+            conflict_of(&s, vec![set_scheme(value)]),
+            vec![Cause::AllowlistWidened],
+            "{value:?}"
+        );
+        let schemes = resolved(&s).layout.bindings("board", "main")[0]
+            .schemes
+            .clone();
+        assert_eq!(schemes, Some(vec!["https".to_owned()]), "{value:?}");
+    }
 }
 
 #[test]

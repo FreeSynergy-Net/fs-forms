@@ -5,3 +5,7 @@ Part of FreeSynergy Forms (probe F1b, first cut): the typed model of a forms des
 Written with the help of Claude (Anthropic); every change is reviewed by a second Claude instance and checked by the gates of the repository. Open points are listed in the CHANGELOG of the repository.
 
 Licence: MIT OR Apache-2.0.
+
+## Rule for the host
+
+A field binding without a scheme list means "no scheme is allowed" (fail closed). A person's overlay can never widen a scheme list; the instance and the package itself can.

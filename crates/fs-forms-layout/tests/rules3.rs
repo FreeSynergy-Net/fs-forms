@@ -135,3 +135,121 @@ fn o1_the_ops_of_one_overlay_run_in_seq_order() {
     assert_eq!(conflict_of(&s, ops), Vec::<Cause>::new());
     assert!(resolved(&s).layout.doc().pages[0].v.blocks.is_empty());
 }
+
+fn three_sources(block_on_source: u32) -> LayoutDoc {
+    let mut d = doc("board");
+    d.sources = vec![
+        item("source:1", source("tasks >=0.1 <0.2")),
+        item("source:2", source("people >=0.1 <0.2")),
+        item("source:3", source("groups >=0.1 <0.2")),
+    ];
+    d.pages[0].v.blocks[0].v.source = Some(block_on_source);
+    d
+}
+fn source_elem(n: u32) -> ElemRef {
+    ElemRef {
+        kind: ElemKind::Source,
+        elem: elem(&format!("source:{n}")),
+    }
+}
+
+/// Q3: removing a source in front of the one a block uses would renumber it, although the removed source itself is not referenced.
+#[test]
+fn q3_a_source_before_the_used_one_cannot_go_either() {
+    for (used, removed) in [(2, 1), (3, 1), (3, 2), (1, 2), (1, 3), (2, 3)] {
+        let s = store();
+        install(&s, three_sources(used), "1.0");
+        let want = if removed == 3 && used != 3 {
+            Vec::<Cause>::new()
+        } else {
+            vec![Cause::ResultInvalid]
+        };
+        assert_eq!(
+            conflict_of(&s, vec![remove(source_elem(removed))]),
+            want,
+            "block on {used}, remove {removed}"
+        );
+        let r = resolved(&s);
+        let doc = r.layout.doc();
+        let range = &doc.sources[usize::try_from(used - 1).unwrap()].v.range;
+        let name = ["tasks", "people", "groups"][usize::try_from(used - 1).unwrap()];
+        assert!(
+            range.starts_with(name),
+            "block on {used} still sees {name}, got {range}"
+        );
+        assert_eq!(doc.pages[0].v.blocks[0].v.source, Some(used));
+    }
+}
+
+struct BoardOnly;
+impl CatalogRules for BoardOnly {
+    fn block_known(&self, b: &str) -> bool {
+        b == "board"
+    }
+    fn slot_known(&self, _: &str, _: &str) -> bool {
+        true
+    }
+    fn slot_repeat(&self, _: &str, _: &str) -> u32 {
+        16
+    }
+}
+
+fn set_block(to: &str) -> OpKind {
+    OpKind::Set {
+        target: block_ref(),
+        field: Field::Block,
+        value: Value::Text(to.into()),
+        expect: Value::None,
+    }
+}
+
+/// Q9: a new package version re-applies every overlay; the catalog is asked again. The overlay set a block the catalog does not
+/// know: it is a conflict at writing and again, under the new base version, at the new install.
+#[test]
+fn q9_a_new_package_version_asks_the_catalog_again() {
+    let s = MemoryLayoutStore::new(Box::new(BoardOnly), Limits::declared(), who().actor);
+    install(&s, doc("board"), "1.0");
+    assert_eq!(
+        conflict_of(&s, vec![set_block("other")]),
+        vec![Cause::ResultInvalid]
+    );
+    let r = block_on(s.install(doc("board"), &pkg("2.0"), Mode::Apply, &who())).unwrap();
+    assert_eq!(
+        r.conflicts
+            .iter()
+            .map(|c| (c.cause, c.base_version.as_str()))
+            .collect::<Vec<_>>(),
+        vec![(Cause::ResultInvalid, "2.0")]
+    );
+}
+
+/// Q14: the same for the limits: an overlay text over the limit is a conflict again at the new install.
+#[test]
+fn q14_a_new_package_version_holds_the_limits_again() {
+    let limits = Limits {
+        text_bytes_max: 16,
+        ..Limits::declared()
+    };
+    let s = MemoryLayoutStore::new(Box::new(OpenCatalog), limits, who().actor);
+    install(&s, doc("board"), "1.0");
+    let target = ElemRef {
+        kind: ElemKind::Message,
+        elem: elem("message:board-title/de"),
+    };
+    let long = OpKind::Set {
+        target,
+        field: Field::Message,
+        value: Value::Text("x".repeat(100)),
+        expect: Value::None,
+    };
+    assert_eq!(conflict_of(&s, vec![long]), vec![Cause::ResultInvalid]);
+    let r = block_on(s.install(doc("board"), &pkg("2.0"), Mode::Apply, &who())).unwrap();
+    assert_eq!(
+        r.conflicts
+            .iter()
+            .map(|c| (c.cause, c.base_version.as_str()))
+            .collect::<Vec<_>>(),
+        vec![(Cause::ResultInvalid, "2.0")]
+    );
+    assert_eq!(resolved(&s).layout.doc().messages[0].v.message, "Aufgaben");
+}

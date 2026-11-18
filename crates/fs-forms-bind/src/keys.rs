@@ -74,6 +74,7 @@ impl KeyPlan {
     ) -> Keymap {
         let mut commands = Commands::new();
         let mut scoped: Vec<CommandId> = Vec::new();
+        let clashing = clashing_ids(menu, platform);
         for entry in menu.entries() {
             let MenuEntry::Command {
                 command,
@@ -86,6 +87,11 @@ impl KeyPlan {
             let id = command_id(command);
             let base = Command::new(id.as_str(), id.as_str()).shortcut(sc.clone());
             let cmd = match command_state(command, selection) {
+                // Hidden by right but sharing its key with another entry: the clash stays a clash, so the other one does
+                // not run alone (c0, K6: no silent hiding of a conflict).
+                Shown::Hidden if clashing.iter().any(|c| c == id.as_str()) => {
+                    base.disabled("bind-error-shortcut-conflict")
+                }
                 Shown::Hidden => continue,
                 Shown::Enabled => base,
                 Shown::Coming => base.unsupported("bind-error-coming"),
@@ -102,4 +108,25 @@ impl KeyPlan {
         }
         map
     }
+}
+
+/// Ids of the commands whose shortcut is shared with another entry of the menu (all entries, hidden ones too).
+fn clashing_ids(menu: &MenuPlan, platform: Platform) -> Vec<String> {
+    let mut all = Commands::new();
+    for entry in menu.entries() {
+        if let MenuEntry::Command {
+            command,
+            shortcut: Some(sc),
+            ..
+        } = entry
+        {
+            let id = command_id(command);
+            all = all.with(Command::new(id.as_str(), id.as_str()).shortcut(sc.clone()));
+        }
+    }
+    fs_components_commands::conflicts(&all, platform)
+        .into_iter()
+        .flat_map(|c| c.commands)
+        .map(|id| id.as_str().to_owned())
+        .collect()
 }

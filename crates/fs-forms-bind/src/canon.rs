@@ -77,6 +77,7 @@ impl Enc {
             Cause::Layout(_) => "layout",
             Cause::Records(_) => "records",
             Cause::Bind(_) => "bind",
+            Cause::Unknown(_) => "unknown",
         };
         self.variant(label, name, |e| e.coded(1, c.coded()));
     }

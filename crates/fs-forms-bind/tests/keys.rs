@@ -104,3 +104,40 @@ fn conflict_with_a_standard_shortcut_is_visible() {
             .contains("app.settings")
     );
 }
+
+/// K6: two commands on one key, one of them hidden for this selection: NO key runs, the clash stays a coded problem.
+#[test]
+fn a_clash_with_a_hidden_command_runs_neither() {
+    let mut r = tasks_resolved();
+    let rec = |elem: &str, name: &str| MenuIn {
+        elem: elem.into(),
+        kind: MenuKind::Command {
+            command: cmd(name, true, false, true),
+            on_selected: true,
+            shortcut: Some("ctrl+k".into()),
+        },
+        children: vec![],
+    };
+    r.menu = vec![rec("m-a", "alpha"), rec("m-b", "beta")];
+    let p = build_with(&r, &TestCatalog::new(), &tasks_facts(), host());
+    assert!(
+        p.menu
+            .locks
+            .iter()
+            .any(|l| code_of(l) == "bind-error-shortcut-conflict")
+    );
+    let sel = view(&["alpha"]);
+    let out = p
+        .keys
+        .keymap_for(&p.menu, Some(&sel), Platform::Linux)
+        .dispatch(&press("ctrl+k"), FocusContext::Global);
+    assert!(!matches!(out, Outcome::Run(_)), "{out:?}");
+    // beta alone does not clash with anything: its key stays NoMatch when hidden.
+    r.menu.remove(0);
+    let p = build_with(&r, &TestCatalog::new(), &tasks_facts(), host());
+    let out = p
+        .keys
+        .keymap_for(&p.menu, Some(&view(&[])), Platform::Linux)
+        .dispatch(&press("ctrl+k"), FocusContext::Global);
+    assert_eq!(out, Outcome::NoMatch);
+}

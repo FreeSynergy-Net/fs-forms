@@ -31,19 +31,20 @@ fn part(c: &CommandIn) -> Part {
 /// The static decision of a command. `source_lock` is the lock of its source (same cause, visible).
 #[must_use]
 pub fn command_plan(c: &CommandIn, host: HostCaps, source_lock: Option<&PartLock>) -> CommandPlan {
-    let fixed = if !c.desc.supported {
+    // A missing source wins over "coming": the cause is visible, never hidden behind "kommt" (c0, K5).
+    let fixed = if let Some(l) = source_lock {
+        Some(PartLock {
+            part: part(c),
+            severity: Severity::Locked,
+            cause: l.cause.clone(),
+        })
+    } else if !c.desc.supported {
         Some(PartLock {
             part: part(c),
             severity: Severity::Coming,
             cause: crate::codes::Cause::from_coded(
                 BindCode::Coming.coded().with("command", c.name.clone()),
             ),
-        })
-    } else if let Some(l) = source_lock {
-        Some(PartLock {
-            part: part(c),
-            severity: Severity::Locked,
-            cause: l.cause.clone(),
         })
     } else if matches!(c.target, Target::Workflow(_)) && !host.workflow {
         let wf = if let Target::Workflow(w) = &c.target {

@@ -118,8 +118,10 @@ pub enum Cause {
     Layout(Coded),
     /// `records-error-*`.
     Records(Coded),
-    /// `bind-error-*` (also the home of codes without a known prefix, so the suite can see them).
+    /// `bind-error-*`.
     Bind(Coded),
+    /// A code without a known prefix, kept with its RAW code so that it stays visible (never sorted in as `bind`).
+    Unknown(Coded),
 }
 
 impl Cause {
@@ -130,7 +132,8 @@ impl Cause {
             Family::Accepts => Cause::Accepts(c),
             Family::Layout => Cause::Layout(c),
             Family::Records => Cause::Records(c),
-            Family::Bind | Family::Unknown => Cause::Bind(c),
+            Family::Bind => Cause::Bind(c),
+            Family::Unknown => Cause::Unknown(c),
         }
     }
 
@@ -138,7 +141,11 @@ impl Cause {
     #[must_use]
     pub fn coded(&self) -> &Coded {
         match self {
-            Cause::Accepts(c) | Cause::Layout(c) | Cause::Records(c) | Cause::Bind(c) => c,
+            Cause::Accepts(c)
+            | Cause::Layout(c)
+            | Cause::Records(c)
+            | Cause::Bind(c)
+            | Cause::Unknown(c) => c,
         }
     }
 }

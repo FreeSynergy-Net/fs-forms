@@ -204,3 +204,42 @@ fn problem_on_an_unknown_element_is_an_orphan_notice_with_its_cause() {
     assert_eq!(n.cause.coded().param("elem"), Some("no-such-elem"));
     assert_eq!(n.cause.coded().param("cause"), Some("layout-error-lost"));
 }
+
+/// K5: a missing source wins over "coming": the command shows the SOURCE cause, locked, not "kommt".
+#[test]
+fn missing_source_wins_over_coming() {
+    let mut r = tasks_resolved();
+    r.menu = vec![MenuIn {
+        elem: "m-c".into(),
+        kind: MenuKind::Command {
+            command: cmd("setColumns", false, false, false),
+            on_selected: false,
+            shortcut: None,
+        },
+        children: vec![],
+    }];
+    let p = build_with(&r, &TestCatalog::new(), &FakeFacts(vec![]), host());
+    let c = p.menu.commands()[0];
+    let state = command_state(c, None);
+    assert!(
+        matches!(&state, Shown::Locked(l) if code_of(l) == "accepts-error-contract-missing"),
+        "{state:?}"
+    );
+    // With the source reached it is "coming" again.
+    let p = build_with(&r, &TestCatalog::new(), &tasks_facts(), host());
+    assert_eq!(command_state(p.menu.commands()[0], None), Shown::Coming);
+}
+
+/// K8: a code without a known prefix is kept as `Cause::Unknown` with its RAW code, never filed as `bind`.
+#[test]
+fn unknown_prefix_is_its_own_cause_with_the_raw_code() {
+    let c = Cause::from_coded(Coded::new("oops-no-prefix").with("a", "b"));
+    assert!(matches!(&c, Cause::Unknown(x) if x.code == "oops-no-prefix"));
+    assert_eq!(c.coded().code, "oops-no-prefix");
+    assert!(matches!(
+        Cause::from_coded(Coded::new("bind-error-locked")),
+        Cause::Bind(_)
+    ));
+    let l = PartLock::locked(Part::Window, Coded::new("oops-no-prefix"));
+    assert_eq!(l.coded().param("cause"), Some("oops-no-prefix"));
+}

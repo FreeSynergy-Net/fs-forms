@@ -37,7 +37,7 @@ fn rich() -> Plan {
 fn golden_digest_of_the_tasks_plan() {
     assert_eq!(
         hex(tasks_plan().digest_without_style()),
-        "89c84020d41eae2f0237909ccc6602e9f6fdcf192f703e3056a0e73286289553"
+        "85fb8056776bf2eac9f1ddfca9067d7bec8171d00697882ced3f967be73e2b3b"
     );
 }
 
@@ -47,7 +47,7 @@ fn golden_digest_of_a_plan_with_notices_and_locks() {
     assert!(!p.notices.is_empty() && !p.menu.locks.is_empty() && p.sources[0].status.is_err());
     assert_eq!(
         hex(p.digest_without_style()),
-        "3b4fd4d54185685fbcfce7b73cbd4fda7ef463d1e9c794ed3f68724339a6561e"
+        "cb10d324a069cd37034d60c89ac55cb5c13548858b2d0ff85cac896ae90dd393"
     );
 }
 

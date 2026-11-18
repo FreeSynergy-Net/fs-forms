@@ -25,7 +25,16 @@ fn plan_with_key(key: &str) -> Plan {
 
 #[test]
 fn every_global_key_is_reserved_and_the_entry_loses_its_key() {
-    for key in ["F6", "F1", "F10", "Escape", "Primary+Q", "Tab"] {
+    for key in [
+        "F6",
+        "Shift+F6",
+        "F1",
+        "F10",
+        "Escape",
+        "Primary+Q",
+        "Tab",
+        "Shift+Tab",
+    ] {
         let p = plan_with_key(key);
         let codes: Vec<String> = p.menu.locks.iter().map(code_of).collect();
         assert_eq!(codes, ["bind-error-key-reserved"], "{key}");
@@ -140,4 +149,59 @@ fn a_clash_with_a_hidden_command_runs_neither() {
         .keymap_for(&p.menu, Some(&view(&[])), Platform::Linux)
         .dispatch(&press("ctrl+k"), FocusContext::Global);
     assert_eq!(out, Outcome::NoMatch);
+}
+
+fn reserved_text(t: &str) -> bool {
+    reserved(&Shortcut::parse(t).expect("a readable key"))
+}
+
+/// P3 + Q11 (c0): exactly the listed keys without further modifiers; Shift+Tab and Shift+F6 too; Shift+F1, Ctrl+F6 and the
+/// like are free.
+#[test]
+fn p3_reserved_spellings_and_free_modified_keys() {
+    for t in [
+        "ctrl+q",
+        "Primary+Q",
+        "f1",
+        "F10",
+        "escape",
+        "F6",
+        "Shift+F6",
+        "tab",
+        "Shift+Tab",
+    ] {
+        assert!(reserved_text(t), "{t}");
+    }
+    for t in [
+        "Ctrl+Escape",
+        "Ctrl+F1",
+        "Ctrl+F10",
+        "Ctrl+Tab",
+        "Ctrl+F6",
+        "Shift+F1",
+        "Shift+F10",
+        "Shift+Escape",
+        "Alt+F1",
+        "Ctrl+Shift+Q",
+        "Alt+Q",
+        "F7",
+        "Delete",
+        "ctrl+n",
+    ] {
+        assert!(!reserved_text(t), "{t}");
+    }
+}
+
+/// P4: the stored list and the function say the same (one list); every stored key parses and is reserved.
+#[test]
+fn p4_stored_reserved_list_equals_the_function() {
+    let names = KeyPlan::default().reserved;
+    assert_eq!(names.len(), 8);
+    assert_eq!(
+        names,
+        RESERVED.iter().map(|s| (*s).to_owned()).collect::<Vec<_>>()
+    );
+    for n in &names {
+        assert!(reserved_text(n), "{n}");
+    }
 }

@@ -99,6 +99,7 @@ pub(crate) fn build_place(
 }
 
 /// A locked placement drops its slots; their locks (layout problem, missing component, locked command) must stay visible.
+/// Duplicates are removed by CAUSE (code and parameters); the part of a duplicate is not kept, the first lock of that cause is.
 fn keep_slot_locks(slots: &[SlotFill], locks: &mut Vec<PartLock>) {
     let mut add = |l: &PartLock| {
         if !locks.iter().any(|k| k.cause == l.cause) {
@@ -189,8 +190,14 @@ fn slot(
                 locks.push(PartLock::locked(place.clone(), c));
             }
             let (f, l) = field_fill(env, field, *role, schemes.clone(), &spart);
-            if slot_lock.is_none() {
-                slot_lock = l;
+            // ONE lock per slot; a second one (a layout problem AND a missing component) stays visible as a placement
+            // lock, like the other further problems above (nothing silent).
+            match (slot_lock.is_none(), l) {
+                (true, l) => slot_lock = l,
+                (false, Some(l)) => {
+                    locks.push(PartLock::locked(place.clone(), l.cause.coded().clone()));
+                }
+                (false, None) => {}
             }
             Fill::Field(f)
         }

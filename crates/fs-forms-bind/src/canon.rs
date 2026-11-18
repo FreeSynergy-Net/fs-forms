@@ -27,6 +27,7 @@ impl Enc {
         let mut inner = Enc(Vec::new());
         body(&mut inner);
         self.0.extend_from_slice(&label.to_be_bytes());
+        // A field above 4 GiB saturates its length: unreachable, the host limits (`Limits`) are far below it.
         let len = u32::try_from(inner.0.len()).unwrap_or(u32::MAX);
         self.0.extend_from_slice(&len.to_be_bytes());
         self.0.extend_from_slice(&inner.0);

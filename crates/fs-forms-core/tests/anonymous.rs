@@ -27,29 +27,49 @@ async fn small(e: &Env, a: Anonymity) -> (fs_forms_core::Survey, fs_objects::Obj
     (e.repo.publish(s.id()).await.unwrap(), q)
 }
 
-/// Counts the dates in a raw text: (the epoch day `1970-01-01`, any other date). A date is any
-/// `dddd-dd-dd` (digits only) anywhere: with or without a time or zone, alone or inside a longer
-/// string. Ids and hashes never match: the groups of a UUID are 8, 4, 4, 4 and 12 characters, never
-/// two, so `dddd-dd-dd` cannot be cut from one. This replaces a search for the current year, which
-/// said nothing in any other year and could hit a random id.
+/// True when `w` (36 bytes) has the shape of a UUID: 8-4-4-4-12 hex digits.
+fn is_uuid(w: &[u8]) -> bool {
+    w.len() == 36
+        && w.iter().enumerate().all(|(i, c)| {
+            if matches!(i, 8 | 13 | 18 | 23) {
+                *c == b'-'
+            } else {
+                c.is_ascii_hexdigit()
+            }
+        })
+}
+
+/// Counts the dates in a raw text: (the epoch day `1970-01-01`, any other date). First every real
+/// UUID (8-4-4-4-12 hex digits, the ids of the box) is blanked out, because the first hex digits of
+/// a UUIDv7 are the clock and can read like `2026-`. In the rest, every `dddd-d` (four digits, a
+/// dash, a digit) starts a date in ANY spelling: padded or not (`2026-11-5`), year and month only
+/// (`2026-11`), ordinal (`2026-322`), with or without time or zone, alone or inside a longer
+/// string. Each one counts as the epoch day only if it reads `1970-01-01`, otherwise as another
+/// date. This is never weaker than the old search for `dddd-dd-dd` and replaces the search for the
+/// current year, which said nothing in any other year and could hit a random id.
+///
+/// Not found (the old test did not see these either): a time without a date (`T10:00:00`), Unix
+/// seconds (`1790000000`), the compact ISO form (`20261118T100000Z`).
 fn dates_in(text: &str) -> (usize, usize) {
-    let b = text.as_bytes();
-    let shape = |w: &[u8]| {
-        w.len() == 10
-            && w.iter().enumerate().all(|(i, c)| {
-                if matches!(i, 4 | 7) {
-                    *c == b'-'
-                } else {
-                    c.is_ascii_digit()
-                }
-            })
-    };
-    let mut counts = (0, 0);
-    for w in b.windows(10).filter(|w| shape(w)) {
-        if w == b"1970-01-01" {
-            counts.0 += 1;
+    let mut b = text.as_bytes().to_vec();
+    let mut i = 0;
+    while i + 36 <= b.len() {
+        if is_uuid(&b[i..i + 36]) {
+            b[i..i + 36].fill(b'_');
+            i += 36;
         } else {
-            counts.1 += 1;
+            i += 1;
+        }
+    }
+    let mut counts = (0, 0);
+    for i in 0..b.len().saturating_sub(5) {
+        let w = &b[i..i + 6];
+        if w[..4].iter().all(u8::is_ascii_digit) && w[4] == b'-' && w[5].is_ascii_digit() {
+            if b[i..].starts_with(b"1970-01-01") {
+                counts.0 += 1;
+            } else {
+                counts.1 += 1;
+            }
         }
     }
     counts
@@ -57,13 +77,20 @@ fn dates_in(text: &str) -> (usize, usize) {
 
 #[test]
 fn dates_in_sees_every_form_of_a_date_in_any_year_and_no_random_id() {
-    // ids: not a date, whatever digits they hold
+    // ids: real UUIDs (8-4-4-4-12), not a date, whatever digits they hold
     for id in [
-        "2026-0000-ada0-4000-8000-000000000001",
+        "01a02026-2026-7000-8000-202620262026", // UUIDv7: group 1 ends in the year, group 2 is the year
         "0a1b2c3d-2026-1234-5678-123456789012",
         "20260101-2026-0101-2026-202601012026",
+        "00002026-2026-2026-2026-202620262026",
+        "ABCDEF12-2026-7ABC-8DEF-2026ABCDEF12", // upper case
     ] {
         assert_eq!(dates_in(&format!("\"{id}\"")), (0, 0), "{id}");
+        assert_eq!(
+            dates_in(&format!("{{\"id\":\"{id}\",\"n\":1}}")),
+            (0, 0),
+            "{id}"
+        );
     }
     for year in [2025, 2026, 2027, 2040] {
         for form in [
@@ -72,12 +99,21 @@ fn dates_in_sees_every_form_of_a_date_in_any_year_and_no_random_id() {
             format!("\"{year}-05-05\""),           // plain date
             format!("\"seen at x{year}-05-05T10:00:00Zy\""), // inside a longer string
             format!("{{\"at\":{year}-05-05}}"),    // bare in the JSON
+            format!("\"{year}-11-5\""),            // not padded
+            format!("\"{year}-11\""),              // year and month
+            format!("\"{year}-322\""),             // ordinal date
         ] {
             assert_eq!(dates_in(&form), (0, 1), "{form}");
         }
     }
+    // a date right next to a real id is still seen, and the id is still not a date
+    assert_eq!(
+        dates_in("\"01a02026-2026-7000-8000-202620262026\" \"2026-11-5\""),
+        (0, 1)
+    );
     assert_eq!(dates_in("\"1970-01-01T00:00:00Z\""), (1, 0));
     assert_eq!(dates_in("\"1970-01-01\" \"1970-01-02\""), (1, 1));
+    assert_eq!(dates_in("\"1970-01\" \"1970-1-1\""), (0, 2));
 }
 
 #[tokio::test]

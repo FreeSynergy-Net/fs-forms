@@ -57,3 +57,18 @@ fn collect_fill_locks<'a>(fill: &'a Fill, out: &mut Vec<&'a PartLock>) {
         _ => {}
     }
 }
+
+impl FieldFill {
+    /// May an address with this scheme be accepted in this field? FAIL-CLOSED (K2, c0): no list, an empty list and a field without
+    /// schemes (not a link or image) allow NOTHING; only a listed scheme (any case) is allowed. A person who sets the path of a
+    /// binding to a link field therefore never gets a field that takes everything: without a per-use list the placement is locked
+    /// (`layout-error-schemes-missing`) and this answers `false` for every scheme.
+    #[must_use]
+    pub fn allows_scheme(&self, scheme: &str) -> bool {
+        self.basic.has_schemes()
+            && self
+                .schemes
+                .as_deref()
+                .is_some_and(|l| l.iter().any(|s| s.eq_ignore_ascii_case(scheme)))
+    }
+}

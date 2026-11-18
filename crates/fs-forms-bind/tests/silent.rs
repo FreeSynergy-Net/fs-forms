@@ -75,7 +75,11 @@ fn r3_command_lock_on_locked_place_is_kept() {
             workflow: false,
         },
     );
-    assert!(has(&p, "bind-error-write-later"), "{:?}", all_codes(&p));
+    let on_place: Vec<String> = locks_of(&p, "board", "main").iter().map(code_of).collect();
+    assert!(
+        on_place.contains(&"bind-error-write-later".to_owned()),
+        "{on_place:?}"
+    );
 }
 
 /// O21: a problem on a reached source locks the source (not only a notice).
@@ -183,4 +187,20 @@ fn same_seq_on_a_page_locks_both_placements() {
             "{pl}: {codes:?}"
         );
     }
+}
+
+/// O5: a problem whose element is not in the plan becomes `elem-orphan{elem, cause}`; nothing is dropped.
+#[test]
+fn problem_on_an_unknown_element_is_an_orphan_notice_with_its_cause() {
+    let mut r = tasks_resolved();
+    r.problems
+        .push(problem("no-such-elem", "layout-error-lost"));
+    let p = build_with(&r, &TestCatalog::new(), &tasks_facts(), host());
+    let n = p
+        .notices
+        .iter()
+        .find(|n| n.cause.coded().code == "bind-error-elem-orphan")
+        .expect("orphan notice");
+    assert_eq!(n.cause.coded().param("elem"), Some("no-such-elem"));
+    assert_eq!(n.cause.coded().param("cause"), Some("layout-error-lost"));
 }

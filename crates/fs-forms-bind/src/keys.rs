@@ -12,19 +12,40 @@ use crate::commands::{Shown, command_id, command_state};
 use crate::menu::{MenuEntry, MenuPlan};
 use crate::types::RecordView;
 
-/// Keys a description may not bind (owner wins; c0, 18.11.): the global, fixed shortcuts Primary+Q (quit), F1 (help), F6 (area
-/// change), F10 (menu), Escape, plus Tab and Shift+Tab (focus). `delete` is NOT reserved: it is an ordinary command that runs only in a list.
-/// Until the commands crate carries the one constant `RESERVED` this is the local copy.
+/// Keys a description may not bind (owner wins; c0, 18.11.): exactly these, WITHOUT further modifiers: Tab, F1, F6, F10, Escape,
+/// Primary+Q, plus Shift+Tab and Shift+F6 (backwards, for accessibility). Shift+F1, Ctrl+F6 and the like are free. `delete` is
+/// NOT reserved: it is an ordinary command that runs only in a list. The list exists ONCE: [`RESERVED`]; this function and the
+/// stored `KeyPlan.reserved` both follow it. Until the commands crate carries the constant, this is the local copy.
 #[must_use]
 pub fn reserved(sc: &Shortcut) -> bool {
-    let m = sc.modifiers();
-    let plain = !(m.primary || m.control || m.alt || m.meta);
-    let key = sc.key();
-    (key == "Tab" && plain)
-        || key == "F6"
-        || (["F1", "F10", "Escape"].contains(&key) && plain)
-        || ((m.primary || m.control || m.meta) && key == "Q")
+    // Primary, Control and Meta count as one "command" modifier (Primary resolves per platform).
+    let norm = |s: &Shortcut| {
+        let m = s.modifiers();
+        (
+            s.key().to_owned(),
+            m.primary || m.control || m.meta,
+            m.alt,
+            m.shift,
+        )
+    };
+    let me = norm(sc);
+    RESERVED
+        .iter()
+        .filter_map(|t| Shortcut::parse(t).ok())
+        .any(|r| norm(&r) == me)
 }
+
+/// The one list of reserved keys, as text.
+pub const RESERVED: [&str; 8] = [
+    "Tab",
+    "Shift+Tab",
+    "F1",
+    "F6",
+    "Shift+F6",
+    "F10",
+    "Escape",
+    "Primary+Q",
+];
 
 /// Editing keys of a text field: bound without a modifier they run only in a list, never while typing.
 #[must_use]
@@ -54,10 +75,7 @@ pub struct KeyPlan {
 impl Default for KeyPlan {
     fn default() -> Self {
         Self {
-            reserved: ["Tab", "Shift+Tab", "F6", "F1", "F10", "Escape", "Primary+Q"]
-                .iter()
-                .map(|s| (*s).to_owned())
-                .collect(),
+            reserved: RESERVED.iter().map(|s| (*s).to_owned()).collect(),
         }
     }
 }

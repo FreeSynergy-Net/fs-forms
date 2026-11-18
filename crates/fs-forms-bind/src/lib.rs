@@ -48,7 +48,7 @@ pub use commands::{Shown, command_id, command_plan, command_state};
 pub use fs_components_commands::{
     CommandId, FocusContext, KeyPress, Keymap, Modifiers, Outcome, Platform, Shortcut,
 };
-pub use keys::{KeyPlan, list_only, reserved};
+pub use keys::{KeyPlan, RESERVED, list_only, reserved};
 pub use menu::{Arranged, MenuEntry, MenuNode, MenuPlan};
 pub use menu_std::{StandardMenus, StdEntry};
 pub use model::*;

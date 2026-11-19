@@ -20,10 +20,9 @@ pub fn scaffold_layout(text: &str) -> Result<Option<String>, Coded<LayoutCode>> 
     };
     let doc = toml_edit::ImDocument::parse(text)
         .map_err(|e| bad(e.span().map_or(0, |s| line_at(text, s.start)), "toml"))?;
-    let item = &doc["frontend"]["layout"];
-    if item.is_none() {
+    let Some(item) = doc.get("frontend").and_then(|f| f.get("layout")) else {
         return Ok(None);
-    }
+    };
     item.as_str()
         .map(|s| Some(s.to_owned()))
         .ok_or_else(|| bad(0, "type"))

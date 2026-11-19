@@ -40,6 +40,7 @@ fn tasks_board() -> View {
     View {
         frontend: "board".into(),
         title: "Tasks".into(),
+        style: None,
         pages: vec![
             page(
                 "board",

@@ -26,3 +26,4 @@ kanban-move_right = Nach rechts
 kanban-more_facts = weitere
 kanban-empty = Hier ist nichts
 kanban-soon = Kommt später
+host-notice-style-unknown = Die Beschreibung nennt einen Stil, den es in dieser Version nicht gibt; es gilt der für das Programm eingestellte Stil

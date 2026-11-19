@@ -220,3 +220,33 @@ fn the_blueprint_decides_which_file_when_there_are_several() {
     fs::write(d.join("scaffold.toml"), "[frontend\n").unwrap();
     assert_eq!(resolve(&d, "").unwrap_err().code(), "layout-unreadable");
 }
+
+#[test]
+fn the_style_of_the_description_is_kept_and_a_name_that_is_no_style_is_said() {
+    let write = |name: &str, line: &str| {
+        let d = dir(name);
+        let f = d.join("board.toml");
+        fs::write(&f, BOARD.replace("style = \"default\"", line)).unwrap();
+        resolve(&f, "").unwrap()
+    };
+    let said = |v: &fs_forms_run::View| {
+        v.notices
+            .iter()
+            .any(|n| n.code == "host-notice-style-unknown")
+    };
+    let plain = write("style-default", "style = \"default\"");
+    assert_eq!(plain.style.as_deref(), Some("default"));
+    assert!(!said(&plain), "`default` is no unknown style");
+    let named = write("style-apple", "style = \"apple\"");
+    assert_eq!(named.style.as_deref(), Some("apple"));
+    assert!(!said(&named));
+    let wrong = write("style-neon", "style = \"neon\"");
+    assert!(said(&wrong), "a style this version does not have is said");
+    assert!(
+        wrong
+            .notices
+            .iter()
+            .any(|n| n.params == [("style".to_owned(), "neon".to_owned())]),
+        "the notice names the style"
+    );
+}

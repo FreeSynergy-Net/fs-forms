@@ -21,6 +21,8 @@ pub(crate) const MIN_H: f32 = 380.0;
 /// What a drawn block needs besides its name.
 #[derive(Clone)]
 pub(crate) struct Ctx {
+    /// The style of the window NOW (asked at every drawing).
+    pub style: Arc<dyn Fn() -> StyleId + Send + Sync>,
     pub records: Arc<dyn Records>,
     pub say: Arc<dyn Say>,
 }
@@ -55,7 +57,7 @@ fn board(ctx: &Ctx, width: f32, height: f32) -> Div {
         columns: ctx.records.columns(),
         ops: Vec::new(),
     });
-    let board = KanbanBoard::new(source, ctx.say.clone(), Look::new(StyleId::Admin, dark()));
+    let board = KanbanBoard::new(source, ctx.say.clone(), Look::new((ctx.style)(), dark()));
     let height = height.max(MIN_H);
     div().w(width).h(height).child(board.build(width, height))
 }

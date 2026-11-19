@@ -5,6 +5,8 @@
 
 use std::path::PathBuf;
 
+use fs_components_styles::StyleId;
+
 /// The help text.
 pub const HELP: &str = "fs-forms-run (--description PATH | PATH | --frontend ID --extends APPSTREAM-ID [--forms-socket PATH]) [--socket PATH] [--fresh | --resumed]\n\
     [--check] [--picture FILE.png [--size WIDTHxHEIGHT] [--screen PAGE]]\n\
@@ -16,6 +18,8 @@ The forms host: opens the window that the layout of a program describes. The sta
   --forms-socket P   the socket of `fs-forms serve` (default: $XDG_RUNTIME_DIR/freesynergy/forms.sock)\n\
   --socket PATH      the socket of the program (handed on to the data sources)\n\
   --check            only connect and fetch the layout, then exit (0 fits, 3 contract differs or no layouts, 1 failed)\n\
+  --style NAME       the style set for the program: what a description that says `style = \"default\"` gets (admin, simple, apple,
+                     windows, craft; the preset is admin); a description that names a style keeps its own
   --sample-data      fill the board and side list with built-in sample records (pictures, development; never a starter)\n\
   --picture FILE     draw the window to a picture, without opening it\n\
   --version, -V      print the version and exit\n\
@@ -43,6 +47,8 @@ pub struct Config {
     pub sample_data: bool,
     /// The page to show first.
     pub page: Option<String>,
+    /// The style set for the program (`--style`); `None` is the preset, `admin`.
+    pub style: Option<StyleId>,
 }
 
 /// What to do.
@@ -86,6 +92,12 @@ pub fn parse(words: &[String]) -> Result<Command, String> {
             "--picture" => picture = Some(PathBuf::from(value("--picture")?)),
             "--size" => size = parse_size(&value("--size")?)?,
             "--screen" => c.page = Some(value("--screen")?),
+            "--style" => {
+                let name = value("--style")?;
+                c.style = Some(StyleId::from_name(&name).ok_or_else(|| {
+                    format!("--style wants one of {}, not {name}", crate::style::names())
+                })?);
+            }
             "--description" => c.description = Some(PathBuf::from(value("--description")?)),
             other if !other.starts_with('-') && c.description.is_none() => {
                 c.description = Some(PathBuf::from(other));

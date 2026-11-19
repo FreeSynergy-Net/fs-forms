@@ -84,13 +84,17 @@ fn window(c: &Config) -> ExitCode {
     } else {
         std::sync::Arc::new(crate::records::NoRecords)
     };
-    let widget = match crate::window::app_with(&texts, &locale, &view, &comp, records) {
-        Ok(w) => w,
-        Err(e) => {
-            eprintln!("fs-forms-run: {e}");
-            return ExitCode::FAILURE;
-        }
-    };
+    let program_style = std::sync::Arc::new(crate::style::StyleCell::new(
+        c.style.unwrap_or(fs_components_styles::StyleId::Admin),
+    ));
+    let widget =
+        match crate::window::app_styled(&texts, &locale, &view, &comp, records, program_style) {
+            Ok(w) => w,
+            Err(e) => {
+                eprintln!("fs-forms-run: {e}");
+                return ExitCode::FAILURE;
+            }
+        };
     if let Some(page) = &c.page {
         widget.select(page);
     }

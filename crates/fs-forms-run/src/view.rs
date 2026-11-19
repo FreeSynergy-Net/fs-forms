@@ -91,6 +91,8 @@ pub struct View {
     pub frontend: String,
     /// The title of the window.
     pub title: String,
+    /// The style the description names (`default` or none: the style set for the program).
+    pub style: Option<String>,
     /// The pages.
     pub pages: Vec<PageView>,
     /// The program menu.

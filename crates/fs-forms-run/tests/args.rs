@@ -70,3 +70,32 @@ fn check_picture_version_and_help() {
     };
     assert_eq!(c.picture, Some((PathBuf::from("p.png"), (800, 600))));
 }
+
+#[test]
+fn the_style_set_for_the_program_is_a_style_name_and_a_wrong_one_is_a_message() {
+    let Ok(Command::Window(c)) = parse(&words("--description x --style apple")) else {
+        panic!("not a window");
+    };
+    assert_eq!(
+        c.style.map(fs_components_styles::StyleId::name),
+        Some("apple")
+    );
+    let Ok(Command::Window(none)) = parse(&words("--description x")) else {
+        panic!("not a window");
+    };
+    assert_eq!(
+        none.style, None,
+        "no word: the preset (admin) is the host's, not the parser's"
+    );
+    let Err(message) = parse(&words("--description x --style neon")) else {
+        panic!("a wrong style is accepted");
+    };
+    assert!(
+        message.contains("neon") && message.contains("admin") && message.contains("craft"),
+        "{message}"
+    );
+    assert!(
+        parse(&words("--description x --style")).is_err(),
+        "a missing value"
+    );
+}

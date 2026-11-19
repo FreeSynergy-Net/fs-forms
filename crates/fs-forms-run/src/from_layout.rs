@@ -86,11 +86,17 @@ pub fn view_of(layout: &Layout, lang: &str) -> View {
         .collect();
     let mut menu = Vec::new();
     menu_items(layout, &doc.menu, lang, &mut menu);
+    let mut notices = vec![Coded::new("host-notice-no-providers")];
+    if let Some(name) = crate::style::unknown(doc.style.as_deref()) {
+        // said, never silent: the window then uses the style set for the program
+        notices.push(Coded::new("host-notice-style-unknown").with("style", name));
+    }
     View {
         frontend: doc.key.frontend.clone(),
         title: text(layout, &doc.title_key, lang),
+        style: doc.style.clone(),
         pages,
         menu,
-        notices: vec![Coded::new("host-notice-no-providers")],
+        notices,
     }
 }

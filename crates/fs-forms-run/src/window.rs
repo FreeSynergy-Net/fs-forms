@@ -17,6 +17,7 @@ use crate::draw::Ctx;
 use crate::error::HostError;
 use crate::page::Page;
 use crate::records::{NoRecords, Records};
+use crate::style::{StyleCell, StyleSource, resolve};
 use crate::view::{Coded, MenuItem, MenuState, View};
 
 /// A part, with its sentences already made.
@@ -154,12 +155,37 @@ pub fn app_with(
     comp: &Composition,
     records: Arc<dyn Records>,
 ) -> Result<AppWidget, AppError> {
+    app_styled(
+        texts,
+        locale,
+        view,
+        comp,
+        records,
+        Arc::new(StyleCell::default()),
+    )
+}
+
+/// The window for `comp`, with records and the source of the style set for the program (a description that says `default` gets
+/// that style, asked again at every drawing).
+///
+/// # Errors
+/// The shell could not be made (no screen, a name that is empty).
+pub fn app_styled(
+    texts: &Mf2Texts,
+    locale: &Locale,
+    view: &View,
+    comp: &Composition,
+    records: Arc<dyn Records>,
+    program_style: Arc<dyn StyleSource>,
+) -> Result<AppWidget, AppError> {
     // the words of the board are asked by key while drawing; they are read once, here, from the host's own MF2 files
     let said: std::collections::HashMap<String, String> = KANBAN_KEYS
         .iter()
         .map(|k| ((*k).to_owned(), texts.plain(&k.replace('.', "-"))))
         .collect();
+    let named = view.style.clone();
     let ctx = Ctx {
+        style: Arc::new(move || resolve(named.as_deref(), program_style.current())),
         records,
         say: Arc::new(move |key: &str| said.get(key).cloned().unwrap_or_else(|| key.to_owned())),
     };

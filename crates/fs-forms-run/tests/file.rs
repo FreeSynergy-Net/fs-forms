@@ -59,6 +59,12 @@ fn a_blueprint_folder_names_its_description() {
         "commands of the menu are read: {:?}",
         v.menu
     );
+    let claim = v.menu.iter().find(|m| m.id == "claim").unwrap();
+    assert_eq!(
+        claim.state,
+        fs_forms_run::MenuState::Coming,
+        "no provider is connected: a command is there but does not run"
+    );
     assert!(
         !v.notices.is_empty(),
         "no provider is connected and the window says so"

@@ -71,6 +71,16 @@ pub(crate) fn parts(texts: &Mf2Texts, nodes: &[Node]) -> Vec<Part> {
         .collect()
 }
 
+/// The lines of a notice, the name of the part in front of the first one, and how many parts the notice counts (one per line).
+pub(crate) fn notice_items(name: &str, lines: &[String]) -> (Vec<String>, usize) {
+    let mut missing = lines.to_vec();
+    if let (false, Some(first)) = (name.is_empty(), missing.first_mut()) {
+        *first = format!("{name}: {first}");
+    }
+    let total = missing.len();
+    (missing, total)
+}
+
 struct Page {
     empty: String,
     parts: Vec<Part>,
@@ -83,12 +93,8 @@ impl Surface for Page {
         for part in &self.parts {
             column = match part {
                 Part::Locked { name, lines } => {
-                    // the name of the part stands in front of its first line: the notice counts parts, not lines
-                    let mut missing = lines.clone();
-                    if let (false, Some(first)) = (name.is_empty(), missing.first_mut()) {
-                        *first = format!("{name}: {first}");
-                    }
-                    column.child(PartialNotice::new(&self.labels, &missing, missing.len()).build())
+                    let (missing, total) = notice_items(name, lines);
+                    column.child(PartialNotice::new(&self.labels, &missing, total).build())
                 }
                 Part::Empty(sentence) => column.child(EmptyState::new(sentence).build()),
                 Part::Block {
@@ -219,6 +225,19 @@ pub fn app(
 
 #[cfg(test)]
 mod tests {
+    use super::notice_items;
+
+    #[test]
+    fn a_notice_counts_one_per_line_and_names_the_part_in_the_first() {
+        let lines = vec!["a".to_owned(), "b".to_owned()];
+        assert_eq!(
+            notice_items("side", &lines),
+            (vec!["side: a".to_owned(), "b".to_owned()], 2)
+        );
+        assert_eq!(notice_items("", &lines), (lines.clone(), 2));
+        assert_eq!(notice_items("x", &[]), (Vec::new(), 0));
+    }
+
     use super::{Part, line, parts};
     use crate::compose::Node;
     use crate::view::Coded;

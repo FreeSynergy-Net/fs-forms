@@ -89,6 +89,23 @@ mod links {
 
     use super::*;
 
+    #[test]
+    fn a_scaffold_that_cannot_be_opened_is_said_not_skipped() {
+        use std::os::unix::fs::PermissionsExt;
+        let d = dir("scaffold-denied");
+        fs::create_dir_all(d.join("forms")).unwrap();
+        fs::write(d.join("forms/board.toml"), BOARD).unwrap();
+        let scaffold = d.join("scaffold.toml");
+        fs::write(&scaffold, "[program]\nname = \"x\"\n").unwrap();
+        fs::set_permissions(&scaffold, fs::Permissions::from_mode(0o000)).unwrap();
+        if fs::File::open(&scaffold).is_ok() {
+            return; // a user that may read everything (root): nothing to test here
+        }
+        let e = resolve(&d, "").unwrap_err();
+        assert_eq!(e.code(), "layout-unreadable", "{e}");
+        assert!(problems(&e).contains("layout-read-failed"), "{e}");
+    }
+
     fn refused(d: &PathBuf) {
         let e = resolve(d, "").unwrap_err();
         assert_eq!(e.code(), "layout-unreadable", "{e}");

@@ -121,11 +121,9 @@ mod tests {
         );
         let failed = failure(ServeError::Failed("no socket".into()));
         assert_eq!(failed.exit, Exit::FAILED);
-        assert!(
-            failed
-                .code
-                .to_string()
-                .starts_with("forms-error-serve-failed")
+        assert_eq!(
+            failed.code.to_string(),
+            "forms-error-serve-failed (message=no socket)"
         );
     }
 

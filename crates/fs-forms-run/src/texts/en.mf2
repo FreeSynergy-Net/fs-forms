@@ -1,0 +1,15 @@
+# The words of the forms host, English (ADR 0057: MessageFormat 2). Every id needs a German twin in de.mf2.
+host-title = Forms
+host-error-no-socket = No socket of the forms server is known; the starter must name one
+host-error-layouts-unreachable = The forms server does not answer
+host-error-layouts-contract-missing = The forms server does not offer the layouts this host speaks
+host-error-layout-missing = This program has no layout for this frontend
+host-error-layout-store = The store of layouts is in emergency mode
+host-error-block-not-built = This part cannot be drawn yet: its block is not built in this version
+host-error-no-pages = The layout has no pages
+host-status-ready = Ready
+host-status-partial = Some parts are locked; the rest works
+host-status-refused = Nothing can be drawn
+host-page-empty = This page is empty
+host-menu-coming = coming soon
+host-screen-error = Problem

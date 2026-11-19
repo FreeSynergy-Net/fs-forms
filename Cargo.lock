@@ -1544,6 +1544,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "fs-forms-run"
+version = "0.0.2"
+dependencies = [
+ "fs-components",
+ "fs-components-app",
+ "fs-components-mf2",
+ "fs-components-widgets",
+ "fs-components-words",
+ "fs-forms-client",
+]
+
+[[package]]
 name = "fs-forms-server"
 version = "0.0.2"
 dependencies = [

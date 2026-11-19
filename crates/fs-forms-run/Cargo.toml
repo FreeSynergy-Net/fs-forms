@@ -1,0 +1,28 @@
+[package]
+name = "fs-forms-run"
+description = "FreeSynergy Forms host (read only, first frame): connects to the layouts of fs-forms, takes the plan, lets the catalog choose and puts the window together from fs-components blocks only"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[lib]
+name = "fs_forms_run"
+
+# The process the starter runs (`fs:exec = fs-forms-run`, ADR 0094): never started by a person directly.
+[[bin]]
+name = "fs-forms-run"
+path = "src/main.rs"
+
+# H-K1: only the forms client and fs-components; no `fs-<program>-*`, no -core, no -server, no toml, no serde_json (a test reads
+# `cargo tree`). The pins are the ones of `fs-forms-simple` (no pin changed). `fs-forms-bind` (probe H1, unpushed at the time of
+# writing) joins when its crate is pinned: `view::View` is the narrow projection of its `Plan` until then.
+[dependencies]
+fs-forms-client = { path = "../fs-forms-client" }
+fs-components = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.25" }
+fs-components-app = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.25" }
+fs-components-widgets = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.25" }
+fs-components-mf2 = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.25" }
+fs-components-words = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.25" }

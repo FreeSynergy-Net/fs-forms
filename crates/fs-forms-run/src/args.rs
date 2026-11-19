@@ -6,10 +6,12 @@
 use std::path::PathBuf;
 
 /// The help text.
-pub const HELP: &str = "fs-forms-run --frontend ID --extends APPSTREAM-ID [--forms-socket PATH] [--socket PATH] [--fresh | --resumed]\n\
+pub const HELP: &str = "fs-forms-run (--description PATH | PATH | --frontend ID --extends APPSTREAM-ID [--forms-socket PATH]) [--socket PATH] [--fresh | --resumed]\n\
     [--check] [--picture FILE.png [--size WIDTHxHEIGHT] [--screen PAGE]]\n\
 The forms host: opens the window that the layout of a program describes. The starter runs it; start the program, not this.\n\
-  --frontend ID      the key of the frontend (a layout of the program)\n\
+  --description P    a blueprint folder (scaffold.toml, `[frontend] layout`), a folder with forms/*.toml, or one description file;\n\
+                     the host reads it and draws the window; the same as a bare PATH. Nothing of the program is built into the host\n\
+  --frontend ID      the key of the frontend (a layout of the program; with a folder of several files: which one)\n\
   --extends ID       the AppStream id of the program the layout is for\n\
   --forms-socket P   the socket of `fs-forms serve` (default: $XDG_RUNTIME_DIR/freesynergy/forms.sock)\n\
   --socket PATH      the socket of the program (handed on to the data sources)\n\
@@ -22,6 +24,8 @@ Exit codes: 0 done, 1 failed, 2 wrong words, 3 the layouts or their contract are
 /// What the starter asked for.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Config {
+    /// A blueprint folder, a folder of descriptions or one description file to read instead of asking the server.
+    pub description: Option<PathBuf>,
     /// The key of the frontend.
     pub frontend: String,
     /// The `AppStream` id of the program.
@@ -78,11 +82,18 @@ pub fn parse(words: &[String]) -> Result<Command, String> {
             "--picture" => picture = Some(PathBuf::from(value("--picture")?)),
             "--size" => size = parse_size(&value("--size")?)?,
             "--screen" => c.page = Some(value("--screen")?),
+            "--description" => c.description = Some(PathBuf::from(value("--description")?)),
+            other if !other.starts_with('-') && c.description.is_none() => {
+                c.description = Some(PathBuf::from(other));
+            }
             other => return Err(format!("unknown option {other}")),
         }
     }
-    if c.frontend.is_empty() || c.extends.is_empty() {
-        return Err("--frontend and --extends are needed (the starter hands them over)".to_owned());
+    if c.description.is_none() && (c.frontend.is_empty() || c.extends.is_empty()) {
+        return Err(
+            "--description PATH, or --frontend and --extends (the starter hands them over), is needed"
+                .to_owned(),
+        );
     }
     c.picture = picture.map(|p| (p, size));
     Ok(if check {

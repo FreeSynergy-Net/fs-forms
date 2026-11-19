@@ -23,7 +23,11 @@ use crate::view::{Coded, MenuItem, MenuState, View};
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Part {
     /// A block that is built; the host has a drawing for the state blocks only.
-    Block { place: String, block: String },
+    Block {
+        place: String,
+        block: String,
+        title: Option<String>,
+    },
     /// Not drawn: the name of the part and one line per code.
     Locked { name: String, lines: Vec<String> },
     /// An empty page with its sentence.
@@ -48,9 +52,12 @@ pub(crate) fn parts(texts: &Mf2Texts, nodes: &[Node]) -> Vec<Part> {
     nodes
         .iter()
         .map(|n| match n {
-            Node::Block { place, block, .. } => Part::Block {
+            Node::Block {
+                place, block, title, ..
+            } => Part::Block {
                 place: place.clone(),
                 block: block.clone(),
+                title: title.clone(),
             },
             Node::Locked { place, codes } => Part::Locked {
                 name: place.clone().unwrap_or_default(),
@@ -62,6 +69,7 @@ pub(crate) fn parts(texts: &Mf2Texts, nodes: &[Node]) -> Vec<Part> {
 }
 
 struct Page {
+    empty: String,
     parts: Vec<Part>,
     labels: states::Labels,
 }
@@ -76,10 +84,18 @@ impl Surface for Page {
                     if !name.is_empty() {
                         missing.insert(0, name.clone());
                     }
-                    column.child(PartialNotice::new(&self.labels, &missing, missing.len()).build())
+                    column.child(PartialNotice::new(&self.labels, &missing, lines.len()).build())
                 }
                 Part::Empty(sentence) => column.child(EmptyState::new(sentence).build()),
-                Part::Block { place, block } => {
+                Part::Block {
+                    place,
+                    block,
+                    title,
+                } if block == "empty-state" => {
+                    let _ = place;
+                    column.child(EmptyState::new(title.as_deref().unwrap_or(&self.empty)).build())
+                }
+                Part::Block { place, block, .. } => {
                     column.child(states::Skeleton::new(&format!("{place} ({block})")).build())
                 }
             };
@@ -156,6 +172,7 @@ pub fn app(
         .iter()
         .map(|s| {
             let page = Page {
+                empty: texts.plain("host-page-empty"),
                 parts: parts(texts, &s.nodes),
                 labels: labels.clone(),
             };
@@ -165,6 +182,7 @@ pub fn app(
     if !comp.notices.is_empty() || screens.is_empty() {
         let lines: Vec<String> = comp.notices.iter().map(|c| line(texts, c)).collect();
         let page = Page {
+            empty: texts.plain("host-page-empty"),
             parts: vec![Part::Locked {
                 name: String::new(),
                 lines,

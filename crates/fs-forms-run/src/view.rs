@@ -39,6 +39,8 @@ pub struct PlaceView {
     pub seq: u32,
     /// The block the catalog chose.
     pub block: String,
+    /// The words of the placement's title (already in the reader's language), if the description gives one.
+    pub title: Option<String>,
     /// Not drawn: every lock (the host draws a `partial-notice` with all of them). Empty = drawn.
     pub locks: Vec<Coded>,
     /// Locks of single slots (the block is still drawn).

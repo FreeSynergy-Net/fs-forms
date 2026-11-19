@@ -17,6 +17,7 @@ use fs_forms_run::{
 
 fn place(name: &str, seq: u32, block: &str) -> PlaceView {
     PlaceView {
+        title: None,
         place: name.into(),
         seq,
         block: block.into(),

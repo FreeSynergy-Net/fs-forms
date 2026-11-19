@@ -13,3 +13,5 @@ host-status-refused = Nothing can be drawn
 host-page-empty = This page is empty
 host-menu-coming = coming soon
 host-screen-error = Problem
+host-error-layout-unreadable = The description of this frontend cannot be read or does not pass the checks
+host-notice-no-providers = Data sources are not connected in this version; the parts show their frame, not their data

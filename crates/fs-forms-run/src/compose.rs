@@ -29,6 +29,8 @@ pub enum Node {
         block: String,
         /// Locks of single slots (the block shows them itself).
         slot_locks: Vec<Coded>,
+        /// The words of the placement's title, if there are any.
+        title: Option<String>,
     },
     /// A part that is not drawn: a `partial-notice` with every code. `place` is `None` for the page itself.
     Locked {
@@ -92,11 +94,12 @@ fn screen(page: &PageView, catalog: &dyn Catalog) -> ScreenTree {
                 place: Some(p.place.clone()),
                 codes: p.locks.clone(),
             });
-        } else if catalog.built(&p.block) {
+        } else if catalog.draws(&p.block) {
             nodes.push(Node::Block {
                 place: p.place.clone(),
                 block: p.block.clone(),
                 slot_locks: p.slot_locks.clone(),
+                title: p.title.clone(),
             });
         } else {
             nodes.push(Node::Locked {

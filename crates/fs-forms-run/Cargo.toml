@@ -21,6 +21,8 @@ path = "src/main.rs"
 # writing) joins when its crate is pinned: `view::View` is the narrow projection of its `Plan` until then.
 [dependencies]
 fs-forms-client = { path = "../fs-forms-client" }
+fs-forms-layout = { path = "../fs-forms-layout" }
+fs-forms-exchange = { path = "../fs-forms-exchange" }
 fs-components = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.25" }
 fs-components-app = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.25" }
 fs-components-widgets = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.25" }

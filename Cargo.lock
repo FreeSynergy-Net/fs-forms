@@ -1553,6 +1553,8 @@ dependencies = [
  "fs-components-widgets",
  "fs-components-words",
  "fs-forms-client",
+ "fs-forms-exchange",
+ "fs-forms-layout",
 ]
 
 [[package]]

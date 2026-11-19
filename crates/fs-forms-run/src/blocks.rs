@@ -32,4 +32,8 @@ impl Catalog for Blocks {
     fn built(&self, block: &str) -> bool {
         BUILT.contains(&block)
     }
+
+    fn draws(&self, block: &str) -> bool {
+        self.built(block) && !Self::is_frame(block)
+    }
 }

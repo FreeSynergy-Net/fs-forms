@@ -11,6 +11,7 @@ use crate::args::{Command, Config, HELP, parse};
 use crate::blocks::Blocks;
 use crate::compose::compose;
 use crate::error::{EXIT_CONTRACT, HostError};
+use crate::file::FileLink;
 use crate::link::{LayoutLink, SocketLink};
 use crate::view::View;
 use crate::window::{app, failure};
@@ -33,11 +34,8 @@ pub fn run(args: &[String]) -> ExitCode {
             ExitCode::SUCCESS
         }
         Ok(Command::Check(c)) => match fetch(&c) {
-            Ok(_) => {
-                println!(
-                    "fs-forms-run: the layout of {} / {} is there",
-                    c.extends, c.frontend
-                );
+            Ok(view) => {
+                println!("fs-forms-run: the description of the frontend {} is there", view.frontend);
                 ExitCode::SUCCESS
             }
             Err(e) => end(&e),
@@ -47,6 +45,10 @@ pub fn run(args: &[String]) -> ExitCode {
 }
 
 fn fetch(c: &Config) -> Result<View, HostError> {
+    if let Some(path) = &c.description {
+        let lang = session_locale().primary().to_owned();
+        return FileLink::new(path, lang).resolve(&c.extends, &c.frontend);
+    }
     SocketLink::open(c.forms_socket.as_deref())?.resolve(&c.extends, &c.frontend)
 }
 

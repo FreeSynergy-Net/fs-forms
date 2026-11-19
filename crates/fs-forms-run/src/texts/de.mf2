@@ -13,3 +13,5 @@ host-status-refused = Nichts kann gezeichnet werden
 host-page-empty = Diese Seite ist leer
 host-menu-coming = kommt noch
 host-screen-error = Problem
+host-error-layout-unreadable = Die Beschreibung dieses Frontends ist nicht lesbar oder besteht die Prüfung nicht
+host-notice-no-providers = Datenquellen sind in dieser Version nicht angeschlossen; die Teile zeigen ihren Rahmen, keine Daten

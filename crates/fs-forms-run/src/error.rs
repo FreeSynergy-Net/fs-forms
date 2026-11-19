@@ -30,6 +30,18 @@ pub enum HostError {
         /// The frontend.
         frontend: String,
     },
+    /// The description named by a path is not there (no file, no folder with one).
+    DescriptionMissing {
+        /// The path that was looked at.
+        path: String,
+    },
+    /// The description is there but cannot be read or does not pass the checks.
+    LayoutUnreadable {
+        /// The file.
+        file: String,
+        /// One line per problem (code and parameters), all of them.
+        problems: Vec<String>,
+    },
     /// The store of layouts is in emergency mode (`layout-error-store-broken` or `-store-newer`, from `health`).
     LayoutStore {
         /// The code of the store.
@@ -45,7 +57,8 @@ impl HostError {
             Self::NoSocket => "no-socket",
             Self::LayoutsUnreachable { .. } => "layouts-unreachable",
             Self::LayoutsContractMissing { .. } => "layouts-contract-missing",
-            Self::LayoutMissing { .. } => "layout-missing",
+            Self::LayoutMissing { .. } | Self::DescriptionMissing { .. } => "layout-missing",
+            Self::LayoutUnreadable { .. } => "layout-unreadable",
             Self::LayoutStore { .. } => "layout-store",
         }
     }
@@ -61,6 +74,10 @@ impl HostError {
             Self::LayoutMissing { extends, frontend } => {
                 vec![("extends", extends.clone()), ("frontend", frontend.clone())]
             }
+            Self::DescriptionMissing { path } => vec![("path", path.clone())],
+            Self::LayoutUnreadable { file, problems } => {
+                vec![("file", file.clone()), ("problems", problems.join(" | "))]
+            }
             Self::LayoutStore { code } => vec![("code", code.clone())],
         }
     }
@@ -68,7 +85,13 @@ impl HostError {
     /// Whether the host ends (exit 3, the starter falls back) instead of showing the problem in a window.
     #[must_use]
     pub fn fatal(&self) -> bool {
-        !matches!(self, Self::LayoutMissing { .. } | Self::LayoutStore { .. })
+        !matches!(
+            self,
+            Self::LayoutMissing { .. }
+                | Self::DescriptionMissing { .. }
+                | Self::LayoutUnreadable { .. }
+                | Self::LayoutStore { .. }
+        )
     }
 }
 

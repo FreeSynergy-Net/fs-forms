@@ -42,7 +42,11 @@ fn no_normal_dependency_leads_to_a_program_the_core_or_the_server() {
         );
         if let Some(rest) = n.strip_prefix("fs-") {
             // only the forms client and the fs-components family (and the transport it brings) may appear with the fs- prefix
+            // K5 H4: `forms-layout` (the model) and `forms-exchange` (the only reader of the description file) join; both are
+            // program-free crates of this repository
             let allowed = rest.starts_with("forms-client")
+                || rest.starts_with("forms-layout")
+                || rest.starts_with("forms-exchange")
                 || rest.starts_with("forms-run")
                 || rest.starts_with("components")
                 || rest.starts_with("rpc")

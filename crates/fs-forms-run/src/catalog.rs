@@ -9,6 +9,12 @@ use std::collections::BTreeSet;
 pub trait Catalog {
     /// Whether this build draws the block.
     fn built(&self, block: &str) -> bool;
+
+    /// Whether this build draws the block as an element of a page. A frame is built (it is a screen) but is no element; the
+    /// default is `built`.
+    fn draws(&self, block: &str) -> bool {
+        self.built(block)
+    }
 }
 
 /// A catalog that knows the blocks it is told (tests and the first frame, until G7).

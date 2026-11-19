@@ -1,6 +1,6 @@
 //! A1/A5 (fs-forms v0.0.3): the reader takes at most `LAYOUT_BYTES_MAX` bytes; more is `import-invalid` with cause `too-big`.
-//! Mutants: no limit (read_to_end on the whole source); limit off by one (`take(MAX)` instead of `MAX + 1` takes the file of
-//! exactly MAX bytes as too big only by luck: the two edge tests below pin both sides).
+//! Mutants: no `take` at all (the endless source is read on); `take(MAX)` instead of `MAX + 1` (a file one byte over is not seen):
+//! the two tests pin both edges.
 
 use std::io::Read;
 use std::path::Path;

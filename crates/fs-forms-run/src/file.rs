@@ -6,9 +6,10 @@
 
 use std::fmt::Write as _;
 use std::fs;
+use std::io::{ErrorKind, Read};
 use std::path::{Component, Path, PathBuf};
 
-use fs_forms_exchange::{Format, read_layout, scaffold_layout};
+use fs_forms_exchange::{Format, LAYOUT_BYTES_MAX, read_layout, scaffold_layout};
 use fs_forms_layout::{Layout, Limits, OpenCatalog};
 
 use crate::error::HostError;
@@ -55,6 +56,54 @@ fn describe<C: fs_forms_layout::ErrorCode>(c: &fs_forms_layout::Coded<C>) -> Str
     out
 }
 
+/// A link (symbolic link) is never followed below the path the person named: it could lead out of the folder.
+fn refused_link(path: &Path) -> HostError {
+    unreadable(
+        path,
+        vec![format!("layout-link-refused path={}", path.display())],
+    )
+}
+
+fn is_link(path: &Path) -> bool {
+    fs::symlink_metadata(path).is_ok_and(|m| m.file_type().is_symlink())
+}
+
+/// Every step of `rel` below `root` (the folder itself is the person's word, what is inside it is not).
+fn link_inside(root: &Path, rel: &Path) -> Result<(), HostError> {
+    let mut at = root.to_path_buf();
+    for part in rel.components() {
+        at.push(part);
+        if is_link(&at) {
+            return Err(refused_link(&at));
+        }
+    }
+    Ok(())
+}
+
+/// The text of a small file; `None` when there is no such file. Larger than [`LAYOUT_BYTES_MAX`] or not UTF-8 is an error.
+fn read_small(path: &Path) -> Result<Option<String>, HostError> {
+    let failed = || unreadable(path, vec!["layout-read-failed".to_owned()]);
+    let mut f = match fs::File::open(path) {
+        Ok(f) => f,
+        Err(e) if e.kind() == ErrorKind::NotFound => return Ok(None),
+        Err(_) => return Err(failed()),
+    };
+    let mut bytes = Vec::new();
+    (&mut f)
+        .take(LAYOUT_BYTES_MAX + 1)
+        .read_to_end(&mut bytes)
+        .map_err(|_| failed())?;
+    if bytes.len() as u64 > LAYOUT_BYTES_MAX {
+        return Err(unreadable(
+            path,
+            vec![format!("layout-too-big max={LAYOUT_BYTES_MAX}")],
+        ));
+    }
+    String::from_utf8(bytes)
+        .map(Some)
+        .map_err(|_| unreadable(path, vec!["layout-read-failed cause=utf8".to_owned()]))
+}
+
 /// Read and check one file.
 fn read_file(path: &Path) -> Result<Layout, HostError> {
     let mut f = fs::File::open(path).map_err(|_| missing(path))?;
@@ -72,28 +121,46 @@ fn inside(rel: &str) -> bool {
             .all(|c| matches!(c, Component::Normal(_) | Component::CurDir))
 }
 
-fn descriptions_in(dir: &Path) -> Vec<PathBuf> {
-    let mut files: Vec<PathBuf> = fs::read_dir(dir)
-        .into_iter()
-        .flatten()
-        .flatten()
-        .map(|e| e.path())
-        .filter(|p| p.is_file() && p.extension().is_some_and(|x| x == "toml"))
-        .collect();
+fn descriptions_in(dir: &Path) -> Result<Vec<PathBuf>, HostError> {
+    let mut files: Vec<PathBuf> = Vec::new();
+    for entry in fs::read_dir(dir).into_iter().flatten().flatten() {
+        let path = entry.path();
+        if path.extension().is_none_or(|x| x != "toml") {
+            continue;
+        }
+        match entry.file_type() {
+            Ok(t) if t.is_symlink() => return Err(refused_link(&path)),
+            Ok(t) if t.is_file() => files.push(path),
+            _ => {}
+        }
+    }
     files.sort();
-    files
+    Ok(files)
 }
 
-/// The layout a path leads to; `frontend` (may be empty) picks one of several files.
-fn locate(root: &Path, frontend: &str) -> Result<(PathBuf, Layout), HostError> {
+/// Whether the layout is the one asked for (an empty word asks for nothing).
+fn asked_for(layout: &Layout, extends: &str, frontend: &str) -> bool {
+    let key = &layout.doc().key;
+    (extends.is_empty() || key.extends == extends)
+        && (frontend.is_empty() || key.frontend == frontend)
+}
+
+/// The layout a path leads to; `extends` and `frontend` (may be empty) pick one of several files or refuse the one file.
+fn locate(root: &Path, extends: &str, frontend: &str) -> Result<(PathBuf, Layout), HostError> {
     if root.is_file() {
-        return Ok((root.to_path_buf(), read_file(root)?));
+        let layout = read_file(root)?;
+        return if asked_for(&layout, extends, frontend) {
+            Ok((root.to_path_buf(), layout))
+        } else {
+            Err(missing(root))
+        };
     }
     if !root.is_dir() {
         return Err(missing(root));
     }
     let scaffold = root.join("scaffold.toml");
-    if let Ok(text) = fs::read_to_string(&scaffold) {
+    link_inside(root, Path::new("scaffold.toml"))?;
+    if let Some(text) = read_small(&scaffold)? {
         let named =
             scaffold_layout(&text).map_err(|c| unreadable(&scaffold, vec![describe(&c)]))?;
         if let Some(rel) = named {
@@ -103,23 +170,24 @@ fn locate(root: &Path, frontend: &str) -> Result<(PathBuf, Layout), HostError> {
                     vec![format!("layout-path-outside path={rel}")],
                 ));
             }
+            link_inside(root, Path::new(&rel))?;
             let file = root.join(rel);
             let layout = read_file(&file)?;
             return Ok((file, layout));
         }
     }
+    link_inside(root, Path::new("forms"))?;
     let forms = root.join("forms");
     let dir = if forms.is_dir() {
         forms
     } else {
         root.to_path_buf()
     };
-    let files = descriptions_in(&dir);
     let mut found: Vec<(PathBuf, Layout)> = Vec::new();
-    for file in &files {
-        let layout = read_file(file)?;
-        if frontend.is_empty() || layout.doc().key.frontend == frontend {
-            found.push((file.clone(), layout));
+    for file in descriptions_in(&dir)? {
+        let layout = read_file(&file)?;
+        if asked_for(&layout, extends, frontend) {
+            found.push((file, layout));
         }
     }
     match found.len() {
@@ -129,8 +197,8 @@ fn locate(root: &Path, frontend: &str) -> Result<(PathBuf, Layout), HostError> {
 }
 
 impl LayoutLink for FileLink {
-    fn resolve(&self, _extends: &str, frontend: &str) -> Result<View, HostError> {
-        let (_file, layout) = locate(&self.root, frontend)?;
+    fn resolve(&self, extends: &str, frontend: &str) -> Result<View, HostError> {
+        let (_file, layout) = locate(&self.root, extends, frontend)?;
         Ok(view_of(&layout, &self.lang))
     }
 }

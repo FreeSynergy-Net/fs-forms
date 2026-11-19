@@ -50,8 +50,11 @@ fn parse(text: &str, file: &Path, format: Format) -> Result<Tree, Coded<LayoutCo
     }
 }
 
-/// Reads a description. Problems: `import-invalid{file,line,cause}` with cause `toml`, `json`, `type`, `key-unknown`,
-/// `key-missing`, `utf8`; ALL problems of the file, never only the first. Unknown keys are errors. CRLF is accepted, a BOM is not.
+/// The most bytes of one description a reader takes (1 MiB): a foreign package cannot fill the memory.
+pub const LAYOUT_BYTES_MAX: u64 = 1 << 20;
+
+/// Reads a description of at most [`LAYOUT_BYTES_MAX`] bytes. Problems: `import-invalid{file,line,cause}` with cause `toml`, `json`, `type`, `key-unknown`,
+/// `key-missing`, `utf8`, `too-big`, `read`; ALL problems of the file, never only the first. Unknown keys are errors. CRLF is accepted, a BOM is not.
 ///
 /// # Errors
 /// Every problem found.
@@ -61,8 +64,13 @@ pub fn read_layout(
     format: Format,
 ) -> Result<LayoutDoc, Vec<Coded<LayoutCode>>> {
     let mut bytes = Vec::new();
-    src.read_to_end(&mut bytes)
+    (&mut *src)
+        .take(LAYOUT_BYTES_MAX + 1)
+        .read_to_end(&mut bytes)
         .map_err(|_| vec![problem(file, 0, "read")])?;
+    if bytes.len() as u64 > LAYOUT_BYTES_MAX {
+        return Err(vec![problem(file, 0, "too-big")]);
+    }
     let text = String::from_utf8(bytes).map_err(|_| vec![problem(file, 0, "utf8")])?;
     if text.starts_with('\u{feff}') {
         return Err(vec![problem(file, 1, "utf8")]);

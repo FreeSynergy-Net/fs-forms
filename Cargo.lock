@@ -1648,6 +1648,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "fs-layouts-rpc"
+version = "0.0.2"
+dependencies = [
+ "capnp",
+ "capnp-rpc",
+ "fs-forms-layout",
+ "fs-interfaces",
+ "fs-rpc",
+ "futures",
+ "rustix 1.1.6",
+ "tempfile",
+ "tokio",
+]
+
+[[package]]
 name = "fs-objects"
 version = "0.0.8"
 source = "git+https://github.com/FreeSynergy/fs-objects?tag=v0.0.8#b638ef3ade2d07f8f03b6ad30c1e57c78f0bf87f"

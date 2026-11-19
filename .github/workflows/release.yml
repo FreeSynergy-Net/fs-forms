@@ -14,7 +14,8 @@ jobs:
       # `fs-forms` holds the server (`fs-forms serve`) and the starter; `fs-forms-simple` is the frontend process.
       binaries: fs-forms,fs-forms-simple
       cargo-package: fs-forms-bin
-      ignore-binaries: fs-forms-server
+      # The host `fs-forms-run` moves into the repo fs-starter; until then it is not packaged.
+      ignore-binaries: fs-forms-server,fs-forms-run
       name: fs-forms
       kind: app
       app-id: net.freesynergy.Forms

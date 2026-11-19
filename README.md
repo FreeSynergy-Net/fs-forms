@@ -8,7 +8,7 @@ What is different here: anonymous answers do not go into the ordinary store at a
 
 ## What it can do today
 
-Latest tag: `v0.0.2`. The version in this tree is `0.0.2` (program with a window, server and frontend).
+Latest tag: `v0.0.4`. The version in this tree is `0.0.4` (program with a window, server and frontend).
 
 - **A window and a server (new in 0.0.2).** `fs-forms` makes sure the server runs and opens the frontend `simple`: the name, the icon, what works today and what comes. Everything that does not work yet says "coming soon"; a missing server or a server that does not fit is said in the window, never a grey window. The window shows no surveys yet: the core is not connected to it. Try `fs-forms --version`, `fs-forms --help`.
 
@@ -49,7 +49,7 @@ Forms belongs to the democracy and project-management suites. FreeSynergy is a f
 
 **Eine Umfrage, bei der eine anonyme Antwort wirklich anonym ist, nicht nur so beschriftet.** FreeSynergy Forms lässt Menschen oder Gruppen Fragen stellen, Antworten sammeln und das Ergebnis lesen. Anonyme Antworten landen nicht im gewöhnlichen Speicher, sondern in einem eigenen Behälter ohne Protokoll und ohne Zeit; Ergebnisse erscheinen erst ab einer Mindestgruppengröße.
 
-**Was es heute kann.** Letzter Tag `v0.0.2`. Der Stand in diesem Baum ist `0.0.2` (Programm mit Fenster, Server und Frontend). Der Kern (Umfragen mit Fragen und Bedingungen, namentliche und anonyme Antworten, Ergebnisse, Zählverfahren, CSV-Export, Ausweiten über Gruppen) liegt als Bibliothek vor. Neu ist ein Fenster mit Server: `fs-forms` startet den Server und das Frontend `simple` mit Name, Symbol, „Was es heute kann“ und „Was kommt“. Was noch nicht geht, sagt „kommt noch“; fehlt der Server oder passt er nicht, steht das im Fenster. Das Fenster zeigt noch keine Umfragen, der Kern ist noch nicht daran angeschlossen.
+**Was es heute kann.** Letzter Tag `v0.0.4`. Der Stand in diesem Baum ist `0.0.4` (Programm mit Fenster, Server und Frontend). Der Kern (Umfragen mit Fragen und Bedingungen, namentliche und anonyme Antworten, Ergebnisse, Zählverfahren, CSV-Export, Ausweiten über Gruppen) liegt als Bibliothek vor. Neu ist ein Fenster mit Server: `fs-forms` startet den Server und das Frontend `simple` mit Name, Symbol, „Was es heute kann“ und „Was kommt“. Was noch nicht geht, sagt „kommt noch“; fehlt der Server oder passt er nicht, steht das im Fenster. Das Fenster zeigt noch keine Umfragen, der Kern ist noch nicht daran angeschlossen.
 
 **Was noch nicht da ist.** Umfragen im Fenster anlegen, beantworten und auswerten, Einladen von Personen, öffentlicher Link ohne Konto (kommt mit dem Server-Teil, geplant, nicht terminiert). Terminumfragen gehören zum Programm Decisions. Die vollständige Liste steht in der Feature-Liste (`todo/features/forms.md` in fs-documentation, sobald sie dort liegt).
 

@@ -2,6 +2,16 @@
 
 Version = tag; all crates of the workspace carry the same version.
 
+## 0.0.4 (2026-11-19)
+
+### English
+
+- The release run of v0.0.3 failed in the plan step (crate `fs-forms-run` is not in `binaries`/`ignore-binaries`); the tag v0.0.3 stays without artifacts; 0.0.4 changes only the release caller (`ignore-binaries` now lists the host `fs-forms-run`, which moves into the repo fs-starter and is not packaged until then) and the version.
+
+### Deutsch
+
+- Der Release-Lauf von v0.0.3 scheiterte im Schritt plan (Crate `fs-forms-run` steht weder in `binaries` noch in `ignore-binaries`); der Tag v0.0.3 bleibt ohne Artefakte; 0.0.4 ändert nur den Release-Aufrufer (`ignore-binaries` nennt jetzt den Host `fs-forms-run`, der in das Repo fs-starter umzieht und bis dahin nicht verpackt wird) und die Version.
+
 ## 0.0.3 (2026-11-19)
 
 ### English

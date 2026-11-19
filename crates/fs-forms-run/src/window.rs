@@ -5,19 +5,17 @@
 //! surfaces only draw. A locked part is one `partial-notice` listing every code with its sentence.
 
 use std::fmt::Write as _;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
-use fs_components::blinc::layout::div::div;
-use fs_components::blinc::layout::widgets::scroll::{Scroll, ScrollPhysics};
-use fs_components_app::{AppError, AppWidget, Element, Menu, MenuEntry, Screen, Status, Surface};
+use fs_components_app::{AppError, AppWidget, Menu, MenuEntry, Screen, Status};
 use fs_components_mf2::Mf2Texts;
-use fs_components_widgets::states::{self, EmptyState, PartialNotice};
-use fs_components_widgets::styles;
+use fs_components_widgets::states;
 use fs_components_words::{Locale, Localized};
 
 use crate::compose::{Composition, HostState, Node, ScreenTree};
-use crate::draw::{self, Ctx};
+use crate::draw::Ctx;
 use crate::error::HostError;
+use crate::page::Page;
 use crate::records::{NoRecords, Records};
 use crate::view::{Coded, MenuItem, MenuState, View};
 
@@ -81,56 +79,6 @@ pub(crate) fn notice_items(name: &str, lines: &[String]) -> (Vec<String>, usize)
     }
     let total = missing.len();
     (missing, total)
-}
-
-struct Page {
-    ctx: Ctx,
-    empty: String,
-    parts: Vec<Part>,
-    labels: states::Labels,
-}
-
-impl Surface for Page {
-    fn build(&self, width: f32, height: f32) -> Box<dyn Element> {
-        let mut column = div().flex_col().gap(16.0).p(24.0);
-        for part in &self.parts {
-            column = match part {
-                Part::Locked { name, lines } => {
-                    let (missing, total) = notice_items(name, lines);
-                    column.child(PartialNotice::new(&self.labels, &missing, total).build())
-                }
-                Part::Empty(sentence) => column.child(EmptyState::new(sentence).build()),
-                Part::Block {
-                    place,
-                    block,
-                    title,
-                } if block == "empty-state" => {
-                    let _ = place;
-                    column.child(EmptyState::new(title.as_deref().unwrap_or(&self.empty)).build())
-                }
-                Part::Block { place, block, .. } => {
-                    match draw::block(block, &self.ctx, width - 48.0) {
-                        Some(element) => column.child(element),
-                        None => column
-                            .child(states::Skeleton::new(&format!("{place} ({block})")).build()),
-                    }
-                }
-            };
-        }
-        let physics = Arc::new(Mutex::new(ScrollPhysics::default()));
-        Box::new(
-            div().w(width).h(height).child(
-                Scroll::with_physics(physics)
-                    .w(width)
-                    .h(height)
-                    .content(column),
-            ),
-        )
-    }
-
-    fn styles(&self) -> String {
-        format!("{}{}", styles(), states::STYLES)
-    }
 }
 
 /// The composition of a failure that is shown in the window instead of ending the host.
@@ -228,6 +176,7 @@ pub fn app_with(
             let page = Page {
                 ctx: ctx.clone(),
                 empty: texts.plain("host-page-empty"),
+                frame: s.frame.clone(),
                 parts: parts(texts, &s.nodes),
                 labels: labels.clone(),
             };
@@ -239,6 +188,7 @@ pub fn app_with(
         let page = Page {
             ctx: ctx.clone(),
             empty: texts.plain("host-page-empty"),
+            frame: String::new(),
             parts: vec![Part::Locked {
                 name: String::new(),
                 lines,

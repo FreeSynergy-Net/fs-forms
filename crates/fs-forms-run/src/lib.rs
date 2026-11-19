@@ -21,6 +21,7 @@ mod error;
 mod file;
 mod from_layout;
 mod link;
+mod page;
 mod records;
 mod run;
 mod view;

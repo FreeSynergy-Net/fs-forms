@@ -15,6 +15,9 @@ use fs_components_widgets::{TreeNode, TreeView};
 
 use crate::records::Records;
 
+/// The least height of the board, in pixels.
+pub(crate) const MIN_H: f32 = 380.0;
+
 /// What a drawn block needs besides its name.
 #[derive(Clone)]
 pub(crate) struct Ctx {
@@ -28,7 +31,7 @@ fn dark() -> bool {
 }
 
 /// The block as an element, or `None` when this host has no drawing for it (the caller says so).
-pub(crate) fn block(name: &str, ctx: &Ctx, width: f32) -> Option<Div> {
+pub(crate) fn block(name: &str, ctx: &Ctx, width: f32, height: f32) -> Option<Div> {
     match name {
         "board" => {
             let source = Arc::new(FixedBoard {
@@ -37,7 +40,8 @@ pub(crate) fn block(name: &str, ctx: &Ctx, width: f32) -> Option<Div> {
             });
             let board =
                 KanbanBoard::new(source, ctx.say.clone(), Look::new(StyleId::Admin, dark()));
-            Some(div().w(width).h(380.0).child(board.build(width, 380.0)))
+            let height = height.max(MIN_H);
+            Some(div().w(width).h(height).child(board.build(width, height)))
         }
         "sidebar" => {
             let nodes: Vec<TreeNode> = ctx

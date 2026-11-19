@@ -165,3 +165,53 @@ fn with_sample_records_the_board_draws_cards_in_columns_light_and_dark() {
         colours(&empty)
     );
 }
+
+/// Whether every pixel of the box has the colour of its first one.
+fn uniform(p: &Picture, x: std::ops::Range<u32>, y: std::ops::Range<u32>) -> bool {
+    let at = |x: u32, y: u32| {
+        let i = ((y * p.w + x) * 3) as usize;
+        [p.rgb[i], p.rgb[i + 1], p.rgb[i + 2]]
+    };
+    let first = at(x.start, y.start);
+    y.clone().all(|yy| x.clone().all(|xx| at(xx, yy) == first))
+}
+
+#[test]
+#[cfg_attr(
+    windows,
+    ignore = "wgpu Validation Error on windows-2022 without a GPU adapter"
+)]
+fn the_side_list_stands_beside_the_board_not_above_it_light_and_dark() {
+    let (_keep, dir) = out_dir();
+    let board = board();
+    for scheme in ["light", "dark"] {
+        let name = format!("board-sample-side-{scheme}.png");
+        let Some(p) = draw(
+            &["--description", &board, "--sample-data"],
+            scheme,
+            &dir.join(name),
+        ) else {
+            return;
+        };
+        // the strip (x 200..420 of a 1000 px window, the shell's own navigation takes the left 200): the list is in its top
+        // part, nothing below it
+        assert!(
+            !uniform(&p, 240..330, 70..180),
+            "{scheme}: the list is drawn in the strip"
+        );
+        assert!(
+            uniform(&p, 230..410, 300..700),
+            "{scheme}: the strip is empty below the list"
+        );
+        // the board starts right of the strip, at the top of the main area (a board below the list would leave this box blank)
+        assert!(
+            !uniform(&p, 440..680, 125..200),
+            "{scheme}: the board begins beside the list"
+        );
+        // the board is not shifted: its first column is at the left edge of the main area, not far right of it
+        assert!(
+            uniform(&p, 421..440, 130..700),
+            "{scheme}: the padding of the main area is 24 px, no more"
+        );
+    }
+}

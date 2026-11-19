@@ -122,6 +122,7 @@ pub fn app_styled(
         .map(|k| ((*k).to_owned(), texts.plain(&k.replace('.', "-"))))
         .collect();
     let named = view.style.clone();
+    let sample = records.is_sample();
     let ctx = Ctx {
         style: Arc::new(move || resolve(named.as_deref(), program_style.current())),
         records,
@@ -174,11 +175,54 @@ pub fn app_styled(
     if !entries.is_empty() {
         widget.set_menus(vec![Menu::new(texts.plain("host-title"), entries)], |_| {})?;
     }
-    let status = match comp.state {
-        HostState::Ready => Status::Info(texts.plain("host-status-ready")),
-        HostState::Partial => Status::Info(texts.plain("host-status-partial")),
-        HostState::Refused => Status::Problem(texts.plain("host-status-refused")),
-    };
-    widget.set_status(Some(status));
+    widget.set_status(Some(status(texts, comp.state, sample)));
     Ok(widget)
+}
+
+/// How the host stands; sample data is said in the same line (a made-up record is never shown as a real one).
+fn status(texts: &Mf2Texts, state: HostState, sample: bool) -> Status {
+    let (problem, mut text) = match state {
+        HostState::Ready => (false, texts.plain("host-status-ready")),
+        HostState::Partial => (false, texts.plain("host-status-partial")),
+        HostState::Refused => (true, texts.plain("host-status-refused")),
+    };
+    if sample {
+        text = format!("{text} · {}", texts.plain("host-status-sample"));
+    }
+    if problem {
+        Status::Problem(text)
+    } else {
+        Status::Info(text)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::words::words;
+
+    fn info(s: &Status) -> &str {
+        match s {
+            Status::Info(t) | Status::Problem(t) => t,
+            _ => "",
+        }
+    }
+
+    #[test]
+    fn sample_data_is_said_in_the_status_in_both_languages_and_real_data_says_nothing() {
+        for (lang, said) in [("en", "Sample data"), ("de", "Beispieldaten")] {
+            let locale = Locale::from_posix(lang).expect("a locale");
+            let texts = words(&locale);
+            let with = status(&texts, HostState::Partial, true);
+            assert!(info(&with).contains(said), "{lang}: {}", info(&with));
+            assert!(
+                info(&with).contains(&texts.plain("host-status-partial")),
+                "the state stays in the line"
+            );
+            let without = status(&texts, HostState::Partial, false);
+            assert!(!info(&without).contains(said), "{lang}: {}", info(&without));
+            let refused = status(&texts, HostState::Refused, true);
+            assert!(matches!(refused, Status::Problem(_)), "a problem stays one");
+        }
+    }
 }

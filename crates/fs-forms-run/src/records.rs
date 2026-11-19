@@ -21,6 +21,10 @@ pub trait Records: Send + Sync {
     fn columns(&self) -> Vec<Column>;
     /// The entries of a side list.
     fn side(&self) -> Vec<SideItem>;
+    /// Whether these records are made-up sample data: the window then says so (it never shows invented records as real ones).
+    fn is_sample(&self) -> bool {
+        false
+    }
 }
 
 /// No provider is connected: nothing to draw.
@@ -64,6 +68,9 @@ fn card(
 }
 
 impl Records for SampleRecords {
+    fn is_sample(&self) -> bool {
+        true
+    }
     fn columns(&self) -> Vec<Column> {
         let mut todo = Column::new("todo", "To do");
         todo.cards = vec![

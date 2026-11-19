@@ -47,16 +47,17 @@ fn contract_dir() -> PathBuf {
 }
 
 fn literal(path: &Path) -> String {
-    // forward slashes read on every system; the path holds no quote
+    // forward slashes read on every system; `{:?}` masks a quote or anything else the path may hold
     format!(
-        "include_str!(\"{}\")",
+        "include_str!({:?})",
         path.to_string_lossy().replace('\\', "/")
     )
 }
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-changed=Cargo.lock");
+    // the pinned catalog tag lives in the lock of the workspace (two levels above this crate); a path is relative to the crate
+    println!("cargo:rerun-if-changed=../../Cargo.lock");
     let dir = contract_dir();
     let mut files: Vec<PathBuf> = std::fs::read_dir(dir.join("blocks"))
         .expect("contract/blocks is there")
@@ -72,7 +73,7 @@ fn main() {
     for f in &files {
         println!("cargo:rerun-if-changed={}", f.display());
         let name = f.file_name().expect("a file name").to_string_lossy();
-        writeln!(code, "    (\"{name}\", {}),", literal(f)).expect("write to a String");
+        writeln!(code, "    ({name:?}, {}),", literal(f)).expect("write to a String");
     }
     code.push_str("];\n");
     let out = PathBuf::from(std::env::var("OUT_DIR").expect("OUT_DIR")).join("contract.rs");

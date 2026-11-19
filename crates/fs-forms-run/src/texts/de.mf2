@@ -11,6 +11,7 @@ host-error-no-pages = Das Layout hat keine Seiten
 host-status-ready = Bereit
 host-status-partial = Einige Teile sind gesperrt; der Rest läuft
 host-status-refused = Nichts kann gezeichnet werden
+host-status-sample = Beispieldaten (nicht Ihre Einträge)
 host-page-empty = Diese Seite ist leer
 host-menu-coming = kommt noch
 host-screen-error = Problem

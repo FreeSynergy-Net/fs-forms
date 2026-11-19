@@ -27,7 +27,8 @@ fn a_time_arrives_to_the_millisecond_in_the_list_and_in_the_log() {
         assert_eq!(got.items[0].updated, want.items[0].updated, "updated");
         let got_log = c.log(None, 10).await.unwrap();
         let want_log = local.log(None, 10).await.unwrap();
-        assert!(!got_log.is_empty());
+        assert_eq!(got_log.len(), want_log.len(), "the same entries");
+        assert!(got_log.iter().all(|e| e.at.0 > 0), "every entry has a time");
         assert_eq!(
             got_log.iter().map(|e| e.at).collect::<Vec<_>>(),
             want_log.iter().map(|e| e.at).collect::<Vec<_>>(),

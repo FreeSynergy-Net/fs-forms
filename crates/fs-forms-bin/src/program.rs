@@ -9,7 +9,7 @@ use fs_forms_server::ServeError;
 use fs_starter::{ContractReq, Exit, Failure, FrontendId, Program, ProgramName};
 use fs_types::coded::{Coded, ErrorCode};
 
-/// The AppStream id of the program: what a frontend manifest names in `<extends>` (`packaging/frontends/simple.metainfo.xml`).
+/// The `AppStream` id of the program: what a frontend manifest names in `<extends>` (`packaging/frontends/simple.metainfo.xml`).
 pub const APP_ID: &str = "net.freesynergy.Forms";
 
 /// The contract the server offers (the manifest of a frontend asks for `surveys 0.1`).
@@ -63,6 +63,7 @@ impl Program for Forms {
         &self.name
     }
 
+    #[allow(clippy::unnecessary_literal_bound)] // the signature is the trait's
     fn version(&self) -> &str {
         env!("CARGO_PKG_VERSION")
     }

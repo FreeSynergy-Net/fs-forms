@@ -68,8 +68,14 @@ pub struct Composition {
     pub notices: Vec<Coded>,
 }
 
-fn not_built(block: &str) -> Coded {
-    Coded::new("host-error-block-not-built").with("block", block)
+/// Why a block is not drawn: the catalog does not know it, or this build has no drawing for it yet.
+fn not_built(block: &str, catalog: &dyn Catalog) -> Coded {
+    let code = if catalog.known(block) {
+        "host-error-block-not-built"
+    } else {
+        "host-error-block-unknown"
+    };
+    Coded::new(code).with("block", block)
 }
 
 fn screen(page: &PageView, catalog: &dyn Catalog) -> ScreenTree {
@@ -83,7 +89,7 @@ fn screen(page: &PageView, catalog: &dyn Catalog) -> ScreenTree {
     if !catalog.built(&page.frame) {
         nodes.push(Node::Locked {
             place: None,
-            codes: vec![not_built(&page.frame)],
+            codes: vec![not_built(&page.frame, catalog)],
         });
     }
     let mut places: Vec<_> = page.places.iter().collect();
@@ -104,7 +110,7 @@ fn screen(page: &PageView, catalog: &dyn Catalog) -> ScreenTree {
         } else {
             nodes.push(Node::Locked {
                 place: Some(p.place.clone()),
-                codes: vec![not_built(&p.block)],
+                codes: vec![not_built(&p.block, catalog)],
             });
         }
     }

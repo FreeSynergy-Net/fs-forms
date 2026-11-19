@@ -1,5 +1,6 @@
 [package]
 name = "fs-forms-run"
+build = "build.rs"
 description = "FreeSynergy Forms host (read only, first frame): connects to the layouts of fs-forms, takes the plan, lets the catalog choose and puts the window together from fs-components blocks only"
 version.workspace = true
 edition.workspace = true
@@ -31,6 +32,8 @@ fs-components-kanban = { git = "https://github.com/FreeSynergy/fs-components", t
 fs-components-fields = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.30" }
 fs-components-styles = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.30" }
 fs-components-words = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.30" }
+# What the blocks of the contract are (and what they accept and render): the host asks it, it has no table of its own.
+fs-components-catalog = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.30" }
 
 # Picture tests (the window drawn without a window, read back): the same dev-dependencies as fs-forms-simple.
 [dev-dependencies]

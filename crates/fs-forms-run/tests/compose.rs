@@ -141,11 +141,26 @@ fn a_missing_source_locks_the_part_and_the_rest_runs() {
 fn a_block_that_is_not_built_is_locked_with_its_code() {
     let c = compose(
         &tasks_board(),
-        &TestCatalog::building(&["workbench", "tablist"]),
+        &TestCatalog::building(&["workbench", "tablist"]).knowing(&["board"]),
     );
     assert!(nodes(&c, "board").iter().any(|n| matches!(n,
         Node::Locked { codes, .. } if codes[0].code == "host-error-block-not-built" && codes[0].params == [("block".into(), "board".into())])));
     assert_eq!(c.state, HostState::Partial);
+}
+
+#[test]
+fn a_block_the_catalog_does_not_know_is_locked_as_unknown_not_as_not_built() {
+    let c = compose(
+        &tasks_board(),
+        &TestCatalog::building(&["workbench", "tablist"]),
+    );
+    assert!(nodes(&c, "board").iter().any(|n| matches!(n,
+        Node::Locked { codes, .. } if codes[0].code == "host-error-block-unknown" && codes[0].params == [("block".into(), "board".into())])));
+    assert!(
+        !nodes(&c, "board").iter().any(|n| matches!(n,
+            Node::Locked { codes, .. } if codes[0].code == "host-error-block-not-built")),
+        "an unknown block is not a block that is merely not built"
+    );
 }
 
 #[test]
@@ -205,6 +220,10 @@ fn the_real_registry_draws_the_board_and_the_state_blocks_and_locks_the_rest() {
     assert!(
         !Blocks.built("board-detail") && !Blocks.draws("board-detail"),
         "no component is mapped yet"
+    );
+    assert!(
+        Blocks.known("board-detail") && !Blocks.known("no-such-block"),
+        "the contract of the catalog knows the block; the host's own list does not decide that"
     );
     let c = compose(&tasks_board(), &Blocks);
     assert_eq!(

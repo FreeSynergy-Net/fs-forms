@@ -5,6 +5,7 @@ host-error-layouts-unreachable = The forms server does not answer
 host-error-layouts-contract-missing = The forms server does not offer the layouts this host speaks
 host-error-layout-missing = This program has no layout for this frontend
 host-error-layout-store = The store of layouts is in emergency mode
+host-error-block-unknown = This part cannot be drawn: no such block is in the contract of the components
 host-error-block-not-built = This part cannot be drawn yet: its block is not built in this version
 host-error-no-pages = The layout has no pages
 host-status-ready = Ready

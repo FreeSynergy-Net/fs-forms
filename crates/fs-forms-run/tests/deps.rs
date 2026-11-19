@@ -53,6 +53,7 @@ fn no_normal_dependency_leads_to_a_program_the_core_or_the_server() {
                 || rest.starts_with("interfaces")
                 || rest.starts_with("types")
                 || rest.starts_with("icons")
+                || rest.starts_with("records") // brought by fs-components-catalog (record shapes, no program)
                 || rest.starts_with("objects"); // brought by fs-rpc
             assert!(
                 allowed,

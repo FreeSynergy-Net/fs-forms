@@ -1409,6 +1409,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "fs-components-catalog"
+version = "0.0.30"
+source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.30#66b8945ad1a4404ad7e84dd9cca40fda1d47d199"
+dependencies = [
+ "fs-records",
+ "fs-types 0.0.4",
+ "toml",
+]
+
+[[package]]
 name = "fs-components-commands"
 version = "0.0.30"
 source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.30#66b8945ad1a4404ad7e84dd9cca40fda1d47d199"
@@ -1578,6 +1588,7 @@ version = "0.0.2"
 dependencies = [
  "fs-components",
  "fs-components-app",
+ "fs-components-catalog",
  "fs-components-fields",
  "fs-components-kanban",
  "fs-components-mf2",
@@ -1651,6 +1662,14 @@ dependencies = [
  "turso",
  "unicode-normalization",
  "uuid",
+]
+
+[[package]]
+name = "fs-records"
+version = "0.0.4"
+source = "git+https://github.com/FreeSynergy/fs-types?tag=v0.0.4#0dbc9b685746ea55ceb789fe1043a162e34ac387"
+dependencies = [
+ "fs-types 0.0.4",
 ]
 
 [[package]]

@@ -7,6 +7,11 @@ use std::collections::BTreeSet;
 
 /// What the host needs from the catalog.
 pub trait Catalog {
+    /// Whether the catalog knows the block at all (it is a block of the contract). The default is `built`.
+    fn known(&self, block: &str) -> bool {
+        self.built(block)
+    }
+
     /// Whether this build draws the block.
     fn built(&self, block: &str) -> bool;
 
@@ -19,18 +24,35 @@ pub trait Catalog {
 
 /// A catalog that knows the blocks it is told (tests and the first frame, until G7).
 #[derive(Clone, Debug, Default)]
-pub struct TestCatalog(BTreeSet<String>);
+pub struct TestCatalog {
+    built: BTreeSet<String>,
+    known: BTreeSet<String>,
+}
 
 impl TestCatalog {
     /// A catalog that builds exactly these blocks.
     #[must_use]
     pub fn building(blocks: &[&str]) -> Self {
-        Self(blocks.iter().map(|b| (*b).to_owned()).collect())
+        Self {
+            built: blocks.iter().map(|b| (*b).to_owned()).collect(),
+            known: BTreeSet::new(),
+        }
+    }
+
+    /// The same, and it knows these blocks too without building them (`host-error-block-not-built`, not `-unknown`).
+    #[must_use]
+    pub fn knowing(mut self, blocks: &[&str]) -> Self {
+        self.known = blocks.iter().map(|b| (*b).to_owned()).collect();
+        self
     }
 }
 
 impl Catalog for TestCatalog {
     fn built(&self, block: &str) -> bool {
-        self.0.contains(block)
+        self.built.contains(block)
+    }
+
+    fn known(&self, block: &str) -> bool {
+        self.built.contains(block) || self.known.contains(block)
     }
 }

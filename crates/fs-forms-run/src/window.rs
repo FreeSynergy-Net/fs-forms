@@ -1,10 +1,9 @@
 //! The window: one screen per page of the composition, a menu from the plan, a status line that says how the host stands. Every
 //! part is a block of `fs-components` (`partial-notice`, `empty-state`, `skeleton`); no widget is painted by hand.
 //!
-//! Pattern: Adapter: the composition in, a shell of `fs-components-app` out. The sentences are made before drawing (`Said`), so the
-//! surfaces only draw. A locked part is one `partial-notice` listing every code with its sentence.
+//! Pattern: Adapter: the composition in, a shell of `fs-components-app` out. The sentences are made before drawing (see `parts`),
+//! so the surfaces only draw.
 
-use std::fmt::Write as _;
 use std::sync::Arc;
 
 use fs_components_app::{AppError, AppWidget, Menu, MenuEntry, Screen, Status};
@@ -16,71 +15,10 @@ use crate::compose::{Composition, HostState, Node, ScreenTree};
 use crate::draw::Ctx;
 use crate::error::HostError;
 use crate::page::Page;
+use crate::parts::{Part, line, parts};
 use crate::records::{NoRecords, Records};
 use crate::style::{StyleCell, StyleSource, resolve};
 use crate::view::{Coded, MenuItem, MenuState, View};
-
-/// A part, with its sentences already made.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) enum Part {
-    /// A block that is built; the host has a drawing for the state blocks only.
-    Block {
-        place: String,
-        block: String,
-        title: Option<String>,
-    },
-    /// Not drawn: the name of the part and one line per code.
-    Locked { name: String, lines: Vec<String> },
-    /// An empty page with its sentence.
-    Empty(String),
-}
-
-/// The sentence of a code, with the code and its parameters behind it; a code without a sentence is shown as itself.
-pub(crate) fn line(texts: &Mf2Texts, c: &Coded) -> String {
-    let said = texts.plain(&c.code);
-    let mut out = if said.is_empty() || said == c.code {
-        c.code.clone()
-    } else {
-        format!("{said} ({})", c.code)
-    };
-    for (k, v) in &c.params {
-        let _ = write!(out, " {k}={v}");
-    }
-    out
-}
-
-pub(crate) fn parts(texts: &Mf2Texts, nodes: &[Node]) -> Vec<Part> {
-    nodes
-        .iter()
-        .map(|n| match n {
-            Node::Block {
-                place,
-                block,
-                title,
-                ..
-            } => Part::Block {
-                place: place.clone(),
-                block: block.clone(),
-                title: title.clone(),
-            },
-            Node::Locked { place, codes } => Part::Locked {
-                name: place.clone().unwrap_or_default(),
-                lines: codes.iter().map(|c| line(texts, c)).collect(),
-            },
-            Node::Empty { .. } => Part::Empty(texts.plain("host-page-empty")),
-        })
-        .collect()
-}
-
-/// The lines of a notice, the name of the part in front of the first one, and how many parts the notice counts (one per line).
-pub(crate) fn notice_items(name: &str, lines: &[String]) -> (Vec<String>, usize) {
-    let mut missing = lines.to_vec();
-    if let (false, Some(first)) = (name.is_empty(), missing.first_mut()) {
-        *first = format!("{name}: {first}");
-    }
-    let total = missing.len();
-    (missing, total)
-}
 
 /// The composition of a failure that is shown in the window instead of ending the host.
 #[must_use]
@@ -243,52 +181,4 @@ pub fn app_styled(
     };
     widget.set_status(Some(status));
     Ok(widget)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::notice_items;
-
-    #[test]
-    fn a_notice_counts_one_per_line_and_names_the_part_in_the_first() {
-        let lines = vec!["a".to_owned(), "b".to_owned()];
-        assert_eq!(
-            notice_items("side", &lines),
-            (vec!["side: a".to_owned(), "b".to_owned()], 2)
-        );
-        assert_eq!(notice_items("", &lines), (lines.clone(), 2));
-        assert_eq!(notice_items("x", &[]), (Vec::new(), 0));
-    }
-
-    use super::{Part, line, parts};
-    use crate::compose::Node;
-    use crate::view::Coded;
-    use crate::words::words;
-    use fs_components_words::Locale;
-
-    #[test]
-    fn a_code_without_a_sentence_is_shown_as_its_code() {
-        let t = words(&Locale::english());
-        let unknown = Coded::new("bind-error-locked").with("part", "page:board");
-        assert_eq!(line(&t, &unknown), "bind-error-locked part=page:board");
-        let known = Coded::new("host-error-no-pages");
-        let l = line(&t, &known);
-        assert!(
-            l.contains("host-error-no-pages") && l.contains("The layout has no pages"),
-            "{l}"
-        );
-    }
-
-    #[test]
-    fn every_code_of_a_locked_part_is_a_line() {
-        let t = words(&Locale::english());
-        let node = Node::Locked {
-            place: Some("board".into()),
-            codes: vec![Coded::new("a-code"), Coded::new("b-code")],
-        };
-        match &parts(&t, &[node])[0] {
-            Part::Locked { name, lines } => assert_eq!((name.as_str(), lines.len()), ("board", 2)),
-            other => panic!("{other:?}"),
-        }
-    }
 }

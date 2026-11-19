@@ -22,6 +22,7 @@ mod file;
 mod from_layout;
 mod link;
 mod page;
+mod parts;
 mod records;
 mod run;
 mod style;

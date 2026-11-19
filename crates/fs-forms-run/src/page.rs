@@ -11,11 +11,11 @@ use std::sync::{Arc, Mutex};
 use fs_components::blinc::layout::div::{Div, div};
 use fs_components::blinc::layout::widgets::scroll::{Scroll, ScrollPhysics};
 use fs_components_app::{Element, Surface};
-use fs_components_widgets::states::{self, EmptyState, PartialNotice};
+use fs_components_widgets::states::{self, EmptyState};
 use fs_components_widgets::styles;
 
 use crate::draw::{self, Ctx};
-use crate::window::{Part, notice_items};
+use crate::parts::{Part, notice};
 
 /// The frame whose page has a strip beside the main area.
 const WORKBENCH: &str = "workbench";
@@ -85,8 +85,7 @@ impl Page {
         for part in parts {
             column = match part {
                 Part::Locked { name, lines } => {
-                    let (missing, total) = notice_items(name, lines);
-                    column.child(PartialNotice::new(&self.labels, &missing, total).build())
+                    column.child(notice(&self.labels, name, lines).build())
                 }
                 Part::Empty(sentence) => column.child(EmptyState::new(sentence).build()),
                 Part::Block { block, title, .. } if block == "empty-state" => {
@@ -147,7 +146,7 @@ impl Surface for Page {
 #[cfg(test)]
 mod tests {
     use super::{MIN_MAIN, SIDE_W, split, widths};
-    use crate::window::Part;
+    use crate::parts::Part;
 
     fn block(place: &str) -> Part {
         Part::Block {

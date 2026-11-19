@@ -125,8 +125,8 @@ fn the_side_list_stands_beside_the_board_not_above_it_light_and_dark() {
         // the strip (x 200..420 of a 1000 px window, the shell's own navigation takes the left 200): the list is in its top
         // part, nothing below it
         assert!(
-            !uniform(&p, 240..330, 70..180),
-            "{scheme}: the list is drawn in the strip"
+            !uniform(&p, 240..300, 70..180),
+            "{scheme}: the list is drawn in the strip, 24 px (not 96) from its edge"
         );
         assert!(
             uniform(&p, 230..410, 300..700),
@@ -140,7 +140,11 @@ fn the_side_list_stands_beside_the_board_not_above_it_light_and_dark() {
         // the board is not shifted: its first column is at the left edge of the main area, not far right of it
         assert!(
             uniform(&p, 421..440, 130..700),
-            "{scheme}: the padding of the main area is 24 px, no more"
+            "{scheme}: nothing of the board left of its own padding"
+        );
+        assert!(
+            !uniform(&p, 440..450, 130..700),
+            "{scheme}: the first column starts 24 px (not 96) from the main area"
         );
     }
 }

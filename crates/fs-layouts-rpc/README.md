@@ -21,10 +21,11 @@ Written with Claude (Anthropic).
 
 ## Edge: where this crate lives (D4, c0 18.11.: yes)
 
-The crate is here only as a probe. Before any release it moves to the program repo fs-forms (decision D4); **fs-rpc is never tagged
-with this crate** (fs-rpc -> fs-forms git -> fs-rpc would be a repo loop). The actor of every call is the identity of the
-connection, never a field of the client: `admin(by)` takes `by` as a claim, hands it to `LayoutService::claimed_by` (the host's
-log) and ignores it otherwise.
+The crate has moved: it lives in the program repo fs-forms (decision D4, moved in from fs-rpc 831aa673 with its 51 files); fs-forms
+depends on `fs-rpc` v0.0.3 and `fs-interfaces` v0.0.28 by tag. **fs-rpc is never tagged with this crate** (fs-rpc -> fs-forms git ->
+fs-rpc would be a repo loop). The actor of every call is the identity of the connection, never a field of the client: `admin(by)`
+takes `by` as a claim, hands it to `LayoutService::claimed_by` (the host's log) and ignores it otherwise. The service is NOT yet
+plugged into `fs-forms-server` (it still answers only `capabilities` and `supportReport`).
 
 ## Edge: who is the actor (fs-rpc `Caller`)
 
@@ -52,7 +53,7 @@ heard by the watchers of socket B. The limit
 
 ## Open before release
 
-These stay open on purpose; they belong to fs-forms / the contract owner, not to this probe:
+These stay open on purpose; they belong to fs-forms / the contract owner:
 
 - (b) the UUIDs of layouts and overlays come from the store (fs-forms); then the uuid wrapper of the tests and wire goes.
 - (d) the words of the 8 remaining enums (FilterOp, FilterCond, Origin, OverlayState, Position, Cause, Field, LogAction) move into

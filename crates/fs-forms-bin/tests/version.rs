@@ -45,7 +45,12 @@ fn the_help_is_printed_with_exit_code_0() {
 fn an_unknown_option_exits_with_2_and_names_it() {
     let out = run(&["--nope"]);
     assert_eq!(out.status.code(), Some(2));
-    assert!(String::from_utf8_lossy(&out.stderr).contains("unknown option --nope"));
+    // fs-starter: a code with its parameter, never a sentence
+    assert!(
+        String::from_utf8_lossy(&out.stderr).contains("starter-error-usage (word=--nope)"),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
 }
 
 #[test]

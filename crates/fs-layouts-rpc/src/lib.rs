@@ -13,8 +13,8 @@
 //! program with their source; only the 64 MiB of one message are fixed (`fs_rpc::MAX_MESSAGE_BYTES`). Nothing is silent: what the
 //! port cannot do (the exchange files, `repair`, `bind`) answers `unsupported{what}`.
 //!
-//! PROVISIONAL (probe): the contracts `layouts` and `bind` are the owner files of fs-interfaces v0.0.28 (no copies here any more);
-//! `fs-forms-layout` is a git pin. The crate moves to fs-forms (K5) before release; the tag replaces the pin.
+//! The contracts `layouts` and `bind` are the owner files of fs-interfaces v0.0.28 (no copies here); the model `fs-forms-layout` is
+//! a crate of this repository. The crate came from fs-rpc (K5, from commit 831aa673).
 //!
 //! Pattern: Adapter (both directions) + Proxy (client link) + Facade (service) + Observer (watch).
 //! Written with Claude (Anthropic) as the coding assistant.

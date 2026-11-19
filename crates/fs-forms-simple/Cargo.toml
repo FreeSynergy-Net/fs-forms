@@ -27,6 +27,20 @@ fs-components-mf2 = { git = "https://github.com/FreeSynergy/fs-components", tag 
 fs-components-words = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.30" }
 
 
+# The manifest of the frontend goes where the starter looks (`<XDG_DATA_DIRS>/freesynergy/frontends/<program>/<id>.metainfo.xml`):
+# without it `fs-forms` finds no frontend after an installation and says `frontend-missing`. A test in `fs-forms-bin` reads these lines.
+[package.metadata.deb]
+assets = [
+    ["target/release/fs-forms-simple", "usr/bin/", "755"],
+    ["../../packaging/frontends/simple.metainfo.xml", "usr/share/freesynergy/frontends/forms/", "644"],
+]
+
+[package.metadata.generate-rpm]
+assets = [
+    { source = "target/release/fs-forms-simple", dest = "/usr/bin/fs-forms-simple", mode = "755" },
+    { source = "packaging/frontends/simple.metainfo.xml", dest = "/usr/share/freesynergy/frontends/forms/simple.metainfo.xml", mode = "644" },
+]
+
 [dev-dependencies]
 # The real server, started inside the tests only (a dev-dependency: `cargo tree -e normal` shows no way to -server).
 fs-forms-server = { path = "../fs-forms-server" }

@@ -142,6 +142,12 @@ fn the_side_list_stands_beside_the_board_not_above_it_light_and_dark() {
             uniform(&p, 421..440, 130..700),
             "{scheme}: nothing of the board left of its own padding"
         );
+        // the board fills the height of the main area: the lower edge of its columns is near the bottom (a board of a fixed 380 px
+        // would end far above it)
+        assert!(
+            !uniform(&p, 460..670, 700..712),
+            "{scheme}: the board is as tall as the main area"
+        );
         assert!(
             !uniform(&p, 440..450, 130..700),
             "{scheme}: the first column starts 24 px (not 96) from the main area"

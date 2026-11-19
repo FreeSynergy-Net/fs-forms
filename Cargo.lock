@@ -1528,6 +1528,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "fs-forms-exchange"
+version = "0.0.2"
+dependencies = [
+ "fs-forms-layout",
+ "serde_json",
+ "toml_edit 0.22.27",
+]
+
+[[package]]
+name = "fs-forms-layout"
+version = "0.0.2"
+dependencies = [
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "fs-forms-server"
 version = "0.0.2"
 dependencies = [
@@ -1551,6 +1567,15 @@ dependencies = [
  "fs-forms-server",
  "png 0.18.1",
  "tempfile",
+]
+
+[[package]]
+name = "fs-forms-store"
+version = "0.0.2"
+dependencies = [
+ "fs-forms-layout",
+ "tokio",
+ "turso",
 ]
 
 [[package]]

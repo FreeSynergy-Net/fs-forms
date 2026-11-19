@@ -23,8 +23,13 @@ path = "src/main.rs"
 fs-forms-client = { path = "../fs-forms-client" }
 fs-forms-layout = { path = "../fs-forms-layout" }
 fs-forms-exchange = { path = "../fs-forms-exchange" }
-fs-components = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.25" }
-fs-components-app = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.25" }
-fs-components-widgets = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.25" }
-fs-components-mf2 = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.25" }
-fs-components-words = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.25" }
+fs-components = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.30" }
+fs-components-app = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.30" }
+fs-components-widgets = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.30" }
+fs-components-mf2 = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.30" }
+fs-components-words = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.30" }
+
+# Picture tests (the window drawn without a window, read back): the same dev-dependencies as fs-forms-simple.
+[dev-dependencies]
+tempfile = "3"
+png = "0.18"

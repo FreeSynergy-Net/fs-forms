@@ -18,7 +18,9 @@ fn text(layout: &Layout, key: &str, lang: &str) -> String {
             .find(|m| m.v.key == key && m.v.lang == l)
             .map(|m| m.v.message.clone())
     };
-    find(lang).or_else(|| find("en")).unwrap_or_else(|| key.to_owned())
+    find(lang)
+        .or_else(|| find("en"))
+        .unwrap_or_else(|| key.to_owned())
 }
 
 fn menu_items(layout: &Layout, entries: &[Item<MenuDoc>], lang: &str, out: &mut Vec<MenuItem>) {
@@ -36,8 +38,15 @@ fn menu_items(layout: &Layout, entries: &[Item<MenuDoc>], lang: &str, out: &mut 
             }
             MenuKind::View => {
                 if let Some(view) = &e.v.view {
-                    let label = e.v.label_key.as_deref().map_or_else(|| view.clone(), |k| text(layout, k, lang));
-                    out.push(MenuItem { id: view.clone(), label, state: MenuState::Coming });
+                    let label =
+                        e.v.label_key
+                            .as_deref()
+                            .map_or_else(|| view.clone(), |k| text(layout, k, lang));
+                    out.push(MenuItem {
+                        id: view.clone(),
+                        label,
+                        state: MenuState::Coming,
+                    });
                 }
             }
             _ => {}

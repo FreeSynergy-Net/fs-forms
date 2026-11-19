@@ -18,5 +18,5 @@ mod tree;
 mod write;
 
 pub use api::{Format, read_layout, write_layout};
-pub use scaffold::scaffold_layout;
 pub use fs_forms_layout::{Coded, Layout, LayoutCode, LayoutDoc};
+pub use scaffold::scaffold_layout;

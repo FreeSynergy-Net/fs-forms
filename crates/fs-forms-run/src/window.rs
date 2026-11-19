@@ -53,7 +53,10 @@ pub(crate) fn parts(texts: &Mf2Texts, nodes: &[Node]) -> Vec<Part> {
         .iter()
         .map(|n| match n {
             Node::Block {
-                place, block, title, ..
+                place,
+                block,
+                title,
+                ..
             } => Part::Block {
                 place: place.clone(),
                 block: block.clone(),
@@ -80,11 +83,12 @@ impl Surface for Page {
         for part in &self.parts {
             column = match part {
                 Part::Locked { name, lines } => {
+                    // the name of the part stands in front of its first line: the notice counts parts, not lines
                     let mut missing = lines.clone();
-                    if !name.is_empty() {
-                        missing.insert(0, name.clone());
+                    if let (false, Some(first)) = (name.is_empty(), missing.first_mut()) {
+                        *first = format!("{name}: {first}");
                     }
-                    column.child(PartialNotice::new(&self.labels, &missing, lines.len()).build())
+                    column.child(PartialNotice::new(&self.labels, &missing, missing.len()).build())
                 }
                 Part::Empty(sentence) => column.child(EmptyState::new(sentence).build()),
                 Part::Block {

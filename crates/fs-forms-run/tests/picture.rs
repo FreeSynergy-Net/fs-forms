@@ -1,0 +1,130 @@
+//! K5-5: the window of a real description, drawn through `fs-components` without a window (`--picture`), read back as pixels.
+//! Where the machine has no graphics adapter a test says so and ends green (as the render tests of fs-components do).
+//!
+//! Tests: pixel tests. (1) the description of the frontend `board` of fs-tasks gives a window of the size asked, not one flat
+//! colour, with something dark in it; (2) light differs from dark and the dark picture is darker on average; (3) a missing
+//! description gives a window too (the visible error `host-error-layout-missing`) that differs from the board window.
+//! Mutants: the host ignores `--description` (all pictures equal); the error window is blank; dark is drawn as light.
+//! Set `FS_PICTURE_OUT=<dir>` to keep the pictures (they are then written there instead of a temp folder).
+
+use std::path::{Path, PathBuf};
+use std::process::Command;
+
+struct Picture {
+    w: u32,
+    h: u32,
+    rgb: Vec<u8>,
+}
+
+fn out_dir() -> (Option<tempfile::TempDir>, PathBuf) {
+    if let Some(d) = std::env::var_os("FS_PICTURE_OUT") {
+        return (None, PathBuf::from(d));
+    }
+    let t = tempfile::tempdir().unwrap();
+    let p = t.path().to_path_buf();
+    (Some(t), p)
+}
+
+fn draw(args: &[&str], scheme: &str, path: &Path) -> Option<Picture> {
+    let out = Command::new(env!("CARGO_BIN_EXE_fs-forms-run"))
+        .args(args)
+        .arg("--picture")
+        .arg(path)
+        .env("LANG", "en_US.UTF-8")
+        .env("FS_COLOR_SCHEME", scheme)
+        .env_remove("FS_RENDER_SCHEME")
+        .env_remove("LC_ALL")
+        .env_remove("LC_MESSAGES")
+        .output()
+        .unwrap();
+    let err = String::from_utf8_lossy(&out.stderr).into_owned();
+    if out.status.code() != Some(0) {
+        assert!(
+            err.to_lowercase().contains("graphics") || err.to_lowercase().contains("adapter"),
+            "failed for another reason: {err}"
+        );
+        eprintln!("skipped: no graphics adapter ({err})");
+        return None;
+    }
+    let decoder = png::Decoder::new(std::io::BufReader::new(std::fs::File::open(path).unwrap()));
+    let mut reader = decoder.read_info().unwrap();
+    let mut buf = vec![0; reader.output_buffer_size().unwrap()];
+    let info = reader.next_frame(&mut buf).unwrap();
+    let step = info.color_type.samples();
+    let rgb = buf[..info.buffer_size()]
+        .chunks(step)
+        .flat_map(|p| p[..3].to_vec())
+        .collect();
+    Some(Picture {
+        w: info.width,
+        h: info.height,
+        rgb,
+    })
+}
+
+#[allow(clippy::cast_precision_loss)] // a picture has far fewer than 2^52 samples
+fn mean(p: &Picture) -> f64 {
+    p.rgb.iter().map(|b| f64::from(*b)).sum::<f64>() / p.rgb.len() as f64
+}
+
+fn board() -> String {
+    format!("{}/tests/fixtures/board.toml", env!("CARGO_MANIFEST_DIR"))
+}
+
+#[test]
+#[cfg_attr(
+    windows,
+    ignore = "wgpu Validation Error on windows-2022 without a GPU adapter"
+)]
+fn the_description_of_a_program_is_drawn_light_and_dark_and_a_missing_one_says_so() {
+    let (_keep, dir) = out_dir();
+    let board = board();
+    let Some(light) = draw(
+        &["--description", &board],
+        "light",
+        &dir.join("board-light.png"),
+    ) else {
+        return;
+    };
+    assert_eq!((light.w, light.h), (1000, 760));
+    assert!(
+        light.rgb.iter().any(|b| *b != light.rgb[0]),
+        "not one flat colour"
+    );
+    let dark = draw(
+        &["--description", &board],
+        "dark",
+        &dir.join("board-dark.png"),
+    )
+    .unwrap();
+    assert_ne!(light.rgb, dark.rgb, "dark is not the light picture");
+    assert!(
+        mean(&dark) + 20.0 < mean(&light),
+        "dark {} is darker than light {}",
+        mean(&dark),
+        mean(&light)
+    );
+    let gone = dir.join("no-such-description");
+    let gone = gone.to_str().unwrap();
+    let missing = draw(
+        &["--description", gone],
+        "light",
+        &dir.join("layout-missing-light.png"),
+    )
+    .unwrap();
+    assert!(
+        missing.rgb.iter().any(|b| *b != missing.rgb[0]),
+        "the error window is not blank"
+    );
+    assert_ne!(
+        light.rgb, missing.rgb,
+        "the error window is not the board window"
+    );
+    let missing_dark = draw(
+        &["--description", gone],
+        "dark",
+        &dir.join("layout-missing-dark.png"),
+    )
+    .unwrap();
+    assert_ne!(missing.rgb, missing_dark.rgb);
+}

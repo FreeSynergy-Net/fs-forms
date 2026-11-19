@@ -35,7 +35,10 @@ pub fn run(args: &[String]) -> ExitCode {
         }
         Ok(Command::Check(c)) => match fetch(&c) {
             Ok(view) => {
-                println!("fs-forms-run: the description of the frontend {} is there", view.frontend);
+                println!(
+                    "fs-forms-run: the description of the frontend {} is there",
+                    view.frontend
+                );
                 ExitCode::SUCCESS
             }
             Err(e) => end(&e),

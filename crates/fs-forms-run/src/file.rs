@@ -4,6 +4,7 @@
 //!
 //! Pattern: Adapter (files to the model of `fs-forms-layout`), behind the port `LayoutLink`.
 
+use std::fmt::Write as _;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 
@@ -49,7 +50,7 @@ fn unreadable(file: &Path, problems: Vec<String>) -> HostError {
 fn describe<C: fs_forms_layout::ErrorCode>(c: &fs_forms_layout::Coded<C>) -> String {
     let mut out = c.code.message_key();
     for (k, v) in &c.params {
-        out.push_str(&format!(" {k}={v}"));
+        let _ = write!(out, " {k}={v}");
     }
     out
 }
@@ -93,10 +94,14 @@ fn locate(root: &Path, frontend: &str) -> Result<(PathBuf, Layout), HostError> {
     }
     let scaffold = root.join("scaffold.toml");
     if let Ok(text) = fs::read_to_string(&scaffold) {
-        let named = scaffold_layout(&text).map_err(|c| unreadable(&scaffold, vec![describe(&c)]))?;
+        let named =
+            scaffold_layout(&text).map_err(|c| unreadable(&scaffold, vec![describe(&c)]))?;
         if let Some(rel) = named {
             if !inside(&rel) {
-                return Err(unreadable(&scaffold, vec![format!("layout-path-outside path={rel}")]));
+                return Err(unreadable(
+                    &scaffold,
+                    vec![format!("layout-path-outside path={rel}")],
+                ));
             }
             let file = root.join(rel);
             let layout = read_file(&file)?;
@@ -104,7 +109,11 @@ fn locate(root: &Path, frontend: &str) -> Result<(PathBuf, Layout), HostError> {
         }
     }
     let forms = root.join("forms");
-    let dir = if forms.is_dir() { forms } else { root.to_path_buf() };
+    let dir = if forms.is_dir() {
+        forms
+    } else {
+        root.to_path_buf()
+    };
     let files = descriptions_in(&dir);
     let mut found: Vec<(PathBuf, Layout)> = Vec::new();
     for file in &files {

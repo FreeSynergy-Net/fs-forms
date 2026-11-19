@@ -115,10 +115,18 @@ mod tests {
     fn the_server_end_keeps_its_exit_and_its_text() {
         let usage = failure(ServeError::Usage("bad word".into()));
         assert_eq!(usage.exit, Exit::USAGE);
-        assert_eq!(usage.code.to_string(), "forms-error-usage (message=bad word)");
+        assert_eq!(
+            usage.code.to_string(),
+            "forms-error-usage (message=bad word)"
+        );
         let failed = failure(ServeError::Failed("no socket".into()));
         assert_eq!(failed.exit, Exit::FAILED);
-        assert!(failed.code.to_string().starts_with("forms-error-serve-failed"));
+        assert!(
+            failed
+                .code
+                .to_string()
+                .starts_with("forms-error-serve-failed")
+        );
     }
 
     #[test]

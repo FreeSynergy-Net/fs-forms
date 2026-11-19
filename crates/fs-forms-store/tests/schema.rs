@@ -84,7 +84,10 @@ fn model_words_are_in_the_closed_lists() {
 
 #[test]
 fn log_is_append_only_by_steps_two_and_three() {
-    let s: Vec<String> = STEPS.iter().flat_map(fs_forms_store::spec::statements).collect();
+    let s: Vec<String> = STEPS
+        .iter()
+        .flat_map(fs_forms_store::spec::statements)
+        .collect();
     assert!(
         s.iter()
             .any(|x| x.contains("forms_log_no_update") && x.contains("BEFORE UPDATE"))

@@ -14,6 +14,7 @@ const BUILT: &[&str] = &[
     "empty-state",
     "partial-notice",
     "skeleton",
+    "board",
 ];
 
 /// The registry of this build.
@@ -34,6 +35,9 @@ impl Catalog for Blocks {
     }
 
     fn draws(&self, block: &str) -> bool {
-        self.built(block) && !Self::is_frame(block)
+        matches!(
+            block,
+            "empty-state" | "partial-notice" | "skeleton" | "board" | "sidebar"
+        )
     }
 }

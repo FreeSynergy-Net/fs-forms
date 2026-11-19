@@ -195,23 +195,36 @@ fn an_empty_page_says_so() {
 }
 
 #[test]
-fn the_real_registry_builds_frames_and_state_blocks_only() {
-    assert!(Blocks.built("workbench") && Blocks.built("partial-notice"));
+fn the_real_registry_draws_the_board_and_the_state_blocks_and_locks_the_rest() {
+    assert!(Blocks.built("workbench") && Blocks.built("partial-notice") && Blocks.built("board"));
+    assert!(Blocks.draws("board") && Blocks.draws("sidebar") && Blocks.draws("empty-state"));
     assert!(
-        !Blocks.built("board"),
-        "the workbench blocks join with the adapter's release"
+        !Blocks.draws("workbench"),
+        "a frame is a screen, no element"
+    );
+    assert!(
+        !Blocks.built("board-detail") && !Blocks.draws("board-detail"),
+        "no component is mapped yet"
     );
     let c = compose(&tasks_board(), &Blocks);
     assert_eq!(
         c.state,
-        HostState::Refused,
-        "nothing of the tasks board is built yet: said, not drawn empty"
+        HostState::Partial,
+        "the board is drawn, the rest is locked"
+    );
+    let nodes = &c.screens[0].nodes;
+    assert!(
+        nodes
+            .iter()
+            .any(|n| matches!(n, Node::Block { block, .. } if block == "board"))
     );
     assert!(
-        c.screens
+        nodes
             .iter()
-            .flat_map(|s| &s.nodes)
-            .all(|n| matches!(n, Node::Locked { .. }))
+            .filter(|n| matches!(n, Node::Locked { .. }))
+            .count()
+            >= 2,
+        "board-detail and tablist stay locked, said"
     );
 }
 

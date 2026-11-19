@@ -14,7 +14,7 @@ use crate::error::{EXIT_CONTRACT, HostError};
 use crate::file::FileLink;
 use crate::link::{LayoutLink, SocketLink};
 use crate::view::View;
-use crate::window::{app, failure};
+use crate::window::failure;
 use crate::words::{session_locale, words};
 
 /// Run the command line (the words after the program name) and return the exit code.
@@ -79,7 +79,12 @@ fn window(c: &Config) -> ExitCode {
             (View::default(), failure(&e))
         }
     };
-    let widget = match app(&texts, &locale, &view, &comp) {
+    let records: std::sync::Arc<dyn crate::records::Records> = if c.sample_data {
+        std::sync::Arc::new(crate::records::SampleRecords)
+    } else {
+        std::sync::Arc::new(crate::records::NoRecords)
+    };
+    let widget = match crate::window::app_with(&texts, &locale, &view, &comp, records) {
         Ok(w) => w,
         Err(e) => {
             eprintln!("fs-forms-run: {e}");

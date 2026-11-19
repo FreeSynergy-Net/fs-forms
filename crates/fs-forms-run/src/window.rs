@@ -16,7 +16,9 @@ use fs_components_widgets::styles;
 use fs_components_words::{Locale, Localized};
 
 use crate::compose::{Composition, HostState, Node, ScreenTree};
+use crate::draw::{self, Ctx};
 use crate::error::HostError;
+use crate::records::{NoRecords, Records};
 use crate::view::{Coded, MenuItem, MenuState, View};
 
 /// A part, with its sentences already made.
@@ -82,6 +84,7 @@ pub(crate) fn notice_items(name: &str, lines: &[String]) -> (Vec<String>, usize)
 }
 
 struct Page {
+    ctx: Ctx,
     empty: String,
     parts: Vec<Part>,
     labels: states::Labels,
@@ -106,7 +109,11 @@ impl Surface for Page {
                     column.child(EmptyState::new(title.as_deref().unwrap_or(&self.empty)).build())
                 }
                 Part::Block { place, block, .. } => {
-                    column.child(states::Skeleton::new(&format!("{place} ({block})")).build())
+                    match draw::block(block, &self.ctx, width - 48.0) {
+                        Some(element) => column.child(element),
+                        None => column
+                            .child(states::Skeleton::new(&format!("{place} ({block})")).build()),
+                    }
                 }
             };
         }
@@ -161,6 +168,20 @@ fn menu_entry(texts: &Mf2Texts, item: &MenuItem) -> Option<MenuEntry> {
     }
 }
 
+/// The keys the kanban board asks for (`kanban.refused.*` codes come from the provider and show as their key until it names them).
+const KANBAN_KEYS: &[&str] = &[
+    "kanban.add_column",
+    "kanban.rename",
+    "kanban.limit",
+    "kanban.drop",
+    "kanban.grab",
+    "kanban.move_left",
+    "kanban.move_right",
+    "kanban.more_facts",
+    "kanban.empty",
+    "kanban.soon",
+];
+
 /// The window for `comp`.
 ///
 /// # Errors
@@ -171,6 +192,29 @@ pub fn app(
     view: &View,
     comp: &Composition,
 ) -> Result<AppWidget, AppError> {
+    app_with(texts, locale, view, comp, Arc::new(NoRecords))
+}
+
+/// The window for `comp`, with the blocks that draw records given them by `records`.
+///
+/// # Errors
+/// The shell could not be made (no screen, a name that is empty).
+pub fn app_with(
+    texts: &Mf2Texts,
+    locale: &Locale,
+    view: &View,
+    comp: &Composition,
+    records: Arc<dyn Records>,
+) -> Result<AppWidget, AppError> {
+    // the words of the board are asked by key while drawing; they are read once, here, from the host's own MF2 files
+    let said: std::collections::HashMap<String, String> = KANBAN_KEYS
+        .iter()
+        .map(|k| ((*k).to_owned(), texts.plain(&k.replace('.', "-"))))
+        .collect();
+    let ctx = Ctx {
+        records,
+        say: Arc::new(move |key: &str| said.get(key).cloned().unwrap_or_else(|| key.to_owned())),
+    };
     let labels = states::Labels::for_locale(locale);
     let title = if view.title.is_empty() {
         texts.plain("host-title")
@@ -182,6 +226,7 @@ pub fn app(
         .iter()
         .map(|s| {
             let page = Page {
+                ctx: ctx.clone(),
                 empty: texts.plain("host-page-empty"),
                 parts: parts(texts, &s.nodes),
                 labels: labels.clone(),
@@ -192,6 +237,7 @@ pub fn app(
     if !comp.notices.is_empty() || screens.is_empty() {
         let lines: Vec<String> = comp.notices.iter().map(|c| line(texts, c)).collect();
         let page = Page {
+            ctx: ctx.clone(),
             empty: texts.plain("host-page-empty"),
             parts: vec![Part::Locked {
                 name: String::new(),

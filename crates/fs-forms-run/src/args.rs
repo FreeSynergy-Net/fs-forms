@@ -16,6 +16,7 @@ The forms host: opens the window that the layout of a program describes. The sta
   --forms-socket P   the socket of `fs-forms serve` (default: $XDG_RUNTIME_DIR/freesynergy/forms.sock)\n\
   --socket PATH      the socket of the program (handed on to the data sources)\n\
   --check            only connect and fetch the layout, then exit (0 fits, 3 contract differs or no layouts, 1 failed)\n\
+  --sample-data      fill the board and side list with built-in sample records (pictures, development; never a starter)\n\
   --picture FILE     draw the window to a picture, without opening it\n\
   --version, -V      print the version and exit\n\
   --help, -h         print this help and exit\n\
@@ -38,6 +39,8 @@ pub struct Config {
     pub resumed: bool,
     /// Draw to this picture instead of opening a window.
     pub picture: Option<(PathBuf, (u32, u32))>,
+    /// Fill the records blocks with the built-in sample data (pictures, development).
+    pub sample_data: bool,
     /// The page to show first.
     pub page: Option<String>,
 }
@@ -73,6 +76,7 @@ pub fn parse(words: &[String]) -> Result<Command, String> {
             "--version" | "-V" => return Ok(Command::Version),
             "--help" | "-h" => return Ok(Command::Help),
             "--check" => check = true,
+            "--sample-data" => c.sample_data = true,
             "--fresh" => c.resumed = false,
             "--resumed" => c.resumed = true,
             "--frontend" => c.frontend = value("--frontend")?,

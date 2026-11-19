@@ -128,3 +128,40 @@ fn the_description_of_a_program_is_drawn_light_and_dark_and_a_missing_one_says_s
     .unwrap();
     assert_ne!(missing.rgb, missing_dark.rgb);
 }
+
+#[test]
+#[cfg_attr(
+    windows,
+    ignore = "wgpu Validation Error on windows-2022 without a GPU adapter"
+)]
+fn with_sample_records_the_board_draws_cards_in_columns_light_and_dark() {
+    let (_keep, dir) = out_dir();
+    let board = board();
+    let args = ["--description", board.as_str(), "--sample-data"];
+    let Some(empty) = draw(
+        &["--description", &board],
+        "light",
+        &dir.join("e-light.png"),
+    ) else {
+        return;
+    };
+    let light = draw(&args, "light", &dir.join("board-sample-light.png")).unwrap();
+    let dark = draw(&args, "dark", &dir.join("board-sample-dark.png")).unwrap();
+    assert_ne!(light.rgb, empty.rgb, "sample records change the window");
+    assert_ne!(light.rgb, dark.rgb);
+    assert!(mean(&dark) + 20.0 < mean(&light));
+    // cards are drawn: the picture has far more distinct colours than the plain one (cards, labels, due marks)
+    let colours = |p: &Picture| {
+        p.rgb
+            .chunks(3)
+            .map(|c| (c[0], c[1], c[2]))
+            .collect::<std::collections::HashSet<_>>()
+            .len()
+    };
+    assert!(
+        colours(&light) > colours(&empty) + 5,
+        "{} vs {}",
+        colours(&light),
+        colours(&empty)
+    );
+}

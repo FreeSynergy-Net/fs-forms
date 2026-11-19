@@ -27,6 +27,9 @@ fs-components = { git = "https://github.com/FreeSynergy/fs-components", tag = "v
 fs-components-app = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.30" }
 fs-components-widgets = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.30" }
 fs-components-mf2 = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.30" }
+fs-components-kanban = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.30" }
+fs-components-fields = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.30" }
+fs-components-styles = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.30" }
 fs-components-words = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.30" }
 
 # Picture tests (the window drawn without a window, read back): the same dev-dependencies as fs-forms-simple.

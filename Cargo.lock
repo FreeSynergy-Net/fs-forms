@@ -881,7 +881,7 @@ checksum = "fe6d2e5af09e8c8ad56c969f2157a3d4238cebc7c55f0a517728c38f7b200f81"
 dependencies = [
  "serde",
  "termcolor",
- "unicode-width 0.2.3",
+ "unicode-width 0.1.14",
 ]
 
 [[package]]
@@ -1414,6 +1414,32 @@ version = "0.0.30"
 source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.30#66b8945ad1a4404ad7e84dd9cca40fda1d47d199"
 
 [[package]]
+name = "fs-components-fields"
+version = "0.0.30"
+source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.30#66b8945ad1a4404ad7e84dd9cca40fda1d47d199"
+dependencies = [
+ "blinc_core",
+ "blinc_layout",
+ "fs-components-primitives",
+ "fs-components-styles",
+ "fs-components-widgets",
+ "fs-types 0.0.4",
+]
+
+[[package]]
+name = "fs-components-kanban"
+version = "0.0.30"
+source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.30#66b8945ad1a4404ad7e84dd9cca40fda1d47d199"
+dependencies = [
+ "blinc_cn",
+ "blinc_core",
+ "blinc_layout",
+ "fs-components-fields",
+ "fs-components-styles",
+ "fs-components-widgets",
+]
+
+[[package]]
 name = "fs-components-mf2"
 version = "0.0.30"
 source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.30#66b8945ad1a4404ad7e84dd9cca40fda1d47d199"
@@ -1552,7 +1578,10 @@ version = "0.0.2"
 dependencies = [
  "fs-components",
  "fs-components-app",
+ "fs-components-fields",
+ "fs-components-kanban",
  "fs-components-mf2",
+ "fs-components-styles",
  "fs-components-widgets",
  "fs-components-words",
  "fs-forms-client",

@@ -187,8 +187,9 @@ fn what_the_host_cannot_draw_is_locked_visibly() {
         .iter()
         .filter(|n| matches!(n, Node::Locked { .. }))
         .collect();
-    // sidebar (a frame, no element), board and board-detail are not built as elements
-    assert_eq!(locked.len(), 3, "{nodes:?}");
+    // `board` and `sidebar` are drawn (components of fs-components); only `board-detail` has no component mapped yet
+    assert_eq!(locked.len(), 1, "{nodes:?}");
+    assert!(matches!(locked[0], Node::Locked { place: Some(p), .. } if p == "detail"));
     for n in &locked {
         if let Node::Locked { codes, .. } = n {
             assert_eq!(codes[0].code, "host-error-block-not-built");

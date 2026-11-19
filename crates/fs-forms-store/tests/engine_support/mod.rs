@@ -18,7 +18,7 @@ pub async fn open() -> Connection {
     let conn = db.connect().unwrap();
     conn.execute("PRAGMA foreign_keys = ON", ()).await.unwrap();
     for step in &STEPS {
-        for sql in step.statements() {
+        for sql in spec::statements(step) {
             conn.execute(&sql, ())
                 .await
                 .unwrap_or_else(|e| panic!("{e}: {sql}"));

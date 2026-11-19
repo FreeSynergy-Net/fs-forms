@@ -1,8 +1,8 @@
 //! `fs-forms-store`: the domain `forms` of fs-forms (probe F1b, first cut): the 20 typed tables `forms_*` with their closed word
 //! lists, the four migration steps, and the mapping between a checked layout and its rows (`to_rows`, `from_rows`).
 //!
-//! What is NOT here yet: the database adapter itself (`DbLayoutStore`), because the edge to fs-objects v5 (`Store`, `inspect`,
-//! `Error::Newer`, `spec`, `migrate`, `registry`) is not pinned. `spec.rs` holds stand-ins with the same shapes; the port
+//! What is NOT here yet: the database adapter itself (`DbLayoutStore`; `Store`, `inspect`, `registry` of fs-objects v5 are
+//! not used yet). `spec.rs` re-exports the table description of fs-objects v5 (`spec`, `migrate::Step`); the port
 //! `LayoutStore` is already served by `MemoryLayoutStore` of `fs-forms-layout`, which is the mock for the first tests.
 //!
 //! Pattern: Facade: this file only declares modules and re-exports the public API.

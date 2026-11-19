@@ -1543,7 +1543,7 @@ dependencies = [
  "capnp",
  "capnp-rpc",
  "fs-forms-server",
- "fs-interfaces",
+ "fs-interfaces 0.0.27",
  "fs-rpc",
  "tempfile",
  "tokio",
@@ -1556,8 +1556,8 @@ dependencies = [
  "async-trait",
  "chrono",
  "fs-ballot",
- "fs-interfaces",
- "fs-objects",
+ "fs-interfaces 0.0.28",
+ "fs-objects 0.0.8",
  "fs-tally",
  "serde",
  "serde_json",
@@ -1608,7 +1608,7 @@ version = "0.0.2"
 dependencies = [
  "capnp",
  "capnp-rpc",
- "fs-interfaces",
+ "fs-interfaces 0.0.27",
  "fs-rpc",
  "tokio",
 ]
@@ -1633,6 +1633,7 @@ name = "fs-forms-store"
 version = "0.0.2"
 dependencies = [
  "fs-forms-layout",
+ "fs-objects 0.0.8",
  "tokio",
  "turso",
 ]
@@ -1647,6 +1648,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "fs-interfaces"
+version = "0.0.28"
+source = "git+https://github.com/FreeSynergy/fs-interfaces?tag=v0.0.28#962f66bcfa187a2e38846fa87fb3f8d535f41866"
+dependencies = [
+ "capnp",
+ "fs-types 0.0.4",
+]
+
+[[package]]
 name = "fs-objects"
 version = "0.0.6"
 source = "git+https://github.com/FreeSynergy/fs-objects?tag=v0.0.6#cc3102a53968c4fc8e900a8193d4d15593e12881"
@@ -1654,6 +1664,27 @@ dependencies = [
  "async-trait",
  "base64",
  "chrono",
+ "serde",
+ "serde_json",
+ "sha2 0.11.1",
+ "thiserror 2.0.21",
+ "tokio",
+ "turso",
+ "unicode-normalization",
+ "uuid",
+]
+
+[[package]]
+name = "fs-objects"
+version = "0.0.8"
+source = "git+https://github.com/FreeSynergy/fs-objects?tag=v0.0.8#b638ef3ade2d07f8f03b6ad30c1e57c78f0bf87f"
+dependencies = [
+ "async-trait",
+ "base64",
+ "chrono",
+ "fs-types 0.0.4",
+ "getrandom 0.3.4",
+ "rustix 1.1.6",
  "serde",
  "serde_json",
  "sha2 0.11.1",
@@ -1680,8 +1711,8 @@ dependencies = [
  "capnp",
  "capnp-rpc",
  "chrono",
- "fs-interfaces",
- "fs-objects",
+ "fs-interfaces 0.0.27",
+ "fs-objects 0.0.6",
  "fs-types 0.0.1",
  "futures",
  "rustix 1.1.6",

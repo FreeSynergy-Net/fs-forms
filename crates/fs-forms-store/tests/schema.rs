@@ -2,7 +2,7 @@
 use std::collections::HashSet;
 
 use fs_forms_layout::*;
-use fs_forms_store::spec::{Logical, Step};
+use fs_forms_store::spec::Logical;
 use fs_forms_store::*;
 
 #[test]
@@ -84,7 +84,7 @@ fn model_words_are_in_the_closed_lists() {
 
 #[test]
 fn log_is_append_only_by_steps_two_and_three() {
-    let s: Vec<String> = STEPS.iter().flat_map(Step::statements).collect();
+    let s: Vec<String> = STEPS.iter().flat_map(fs_forms_store::spec::statements).collect();
     assert!(
         s.iter()
             .any(|x| x.contains("forms_log_no_update") && x.contains("BEFORE UPDATE"))
@@ -114,7 +114,7 @@ fn dump_ddl_for_the_sql_check() {
     if let Ok(path) = std::env::var("FORMS_DDL_OUT") {
         let sql: Vec<String> = STEPS
             .iter()
-            .flat_map(Step::statements)
+            .flat_map(fs_forms_store::spec::statements)
             .map(|s| format!("{s};"))
             .collect();
         std::fs::write(path, sql.join("\n")).unwrap();

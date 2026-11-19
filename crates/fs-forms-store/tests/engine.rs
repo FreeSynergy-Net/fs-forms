@@ -198,8 +198,8 @@ fn each_check_constraint_is_accepted_on_its_own() {
                     ..*t
                 };
                 let mut sql = alone.ddl();
-                let at = sql.rfind("\n) STRICT").unwrap();
-                sql.insert_str(at, &format!(",\n    {c}"));
+                let at = sql.rfind(") STRICT").unwrap();
+                sql.insert_str(at, &format!(", {c}"));
                 let db = Builder::new_local(":memory:").build().await.unwrap();
                 let conn = db.connect().unwrap();
                 if let Err(e) = conn.execute(&sql, ()).await {

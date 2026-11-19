@@ -12,7 +12,7 @@
   <developer id="net.freesynergy"><name>FreeSynergy</name></developer>
   <extends>net.freesynergy.Forms</extends>
   <requires>
-    <id version="0.0.2" compare="ge">net.freesynergy.Forms</id>
+    <id version="0.0.3" compare="ge">net.freesynergy.Forms</id>
   </requires>
   <custom>
     <value key="fs:kind">frontend</value>
@@ -22,6 +22,6 @@
     <value key="fs:requires">surveys 0.1</value>
   </custom>
   <releases>
-    <release version="0.0.2" date="2026-11-17"/>
+    <release version="0.0.3" date="2026-11-19"/>
   </releases>
 </component>

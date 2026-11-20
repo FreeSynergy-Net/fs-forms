@@ -37,7 +37,10 @@ fn a_card_a_move_and_a_column_made_through_the_host_are_in_the_service() {
         );
     }
     for op in [Operation::Rename, Operation::Limit] {
-        assert!(records.can(op), "{op:?} is unlocked by what the service reports");
+        assert!(
+            records.can(op),
+            "{op:?} is unlocked by what the service reports"
+        );
     }
     assert_eq!(
         column_keys(&records.columns()),
@@ -81,14 +84,23 @@ fn a_rename_and_a_limit_made_through_the_host_are_in_the_service() {
     records.add_card("todo", "One");
     records.add_card("todo", "Two");
     let name_of = |r: &PlanningRecords, key: &str| {
-        r.columns().iter().find(|c| c.key == key).map(|c| (c.title.clone(), c.limit))
+        r.columns()
+            .iter()
+            .find(|c| c.key == key)
+            .map(|c| (c.title.clone(), c.limit))
     };
     assert_eq!(name_of(&records, "todo"), Some(("To do".to_owned(), None)));
 
-    assert_eq!(records.rename_column("todo", "  Backlog "), Answer::Accepted);
+    assert_eq!(
+        records.rename_column("todo", "  Backlog "),
+        Answer::Accepted
+    );
     assert_eq!(records.set_limit("todo", Some(1)), Answer::Accepted);
     // the key stays, the name and the limit change; two cards over a limit of one are shown, not refused
-    assert_eq!(name_of(&records, "todo"), Some(("Backlog".to_owned(), Some(1))));
+    assert_eq!(
+        name_of(&records, "todo"),
+        Some(("Backlog".to_owned(), Some(1)))
+    );
     assert_eq!(titles(&records.columns(), "todo"), ["One", "Two"]);
     // another window sees the same
     assert_eq!(
@@ -97,7 +109,10 @@ fn a_rename_and_a_limit_made_through_the_host_are_in_the_service() {
     );
 
     assert_eq!(records.set_limit("todo", None), Answer::Accepted);
-    assert_eq!(name_of(&records, "todo"), Some(("Backlog".to_owned(), None)));
+    assert_eq!(
+        name_of(&records, "todo"),
+        Some(("Backlog".to_owned(), None))
+    );
 
     // what the service refuses is a code the board has a sentence for
     assert_eq!(
@@ -108,7 +123,10 @@ fn a_rename_and_a_limit_made_through_the_host_are_in_the_service() {
         records.set_limit("nowhere", Some(2)),
         Answer::Refused("rejected".into())
     );
-    assert_eq!(name_of(&records, "todo"), Some(("Backlog".to_owned(), None)));
+    assert_eq!(
+        name_of(&records, "todo"),
+        Some(("Backlog".to_owned(), None))
+    );
 }
 
 #[test]

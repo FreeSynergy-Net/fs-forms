@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use fs_components_app::{AppError, AppWidget, Menu, MenuEntry, Screen, Status};
 use fs_components_mf2::Mf2Texts;
-use fs_components_widgets::states;
+use fs_components_widgets::{dialogs, states};
 use fs_components_words::{Locale, Localized};
 
 use crate::compose::{Composition, HostState, Node, ScreenTree};
@@ -58,6 +58,11 @@ fn menu_entry(texts: &Mf2Texts, item: &MenuItem) -> Option<MenuEntry> {
 /// The keys the kanban board asks for (`kanban.refused.*` codes come from the provider and show as their key until it names them).
 const KANBAN_KEYS: &[&str] = &[
     "kanban.add_column",
+    "kanban.add_card",
+    "kanban.add_card_hint",
+    "kanban.add_card_ok",
+    "kanban.new_column",
+    "kanban.column_name",
     "kanban.rename",
     "kanban.limit",
     "kanban.drop",
@@ -127,6 +132,9 @@ pub fn app_styled(
         style: Arc::new(move || resolve(named.as_deref(), program_style.current())),
         records,
         say: Arc::new(move |key: &str| said.get(key).cloned().unwrap_or_else(|| key.to_owned())),
+        actions: Arc::new(view.actions.clone()),
+        ask: Arc::default(),
+        labels: dialogs::Labels::for_locale(locale),
     };
     let labels = states::Labels::for_locale(locale);
     let title = if view.title.is_empty() {

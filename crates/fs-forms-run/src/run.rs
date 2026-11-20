@@ -80,7 +80,7 @@ fn window(c: &Config) -> ExitCode {
         }
     };
     let records: std::sync::Arc<dyn crate::records::Records> = if c.sample_data {
-        std::sync::Arc::new(crate::records::SampleRecords)
+        std::sync::Arc::new(crate::sample::SampleBoard::default())
     } else {
         std::sync::Arc::new(crate::records::NoRecords)
     };

@@ -4,9 +4,9 @@
 //!
 //! Pattern: Anti-corruption mirror (the model of the layout in, the narrow view out).
 
-use fs_forms_layout::{Item, Layout, MenuDoc, MenuKind};
+use fs_forms_layout::{ActionTarget, Item, Layout, MenuDoc, MenuKind, Trigger};
 
-use crate::view::{Coded, MenuItem, MenuState, PageView, PlaceView, View};
+use crate::view::{ActionView, Coded, MenuItem, MenuState, PageView, PlaceView, View};
 
 /// The text of an MF2 key in `lang`, else in English, else the key itself (a visible gap, not a blank).
 fn text(layout: &Layout, key: &str, lang: &str) -> String {
@@ -55,6 +55,16 @@ fn menu_items(layout: &Layout, entries: &[Item<MenuDoc>], lang: &str, out: &mut 
     }
 }
 
+fn trigger_name(t: Trigger) -> &'static str {
+    match t {
+        Trigger::Button => "button",
+        Trigger::Menu => "menu",
+        Trigger::Key => "key",
+        Trigger::Drop => "drop",
+        Trigger::QuickAdd => "quick-add",
+    }
+}
+
 /// The view of `layout` for a reader of `lang`.
 #[must_use]
 pub fn view_of(layout: &Layout, lang: &str) -> View {
@@ -91,7 +101,19 @@ pub fn view_of(layout: &Layout, lang: &str) -> View {
         // said, never silent: the window then uses the style set for the program
         notices.push(Coded::new("host-notice-style-unknown").with("style", name));
     }
+    let actions = doc
+        .actions
+        .iter()
+        .filter_map(|a| match &a.v.target {
+            ActionTarget::Command { command, .. } => Some(ActionView {
+                trigger: trigger_name(a.v.trigger).to_owned(),
+                command: command.clone(),
+            }),
+            ActionTarget::Workflow(_) => None,
+        })
+        .collect();
     View {
+        actions,
         frontend: doc.key.frontend.clone(),
         title: text(layout, &doc.title_key, lang),
         style: doc.style.clone(),

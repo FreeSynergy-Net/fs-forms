@@ -77,7 +77,7 @@ fn a_change_of_the_style_set_for_the_program_shows_in_the_next_drawing_of_the_sa
         &locale,
         &view,
         &comp,
-        Arc::new(fs_forms_run::SampleRecords),
+        Arc::new(fs_forms_run::SampleBoard::default()),
         cell.clone(),
     )
     .unwrap();

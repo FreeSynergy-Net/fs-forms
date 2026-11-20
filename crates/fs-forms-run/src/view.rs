@@ -84,9 +84,21 @@ pub struct MenuItem {
     pub state: MenuState,
 }
 
+/// One `[[action]]` of the description: what triggers it (`quick-add`, `drop`, `button`, `menu`, `key`) and the command of the
+/// source it calls. The host connects a gesture of a block to a record operation only through these.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ActionView {
+    /// The trigger.
+    pub trigger: String,
+    /// The command name (`create`, `move`, ...); actions that start a workflow are not read here.
+    pub command: String,
+}
+
 /// The plan as the host reads it.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct View {
+    /// The actions of the description.
+    pub actions: Vec<ActionView>,
     /// The frontend key.
     pub frontend: String,
     /// The title of the window.

@@ -1,12 +1,13 @@
 //! The real planning service for a test: the program `fs-modules-planning` on a socket in a temporary folder (the XDG variables
 //! point there too, so no folder of the user is touched; the child is ended when the value is dropped, also when the test fails).
 //!
-//! Where the program file is: `FS_MODULES_PLANNING_BIN`, else next to the test target (`target/debug/fs-modules-planning`: build
-//! it with `cargo build --manifest-path <fs-modules-planning>/Cargo.toml -p fs-modules-planning` and the same target dir).
+//! Where the program file is: `FS_MODULES_PLANNING_BIN`, else next to the test target (`target/debug/fs-modules-planning`),
+//! else it is built once from the pinned tag of the repository (`cargo install --git`, into the target folder of the test).
 
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
+use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 
 use fs_forms_run::PlanningRecords;
@@ -14,16 +15,59 @@ use fs_forms_run::PlanningRecords;
 /// The folder the pictures for the reader of the report go to, when it exists.
 const SHOWN: &str = "/srv/FreeSynergy/.scratch/bilder/forms-tasks";
 
+/// The repository and tag of the service program: the tag of `fs-modules-planning-client` in `Cargo.toml` (keep the two equal).
+const SERVICE_REPO: &str = "https://github.com/FreeSynergy/fs-modules-planning";
+const SERVICE_TAG: &str = "v0.0.2";
+
+/// The service program built from the pinned tag into the target of the test (once per test program; `cargo install --locked`).
+fn installed_bin() -> PathBuf {
+    static BIN: OnceLock<PathBuf> = OnceLock::new();
+    BIN.get_or_init(|| {
+        let root = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("service");
+        let bin = root.join("bin").join("fs-modules-planning");
+        if !bin.is_file() {
+            let cargo = std::env::var_os("CARGO").unwrap_or_else(|| "cargo".into());
+            let status = Command::new(cargo)
+                .args([
+                    "install",
+                    "--locked",
+                    "--git",
+                    SERVICE_REPO,
+                    "--tag",
+                    SERVICE_TAG,
+                ])
+                .arg("--root")
+                .arg(&root)
+                .arg("fs-modules-planning")
+                .env("CARGO_TARGET_DIR", root.join("build"))
+                .status()
+                .expect("cargo runs");
+            assert!(
+                status.success(),
+                "the service program could not be built from {SERVICE_REPO} {SERVICE_TAG}"
+            );
+        }
+        bin
+    })
+    .clone()
+}
+
 pub fn service_bin() -> PathBuf {
     if let Some(p) = std::env::var_os("FS_MODULES_PLANNING_BIN") {
         return PathBuf::from(p);
     }
     let exe = std::env::current_exe().unwrap();
     // target/debug/deps/<test> -> target/debug/fs-modules-planning
-    exe.parent()
+    let beside = exe
+        .parent()
         .and_then(Path::parent)
         .unwrap()
-        .join("fs-modules-planning")
+        .join("fs-modules-planning");
+    if beside.is_file() {
+        beside
+    } else {
+        installed_bin()
+    }
 }
 
 /// A running service on a socket in a temporary folder.

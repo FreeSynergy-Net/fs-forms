@@ -67,6 +67,7 @@ fn tasks_board() -> View {
         ],
         notices: Vec::new(),
         actions: Vec::new(),
+        sources: Vec::new(),
     }
 }
 

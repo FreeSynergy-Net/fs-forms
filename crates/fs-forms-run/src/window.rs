@@ -72,6 +72,13 @@ const KANBAN_KEYS: &[&str] = &[
     "kanban.more_facts",
     "kanban.empty",
     "kanban.soon",
+    "kanban.refused.locked",
+    "kanban.refused.unsupported",
+    "kanban.refused.unreachable",
+    "kanban.refused.conflict",
+    "kanban.refused.rejected",
+    "kanban.refused.no-board",
+    "kanban.refused.failed",
 ];
 
 /// The sentence of each key of the board (MF2 ids carry a hyphen where the key has a dot).
@@ -133,6 +140,7 @@ pub fn app_styled(
     let said = kanban_words(texts);
     let named = view.style.clone();
     let sample = records.is_sample();
+    let down = records.unavailable();
     let ctx = Ctx {
         style: Arc::new(move || resolve(named.as_deref(), program_style.current())),
         records,
@@ -188,12 +196,16 @@ pub fn app_styled(
     if !entries.is_empty() {
         widget.set_menus(vec![Menu::new(texts.plain("host-title"), entries)], |_| {})?;
     }
-    widget.set_status(Some(status(texts, comp.state, sample)));
+    widget.set_status(Some(status(texts, comp.state, sample, down.as_deref())));
     Ok(widget)
 }
 
-/// How the host stands; sample data is said in the same line (a made-up record is never shown as a real one).
-fn status(texts: &Mf2Texts, state: HostState, sample: bool) -> Status {
+/// How the host stands; sample data is said in the same line (a made-up record is never shown as a real one), and so is a data
+/// source that is not there (`down`: always a problem).
+fn status(texts: &Mf2Texts, state: HostState, sample: bool, down: Option<&str>) -> Status {
+    if let Some(why) = down {
+        return Status::Problem(why.to_owned());
+    }
     let (problem, mut text) = match state {
         HostState::Ready => (false, texts.plain("host-status-ready")),
         HostState::Partial => (false, texts.plain("host-status-partial")),
@@ -245,16 +257,23 @@ mod tests {
         for (lang, said) in [("en", "Sample data"), ("de", "Beispieldaten")] {
             let locale = Locale::from_posix(lang).expect("a locale");
             let texts = words(&locale);
-            let with = status(&texts, HostState::Partial, true);
+            let with = status(&texts, HostState::Partial, true, None);
             assert!(info(&with).contains(said), "{lang}: {}", info(&with));
             assert!(
                 info(&with).contains(&texts.plain("host-status-partial")),
                 "the state stays in the line"
             );
-            let without = status(&texts, HostState::Partial, false);
+            let without = status(&texts, HostState::Partial, false, None);
             assert!(!info(&without).contains(said), "{lang}: {}", info(&without));
-            let refused = status(&texts, HostState::Refused, true);
+            let refused = status(&texts, HostState::Refused, true, None);
             assert!(matches!(refused, Status::Problem(_)), "a problem stays one");
         }
+    }
+
+    #[test]
+    fn a_data_source_that_is_not_there_is_a_problem_in_the_status_line_with_its_reason() {
+        let texts = words(&Locale::from_posix("en").expect("a locale"));
+        let down = status(&texts, HostState::Ready, false, Some("no answer: socket x"));
+        assert!(matches!(&down, Status::Problem(t) if t == "no answer: socket x"));
     }
 }

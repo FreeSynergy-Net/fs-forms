@@ -33,6 +33,11 @@ pub trait Records: Send + Sync {
     fn is_sample(&self) -> bool {
         false
     }
+    /// The sentence that says why the data source the description names is not there (the window shows it as a problem in its
+    /// status line); `None` when the records are what they claim to be.
+    fn unavailable(&self) -> Option<String> {
+        None
+    }
     /// Whether these records can do `op` now. A control of an operation they cannot do stays locked ("Comes later").
     fn can(&self, _op: Operation) -> bool {
         false
@@ -61,5 +66,21 @@ impl Records for NoRecords {
     }
     fn side(&self) -> Vec<SideItem> {
         Vec::new()
+    }
+}
+
+/// The data source of the description could not be reached: nothing to draw, and the window says why (never silently empty).
+#[derive(Clone, Debug)]
+pub struct Unavailable(pub String);
+
+impl Records for Unavailable {
+    fn columns(&self) -> Vec<Column> {
+        Vec::new()
+    }
+    fn side(&self) -> Vec<SideItem> {
+        Vec::new()
+    }
+    fn unavailable(&self) -> Option<String> {
+        Some(self.0.clone())
     }
 }

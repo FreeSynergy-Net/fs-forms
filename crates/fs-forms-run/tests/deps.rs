@@ -48,6 +48,11 @@ fn no_normal_dependency_leads_to_a_program_the_core_or_the_server() {
                 || rest.starts_with("forms-layout")
                 || rest.starts_with("forms-exchange")
                 || rest.starts_with("forms-run")
+                // TRANSITION (K2/K3): the client of the planning module (and what it brings) is linked for the data port
+                || rest.starts_with("modules-planning-client")
+                || rest.starts_with("jscalendar")
+                // the local head of fs-components (WIP patch, unreviewed/b3) brings the settings library
+                || rest.starts_with("settings")
                 || rest.starts_with("components")
                 || rest.starts_with("rpc")
                 || rest.starts_with("interfaces")

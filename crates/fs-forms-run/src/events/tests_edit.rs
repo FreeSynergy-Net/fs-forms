@@ -12,7 +12,7 @@ use std::sync::{Arc, Mutex, PoisonError};
 
 use fs_components_fields::Look;
 use fs_components_fields::Say;
-use fs_components_kanban::{Answer, BoardSource, Column, KanbanBoard, Operation};
+use fs_components_kanban::{Answer, BoardEvents, BoardSource, Column, KanbanBoard, Operation};
 use fs_components_styles::StyleId;
 use fs_components_widgets::dialogs::Labels;
 
@@ -156,7 +156,7 @@ fn a_line_that_is_no_number_never_reaches_the_records_and_the_dialog_says_so() {
             "what was typed stays"
         );
     }
-    assert!(records.calls().is_empty());
+    assert_eq!(records.calls(), [] as [String; 0]);
     assert!(type_in(&w, "3"));
     assert_eq!(records.calls(), ["limit todo Some(3)"]);
     assert!(w.ask.current().is_none());
@@ -174,7 +174,7 @@ fn a_conflict_shows_its_sentence_and_the_dialog_stays_until_a_try_works() {
         "a refusal is not silence and not the end"
     );
     assert_eq!(w.ask.message().as_deref(), Some("kanban.refused.conflict"));
-    assert!(records.calls().is_empty());
+    assert_eq!(records.calls(), [] as [String; 0]);
     records.refuse_with(None);
     assert!(type_in(&w, "Backlog"));
     assert_eq!(records.calls(), ["rename todo Backlog"]);
@@ -189,7 +189,7 @@ fn cancel_leaves_without_a_change() {
     board(&w).request(Operation::Rename, Some("todo"));
     w.ask.current().expect("open").cancel();
     assert!(w.ask.current().is_none());
-    assert!(records.calls().is_empty());
+    assert_eq!(records.calls(), [] as [String; 0]);
 }
 
 #[test]
@@ -201,7 +201,6 @@ fn without_the_capability_or_the_action_the_control_stays_locked() {
     board(&w).request(Operation::Limit, Some("todo"));
     assert!(w.ask.current().is_none(), "no dialog for a locked control");
     // the event called on its own does not open one either
-    use fs_components_kanban::BoardEvents;
     w.set_limit("todo");
     assert!(w.ask.current().is_none());
     // the records can both, the description names only the limit: rename stays locked

@@ -157,7 +157,10 @@ fn a_service_that_is_not_there_is_a_code_and_a_notice_not_an_empty_board_without
     assert!(why.contains("contract=tasks"), "{why}");
     let notice = opened.notice.expect("a notice for the window");
     assert_eq!(notice.code, "host-notice-data-unreachable");
-    assert!(opened.records.columns().is_empty());
+    assert_eq!(
+        opened.records.columns(),
+        [] as [fs_components_kanban::Column; 0]
+    );
     for op in Operation::ALL {
         assert!(
             !opened.records.can(op),

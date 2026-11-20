@@ -179,9 +179,9 @@ impl BoardEvents for Wiring {
             hint,
         );
         self.ask_text(keys, &initial, move |text| match parse_limit(text) {
-            Some(limit) => said(&*say, records.set_limit(&column, limit)),
+            Ok(limit) => said(&*say, records.set_limit(&column, limit)),
             // not a number: the dialog stays open and says so
-            None => Err(say.say("kanban.limit_invalid")),
+            Err(_) => Err(say.say("kanban.limit_invalid")),
         });
     }
 }
@@ -194,10 +194,10 @@ fn said(say: &dyn Say, answer: Answer) -> Result<(), String> {
     }
 }
 
-/// The limit a line says: a whole number of cards, `0` = no limit; `None` when the line is not a number.
-fn parse_limit(text: &str) -> Option<Option<u32>> {
-    let n: u32 = text.trim().parse().ok()?;
-    Some((n > 0).then_some(n))
+/// The limit a line says: a whole number of cards, `0` = no limit; `Err` when the line is not a number.
+fn parse_limit(text: &str) -> Result<Option<u32>, std::num::ParseIntError> {
+    let n: u32 = text.trim().parse()?;
+    Ok((n > 0).then_some(n))
 }
 
 #[cfg(test)]

@@ -68,7 +68,7 @@ fn answer(result: Result<(), client::Error>) -> Answer {
     }
 }
 
-fn column_of(c: client::Column) -> Column {
+fn column_of(c: &client::Column) -> Column {
     let mut out = Column::new(&c.id, &c.name);
     out.limit = c.limit.and_then(|l| usize::try_from(l).ok());
     out.cards = c
@@ -193,7 +193,7 @@ impl Records for PlanningRecords {
     fn columns(&self) -> Vec<Column> {
         let mut last = self.last.lock().unwrap_or_else(PoisonError::into_inner);
         if let Ok(cols) = self.ask(Job::Columns) {
-            *last = cols.into_iter().map(column_of).collect();
+            *last = cols.iter().map(column_of).collect();
         }
         last.clone()
     }

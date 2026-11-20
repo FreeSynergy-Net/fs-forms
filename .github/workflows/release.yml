@@ -9,7 +9,7 @@ permissions:
   packages: write
 jobs:
   release:
-    uses: FreeSynergy/fs-release/.github/workflows/release.yml@v0.0.11
+    uses: FreeSynergy/fs-release/.github/workflows/release.yml@v0.0.16
     with:
       # `fs-forms` holds the server (`fs-forms serve`) and the starter; `fs-forms-simple` is the frontend process.
       binaries: fs-forms,fs-forms-simple

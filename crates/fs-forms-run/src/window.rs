@@ -74,6 +74,14 @@ const KANBAN_KEYS: &[&str] = &[
     "kanban.soon",
 ];
 
+/// The sentence of each key of the board (MF2 ids carry a hyphen where the key has a dot).
+fn kanban_words(texts: &Mf2Texts) -> std::collections::HashMap<String, String> {
+    KANBAN_KEYS
+        .iter()
+        .map(|k| ((*k).to_owned(), texts.plain(&k.replace('.', "-"))))
+        .collect()
+}
+
 /// The window for `comp`.
 ///
 /// # Errors
@@ -122,10 +130,7 @@ pub fn app_styled(
     program_style: Arc<dyn StyleSource>,
 ) -> Result<AppWidget, AppError> {
     // the words of the board are asked by key while drawing; they are read once, here, from the host's own MF2 files
-    let said: std::collections::HashMap<String, String> = KANBAN_KEYS
-        .iter()
-        .map(|k| ((*k).to_owned(), texts.plain(&k.replace('.', "-"))))
-        .collect();
+    let said = kanban_words(texts);
     let named = view.style.clone();
     let sample = records.is_sample();
     let ctx = Ctx {
@@ -213,6 +218,25 @@ mod tests {
         match s {
             Status::Info(t) | Status::Problem(t) => t,
             _ => "",
+        }
+    }
+
+    #[test]
+    fn every_key_of_the_board_has_a_sentence_in_both_languages_never_its_raw_key() {
+        for lang in ["en", "de"] {
+            let locale = Locale::from_posix(lang).expect("a locale");
+            let said = kanban_words(&words(&locale));
+            assert_eq!(said.len(), KANBAN_KEYS.len());
+            for key in KANBAN_KEYS {
+                let text = &said[*key];
+                assert!(
+                    !text.is_empty()
+                        && text != key
+                        && text != &key.replace('.', "-")
+                        && !text.contains("kanban"),
+                    "{lang}: `{key}` shows raw as `{text}`"
+                );
+            }
         }
     }
 

@@ -1,8 +1,8 @@
 //! B4: the window takes its records from the planning service (real data), not from the sample board. The service is the real
 //! program `fs-modules-planning` (see `support/service.rs`: a socket and XDG folders in a temporary directory).
 //!
-//! Tests: card, move and column made through the host are in the service (a second connection sees them); rename and limit stay
-//! locked; a service that is not there is a code and a notice, never an empty board without a word; a contract without a module
+//! Tests: card, move and column made through the host are in the service (a second connection sees them); rename and limit are
+//! unlocked by what the service reports and are in the service too; a service that is not there is a code and a notice, never an empty board without a word; a contract without a module
 //! is said. The pictures with real records are in `planning_pictures.rs`.
 #![cfg(unix)]
 
@@ -37,10 +37,7 @@ fn a_card_a_move_and_a_column_made_through_the_host_are_in_the_service() {
         );
     }
     for op in [Operation::Rename, Operation::Limit] {
-        assert!(
-            !records.can(op),
-            "{op:?} stays locked: the port has no call for it"
-        );
+        assert!(records.can(op), "{op:?} is unlocked by what the service reports");
     }
     assert_eq!(
         column_keys(&records.columns()),
@@ -75,6 +72,43 @@ fn a_card_a_move_and_a_column_made_through_the_host_are_in_the_service() {
     let other = connect(&service);
     assert_eq!(other.columns(), records.columns());
     assert_eq!(titles(&other.columns(), "doing"), ["Write the spec"]);
+}
+
+#[test]
+fn a_rename_and_a_limit_made_through_the_host_are_in_the_service() {
+    let service = start();
+    let records = connect(&service);
+    records.add_card("todo", "One");
+    records.add_card("todo", "Two");
+    let name_of = |r: &PlanningRecords, key: &str| {
+        r.columns().iter().find(|c| c.key == key).map(|c| (c.title.clone(), c.limit))
+    };
+    assert_eq!(name_of(&records, "todo"), Some(("To do".to_owned(), None)));
+
+    assert_eq!(records.rename_column("todo", "  Backlog "), Answer::Accepted);
+    assert_eq!(records.set_limit("todo", Some(1)), Answer::Accepted);
+    // the key stays, the name and the limit change; two cards over a limit of one are shown, not refused
+    assert_eq!(name_of(&records, "todo"), Some(("Backlog".to_owned(), Some(1))));
+    assert_eq!(titles(&records.columns(), "todo"), ["One", "Two"]);
+    // another window sees the same
+    assert_eq!(
+        name_of(&connect(&service), "todo"),
+        Some(("Backlog".to_owned(), Some(1)))
+    );
+
+    assert_eq!(records.set_limit("todo", None), Answer::Accepted);
+    assert_eq!(name_of(&records, "todo"), Some(("Backlog".to_owned(), None)));
+
+    // what the service refuses is a code the board has a sentence for
+    assert_eq!(
+        records.rename_column("nowhere", "X"),
+        Answer::Refused("rejected".into())
+    );
+    assert_eq!(
+        records.set_limit("nowhere", Some(2)),
+        Answer::Refused("rejected".into())
+    );
+    assert_eq!(name_of(&records, "todo"), Some(("Backlog".to_owned(), None)));
 }
 
 #[test]

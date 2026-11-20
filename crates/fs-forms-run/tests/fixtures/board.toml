@@ -109,6 +109,17 @@ trigger = "button"
 source = 1
 command = "column.create"
 
+# K3c: rename and limit of a column, the same kind of button (the real description of fs-tasks needs these two lines as well)
+[[action]]
+trigger = "button"
+source = 1
+command = "column.rename"
+
+[[action]]
+trigger = "button"
+source = 1
+command = "column.limit"
+
 [[action]]
 trigger = "menu"
 source = 1

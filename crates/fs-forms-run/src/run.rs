@@ -74,7 +74,8 @@ fn window(c: &Config) -> ExitCode {
             let opened = open(c, &view, &texts, &running);
             // real records (or a source that is not there) make "data sources are not connected in this version" untrue
             if opened.connected || opened.notice.is_some() {
-                view.notices.retain(|n| n.code != "host-notice-no-providers");
+                view.notices
+                    .retain(|n| n.code != "host-notice-no-providers");
             }
             view.notices.extend(opened.notice);
             let comp = compose(&view, &Blocks);

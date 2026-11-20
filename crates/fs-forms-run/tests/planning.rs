@@ -55,10 +55,7 @@ fn a_card_a_move_and_a_column_made_through_the_host_are_in_the_service() {
     );
 
     let first = records.columns()[0].cards[0].key.clone();
-    assert_eq!(
-        records.move_card(&first, "todo", "doing"),
-        Answer::Accepted
-    );
+    assert_eq!(records.move_card(&first, "todo", "doing"), Answer::Accepted);
     assert_eq!(titles(&records.columns(), "todo"), ["Review the plan"]);
     assert_eq!(titles(&records.columns(), "doing"), ["Write the spec"]);
 

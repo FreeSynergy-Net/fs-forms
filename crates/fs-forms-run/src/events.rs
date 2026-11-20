@@ -100,11 +100,7 @@ impl BoardEvents for Wiring {
         if !self.supports(Operation::AddColumn) {
             return;
         }
-        let (records, done, left) = (
-            self.records.clone(),
-            self.ask.clone(),
-            self.ask.clone(),
-        );
+        let (records, done, left) = (self.records.clone(), self.ask.clone(), self.ask.clone());
         let dialog = InputDialog::new(
             &self.labels,
             &self.say.say("kanban.new_column"),

@@ -15,7 +15,7 @@ use support::board;
 /// Wide enough that a fourth column is in the picture.
 const WIDE: u32 = 1700;
 
-type Step =Box<dyn Fn(&SampleBoard)>;
+type Step = Box<dyn Fn(&SampleBoard)>;
 
 fn actions() -> Vec<(&'static str, Step)> {
     vec![

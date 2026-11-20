@@ -10,6 +10,7 @@ Version = tag; all crates of the workspace carry the same version.
 - `fs-forms-run`: real records from the planning service, rename and limit of a kanban column are live (K3c); the pedantic clippy findings of that code are fixed (`parse_limit` returns a `Result`).
 - `fs-forms-bin` is excluded from the workspace (files stay): forms later runs as a blueprint package via fs-starter, and fs-forms must not depend on fs-starter (cycle). The direction is one way only: fs-starter host -> `fs-forms-run`.
 - CI callers (`check.yml`, `windows.yml`, `release.yml`) pinned to fs-release v0.0.16 (was v0.0.11): the Blinc lock gate of v0.0.11 did not know the approved tag fs-blinc-3.2.
+- `release.yml` is now a library release (`kind: library`, no binary packages, notes from this changelog): the excluded `fs-forms-bin` is no longer packaged.
 - Not run here: the four tests of `fs-forms-run` that need the planning service program (`tests/planning.rs`, `tests/planning_pictures.rs`); Windows is not proven.
 
 ### Deutsch
@@ -18,6 +19,7 @@ Version = tag; all crates of the workspace carry the same version.
 - `fs-forms-run`: echte Datensätze aus dem Planungsdienst, Umbenennen und Limit einer Kanban-Spalte sind lebendig (K3c); die Pedantic-Clippy-Befunde dieses Codes sind behoben (`parse_limit` liefert ein `Result`).
 - `fs-forms-bin` ist aus dem Workspace ausgenommen (Dateien bleiben): forms läuft später als Blueprint-Paket über fs-starter, und fs-forms darf nicht von fs-starter abhängen (Zyklus). Die Richtung ist einseitig: Host in fs-starter -> `fs-forms-run`.
 - CI-Aufrufer (`check.yml`, `windows.yml`, `release.yml`) auf fs-release v0.0.16 gepinnt (vorher v0.0.11): die Blinc-Lock-Prüfung von v0.0.11 kannte den freigegebenen Tag fs-blinc-3.2 nicht.
+- `release.yml` ist jetzt ein Bibliotheks-Release (`kind: library`, keine Binärpakete, Notizen aus diesem Changelog): das ausgenommene `fs-forms-bin` wird nicht mehr verpackt.
 - Hier nicht gelaufen: die vier Tests von `fs-forms-run`, die das Programm des Planungsdienstes brauchen (`tests/planning.rs`, `tests/planning_pictures.rs`); Windows ist nicht belegt.
 
 ## 0.0.5 (2026-11-20)

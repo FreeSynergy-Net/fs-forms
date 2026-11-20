@@ -1,26 +1,14 @@
-# Release of FreeSynergy Forms on a version tag (fs-release caller, pinned).
+# Release of the library FreeSynergy Forms on a version tag (fs-release caller, pinned, LIBRARY MODE: no binary packages,
+# the Pre-release carries the CHANGELOG.md section of the tag version; tag = workspace version = non-empty section).
+# fs-forms builds no app binary: fs-starter is the one executable host and calls fs-forms-run as a library.
 name: release
 on:
   push: { tags: ["v*"] }
 permissions:
   contents: write
-  id-token: write
-  attestations: write
-  packages: write
 jobs:
   release:
     uses: FreeSynergy/fs-release/.github/workflows/release.yml@v0.0.16
     with:
-      # `fs-forms` holds the server (`fs-forms serve`) and the starter; `fs-forms-simple` is the frontend process.
-      binaries: fs-forms,fs-forms-simple
-      cargo-package: fs-forms-bin
-      # The host `fs-forms-run` moves into the repo fs-starter; until then it is not packaged.
-      ignore-binaries: fs-forms-server,fs-forms-run
+      kind: library
       name: fs-forms
-      kind: app
-      app-id: net.freesynergy.Forms
-      macos: false
-      windows-targets: ""   # Unix sockets and Unix paths for now
-    secrets:
-      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}

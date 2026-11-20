@@ -10,9 +10,9 @@
 
 use std::sync::{Arc, Mutex, PoisonError};
 
+use fs_components_fields::Look;
 use fs_components_fields::Say;
 use fs_components_kanban::{Answer, BoardSource, Column, KanbanBoard, Operation};
-use fs_components_fields::Look;
 use fs_components_styles::StyleId;
 use fs_components_widgets::dialogs::Labels;
 
@@ -39,14 +39,24 @@ impl Edits {
         *self.refuse.lock().unwrap_or_else(PoisonError::into_inner) = code.map(str::to_owned);
     }
     fn calls(&self) -> Vec<String> {
-        self.calls.lock().unwrap_or_else(PoisonError::into_inner).clone()
+        self.calls
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .clone()
     }
     fn answer(&self, call: String) -> Answer {
-        let refuse = self.refuse.lock().unwrap_or_else(PoisonError::into_inner).clone();
+        let refuse = self
+            .refuse
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .clone();
         if let Some(code) = refuse {
             return Answer::Refused(code);
         }
-        self.calls.lock().unwrap_or_else(PoisonError::into_inner).push(call);
+        self.calls
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .push(call);
         Answer::Accepted
     }
 }
@@ -125,10 +135,7 @@ fn the_limit_dialog_starts_with_the_limit_and_zero_means_no_limit() {
     assert!(type_in(&w, "7"));
     b.request(Operation::Limit, Some("todo"));
     assert!(type_in(&w, "0"));
-    assert_eq!(
-        records.calls(),
-        ["limit todo Some(7)", "limit todo None"]
-    );
+    assert_eq!(records.calls(), ["limit todo Some(7)", "limit todo None"]);
     // a column without a limit starts with an empty field
     b.request(Operation::Limit, Some("done"));
     assert_eq!(w.ask.current().expect("open").text(), "");
@@ -143,7 +150,11 @@ fn a_line_that_is_no_number_never_reaches_the_records_and_the_dialog_says_so() {
         assert!(type_in(&w, bad));
         assert!(w.ask.current().is_some(), "{bad}: still open");
         assert_eq!(w.ask.message().as_deref(), Some("kanban.limit_invalid"));
-        assert_eq!(w.ask.current().expect("open").text(), bad, "what was typed stays");
+        assert_eq!(
+            w.ask.current().expect("open").text(),
+            bad,
+            "what was typed stays"
+        );
     }
     assert!(records.calls().is_empty());
     assert!(type_in(&w, "3"));
@@ -158,7 +169,10 @@ fn a_conflict_shows_its_sentence_and_the_dialog_stays_until_a_try_works() {
     board(&w).request(Operation::Rename, Some("todo"));
     records.refuse_with(Some("conflict"));
     assert!(type_in(&w, "Backlog"));
-    assert!(w.ask.current().is_some(), "a refusal is not silence and not the end");
+    assert!(
+        w.ask.current().is_some(),
+        "a refusal is not silence and not the end"
+    );
     assert_eq!(w.ask.message().as_deref(), Some("kanban.refused.conflict"));
     assert!(records.calls().is_empty());
     records.refuse_with(None);

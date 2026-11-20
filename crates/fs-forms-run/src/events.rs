@@ -141,10 +141,13 @@ impl BoardEvents for Wiring {
             return;
         }
         let (records, say) = (self.records.clone(), self.say.clone());
-        let keys = ("new-column", "kanban.new_column", "kanban.column_name", None);
-        self.ask_text(keys, "", move |name| {
-            said(&*say, records.add_column(name))
-        });
+        let keys = (
+            "new-column",
+            "kanban.new_column",
+            "kanban.column_name",
+            None,
+        );
+        self.ask_text(keys, "", move |name| said(&*say, records.add_column(name)));
     }
 
     fn rename_column(&self, column: &str) {
@@ -169,7 +172,12 @@ impl BoardEvents for Wiring {
             .and_then(|c| c.limit)
             .map_or_else(String::new, |n| n.to_string());
         let hint = Some("kanban.limit_hint");
-        let keys = ("column-limit", "kanban.limit", "kanban.limit_placeholder", hint);
+        let keys = (
+            "column-limit",
+            "kanban.limit",
+            "kanban.limit_placeholder",
+            hint,
+        );
         self.ask_text(keys, &initial, move |text| match parse_limit(text) {
             Some(limit) => said(&*say, records.set_limit(&column, limit)),
             // not a number: the dialog stays open and says so

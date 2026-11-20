@@ -2,6 +2,16 @@
 
 Version = tag; all crates of the workspace carry the same version.
 
+## 0.0.5 (2026-11-20)
+
+### English
+
+- `fs-forms-run` build script: the call `cargo metadata` no longer passes `--offline`. It covers the whole workspace of the checkout (also `fs-ballot`, `fs-tally`, ...), which a consumer's build (fs-starter, CI run 44640126083: "failed to get fs-ballot ... you are in the offline mode") has not fetched; cargo now fetches what is missing, as the build itself does. `--locked` stays (the checkout carries its own lock). No other code changed. Not covered by a test: the logic lives in `build.rs`, which `cargo test` does not test; it is proven by the consumer's CI.
+
+### Deutsch
+
+- Build-Skript von `fs-forms-run`: der Aufruf `cargo metadata` übergibt kein `--offline` mehr. Er löst den ganzen Workspace des Checkouts auf (auch `fs-ballot`, `fs-tally`, ...), den der Build eines Verbrauchers (fs-starter, CI-Lauf 44640126083: „failed to get fs-ballot ... you are in the offline mode“) nicht geholt hat; cargo holt jetzt Fehlendes, wie es der Build selbst auch tut. `--locked` bleibt (der Checkout bringt seinen eigenen Lock mit). Sonst keine Codeänderung. Nicht durch einen Test gedeckt: die Logik steckt in `build.rs`, die `cargo test` nicht testet; belegt wird sie durch die CI des Verbrauchers.
+
 ## 0.0.4 (2026-11-19)
 
 ### English

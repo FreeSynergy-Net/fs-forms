@@ -15,7 +15,9 @@ fn contract_dir() -> PathBuf {
     let manifest = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR");
     let target = std::env::var("TARGET").expect("TARGET");
     let out = Command::new(cargo)
-        .args(["metadata", "--format-version", "1", "--locked", "--offline"])
+        // no `--offline`: the metadata covers the whole workspace of the checkout, a consumer's build may not have fetched all of it
+        // yet (cargo then fetches what is missing, as the build itself does); `--locked` stays, the checkout carries its own lock
+        .args(["metadata", "--format-version", "1", "--locked"])
         .args(["--filter-platform", &target])
         .arg("--manifest-path")
         .arg(Path::new(&manifest).join("Cargo.toml"))

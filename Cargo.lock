@@ -1521,7 +1521,7 @@ source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.30#66b8945ad
 
 [[package]]
 name = "fs-forms-bin"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "fs-forms-client",
  "fs-forms-server",
@@ -1533,7 +1533,7 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-bind"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "fs-components-commands",
  "fs-forms-bind",
@@ -1542,7 +1542,7 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-client"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "capnp",
  "capnp-rpc",
@@ -1555,7 +1555,7 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-core"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "async-trait",
  "chrono",
@@ -1572,7 +1572,7 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-exchange"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "fs-forms-layout",
  "serde_json",
@@ -1581,14 +1581,14 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-layout"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "sha2 0.10.9",
 ]
 
 [[package]]
 name = "fs-forms-run"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "fs-components",
  "fs-components-app",
@@ -1608,7 +1608,7 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-server"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "capnp",
  "capnp-rpc",
@@ -1619,7 +1619,7 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-simple"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "fs-components",
  "fs-components-app",
@@ -1634,7 +1634,7 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-store"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "fs-forms-layout",
  "fs-objects",
@@ -1653,7 +1653,7 @@ dependencies = [
 
 [[package]]
 name = "fs-layouts-rpc"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "capnp",
  "capnp-rpc",

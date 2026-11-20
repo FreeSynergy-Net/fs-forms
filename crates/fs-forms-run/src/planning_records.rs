@@ -2,8 +2,8 @@
 //! client crate, which the host LINKS for now: transition for K2/K3, a host that loads modules at run time replaces that).
 //!
 //! The client works on a `LocalSet` (capnp-rpc), the port is synchronous: the client lives on a thread of its own and the port
-//! sends it one job at a time and waits for the answer. `can` is what the service reported at the connect, narrowed to what the
-//! port can take (add card, move, add column); rename and limit stay locked because the port has no call for them.
+//! sends it one job at a time and waits for the answer. `can` is what the service reported at the connect (add card, move, add
+//! column, rename, limit: the limit only when it names `column.limit`); a conflict of the revision is a refusal, never silence.
 //!
 //! Pattern: Adapter (the port `Records` over the client) + Active object (one worker thread owns the connection).
 
@@ -30,6 +30,8 @@ enum Job {
     AddCard(String, String, Reply<()>),
     Move(String, String, Reply<()>),
     AddColumn(String, Reply<()>),
+    Rename(String, String, Reply<()>),
+    Limit(String, Option<u32>, Reply<()>),
 }
 
 /// The board of the planning service as the records of a window.
@@ -110,7 +112,7 @@ fn work(
                 return;
             }
         };
-        let can = [Operation::AddCard, Operation::Move, Operation::AddColumn]
+        let can = Operation::ALL
             .into_iter()
             .filter(|op| planning.can(client_op(*op)))
             .collect();
@@ -129,18 +131,25 @@ fn work(
                 Job::AddColumn(name, r) => {
                     let _ = r.send(planning.add_column(&name).await.map(drop));
                 }
+                Job::Rename(column, name, r) => {
+                    let _ = r.send(planning.rename_column(&column, &name).await);
+                }
+                Job::Limit(column, limit, r) => {
+                    let _ = r.send(planning.set_limit(&column, limit).await);
+                }
             }
         }
     });
 }
 
-/// The operation of the client behind an operation of the port (only the three the port takes are asked).
+/// The operation of the client behind an operation of the port.
 fn client_op(op: Operation) -> client::Operation {
     match op {
         Operation::AddCard => client::Operation::AddCard,
         Operation::Move => client::Operation::Move,
-        // AddColumn; the others are never asked (the port has no call for rename and limit)
-        _ => client::Operation::AddColumn,
+        Operation::AddColumn => client::Operation::AddColumn,
+        Operation::Rename => client::Operation::Rename,
+        Operation::Limit => client::Operation::Limit,
     }
 }
 
@@ -202,5 +211,11 @@ impl Records for PlanningRecords {
     }
     fn add_column(&self, title: &str) -> Answer {
         answer(self.ask(|r| Job::AddColumn(title.to_owned(), r)))
+    }
+    fn rename_column(&self, column: &str, name: &str) -> Answer {
+        answer(self.ask(|r| Job::Rename(column.to_owned(), name.to_owned(), r)))
+    }
+    fn set_limit(&self, column: &str, limit: Option<u32>) -> Answer {
+        answer(self.ask(|r| Job::Limit(column.to_owned(), limit, r)))
     }
 }

@@ -32,6 +32,9 @@ kanban-add_card_hint = Titel der neuen Karte
 kanban-add_card_ok = Hinzufügen
 kanban-new_column = Neue Spalte
 kanban-column_name = Name der Spalte
+kanban-limit_placeholder = Anzahl Karten
+kanban-limit_hint = Wie viele Karten die Spalte höchstens fassen soll; 0 = keine Grenze
+kanban-limit_invalid = Das ist keine ganze Zahl; 0 bedeutet keine Grenze
 host-notice-data-unreachable = Die Datenquelle dieses Fensters antwortet nicht; die Tafel zeigt keine Einträge
 host-notice-data-no-socket = Für die Datenquelle ist kein Socket bekannt (kein Laufzeitordner); die Tafel zeigt keine Einträge
 host-notice-source-unknown = Keine Datenquelle dieses Hosts spricht den Vertrag, den die Beschreibung nennt; die Tafel zeigt keine Einträge

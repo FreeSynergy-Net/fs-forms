@@ -3,7 +3,7 @@
 //! built-in, writable sample data for pictures and development (`--sample-data`), never used by a starter.
 //!
 //! The port also says which changes the records can take ([`Records::can`]) and takes them (`add_card`, `move_card`,
-//! `add_column`); every one defaults to "cannot", so a provider that does not name an operation leaves its control locked.
+//! `add_column`, `rename_column`, `set_limit`); every one defaults to "cannot", so a provider that does not name an operation leaves its control locked.
 //!
 //! Pattern: Port (`Records`) with a null object and a fixture.
 
@@ -52,6 +52,15 @@ pub trait Records: Send + Sync {
     }
     /// A column named `title` (only called when [`Records::can`] says [`Operation::AddColumn`]).
     fn add_column(&self, _title: &str) -> Answer {
+        unsupported()
+    }
+    /// The column `column` named `name` (only called when [`Records::can`] says [`Operation::Rename`]).
+    fn rename_column(&self, _column: &str, _name: &str) -> Answer {
+        unsupported()
+    }
+    /// The column `column` limited to `limit` cards, `None` = no limit (only called when [`Records::can`] says
+    /// [`Operation::Limit`]).
+    fn set_limit(&self, _column: &str, _limit: Option<u32>) -> Answer {
         unsupported()
     }
 }

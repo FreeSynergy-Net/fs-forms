@@ -41,6 +41,19 @@ fn actions() -> Vec<(&'static str, Step)> {
                 r.add_column("Review");
             }),
         ),
+        (
+            "rename",
+            Box::new(|r| {
+                r.rename_column("todo", "Backlog");
+            }),
+        ),
+        (
+            "limit",
+            Box::new(|r| {
+                // two cards in "To do": a limit of one shows the column over its limit
+                r.set_limit("todo", Some(1));
+            }),
+        ),
     ]
 }
 

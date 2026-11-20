@@ -114,6 +114,7 @@ pub fn view_of(layout: &Layout, lang: &str) -> View {
         .collect();
     View {
         actions,
+        sources: doc.sources.iter().map(|s| s.v.range.clone()).collect(),
         frontend: doc.key.frontend.clone(),
         title: text(layout, &doc.title_key, lang),
         style: doc.style.clone(),

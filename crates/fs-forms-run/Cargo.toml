@@ -35,6 +35,13 @@ fs-components-words = { git = "https://github.com/FreeSynergy/fs-components", ta
 # What the blocks of the contract are (and what they accept and render): the host asks it, it has no table of its own.
 fs-components-catalog = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.30" }
 
+# TRANSITION (K2/K3): the client of the planning module is LINKED into the host (the data port `PlanningRecords`); loading modules
+# at run time (ADR 0104) replaces this. The tag does not exist yet: the workspace `[patch]` (WIP patch commit) points at the local
+# head until the module is released.
+fs-modules-planning-client = { git = "https://github.com/FreeSynergy/fs-modules-planning", tag = "v0.0.1" }
+fs-rpc = { git = "https://github.com/FreeSynergy/fs-rpc", tag = "v0.0.3" }
+tokio = { version = "1", features = ["rt", "sync", "net", "time"] }
+
 # Picture tests (the window drawn without a window, read back): the same dev-dependencies as fs-forms-simple.
 [dev-dependencies]
 tempfile = "3"

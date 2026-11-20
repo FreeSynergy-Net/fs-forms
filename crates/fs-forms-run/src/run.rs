@@ -13,6 +13,7 @@ use crate::compose::compose;
 use crate::error::{EXIT_CONTRACT, HostError};
 use crate::file::FileLink;
 use crate::link::{LayoutLink, SocketLink};
+use crate::source::open;
 use crate::view::View;
 use crate::window::failure;
 use crate::words::{session_locale, words};
@@ -67,22 +68,26 @@ fn end(e: &HostError) -> ExitCode {
 fn window(c: &Config) -> ExitCode {
     let locale = session_locale();
     let texts = words(&locale);
-    let (view, comp) = match fetch(c) {
-        Ok(view) => {
+    let (view, comp, records) = match fetch(c) {
+        Ok(mut view) => {
+            let running = std::env::current_exe().unwrap_or_default();
+            let opened = open(c, &view, &texts, &running);
+            // real records (or a source that is not there) make "data sources are not connected in this version" untrue
+            if opened.connected || opened.notice.is_some() {
+                view.notices.retain(|n| n.code != "host-notice-no-providers");
+            }
+            view.notices.extend(opened.notice);
             let comp = compose(&view, &Blocks);
-            (view, comp)
+            (view, comp, opened.records)
         }
         // fatal: the starter falls back to the standard frontend and says why; the others are shown here
         Err(e) if e.fatal() => return end(&e),
         Err(e) => {
             eprintln!("fs-forms-run: {e}");
-            (View::default(), failure(&e))
+            let none: std::sync::Arc<dyn crate::records::Records> =
+                std::sync::Arc::new(crate::records::NoRecords);
+            (View::default(), failure(&e), none)
         }
-    };
-    let records: std::sync::Arc<dyn crate::records::Records> = if c.sample_data {
-        std::sync::Arc::new(crate::sample::SampleBoard::default())
-    } else {
-        std::sync::Arc::new(crate::records::NoRecords)
     };
     let program_style = std::sync::Arc::new(crate::style::StyleCell::new(
         c.style.unwrap_or(fs_components_styles::StyleId::Admin),

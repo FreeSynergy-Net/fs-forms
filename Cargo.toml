@@ -23,6 +23,15 @@ repository = "https://github.com/FreeSynergy/fs-forms"
 # fs-rpc and fs-components need 1.89.
 rust-version = "1.89"
 
+# WIP patch (CLAUDE.md 4b): the client of the planning module from the local head (unreviewed/b2b); NOT part of the release commit.
+[patch."https://github.com/FreeSynergy/fs-modules-planning"]
+fs-modules-planning-client = { path = "/srv/FreeSynergy/.scratch/api-runner/wt/b2b/crates/fs-modules-planning-client" }
+
+# WIP patch: the contract `Boards` is in fs-interfaces main 4f5834db, not in a tag yet (as in the workspace of fs-modules-planning;
+# the same repository is named through its `www.` address because Cargo refuses a patch with the same URL); NOT for the release.
+[patch."https://github.com/FreeSynergy/fs-interfaces"]
+fs-interfaces = { git = "https://www.github.com/FreeSynergy/fs-interfaces", rev = "4f5834db" }
+
 # WIP patch (CLAUDE.md 4b): the local head of fs-components (unreviewed/b3); NOT part of the release commit.
 [patch."https://github.com/FreeSynergy/fs-components"]
 fs-components = { path = "/srv/FreeSynergy/.scratch/api-runner/wt/b3/crates/fs-components" }

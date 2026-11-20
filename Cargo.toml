@@ -22,3 +22,18 @@ authors = ["FreeSynergy <support@freesynergy.net>"]
 repository = "https://github.com/FreeSynergy/fs-forms"
 # fs-rpc and fs-components need 1.89.
 rust-version = "1.89"
+
+# WIP patch (CLAUDE.md 4b): the local head of fs-components (unreviewed/b3); NOT part of the release commit.
+[patch."https://github.com/FreeSynergy/fs-components"]
+fs-components = { path = "/srv/FreeSynergy/.scratch/api-runner/wt/b3/crates/fs-components" }
+fs-components-app = { path = "/srv/FreeSynergy/.scratch/api-runner/wt/b3/crates/fs-components-app" }
+fs-components-catalog = { path = "/srv/FreeSynergy/.scratch/api-runner/wt/b3/crates/fs-components-catalog" }
+fs-components-commands = { path = "/srv/FreeSynergy/.scratch/api-runner/wt/b3/crates/fs-components-commands" }
+fs-components-fields = { path = "/srv/FreeSynergy/.scratch/api-runner/wt/b3/crates/fs-components-fields" }
+fs-components-kanban = { path = "/srv/FreeSynergy/.scratch/api-runner/wt/b3/crates/fs-components-kanban" }
+fs-components-mf2 = { path = "/srv/FreeSynergy/.scratch/api-runner/wt/b3/crates/fs-components-mf2" }
+fs-components-primitives = { path = "/srv/FreeSynergy/.scratch/api-runner/wt/b3/crates/fs-components-primitives" }
+fs-components-render = { path = "/srv/FreeSynergy/.scratch/api-runner/wt/b3/crates/fs-components-render" }
+fs-components-styles = { path = "/srv/FreeSynergy/.scratch/api-runner/wt/b3/crates/fs-components-styles" }
+fs-components-widgets = { path = "/srv/FreeSynergy/.scratch/api-runner/wt/b3/crates/fs-components-widgets" }
+fs-components-words = { path = "/srv/FreeSynergy/.scratch/api-runner/wt/b3/crates/fs-components-words" }

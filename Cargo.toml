@@ -11,8 +11,10 @@ members = [
     "crates/fs-forms-client",
     "crates/fs-layouts-rpc",
     "crates/fs-forms-simple",
-    "crates/fs-forms-bin",
 ]
+# forms later runs as a blueprint package via fs-starter; fs-forms must not depend on fs-starter (cycle).
+# The files of crates/fs-forms-bin stay, the crate is just not built here.
+exclude = ["crates/fs-forms-bin"]
 
 [workspace.package]
 version = "0.0.5"

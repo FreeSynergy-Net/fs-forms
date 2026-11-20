@@ -2,6 +2,16 @@
 
 Version = tag; all crates of the workspace carry the same version.
 
+## 0.0.7
+
+### English
+
+- Fix of the release of 0.0.6 (tag v0.0.6 exists but its release workflow did not start: `startup_failure`): the caller `release.yml` must grant the permissions the shared fs-release workflow asks for (`contents`, `id-token`, `attestations`, `packages` write), also in library mode where those jobs are skipped. No code change; v0.0.6 carries no release.
+
+### Deutsch
+
+- Korrektur der Veröffentlichung von 0.0.6 (der Tag v0.0.6 existiert, sein Release-Workflow startete aber nicht: `startup_failure`): Der Aufrufer `release.yml` muss die Rechte erteilen, die der gemeinsame fs-release-Workflow verlangt (`contents`, `id-token`, `attestations`, `packages` schreiben), auch im Bibliotheksmodus, in dem diese Jobs übersprungen werden. Keine Code-Änderung; v0.0.6 trägt kein Release.
+
 ## 0.0.6
 
 ### English

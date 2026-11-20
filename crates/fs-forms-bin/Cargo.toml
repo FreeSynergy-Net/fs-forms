@@ -27,11 +27,11 @@ fs-types = { git = "https://github.com/FreeSynergy/fs-types", tag = "v0.0.4" }
 [package.metadata.deb]
 name = "fs-forms"
 # cargo-deb replaces only `$auto` in `depends`; so a fixed lower bound, not `${binary:Version}`.
-depends = "$auto, fs-forms-simple (>= 0.0.6)"
+depends = "$auto, fs-forms-simple (>= 0.0.7)"
 
 # A package with its own generate-rpm table lists its assets itself (fs-release scripts/linux-pkg.sh).
 [package.metadata.generate-rpm]
 name = "fs-forms"
 assets = [{ source = "target/release/fs-forms", dest = "/usr/bin/fs-forms", mode = "755" }]
 [package.metadata.generate-rpm.requires]
-fs-forms-simple = ">= 0.0.6"
+fs-forms-simple = ">= 0.0.7"

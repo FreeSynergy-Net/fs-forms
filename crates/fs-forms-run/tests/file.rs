@@ -54,6 +54,21 @@ fn a_blueprint_folder_names_its_description() {
             ("empty", "empty-state")
         ]
     );
+    // K3: the actions of the description are what unlocks a gesture of the board
+    for (trigger, command) in [
+        ("quick-add", "create"),
+        ("drop", "move"),
+        ("button", "column.create"),
+        ("menu", "delete"),
+    ] {
+        assert!(
+            v.actions
+                .iter()
+                .any(|a| a.trigger == trigger && a.command == command),
+            "{trigger} {command}: {:?}",
+            v.actions
+        );
+    }
     assert!(
         v.menu.iter().any(|m| m.id == "claim"),
         "commands of the menu are read: {:?}",

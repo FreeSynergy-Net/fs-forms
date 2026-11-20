@@ -102,6 +102,13 @@ trigger = "drop"
 source = 1
 command = "move"
 
+# K3: a new column is a button of the board that calls this command of the source (the real description of fs-tasks has no such
+# action yet: there the control stays locked, "Comes later")
+[[action]]
+trigger = "button"
+source = 1
+command = "column.create"
+
 [[action]]
 trigger = "menu"
 source = 1

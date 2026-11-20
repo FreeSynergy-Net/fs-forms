@@ -2,7 +2,7 @@
 
 Version = tag; all crates of the workspace carry the same version.
 
-## 0.0.6 (2026-11-20)
+## 0.0.6
 
 ### English
 

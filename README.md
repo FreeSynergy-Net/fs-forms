@@ -8,9 +8,9 @@ What is different here: anonymous answers do not go into the ordinary store at a
 
 ## What it can do today
 
-Latest tag: `v0.0.4`. The version in this tree is `0.0.4` (program with a window, server and frontend).
+Latest tag: `v0.0.7`. The version in this tree is `0.0.7`. This repository is a library (a release carries no program binary); the one executable host is `fs-starter`, which calls `fs-forms-run`.
 
-- **A window and a server (new in 0.0.2).** `fs-forms` makes sure the server runs and opens the frontend `simple`: the name, the icon, what works today and what comes. Everything that does not work yet says "coming soon"; a missing server or a server that does not fit is said in the window, never a grey window. The window shows no surveys yet: the core is not connected to it. Try `fs-forms --version`, `fs-forms --help`.
+- **Window and server (since 0.0.2; the command `fs-forms` is retired).** The crate `fs-forms-bin` (command `fs-forms`) is excluded from the workspace; `fs-starter` is the host and runs `fs-forms-run` on a forms description. The frontend `simple` still shows the name, the icon, what works today and what comes; what does not work yet says "coming soon".
 
 - Create and edit surveys with questions and conditions, through the stages draft, open, closed.
 - Named answers: save a draft, resume, submit, replace while open.
@@ -38,7 +38,7 @@ Forms belongs to the democracy and project-management suites. FreeSynergy is a f
 ## For developers
 
 - The counting methods and the anonymous box logic are libraries of their own: [fs-tally](https://github.com/FreeSynergy/fs-tally) and [fs-ballot](https://github.com/FreeSynergy/fs-ballot) (pinned by commit until their first tags).
-- Workspace crates: `fs-forms-core` (core, no GUI), `fs-forms-server` (the contract over a local socket), `fs-forms-client` (the contract as a client), `fs-forms-simple` (the frontend `simple`, a process of its own, depends only on the client and fs-components), `fs-forms-bin` (the command `fs-forms`: starter and `serve`).
+- Workspace crates: `fs-forms-core` (core, no GUI), `fs-forms-server` (the contract over a local socket), `fs-forms-client` (the contract as a client), `fs-forms-simple` (the frontend `simple`, a process of its own, depends only on the client and fs-components), `fs-forms-run` (the library the host `fs-starter` calls), plus `fs-forms-bind`, `fs-forms-layout`, `fs-forms-exchange`, `fs-forms-store` and `fs-layouts-rpc`. `fs-forms-bin` (the old command `fs-forms`) is NOT a workspace crate: it is excluded and must not depend on `fs-starter` in the workspace (cycle).
 - Engine and frontend are separate processes (ADR 0021, 0094 draft); the manifest of the frontend is `packaging/frontends/simple.metainfo.xml`.
 - The contract is `surveys.capnp` in [fs-interfaces](https://github.com/FreeSynergy/fs-interfaces) (draft, not locked; shown as Forms). Forms owns it.
 - Build and test: `cargo build --workspace` and `cargo test --workspace` (the window crates need the system libraries of Blinc; the tests do not open a window).
@@ -49,7 +49,7 @@ Forms belongs to the democracy and project-management suites. FreeSynergy is a f
 
 **Eine Umfrage, bei der eine anonyme Antwort wirklich anonym ist, nicht nur so beschriftet.** FreeSynergy Forms lässt Menschen oder Gruppen Fragen stellen, Antworten sammeln und das Ergebnis lesen. Anonyme Antworten landen nicht im gewöhnlichen Speicher, sondern in einem eigenen Behälter ohne Protokoll und ohne Zeit; Ergebnisse erscheinen erst ab einer Mindestgruppengröße.
 
-**Was es heute kann.** Letzter Tag `v0.0.4`. Der Stand in diesem Baum ist `0.0.4` (Programm mit Fenster, Server und Frontend). Der Kern (Umfragen mit Fragen und Bedingungen, namentliche und anonyme Antworten, Ergebnisse, Zählverfahren, CSV-Export, Ausweiten über Gruppen) liegt als Bibliothek vor. Neu ist ein Fenster mit Server: `fs-forms` startet den Server und das Frontend `simple` mit Name, Symbol, „Was es heute kann“ und „Was kommt“. Was noch nicht geht, sagt „kommt noch“; fehlt der Server oder passt er nicht, steht das im Fenster. Das Fenster zeigt noch keine Umfragen, der Kern ist noch nicht daran angeschlossen.
+**Was es heute kann.** Letzter Tag `v0.0.7`. Der Stand in diesem Baum ist `0.0.7`. Dieses Repo ist eine Bibliothek (ein Release enthält kein Programm-Binary); der eine ausführbare Host ist `fs-starter`, der `fs-forms-run` aufruft. Der Kern (Umfragen mit Fragen und Bedingungen, namentliche und anonyme Antworten, Ergebnisse, Zählverfahren, CSV-Export, Ausweiten über Gruppen) liegt als Bibliothek vor. Fenster und Server: der Befehl `fs-forms` (Crate `fs-forms-bin`) ist ausgeklammert; `fs-starter` startet `fs-forms-run`, das Frontend `simple` zeigt Name, Symbol, „Was es heute kann“ und „Was kommt“. Was noch nicht geht, sagt „kommt noch“; fehlt der Server oder passt er nicht, steht das im Fenster. Das Fenster zeigt noch keine Umfragen, der Kern ist noch nicht daran angeschlossen.
 
 **Was noch nicht da ist.** Umfragen im Fenster anlegen, beantworten und auswerten, Einladen von Personen, öffentlicher Link ohne Konto (kommt mit dem Server-Teil, geplant, nicht terminiert). Terminumfragen gehören zum Programm Decisions. Die vollständige Liste steht in der Feature-Liste (`todo/features/forms.md` in fs-documentation, sobald sie dort liegt).
 

@@ -2,7 +2,7 @@
 
 Version = tag; all crates of the workspace carry the same version.
 
-## Unreleased
+## 0.0.8
 
 ### English
 
@@ -10,6 +10,9 @@ Version = tag; all crates of the workspace carry the same version.
 - New test `fs-forms-run/tests/service_tag.rs`: `SERVICE_TAG` of the service tests equals the tag of the pin `fs-modules-planning-client` (F2).
 - README states the real state (0.0.7, library, the host is fs-starter) (F3). `crates/fs-forms-bin` carries a note at the top of its manifest: excluded, its `fs-starter` pin must not come back into the workspace (cycle) (F5).
 - Open decision (F1): `fs-forms-simple` is still a workspace member with its own binary, but nobody starts it, and its manifest says `fs:exec fs-forms-simple` while manifests made by fs-blueprint say `fs:exec fs-forms-run`. Options: (a) keep as the reference frontend and align `fs:exec`; (b) turn it into a layout description run by `fs-forms-run` and remove the crate; (c) keep it excluded like `fs-forms-bin`. No code was deleted.
+- Known/Open: the delivery of the `simple` frontend is an open decision (options a/b/c above); `fs-forms-simple` stays a workspace member for now. The CI callers stay at fs-release v0.0.16 (the tag v0.0.17 does not exist yet); the pin follows with the next lift.
+- Test support of `fs-forms-run` takes the picture folder only from `FS_PICTURE_OUT` (no fixed path of one machine) (check report K3).
+- Version 0.0.8: workspace, Lock (own crates), `fs-forms-bin` package floors, README, metainfo of `simple` (requires/release 0.0.8; it was still 0.0.4).
 
 ### Deutsch
 
@@ -17,6 +20,9 @@ Version = tag; all crates of the workspace carry the same version.
 - Neuer Test `fs-forms-run/tests/service_tag.rs`: `SERVICE_TAG` der Dienst-Tests ist gleich dem Tag des Pins `fs-modules-planning-client` (F2).
 - README nennt den wahren Stand (0.0.7, Bibliothek, Host ist fs-starter) (F3). `crates/fs-forms-bin` trägt oben im Manifest einen Hinweis: ausgenommen, der Pin auf `fs-starter` darf nicht in den Workspace zurück (Zyklus) (F5).
 - Offene Entscheidung (F1): `fs-forms-simple` ist noch Workspace-Mitglied mit eigenem Binary, wird aber von niemandem gestartet; sein Manifest sagt `fs:exec fs-forms-simple`, die von fs-blueprint erzeugten sagen `fs:exec fs-forms-run`. Optionen: (a) als Referenz-Frontend behalten und `fs:exec` angleichen; (b) in eine Layout-Beschreibung für `fs-forms-run` überführen und das Crate entfernen; (c) wie `fs-forms-bin` ausklammern. Es wurde kein Code gelöscht.
+- Bekannt/Offen: die Auslieferung des Frontends `simple` ist eine offene Entscheidung (Optionen a/b/c oben); `fs-forms-simple` bleibt vorerst Workspace-Mitglied. Die CI-Aufrufer bleiben bei fs-release v0.0.16 (der Tag v0.0.17 existiert noch nicht); der Pin folgt beim nächsten Anheben.
+- Test-Unterstützung von `fs-forms-run` nimmt den Bilder-Ordner nur aus `FS_PICTURE_OUT` (kein fester Pfad einer Maschine) (Prüfbericht K3).
+- Version 0.0.8: Workspace, Lock (eigene Crates), Paket-Untergrenzen von `fs-forms-bin`, README, Metainfo von `simple` (requires/release 0.0.8; stand noch auf 0.0.4).
 
 ## 0.0.7
 

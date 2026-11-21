@@ -12,9 +12,6 @@ use std::time::{Duration, Instant};
 
 use fs_forms_run::PlanningRecords;
 
-/// The folder the pictures for the reader of the report go to, when it exists.
-const SHOWN: &str = "/srv/FreeSynergy/.scratch/bilder/forms-tasks";
-
 /// The repository and tag of the service program: the tag of `fs-modules-planning-client` in `Cargo.toml` (keep the two equal; `tests/service_tag.rs` checks it).
 const SERVICE_REPO: &str = "https://github.com/FreeSynergy/fs-modules-planning";
 const SERVICE_TAG: &str = "v0.0.2";
@@ -128,12 +125,10 @@ pub fn connect(service: &Service) -> PlanningRecords {
     PlanningRecords::connect(&service.socket, &service_bin()).expect("the service answers")
 }
 
-/// Where the pictures go: `FS_PICTURE_OUT`, else the folder of the report when it exists, else the target of the test.
+/// Where the pictures go: `FS_PICTURE_OUT`, else the target of the test.
 pub fn pictures_dir() -> PathBuf {
     let dir = if let Some(d) = std::env::var_os("FS_PICTURE_OUT") {
         PathBuf::from(d)
-    } else if Path::new(SHOWN).is_dir() {
-        PathBuf::from(SHOWN)
     } else {
         PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("b4-pictures")
     };

@@ -172,7 +172,7 @@ dependencies = [
  "objc2-foundation 0.3.2",
  "parking_lot",
  "percent-encoding",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
  "x11rb",
 ]
 
@@ -1250,7 +1250,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e35d6e78f4cebb90e51d543db8fe41528851d6deeef6ef21ebd4bfdc1e784776"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1620,7 +1620,7 @@ source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.33#ee6d72b8d
 
 [[package]]
 name = "fs-forms-bind"
-version = "0.0.9"
+version = "0.0.10"
 dependencies = [
  "fs-components-commands",
  "fs-forms-bind",
@@ -1629,7 +1629,7 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-client"
-version = "0.0.9"
+version = "0.0.10"
 dependencies = [
  "capnp",
  "capnp-rpc",
@@ -1642,7 +1642,7 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-core"
-version = "0.0.9"
+version = "0.0.10"
 dependencies = [
  "async-trait",
  "chrono",
@@ -1659,7 +1659,7 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-exchange"
-version = "0.0.9"
+version = "0.0.10"
 dependencies = [
  "fs-forms-layout",
  "serde_json",
@@ -1668,14 +1668,14 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-layout"
-version = "0.0.9"
+version = "0.0.10"
 dependencies = [
  "sha2 0.10.9",
 ]
 
 [[package]]
 name = "fs-forms-run"
-version = "0.0.9"
+version = "0.0.10"
 dependencies = [
  "fs-components",
  "fs-components-app",
@@ -1698,7 +1698,7 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-server"
-version = "0.0.9"
+version = "0.0.10"
 dependencies = [
  "capnp",
  "capnp-rpc",
@@ -1709,7 +1709,7 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-simple"
-version = "0.0.9"
+version = "0.0.10"
 dependencies = [
  "fs-components",
  "fs-components-app",
@@ -1724,7 +1724,7 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-store"
-version = "0.0.9"
+version = "0.0.10"
 dependencies = [
  "fs-forms-layout",
  "fs-objects",
@@ -1734,8 +1734,8 @@ dependencies = [
 
 [[package]]
 name = "fs-interfaces"
-version = "0.0.29"
-source = "git+https://github.com/FreeSynergy/fs-interfaces?tag=v0.0.29#4f5834db3ac382a9f5897d467e066ed151d1c6cf"
+version = "0.0.30"
+source = "git+https://github.com/FreeSynergy/fs-interfaces?tag=v0.0.30#5e049ad0be2bc1a1b03ca5783da791b93a66edd7"
 dependencies = [
  "capnp",
  "fs-types",
@@ -1759,7 +1759,7 @@ dependencies = [
 
 [[package]]
 name = "fs-layouts-rpc"
-version = "0.0.9"
+version = "0.0.10"
 dependencies = [
  "capnp",
  "capnp-rpc",
@@ -1774,8 +1774,8 @@ dependencies = [
 
 [[package]]
 name = "fs-modules-planning-client"
-version = "0.0.2"
-source = "git+https://github.com/FreeSynergy/fs-modules-planning?tag=v0.0.2#4152a941dd39a6d5d6df21fb917f68e17a7a9d22"
+version = "0.0.3"
+source = "git+https://github.com/FreeSynergy/fs-modules-planning?tag=v0.0.3#e38ccbd8289844ef26ad971d42ce92f152c667f1"
 dependencies = [
  "capnp",
  "capnp-rpc",
@@ -1817,8 +1817,8 @@ dependencies = [
 
 [[package]]
 name = "fs-rpc"
-version = "0.0.5"
-source = "git+https://github.com/FreeSynergy/fs-rpc?tag=v0.0.5#cbb584c0535e82078a78d9a4eca3fa3e0119aab3"
+version = "0.0.6"
+source = "git+https://github.com/FreeSynergy/fs-rpc?tag=v0.0.6#7c5ba2fd6a3aea16f29dd8bc5558c210f8ca6e61"
 dependencies = [
  "capnp",
  "capnp-rpc",
@@ -4325,7 +4325,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4830,7 +4830,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix 1.1.6",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5949,7 +5949,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

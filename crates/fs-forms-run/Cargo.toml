@@ -37,8 +37,8 @@ fs-components-catalog = { git = "https://github.com/FreeSynergy/fs-components", 
 
 # TRANSITION (K2/K3): the client of the planning module is LINKED into the host (the data port `PlanningRecords`); loading modules
 # at run time (ADR 0104) replaces this.
-fs-modules-planning-client = { git = "https://github.com/FreeSynergy/fs-modules-planning", tag = "v0.0.2" }
-fs-rpc = { git = "https://github.com/FreeSynergy/fs-rpc", tag = "v0.0.5" }
+fs-modules-planning-client = { git = "https://github.com/FreeSynergy/fs-modules-planning", tag = "v0.0.3" }
+fs-rpc = { git = "https://github.com/FreeSynergy/fs-rpc", tag = "v0.0.6" }
 tokio = { version = "1", features = ["rt", "sync", "net", "time"] }
 
 # Picture tests (the window drawn without a window, read back): the same dev-dependencies as fs-forms-simple.

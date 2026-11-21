@@ -14,7 +14,7 @@ use fs_forms_run::PlanningRecords;
 
 /// The repository and tag of the service program: the tag of `fs-modules-planning-client` in `Cargo.toml` (keep the two equal; `tests/service_tag.rs` checks it).
 const SERVICE_REPO: &str = "https://github.com/FreeSynergy/fs-modules-planning";
-const SERVICE_TAG: &str = "v0.0.2";
+const SERVICE_TAG: &str = "v0.0.3";
 
 /// The service program built from the pinned tag into the target of the test (once per test program; `cargo install --locked`).
 fn installed_bin() -> PathBuf {

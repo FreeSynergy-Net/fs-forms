@@ -2,6 +2,22 @@
 
 Version = tag; all crates of the workspace carry the same version.
 
+## 0.0.10
+
+### English
+
+- Lift only, no code change: `fs-interfaces` v0.0.29 -> v0.0.30 (adds the `instance` contract), `fs-rpc` v0.0.5 -> v0.0.6, `fs-modules-planning-client` v0.0.2 -> v0.0.3 (all crates of the workspace, one source per library). `fs-components` stays at v0.0.33 (the `simple` rebuild on a newer fs-components follows as 0.0.11).
+- `SERVICE_TAG` of the service tests follows the planning-client pin (v0.0.3).
+- `crates/fs-forms-bin/Cargo.toml`: the dead `fs-starter` entry (git fs-rpc v0.0.5, a crate that tag never had; forbidden edge fs-forms -> fs-starter, ADR 0105) is removed; the crate stays excluded from the workspace.
+- Version 0.0.10: workspace, Lock (own crates), `fs-forms-bin` package floors, README, metainfo of `simple`.
+
+### Deutsch
+
+- Nur Hebung, keine Code-Änderung: `fs-interfaces` v0.0.29 -> v0.0.30 (bringt den Vertrag `instance`), `fs-rpc` v0.0.5 -> v0.0.6, `fs-modules-planning-client` v0.0.2 -> v0.0.3 (alle Crates des Workspace, eine Quelle je Bibliothek). `fs-components` bleibt bei v0.0.33 (der Umbau von `simple` auf ein neueres fs-components folgt als 0.0.11).
+- `SERVICE_TAG` der Dienst-Tests folgt dem Pin des planning-client (v0.0.3).
+- `crates/fs-forms-bin/Cargo.toml`: der tote Eintrag `fs-starter` (git fs-rpc v0.0.5, ein Crate, das dieser Tag nie hatte; verbotene Kante fs-forms -> fs-starter, ADR 0105) ist entfernt; das Crate bleibt aus dem Workspace ausgeklammert.
+- Version 0.0.10: Workspace, Lock (eigene Crates), Paketuntergrenzen von `fs-forms-bin`, README, metainfo von `simple`.
+
 ## 0.0.9
 
 ### English

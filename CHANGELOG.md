@@ -2,6 +2,16 @@
 
 Version = tag; all crates of the workspace carry the same version.
 
+## Unreleased
+
+### English
+
+- CI callers (`check.yml`, `windows.yml`, `release.yml`) pinned to fs-release v0.0.17 (was v0.0.16): the release that contains the generator with the valid forms layout seed and the nested types. No code change.
+
+### Deutsch
+
+- CI-Aufrufer (`check.yml`, `windows.yml`, `release.yml`) auf fs-release v0.0.17 gehoben (vorher v0.0.16): das Release mit dem Generator, der das gültige forms-Layout erzeugt, und den verschachtelten Typen. Keine Code-Änderung.
+
 ## 0.0.8
 
 ### English

@@ -2,11 +2,27 @@
 
 Version = tag; all crates of the workspace carry the same version.
 
+## Unreleased
+
+### English
+
+- The packaging guard test of the frontend `simple` (`tests/packaging.rs`: deb/rpm assets and the manifest folder) moved from the excluded `fs-forms-bin` into `fs-forms-simple`, so it runs again (check report F1).
+- New test `fs-forms-run/tests/service_tag.rs`: `SERVICE_TAG` of the service tests equals the tag of the pin `fs-modules-planning-client` (F2).
+- README states the real state (0.0.7, library, the host is fs-starter) (F3). `crates/fs-forms-bin` carries a note at the top of its manifest: excluded, its `fs-starter` pin must not come back into the workspace (cycle) (F5).
+- Open decision (F1): `fs-forms-simple` is still a workspace member with its own binary, but nobody starts it, and its manifest says `fs:exec fs-forms-simple` while manifests made by fs-blueprint say `fs:exec fs-forms-run`. Options: (a) keep as the reference frontend and align `fs:exec`; (b) turn it into a layout description run by `fs-forms-run` and remove the crate; (c) keep it excluded like `fs-forms-bin`. No code was deleted.
+
+### Deutsch
+
+- Der Packaging-Wächtertest des Frontends `simple` (`tests/packaging.rs`: deb/rpm-Assets und Manifest-Ordner) ist aus dem ausgenommenen `fs-forms-bin` nach `fs-forms-simple` umgezogen und läuft wieder (Prüfbericht F1).
+- Neuer Test `fs-forms-run/tests/service_tag.rs`: `SERVICE_TAG` der Dienst-Tests ist gleich dem Tag des Pins `fs-modules-planning-client` (F2).
+- README nennt den wahren Stand (0.0.7, Bibliothek, Host ist fs-starter) (F3). `crates/fs-forms-bin` trägt oben im Manifest einen Hinweis: ausgenommen, der Pin auf `fs-starter` darf nicht in den Workspace zurück (Zyklus) (F5).
+- Offene Entscheidung (F1): `fs-forms-simple` ist noch Workspace-Mitglied mit eigenem Binary, wird aber von niemandem gestartet; sein Manifest sagt `fs:exec fs-forms-simple`, die von fs-blueprint erzeugten sagen `fs:exec fs-forms-run`. Optionen: (a) als Referenz-Frontend behalten und `fs:exec` angleichen; (b) in eine Layout-Beschreibung für `fs-forms-run` überführen und das Crate entfernen; (c) wie `fs-forms-bin` ausklammern. Es wurde kein Code gelöscht.
+
 ## 0.0.7
 
 ### English
 
-- Fix of the release of 0.0.6 (tag v0.0.6 exists but its release workflow did not start: `startup_failure`): the caller `release.yml` must grant the permissions the shared fs-release workflow asks for (`contents`, `id-token`, `attestations`, `packages` write), also in library mode where those jobs are skipped. No code change; v0.0.6 carries no release.
+- Fix of the release of 0.0.6 (tag v0.0.6 exists but its release workflow did not start: `startup_failure`; CI of the tag v0.0.7: `check` 44808602867, `windows` 44808602268, `release` 44808603517, all success): the caller `release.yml` must grant the permissions the shared fs-release workflow asks for (`contents`, `id-token`, `attestations`, `packages` write), also in library mode where those jobs are skipped. No code change; v0.0.6 carries no release.
 
 ### Deutsch
 
@@ -21,7 +37,7 @@ Version = tag; all crates of the workspace carry the same version.
 - `fs-forms-bin` is excluded from the workspace (files stay): forms later runs as a blueprint package via fs-starter, and fs-forms must not depend on fs-starter (cycle). The direction is one way only: fs-starter host -> `fs-forms-run`.
 - CI callers (`check.yml`, `windows.yml`, `release.yml`) pinned to fs-release v0.0.16 (was v0.0.11): the Blinc lock gate of v0.0.11 did not know the approved tag fs-blinc-3.2.
 - `release.yml` is now a library release (`kind: library`, no binary packages, notes from this changelog): the excluded `fs-forms-bin` is no longer packaged.
-- Not run here: the four tests of `fs-forms-run` that need the planning service program (`tests/planning.rs`, `tests/planning_pictures.rs`); Windows is not proven.
+- Proof by CI (replaces an unbelievable "not run here" line): the branch CI of the head d7751ed is green for `check` (run 44806766705 on tag v0.0.6, 44806763861 on main) and `windows` (44806766123, 44806763201). The release run of v0.0.6 is `startup_failure` (44806767297), see 0.0.7.
 
 ### Deutsch
 
@@ -30,7 +46,7 @@ Version = tag; all crates of the workspace carry the same version.
 - `fs-forms-bin` ist aus dem Workspace ausgenommen (Dateien bleiben): forms läuft später als Blueprint-Paket über fs-starter, und fs-forms darf nicht von fs-starter abhängen (Zyklus). Die Richtung ist einseitig: Host in fs-starter -> `fs-forms-run`.
 - CI-Aufrufer (`check.yml`, `windows.yml`, `release.yml`) auf fs-release v0.0.16 gepinnt (vorher v0.0.11): die Blinc-Lock-Prüfung von v0.0.11 kannte den freigegebenen Tag fs-blinc-3.2 nicht.
 - `release.yml` ist jetzt ein Bibliotheks-Release (`kind: library`, keine Binärpakete, Notizen aus diesem Changelog): das ausgenommene `fs-forms-bin` wird nicht mehr verpackt.
-- Hier nicht gelaufen: die vier Tests von `fs-forms-run`, die das Programm des Planungsdienstes brauchen (`tests/planning.rs`, `tests/planning_pictures.rs`); Windows ist nicht belegt.
+- Beleg durch CI (ersetzt eine unglaubwürdige Zeile „hier nicht gelaufen“): die Zweig-CI des Kopfes d7751ed ist grün für `check` (Lauf 44806766705 auf dem Tag v0.0.6, 44806763861 auf main) und `windows` (44806766123, 44806763201). Der Release-Lauf von v0.0.6 ist `startup_failure` (44806767297), siehe 0.0.7.
 
 ## 0.0.5 (2026-11-20)
 

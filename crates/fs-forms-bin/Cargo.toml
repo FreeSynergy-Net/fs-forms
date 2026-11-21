@@ -1,3 +1,8 @@
+# EXCLUDED from the workspace (root Cargo.toml `exclude`): the files stay, the crate is not built, tested or released here.
+# Its `fs-starter` pin below is a forbidden edge (fs-forms must not depend on fs-starter, ADR 0105): do NOT add this crate back
+# to the workspace members without removing that pin first, or the cycle fs-starter -> fs-forms-run -> fs-forms returns.
+# The one host is fs-starter; fs-forms is a library.
+
 [package]
 name = "fs-forms-bin"
 description = "FreeSynergy Forms: one command for the program. Without words it makes sure the server runs and opens the frontend; `serve` runs the server."

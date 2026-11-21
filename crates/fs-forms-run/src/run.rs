@@ -1,4 +1,4 @@
-//! Running a command: the exit codes of the host (ADR 0094 4: a fatal connection error ends with 3 and a message, the starter then
+//! Running a command (`run` gives an `ExitCode`, `run_code` the same code as a number): the exit codes of the host (ADR 0094 4: a fatal connection error ends with 3 and a message, the starter then
 //! shows the standard frontend; a layout problem is shown in the window, never silently).
 //!
 //! Pattern: Facade over link, catalog, composition and window.
@@ -18,21 +18,39 @@ use crate::view::View;
 use crate::window::failure;
 use crate::words::{session_locale, words};
 
+/// The exit code for success, as a plain number.
+const CODE_SUCCESS: i32 = 0;
+/// The exit code for a failure that is not fatal for the starter.
+const CODE_FAILURE: i32 = 1;
+/// The exit code for a usage error (wrong words on the command line).
+const CODE_USAGE: i32 = 2;
+/// The contract code as a plain number (`EXIT_CONTRACT`).
+const CODE_CONTRACT: i32 = EXIT_CONTRACT as i32;
+
 /// Run the command line (the words after the program name) and return the exit code.
+///
+/// Same as [`run_code`], handed over as a process exit code (`ExitCode` has no accessor to read the number back).
 #[must_use]
 pub fn run(args: &[String]) -> ExitCode {
+    ExitCode::from(u8::try_from(run_code(args)).unwrap_or(1))
+}
+
+/// Run the command line and return the REAL exit code as a number: 0 success, 1 failure, 2 usage error, `EXIT_CONTRACT` (3)
+/// for a fatal connection or contract error. For hosts that must act on the number (an update hook in the starter, ADR 0105).
+#[must_use]
+pub fn run_code(args: &[String]) -> i32 {
     match parse(args) {
         Err(message) => {
             eprintln!("fs-forms-run: {message}\nTry `fs-forms-run --help`.");
-            ExitCode::from(2)
+            CODE_USAGE
         }
         Ok(Command::Version) => {
             println!("fs-forms-run {}", env!("CARGO_PKG_VERSION"));
-            ExitCode::SUCCESS
+            CODE_SUCCESS
         }
         Ok(Command::Help) => {
             println!("{HELP}");
-            ExitCode::SUCCESS
+            CODE_SUCCESS
         }
         Ok(Command::Check(c)) => match fetch(&c) {
             Ok(view) => {
@@ -40,7 +58,7 @@ pub fn run(args: &[String]) -> ExitCode {
                     "fs-forms-run: the description of the frontend {} is there",
                     view.frontend
                 );
-                ExitCode::SUCCESS
+                CODE_SUCCESS
             }
             Err(e) => end(&e),
         },
@@ -56,16 +74,16 @@ fn fetch(c: &Config) -> Result<View, HostError> {
     SocketLink::open(c.forms_socket.as_deref())?.resolve(&c.extends, &c.frontend)
 }
 
-fn end(e: &HostError) -> ExitCode {
+fn end(e: &HostError) -> i32 {
     eprintln!("fs-forms-run: {e}");
     if e.fatal() {
-        ExitCode::from(EXIT_CONTRACT)
+        CODE_CONTRACT
     } else {
-        ExitCode::FAILURE
+        CODE_FAILURE
     }
 }
 
-fn window(c: &Config) -> ExitCode {
+fn window(c: &Config) -> i32 {
     let locale = session_locale();
     let texts = words(&locale);
     let (view, comp, records) = match fetch(c) {
@@ -98,7 +116,7 @@ fn window(c: &Config) -> ExitCode {
             Ok(w) => w,
             Err(e) => {
                 eprintln!("fs-forms-run: {e}");
-                return ExitCode::FAILURE;
+                return CODE_FAILURE;
             }
         };
     if let Some(page) = &c.page {
@@ -109,10 +127,10 @@ fn window(c: &Config) -> ExitCode {
         None => launch(WindowOptions::default(), widget),
     };
     match done {
-        Ok(()) => ExitCode::SUCCESS,
+        Ok(()) => CODE_SUCCESS,
         Err(e) => {
             eprintln!("fs-forms-run: {e}");
-            ExitCode::FAILURE
+            CODE_FAILURE
         }
     }
 }

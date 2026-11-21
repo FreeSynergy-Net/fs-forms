@@ -44,7 +44,7 @@ pub use from_layout::view_of;
 pub use link::{FixtureLink, LayoutLink, SocketLink};
 pub use planning_records::PlanningRecords;
 pub use records::{NoRecords, Records, SideItem, Unavailable};
-pub use run::run;
+pub use run::{run, run_code};
 pub use sample::SampleBoard;
 pub use source::{Opened, open};
 pub use style::{DEFAULT_STYLE, StyleCell, StyleSource, resolve, unknown};

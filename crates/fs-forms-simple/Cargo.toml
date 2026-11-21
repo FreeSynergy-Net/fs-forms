@@ -28,7 +28,8 @@ fs-components-words = { git = "https://github.com/FreeSynergy/fs-components", ta
 
 
 # The manifest of the frontend goes where the starter looks (`<XDG_DATA_DIRS>/freesynergy/frontends/<program>/<id>.metainfo.xml`):
-# without it `fs-forms` finds no frontend after an installation and says `frontend-missing`. A test in `fs-forms-bin` reads these lines.
+# without it the starter finds no frontend after an installation and says `frontend-missing`. The test `tests/packaging.rs` of this crate reads these lines.
+# OPEN (decision, check report F1): this crate and its `fs:exec fs-forms-simple` vs `fs-forms-run` of the manifests made by fs-blueprint; see CHANGELOG, Unreleased.
 [package.metadata.deb]
 assets = [
     ["target/release/fs-forms-simple", "usr/bin/", "755"],

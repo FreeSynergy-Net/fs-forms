@@ -1,4 +1,4 @@
-//! A4 (fs-forms v0.0.3): the package of the frontend `simple` puts its manifest where the starter looks, so that after an
+//! A4 (fs-forms v0.0.3; moved here from the excluded `fs-forms-bin`, so it runs again): the package of the frontend `simple` puts its manifest where the starter looks, so that after an
 //! installation `fs-forms` does not end with `frontend-missing`: `<XDG_DATA_DIRS>/freesynergy/frontends/forms/simple.metainfo.xml`
 //! (`usr/share/...`). The starter reads `<fs:frontend-id>.metainfo.xml` in the folder named by the program (`forms`).
 //!

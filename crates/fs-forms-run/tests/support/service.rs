@@ -15,7 +15,7 @@ use fs_forms_run::PlanningRecords;
 /// The folder the pictures for the reader of the report go to, when it exists.
 const SHOWN: &str = "/srv/FreeSynergy/.scratch/bilder/forms-tasks";
 
-/// The repository and tag of the service program: the tag of `fs-modules-planning-client` in `Cargo.toml` (keep the two equal).
+/// The repository and tag of the service program: the tag of `fs-modules-planning-client` in `Cargo.toml` (keep the two equal; `tests/service_tag.rs` checks it).
 const SERVICE_REPO: &str = "https://github.com/FreeSynergy/fs-modules-planning";
 const SERVICE_TAG: &str = "v0.0.2";
 

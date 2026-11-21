@@ -1,7 +1,6 @@
 //! B4: the pictures of the window with REAL records, made through the planning service (see `support/service.rs`): the board
 //! before and after each action (a card added, a card moved, a column added), and the host program given the socket of a service.
-//! The pictures are kept under `FS_PICTURE_OUT`, else `/srv/FreeSynergy/.scratch/bilder/forms-tasks` when that folder exists, else
-//! the target of the test. Where the machine has no graphics adapter a test says so and ends green.
+//! The pictures are kept under the folder named by `FS_PICTURE_OUT`, else in the target folder of the test (no fixed path). Where the machine has no graphics adapter a test says so and ends green.
 //!
 //! Tests: after each action the next drawing differs from the one before; the host program draws the card made in the service.
 #![cfg(unix)]

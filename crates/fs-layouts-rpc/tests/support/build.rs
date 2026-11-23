@@ -82,13 +82,13 @@ pub fn rich(frontend: &str) -> LayoutDoc {
     d.requires = vec![item(
         "requires:tasks",
         RequiresDoc {
-            range: "tasks >=0.2, <0.3".into(),
+            range: "tasks@>=0.2, <0.3".into(),
         },
     )];
     d.sources = vec![item(
         "source:1",
         SourceDoc {
-            range: "tasks >=0.2, <0.3".into(),
+            range: "tasks@>=0.2, <0.3".into(),
             data_type: "task".into(),
             scope: Some(SourceScope::SelectedList),
         },

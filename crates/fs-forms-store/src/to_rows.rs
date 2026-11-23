@@ -37,17 +37,17 @@ pub(crate) fn elem<T>(i: &Item<T>) -> Cell {
     text(i.elem.as_ref().map_or("", |e| e.as_str()))
 }
 
-/// Splits `name >=a.b, <c.d` into its capability and four integers. The check of the layout guarantees both bounds.
+/// Splits `name@>=a.b, <c.d` into its capability and four integers. The check of the layout guarantees both bounds.
 pub(crate) fn range_parts(range: &str) -> Result<(String, [i64; 4]), Coded<LayoutCode>> {
-    let mut it = range.split_whitespace();
-    let name = it.next().unwrap_or("").to_owned();
+    let (name, req) = fs_forms_layout::split_range(range);
+    let name = name.to_owned();
     let mut v = [0_i64; 4];
-    for tok in it {
+    for tok in req.split(',').map(str::trim) {
         let (slot, rest) = match tok.strip_prefix(">=") {
             Some(r) => (0, r),
             None => (2, tok.trim_start_matches('<')),
         };
-        let mut parts = rest.trim_end_matches(',').splitn(3, '.');
+        let mut parts = rest.splitn(3, '.');
         let (a, b) = (parts.next().unwrap_or("0"), parts.next().unwrap_or("0"));
         if parts.next().is_some_and(|p| p.parse::<u64>() != Ok(0)) {
             // The table holds major and minor only: refuse, never cut the patch off (patch columns wait for the contract, V-2).
@@ -61,11 +61,11 @@ pub(crate) fn range_parts(range: &str) -> Result<(String, [i64; 4]), Coded<Layou
     Ok((name, v))
 }
 
-/// The text range of the four integers of a `requires` or `source` row, e.g. `tasks >=0.2, <0.3`.
+/// The text range of the four integers of a `requires` or `source` row, e.g. `tasks@>=0.2, <0.3`.
 pub(crate) fn range_text(r: &crate::rows::RowReader<'_>) -> String {
     let n = |c: &str| r.int(c).unwrap_or(0);
     format!(
-        "{} >={}.{}, <{}.{}",
+        "{}@>={}.{}, <{}.{}",
         r.text("capability").unwrap_or_default(),
         n("min_major"),
         n("min_minor"),
@@ -191,14 +191,14 @@ mod range_tests {
     #[test]
     fn a_patch_is_never_cut_off_silently() {
         assert_eq!(
-            range_parts("tasks >=0.2, <0.3").unwrap(),
+            range_parts("tasks@>=0.2, <0.3").unwrap(),
             ("tasks".to_owned(), [0, 2, 0, 3])
         );
         assert_eq!(
-            range_parts("tasks >=0.2.0, <0.3.0").unwrap().1,
+            range_parts("tasks@>=0.2.0, <0.3.0").unwrap().1,
             [0, 2, 0, 3]
         );
-        for text in ["tasks >=0.0.1, <0.1", "tasks >=0.2, <0.3.4"] {
+        for text in ["tasks@>=0.0.1, <0.1", "tasks@>=0.2, <0.3.4"] {
             let e = range_parts(text).unwrap_err();
             assert_eq!(e.param("cause"), Some("range-patch"), "{text}");
         }

@@ -21,15 +21,11 @@ fn read_range(r: w::range::Reader<'_>) -> R<String> {
     let mut out = txt(r.get_capability())?;
     let low = (r.get_min_major(), r.get_min_minor()) != (0, 0);
     if low {
-        out = format!("{out} >={}.{}", r.get_min_major(), r.get_min_minor());
+        out = format!("{out}@>={}.{}", r.get_min_major(), r.get_min_minor());
     }
     if (r.get_below_major(), r.get_below_minor()) != (0, 0) {
-        let comma = if low { "," } else { "" };
-        out = format!(
-            "{out}{comma} <{}.{}",
-            r.get_below_major(),
-            r.get_below_minor()
-        );
+        let sep = if low { ", " } else { "@" };
+        out = format!("{out}{sep}<{}.{}", r.get_below_major(), r.get_below_minor());
     }
     Ok(out)
 }

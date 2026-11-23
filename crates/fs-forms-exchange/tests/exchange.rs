@@ -14,7 +14,7 @@ title = "board-title"
 [[source]]
 elem = "source:1"
 n = 1
-contract = "tasks >=0.2, <0.3"
+contract = "tasks@>=0.2, <0.3"
 type = "Task"
 scope = "selected-list"
 

@@ -56,7 +56,7 @@ fn golden_digest_of_a_plan_with_notices_and_locks() {
     assert!(!p.notices.is_empty() && !p.menu.locks.is_empty() && p.sources[0].status.is_err());
     assert_eq!(
         hex(p.digest_without_style()),
-        "19809d0e7205cf6affa98d31081ea32819a79c494c42efc5dbfaa481fb7d0d17"
+        "0462b6c9e88fddbc707def3116600825b1cccfc7290482dc18ffa9c980cbaba8"
     );
 }
 

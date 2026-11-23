@@ -27,7 +27,7 @@ pub struct Opened {
 
 /// The data sources a host can offer: it connects the module service that speaks a contract.
 pub trait Sources: Send + Sync {
-    /// The records of the module that serves `range` (the contract and its range as the description writes it: `tasks >=0.2, <0.3`;
+    /// The records of the module that serves `range` (the contract and its range as the description writes it: `tasks@>=0.2, <0.3`;
     /// the host compares the version of the module with it), or the code that says why there are none. `socket` is the one the
     /// command line gave (a host may ignore it), `running` the running program.
     ///
@@ -51,10 +51,10 @@ impl Sources for NoSources {
     }
 }
 
-/// The name of the contract in a range (`tasks >=0.2, <0.3` is `tasks`).
+/// The name of the contract in a range (`tasks@>=0.2, <0.3` is `tasks`).
 #[must_use]
 pub fn name_of(range: &str) -> &str {
-    range.split_whitespace().next().unwrap_or("")
+    fs_forms_layout::split_range(range).0
 }
 
 /// The records for `view`: the sample data when asked for (`--sample-data`), else what `sources` connects for the first source of
@@ -104,7 +104,7 @@ mod tests {
     fn a_host_without_sources_says_the_contract_is_unknown_and_shows_it_as_a_problem() {
         let texts = words(&fs_components_words::Locale::english());
         let view = View {
-            sources: vec!["groups >=0.1, <0.2".into()],
+            sources: vec!["groups@>=0.1, <0.2".into()],
             ..View::default()
         };
         let c = crate::args::Config::default();

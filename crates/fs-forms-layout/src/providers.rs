@@ -42,7 +42,7 @@ pub fn check_providers<'a>(
                     );
                     continue;
                 };
-                let capability = src.v.range.split_whitespace().next().unwrap_or("");
+                let capability = crate::check_text::split_range(&src.v.range).0;
                 for b in &block.v.bindings {
                     let BindFrom::Field { path, .. } = &b.v.from else {
                         continue;
@@ -98,7 +98,7 @@ pub fn unchecked_capabilities(layout: &Layout) -> Vec<Coded<LayoutCode>> {
             .iter()
             .any(|b| matches!(b.v.from, BindFrom::Field { .. }));
         if let (Some(src), true) = (src, has_field) {
-            let capability = src.v.range.split_whitespace().next().unwrap_or("");
+            let capability = crate::check_text::split_range(&src.v.range).0;
             let c = Coded::new(LayoutCode::ProviderUnchecked).with("capability", capability);
             if !out.contains(&c) {
                 out.push(c);

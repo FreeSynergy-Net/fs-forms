@@ -25,7 +25,7 @@ impl ProviderCatalogs for Fake {
 fn with_source() -> LayoutDoc {
     let mut d = doc("board");
     let src = SourceDoc {
-        range: "tasks >=0.2, <0.3".into(),
+        range: "tasks@>=0.2, <0.3".into(),
         data_type: "Task".into(),
         scope: None,
     };

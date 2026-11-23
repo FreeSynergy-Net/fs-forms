@@ -14,7 +14,7 @@ use crate::shim::Coded;
 
 type Problems = Vec<Coded<LayoutCode>>;
 
-/// `name >=a.b.c, <d.e` (the grammar of `semver::VersionReq`, as the host writes it): exactly one lower bound `>=` and one upper bound `<`
+/// `name@>=a.b.c, <d.e` (the grammar of `semver::VersionReq`, as the host writes it): exactly one lower bound `>=` and one upper bound `<`
 /// (the table holds them as integers), the lower one below the upper one.
 pub(crate) fn check_range(text: &str, out: &mut Problems) {
     if !range_ok(text) {
@@ -23,13 +23,12 @@ pub(crate) fn check_range(text: &str, out: &mut Problems) {
 }
 
 fn range_ok(text: &str) -> bool {
-    let text = text.trim();
-    let (name, req) = text.split_once(char::is_whitespace).unwrap_or((text, ""));
+    let (name, req) = split_range(text);
     let name_ok = !name.is_empty()
         && name
             .chars()
             .all(|c| c.is_ascii_alphanumeric() || "-_.".contains(c));
-    let Ok(req) = VersionReq::parse(req.trim()) else {
+    let Ok(req) = VersionReq::parse(req) else {
         return false;
     };
     let bound = |op: Op| {
@@ -111,4 +110,12 @@ pub(crate) fn check_messages(list: &[Item<MessageDoc>], limits: &Limits, out: &m
             );
         }
     }
+}
+
+/// Splits a version need `name@<req>` (`tasks@>=0.0.1, <0.1.0`, the cargo way) into the name and the requirement text.
+/// The one place that knows the separator; every reader of a range uses it.
+#[must_use]
+pub fn split_range(text: &str) -> (&str, &str) {
+    let (name, req) = text.trim().split_once('@').unwrap_or((text.trim(), ""));
+    (name.trim(), req.trim())
 }

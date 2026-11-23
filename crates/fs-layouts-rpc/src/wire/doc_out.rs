@@ -17,11 +17,11 @@ pub(crate) fn elem_text<T>(i: &Item<T>) -> &str {
 /// Writes a range text as the wire's `Range`: the text always, the fields when it parses.
 pub(crate) fn write_range(mut out: w::range::Builder<'_>, text: &str) {
     out.set_text(text);
-    let mut it = text.split_whitespace();
-    out.set_capability(it.next().unwrap_or(""));
-    for t in it {
+    let (name, req) = fs_forms_layout::split_range(text);
+    out.set_capability(name);
+    for t in req.split(',').map(str::trim) {
         let v = |s: &str| {
-            let (a, b) = s.trim_end_matches(',').split_once('.')?;
+            let (a, b) = s.split_once('.')?;
             Some((a.parse::<u32>().ok()?, b.parse::<u32>().ok()?))
         };
         if let Some((a, b)) = t.strip_prefix(">=").and_then(v) {

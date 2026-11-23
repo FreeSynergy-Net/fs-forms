@@ -16,8 +16,8 @@ fn source(range: &str) -> SourceDoc {
 fn two_sources() -> LayoutDoc {
     let mut d = doc("board");
     d.sources = vec![
-        item("source:1", source("tasks >=0.1, <0.2")),
-        item("source:2", source("people >=0.1, <0.2")),
+        item("source:1", source("tasks@>=0.1, <0.2")),
+        item("source:2", source("people@>=0.1, <0.2")),
     ];
     d.pages[0].v.blocks[0].v.source = Some(1);
     d
@@ -57,7 +57,7 @@ fn p2_removing_a_source_in_the_middle_is_refused_not_renumbered() {
     );
     let r = resolved(&s);
     assert_eq!(r.layout.doc().sources.len(), 2);
-    assert_eq!(r.layout.doc().sources[0].v.range, "tasks >=0.1, <0.2"); // the block still points at tasks
+    assert_eq!(r.layout.doc().sources[0].v.range, "tasks@>=0.1, <0.2"); // the block still points at tasks
     assert_eq!(r.layout.doc().pages[0].v.blocks[0].v.source, Some(1));
 }
 

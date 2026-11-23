@@ -140,7 +140,7 @@ fn n17_a_range_needs_both_bounds() {
         "tasks >=0.2",
         "tasks <0.3",
         "tasks",
-        "tasks >=0.3, <0.2",
+        "tasks@>=0.3, <0.2",
         "tasks >0.2",
     ] {
         let mut d = doc("board");
@@ -274,7 +274,7 @@ fn n25_off_and_orphaned_overlays_do_nothing() {
 fn resolve_is_never_silent_about_providers() {
     let mut d = doc("board");
     let src = SourceDoc {
-        range: "tasks >=0.2, <0.3".into(),
+        range: "tasks@>=0.2, <0.3".into(),
         data_type: "Task".into(),
         scope: None,
     };
@@ -294,21 +294,22 @@ fn resolve_is_never_silent_about_providers() {
 #[test]
 fn n17b_a_range_is_written_like_the_host_does_with_a_comma_and_three_parts() {
     for text in [
-        "tasks >=0.0.1, <0.1",
-        "tasks >=0.2, <0.3",
-        "tasks >=1.2.3, <2",
-        "tasks >=0.0.1, <0.1.0",
+        "tasks@>=0.0.1, <0.1",
+        "tasks@>=0.2, <0.3",
+        "tasks@>=1.2.3, <2",
+        "tasks@>=0.0.1, <0.1.0",
     ] {
         let mut d = doc("board");
         d.requires = vec![item("requires:t", RequiresDoc { range: text.into() })];
         assert!(check(d).is_ok(), "{text}");
     }
     for text in [
-        "tasks >=0.2 <0.3",
-        "tasks >=0.3, <0.2",
-        "tasks >=zz, <0.3",
-        "tasks >=0.0.1, >=0.0.2",
-        "bad name >=0.1, <0.2",
+        "tasks >=0.2, <0.3",
+        "tasks@>=0.2 <0.3",
+        "tasks@>=0.3, <0.2",
+        "tasks@>=zz, <0.3",
+        "tasks@>=0.0.1, >=0.0.2",
+        "bad name@>=0.1, <0.2",
     ] {
         let mut d = doc("board");
         d.requires = vec![item("requires:t", RequiresDoc { range: text.into() })];

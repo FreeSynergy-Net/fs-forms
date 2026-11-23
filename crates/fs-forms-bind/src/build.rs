@@ -178,7 +178,7 @@ fn build_sources(layout: &Resolved, providers: &Providers<'_>) -> Vec<SourcePlan
         let idx = u32::try_from(i).unwrap_or(u32::MAX);
         let lock = |c: Coded| PartLock::locked(Part::Source(idx), c);
         let missing = |have: &str| {
-            let range = format!("{} {}", s.capability, s.range.text());
+            let range = format!("{}@{}", s.capability, s.range.text());
             Coded::new("accepts-error-contract-missing")
                 .with("capability", s.capability.clone())
                 .with("range", range)

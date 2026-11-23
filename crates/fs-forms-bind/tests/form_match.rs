@@ -7,7 +7,7 @@ use fs_forms_bind::*;
 const TXT: &str = include_str!("data/forms.txt");
 
 #[test]
-fn the_suite_proves_itself_seven_of_seven() {
+fn the_suite_proves_itself_nine_of_nine() {
     let (base_green, caught) = FormsSuite::prove();
     assert!(
         base_green,
@@ -19,7 +19,7 @@ fn the_suite_proves_itself_seven_of_seven() {
     let mut got = caught;
     got.sort_unstable();
     assert_eq!(got, want, "every rule has its mutant red");
-    assert_eq!(want.len(), 7);
+    assert_eq!(want.len(), 9);
 }
 
 #[test]
@@ -30,7 +30,7 @@ fn every_rule_has_exactly_one_mutant() {
         .collect();
     flaws.sort_unstable();
     flaws.dedup();
-    assert_eq!(flaws.len(), 7);
+    assert_eq!(flaws.len(), 9);
 }
 
 #[test]

@@ -25,17 +25,9 @@ fn grundtyp(art: Art) -> Grundtyp {
 }
 
 fn count(c: Cnt) -> Count {
-    match c {
-        Cnt::Range {
-            min: 1,
-            max: Some(1),
-        } => Count::One,
-        Cnt::Range {
-            min: 0,
-            max: Some(1),
-        } => Count::ZeroOrOne,
-        Cnt::Range { max, .. } => Count::ZeroToN(max),
-        Cnt::Open => Count::ZeroToN(None),
+    Count::Range {
+        min: c.min,
+        max: c.max,
     }
 }
 
@@ -144,4 +136,32 @@ pub fn report(records: &dyn Records) -> Vec<Finding> {
             }
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{count, forms};
+    use fs_interfaces::forms::catalog;
+
+    #[test]
+    fn the_counts_of_the_real_catalog_allow_the_same_numbers_after_the_conversion() {
+        let mut seen = 0;
+        for (real, mine) in catalog().iter().zip(forms()) {
+            assert_eq!(real.name, mine.name);
+            for (r, m) in real.channels.iter().zip(&mine.channels) {
+                for n in 0..7 {
+                    assert_eq!(
+                        count(r.count).allows(n),
+                        r.count.allows(n),
+                        "{}.{} with {n}",
+                        real.name,
+                        r.name
+                    );
+                    seen += 1;
+                }
+                assert_eq!(m.required, r.required);
+            }
+        }
+        assert!(seen > 100, "the whole catalog is read, {seen}");
+    }
 }

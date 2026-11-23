@@ -22,4 +22,5 @@ form-unknown = The form “{$form}” {$version} is not in the form catalog.
 form-version-mismatch = The block “{$block}” draws {$form} in version {$component}, the module offers {$module}.
 form-channel-unmapped = The module gives no field for the required channel “{$channel}” of the form “{$form}”.
 form-basic-mismatch = The field “{$field}” does not fit the channel “{$channel}” of the form “{$form}” (needs {$grundtyp}).
+form-channel-count = The channel “{$channel}” of the form “{$form}” takes another number of fields than its count allows ({$fields} given).
 form-no-component = No block draws the form “{$form}” yet; the fallback is shown.

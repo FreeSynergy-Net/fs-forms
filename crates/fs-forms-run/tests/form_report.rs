@@ -12,7 +12,7 @@ fn records(forms: Vec<FormData>) -> FormRecords {
 
 #[test]
 fn a_module_that_fits_gives_no_finding() {
-    assert!(form_report(&records(sample_groups())).is_empty());
+    assert_eq!(form_report(&records(sample_groups())), Vec::new());
 }
 
 #[test]

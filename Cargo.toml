@@ -27,7 +27,7 @@ rust-version = "1.89"
 
 # Develop against the local head (PLAN-quelle-und-abgleich 4b); removed at the lift to the tag.
 [patch."https://github.com/FreeSynergy/fs-interfaces"]
-fs-interfaces = { path = "../fs-interfaces-r1/crates/fs-interfaces" }
+fs-interfaces = { path = "../fs-interfaces-r2/crates/fs-interfaces" }
 
 [patch."https://github.com/FreeSynergy/fs-components"]
 fs-components-app = { path = "../fs-components/crates/fs-components-app" }

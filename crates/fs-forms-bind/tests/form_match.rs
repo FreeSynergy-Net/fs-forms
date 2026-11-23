@@ -7,7 +7,7 @@ use fs_forms_bind::*;
 const TXT: &str = include_str!("data/forms.txt");
 
 #[test]
-fn the_suite_proves_itself_six_of_six() {
+fn the_suite_proves_itself_seven_of_seven() {
     let (base_green, caught) = FormsSuite::prove();
     assert!(
         base_green,
@@ -19,7 +19,7 @@ fn the_suite_proves_itself_six_of_six() {
     let mut got = caught;
     got.sort_unstable();
     assert_eq!(got, want, "every rule has its mutant red");
-    assert_eq!(want.len(), 6);
+    assert_eq!(want.len(), 7);
 }
 
 #[test]
@@ -30,7 +30,7 @@ fn every_rule_has_exactly_one_mutant() {
         .collect();
     flaws.sort_unstable();
     flaws.dedup();
-    assert_eq!(flaws.len(), 6);
+    assert_eq!(flaws.len(), 7);
 }
 
 #[test]
@@ -77,7 +77,7 @@ fn minimal_module(def: &FormDef) -> ModuleForm {
     let mut map = Vec::new();
     let mut fields = Vec::new();
     for c in def.channels.iter().filter(|c| c.required) {
-        let basic = match c.grundtyp {
+        let basic = match c.grundtypen[0] {
             Grundtyp::Time => Basic::DateTime,
             Grundtyp::Number => Basic::Number,
             Grundtyp::Flag => Basic::Bool,

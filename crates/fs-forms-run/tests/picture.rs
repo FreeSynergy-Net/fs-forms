@@ -124,34 +124,34 @@ fn the_side_list_stands_beside_the_board_not_above_it_light_and_dark() {
         ) else {
             return;
         };
-        // the strip (x 200..420 of a 1000 px window, the shell's own navigation takes the left 200): the list is in its top
+        // the strip (x 0..220 of a 1000 px window: with sample records the window has one page, so the shell shows no navigation): the list is in its top
         // part, nothing below it
         assert!(
-            !uniform(&p, 240..300, 70..180),
+            !uniform(&p, 40..100, 70..180),
             "{scheme}: the list is drawn in the strip, 24 px (not 96) from its edge"
         );
         assert!(
-            uniform(&p, 230..410, 300..700),
+            uniform(&p, 30..210, 300..700),
             "{scheme}: the strip is empty below the list"
         );
         // the board starts right of the strip, at the top of the main area (a board below the list would leave this box blank)
         assert!(
-            !uniform(&p, 440..680, 125..200),
+            !uniform(&p, 240..480, 125..200),
             "{scheme}: the board begins beside the list"
         );
         // the board is not shifted: its first column is at the left edge of the main area, not far right of it
         assert!(
-            uniform(&p, 421..440, 130..700),
+            uniform(&p, 221..240, 130..700),
             "{scheme}: nothing of the board left of its own padding"
         );
         // the board fills the height of the main area: the lower edge of its columns is near the bottom (a board of a fixed 380 px
         // would end far above it)
         assert!(
-            !uniform(&p, 460..670, 700..712),
+            !uniform(&p, 260..470, 700..712),
             "{scheme}: the board is as tall as the main area"
         );
         assert!(
-            !uniform(&p, 440..450, 130..700),
+            !uniform(&p, 240..250, 130..700),
             "{scheme}: the first column starts 24 px (not 96) from the main area"
         );
     }

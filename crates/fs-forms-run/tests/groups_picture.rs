@@ -129,5 +129,5 @@ fn the_lock_names_the_code_of_the_rule() {
             && c.params.iter().any(|(k, v)| k == "channel" && v == "label")),
         "{codes:?}"
     );
-    assert!(fs_forms_run::form_problems("table", r.as_ref()).is_empty());
+    assert_eq!(fs_forms_run::form_problems("table", r.as_ref()), vec![]);
 }

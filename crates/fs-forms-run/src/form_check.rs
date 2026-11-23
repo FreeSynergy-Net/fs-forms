@@ -12,22 +12,6 @@ use fs_interfaces::forms::{Art, Count as Cnt, catalog};
 use crate::records::Records;
 use crate::view::{Coded, View};
 
-/// The form each block of this build draws (name and version as the component declares them): `tree` draws `tree@1.0`, `table`
-/// the member list, `board` the cards in columns.
-pub(crate) const BLOCK_FORMS: &[(&str, &str, u32, u32)] = &[
-    ("tree", "tree", 1, 0),
-    ("table", "members", 1, 0),
-    ("board", "cards-in-columns", 1, 0),
-];
-
-/// The name of the form a block draws.
-pub(crate) fn form_of(block: &str) -> Option<&'static str> {
-    BLOCK_FORMS
-        .iter()
-        .find(|(b, ..)| *b == block)
-        .map(|(_, f, ..)| *f)
-}
-
 fn grundtyp(art: Art) -> Grundtyp {
     match art {
         Art::Records => Grundtyp::Records,
@@ -77,16 +61,21 @@ fn forms() -> Vec<FormDef> {
         .collect()
 }
 
+/// What each block draws, as the COMPONENT declares it (`forms=` of the block contract, read by the catalog): the host holds no
+/// table of its own.
 fn components() -> Vec<ComponentForms> {
-    BLOCK_FORMS
-        .iter()
-        .map(|(block, name, major, minor)| ComponentForms {
-            block: (*block).to_owned(),
-            forms: vec![FormRef {
-                name: (*name).to_owned(),
-                major: *major,
-                minor: *minor,
-            }],
+    crate::blocks::forms_of_blocks()
+        .into_iter()
+        .map(|(block, forms)| ComponentForms {
+            block,
+            forms: forms
+                .into_iter()
+                .map(|f| FormRef {
+                    name: f.name,
+                    major: f.major,
+                    minor: f.minor,
+                })
+                .collect(),
         })
         .collect()
 }
@@ -100,13 +89,12 @@ fn coded(c: &fs_forms_bind::Coded) -> Coded {
 /// The codes the match says for the form `block` draws, when the connected module offers it; empty = fits (or nothing is offered:
 /// then the block is drawn empty by the existing notices). Yellow results (a fallback) lock nothing.
 pub fn problems(block: &str, records: &dyn Records) -> Vec<Coded> {
-    let Some(form) = form_of(block) else {
-        return Vec::new();
-    };
+    // the forms the block draws, from the component; the module offers one of them or there is nothing to match
+    let drawn = crate::blocks::forms_of(block);
     let Some(data) = records
         .forms()
         .iter()
-        .find(|d| d.declared.form.name == form)
+        .find(|d| drawn.iter().any(|f| f.name == d.declared.form.name))
     else {
         return Vec::new();
     };

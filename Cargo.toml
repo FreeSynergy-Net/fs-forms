@@ -28,3 +28,22 @@ rust-version = "1.89"
 # Develop against the local head (PLAN-quelle-und-abgleich 4b); removed at the lift to the tag.
 [patch."https://github.com/FreeSynergy/fs-interfaces"]
 fs-interfaces = { path = "../fs-interfaces/crates/fs-interfaces" }
+
+[patch."https://github.com/FreeSynergy/fs-components"]
+fs-components-app = { path = "../fs-components/crates/fs-components-app" }
+fs-components-catalog = { path = "../fs-components/crates/fs-components-catalog" }
+fs-components-commands = { path = "../fs-components/crates/fs-components-commands" }
+fs-components-core = { path = "../fs-components/crates/fs-components-core" }
+fs-components-fields = { path = "../fs-components/crates/fs-components-fields" }
+fs-components-kanban = { path = "../fs-components/crates/fs-components-kanban" }
+fs-components-lists = { path = "../fs-components/crates/fs-components-lists" }
+fs-components-measures = { path = "../fs-components/crates/fs-components-measures" }
+fs-components-mf2 = { path = "../fs-components/crates/fs-components-mf2" }
+fs-components-overlays = { path = "../fs-components/crates/fs-components-overlays" }
+fs-components-primitives = { path = "../fs-components/crates/fs-components-primitives" }
+fs-components-render = { path = "../fs-components/crates/fs-components-render" }
+fs-components-styles = { path = "../fs-components/crates/fs-components-styles" }
+fs-components-widgets = { path = "../fs-components/crates/fs-components-widgets" }
+fs-components-words = { path = "../fs-components/crates/fs-components-words" }
+fs-components = { path = "../fs-components/crates/fs-components" }
+fs-settings = { path = "../fs-components/crates/fs-settings" }

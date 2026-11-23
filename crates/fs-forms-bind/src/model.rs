@@ -18,28 +18,28 @@ pub struct Problem {
     pub params: Vec<(String, String)>,
 }
 
-/// Half-open version range `>=min <max` (`major.minor`).
+/// Half-open version range `>=min <max` (`major.minor.patch`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Range {
     /// Inclusive lower bound.
-    pub min: (u32, u32),
+    pub min: (u32, u32, u32),
     /// Exclusive upper bound.
-    pub max: (u32, u32),
+    pub max: (u32, u32, u32),
 }
 
 impl Range {
     /// Is the version inside?
     #[must_use]
-    pub fn contains(&self, v: (u32, u32)) -> bool {
+    pub fn contains(&self, v: (u32, u32, u32)) -> bool {
         v >= self.min && v < self.max
     }
 
-    /// Text form `>=0.2, <0.3`.
+    /// Text form `>=0.2.0, <0.3.0` (the one spelling of `semver::VersionReq`).
     #[must_use]
     pub fn text(&self) -> String {
         format!(
-            ">={}.{}, <{}.{}",
-            self.min.0, self.min.1, self.max.0, self.max.1
+            ">={}.{}.{}, <{}.{}.{}",
+            self.min.0, self.min.1, self.min.2, self.max.0, self.max.1, self.max.2
         )
     }
 }

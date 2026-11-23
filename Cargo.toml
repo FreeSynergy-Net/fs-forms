@@ -24,3 +24,8 @@ authors = ["FreeSynergy <support@freesynergy.net>"]
 repository = "https://github.com/FreeSynergy/fs-forms"
 # fs-rpc and fs-components need 1.89.
 rust-version = "1.89"
+
+# Development against the heads of the neighbours (CLAUDE.md 4b), removed with the tag fs-forms 0.0.12:
+# fs-rpc v0.0.7 still pins fs-interfaces v0.0.31; one source per library means it must read v0.0.32 too.
+[patch."https://github.com/FreeSynergy/fs-interfaces"]
+fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "b2b5169ec336bb4881e2c067a6c46f7c4896fb63" }

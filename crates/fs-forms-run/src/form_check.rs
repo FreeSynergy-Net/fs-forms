@@ -8,6 +8,7 @@ use fs_forms_bind::{
     Basic, Channel, ComponentForms, Count, FormDef, FormRef, Grundtyp, Kind, Matched, match_form,
 };
 use fs_interfaces::forms::{Art, Count as Cnt, catalog};
+use fs_types::interface::InterfaceVersion;
 
 use crate::records::Records;
 use crate::view::{Coded, View};
@@ -63,8 +64,8 @@ fn forms() -> Vec<FormDef> {
         .iter()
         .map(|f| FormDef {
             name: f.name.clone(),
-            major: f.version.major,
-            minor: f.version.minor,
+            major: small(f.version.major),
+            minor: small(f.version.minor),
             channels: f
                 .channels
                 .iter()
@@ -79,19 +80,37 @@ fn forms() -> Vec<FormDef> {
         .collect()
 }
 
+/// A number of a form version as bind reads it (`u32`); a version of that size does not exist, the largest value then never fits.
+fn small(n: u64) -> u32 {
+    u32::try_from(n).unwrap_or(u32::MAX)
+}
+
 /// What each block draws, as the COMPONENT declares it (`forms=` of the block contract, read by the catalog): the host holds no
-/// table of its own.
+/// table of its own. A component declares a NEED (`tree@^1.0.0`), bind compares the version up to which the component draws: that is
+/// the version of the catalog when the need draws it, else `0.0` (the form is named, but no version of the catalog is drawn: the match
+/// says `form-version-mismatch`). A form the catalog does not know is not listed.
 fn components() -> Vec<ComponentForms> {
+    let catalog = catalog();
     crate::blocks::forms_of_blocks()
         .into_iter()
         .map(|(block, forms)| ComponentForms {
             block,
             forms: forms
-                .into_iter()
-                .map(|f| FormRef {
-                    name: f.name,
-                    major: f.major,
-                    minor: f.minor,
+                .iter()
+                .filter_map(|need| {
+                    let form = catalog.iter().find(|f| f.name == need.name())?;
+                    let offered: InterfaceVersion =
+                        format!("{}@{}", form.name, form.version).parse().ok()?;
+                    let (major, minor) = if need.draws(&offered) {
+                        (small(form.version.major), small(form.version.minor))
+                    } else {
+                        (0, 0)
+                    };
+                    Some(FormRef {
+                        name: form.name.clone(),
+                        major,
+                        minor,
+                    })
                 })
                 .collect(),
         })
@@ -109,10 +128,10 @@ fn coded(c: &fs_forms_bind::Coded) -> Coded {
 pub fn problems(block: &str, records: &dyn Records) -> Vec<Coded> {
     // the forms the block draws, from the component; the module offers one of them or there is nothing to match
     let drawn = crate::blocks::forms_of(block);
-    let Some(data) = records
-        .forms()
+    let forms_of_module = records.forms();
+    let Some(data) = forms_of_module
         .iter()
-        .find(|d| drawn.iter().any(|f| f.name == d.declared.form.name))
+        .find(|d| drawn.iter().any(|f| f.name() == d.declared.form.name))
     else {
         return Vec::new();
     };
@@ -147,8 +166,8 @@ pub struct Finding {
 #[must_use]
 pub fn report(records: &dyn Records) -> Vec<Finding> {
     let (catalog, components) = (forms(), components());
-    records
-        .forms()
+    let offered = records.forms();
+    offered
         .iter()
         .flat_map(|d| {
             let said = |c: &fs_forms_bind::Coded, red| Finding {
@@ -194,3 +213,34 @@ mod tests {
 
 #[cfg(test)]
 mod catalog_tests;
+
+/// The channel of the form `cards-in-columns` a gesture of the description is for (the table of the schnitt: a drop moves, the quick
+/// row and a sent form create); the other triggers (`button`, `menu`, `key`) call any command and are not checked.
+fn channel_of(trigger: &str) -> Option<&'static str> {
+    match trigger {
+        "drop" => Some("move"),
+        "quick-add" | "submit" => Some("create"),
+        _ => None,
+    }
+}
+
+/// The actions of the description whose command is not the one the module binds to the channel their gesture is for: the warning
+/// `action-channel-mismatch{trigger, command}` (yellow, nothing is locked here: the control simply stays locked, because the key
+/// is not what the module bound). Only for records that bind commands at all (a module without writing says nothing).
+#[must_use]
+pub fn action_report(actions: &[crate::view::ActionView], records: &dyn Records) -> Vec<Finding> {
+    let bound = |ch: &str| records.command_of("cards-in-columns", ch);
+    actions
+        .iter()
+        .filter_map(|a| {
+            let channel = channel_of(&a.trigger)?;
+            let key = bound(channel)?;
+            (key != a.command).then(|| Finding {
+                code: Coded::new("action-channel-mismatch")
+                    .with("trigger", a.trigger.clone())
+                    .with("command", a.command.clone()),
+                red: false,
+            })
+        })
+        .collect()
+}

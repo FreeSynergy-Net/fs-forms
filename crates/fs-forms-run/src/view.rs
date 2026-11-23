@@ -84,7 +84,7 @@ pub struct MenuItem {
     pub state: MenuState,
 }
 
-/// One `[[action]]` of the description: what triggers it (`quick-add`, `drop`, `button`, `menu`, `key`) and the command of the
+/// One `[[action]]` of the description: what triggers it (`quick-add`, `drop`, `submit`, `button`, `menu`, `key`) and the command of the
 /// source it calls. The host connects a gesture of a block to a record operation only through these.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ActionView {

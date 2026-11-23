@@ -7,6 +7,8 @@
 //!
 //! Pattern: Port (`Records`) with a null object and a fixture.
 
+use std::sync::Arc;
+
 use fs_components_kanban::{Answer, Column, Operation};
 
 use crate::form_data::FormData;
@@ -31,9 +33,32 @@ pub trait Records: Send + Sync {
     fn columns(&self) -> Vec<Column>;
     /// The entries of a side list.
     fn side(&self) -> Vec<SideItem>;
-    /// The forms the connected module offers, with the rows by channel (the blocks tree and table draw from these).
-    fn forms(&self) -> &[FormData] {
-        &[]
+    /// The forms the connected module offers, with the rows by channel (the blocks tree and table draw from these). Read again
+    /// after an accepted call, so a block takes the answer once per drawing, never keeps it.
+    fn forms(&self) -> Arc<Vec<FormData>> {
+        Arc::default()
+    }
+    /// The key of the command the channel `channel` of the form `form` is bound to by the module (`move` is `card.move`); `None`
+    /// = not bound. The description's `[[action]]` names a command by this key.
+    fn command_of(&self, _form: &str, _channel: &str) -> Option<String> {
+        None
+    }
+    /// Whether the channel `channel` of the form `form` may be used now on `record` (`None` = without a record, or on any: see
+    /// [`crate::write::allowed`]). Default `false`: what is not said is locked.
+    fn can_channel(&self, _form: &str, _channel: &str, _record: Option<&str>) -> bool {
+        false
+    }
+    /// A gesture on the channel `channel` of the form `form`, `values` by channel name (what the gesture carries: `column`, `order`);
+    /// the arguments are made by the rule of [`crate::write::args_of`], the module is asked, and after an accepted call the form is
+    /// read again.
+    fn invoke(
+        &self,
+        _form: &str,
+        _channel: &str,
+        _record: Option<&str>,
+        _values: &[(String, String)],
+    ) -> Answer {
+        unsupported()
     }
     /// Whether these records are made-up sample data: the window then says so (it never shows invented records as real ones).
     fn is_sample(&self) -> bool {

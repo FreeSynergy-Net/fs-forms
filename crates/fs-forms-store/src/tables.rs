@@ -35,7 +35,7 @@ pub const FROM: &[&str] = &[
     "condition",
 ];
 pub const ROLE: &[&str] = &["input", "display", "compact", "cell"];
-pub const TRIGGER: &[&str] = &["button", "menu", "key", "drop", "quick-add"];
+pub const TRIGGER: &[&str] = &["button", "menu", "key", "drop", "quick-add", "submit"];
 pub const TARGET: &[&str] = &["command", "workflow"];
 pub const CONFIRM: &[&str] = &["none", "confirm", "choice"];
 pub const VIEW_SCOPE: &[&str] = &["all", "person"];
@@ -164,14 +164,16 @@ pub const REQUIRES: Table = Table {
         Col::req("capability", Text),
         Col::req("min_major", Int),
         Col::req("min_minor", Int),
+        Col::req("min_patch", Int),
         Col::req("below_major", Int),
         Col::req("below_minor", Int),
+        Col::req("below_patch", Int),
     ],
     constraints: &[
         "PRIMARY KEY (layout, seq)",
         ELEM_UNIQUE,
         "FOREIGN KEY (layout) REFERENCES forms_layout(id)",
-        "CHECK ((below_major > min_major) OR (below_major = min_major AND below_minor > min_minor))",
+        "CHECK ((below_major > min_major) OR (below_major = min_major AND below_minor > min_minor) OR (below_major = min_major AND below_minor = min_minor AND below_patch > min_patch))",
     ],
     indexes: &[],
 };
@@ -185,8 +187,10 @@ pub const SOURCE: Table = Table {
         Col::req("capability", Text),
         Col::req("min_major", Int),
         Col::req("min_minor", Int),
+        Col::req("min_patch", Int),
         Col::req("below_major", Int),
         Col::req("below_minor", Int),
+        Col::req("below_patch", Int),
         Col::req("data_type", Text),
         Col::opt("scope", Enum(SCOPE_SRC)),
     ],

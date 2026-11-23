@@ -40,7 +40,7 @@ fn a_server_with_the_expected_contract_is_accepted_and_says_it_offers_nothing_ye
     let server = start(&socket, fs_forms_server::CONTRACT_VERSION);
     wait_for(&socket);
     let hello = Hello::fetch(&socket, &nobody_starts_a_server, EXPECTED_CONTRACT).unwrap();
-    assert_eq!(hello.contract, "0.1");
+    assert_eq!(hello.contract, "0.1.0");
     assert_eq!(hello.ids, Vec::<String>::new());
     stop(&socket, server);
 }

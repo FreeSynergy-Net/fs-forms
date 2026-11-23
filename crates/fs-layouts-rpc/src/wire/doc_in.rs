@@ -13,19 +13,35 @@ use super::text::{R, bad, elem, opt, txt, word};
 use super::words::menu_from_words;
 use crate::layouts_capnp as w;
 
-/// The range as written: the text when given, else built from the fields (a reader that is no Rust program sends fields only).
+/// The range as written: the text when given, else built from the fields (a reader that is no Rust program sends fields only), in
+/// the one spelling `name@>=a.b.c, <d.e.f` (the patch is read too).
 fn read_range(r: w::range::Reader<'_>) -> R<String> {
     if let Some(t) = opt(r.get_text())? {
         return Ok(t);
     }
     let mut out = txt(r.get_capability())?;
-    let low = (r.get_min_major(), r.get_min_minor()) != (0, 0);
+    let low = (r.get_min_major(), r.get_min_minor(), r.get_min_patch()) != (0, 0, 0);
     if low {
-        out = format!("{out}@>={}.{}", r.get_min_major(), r.get_min_minor());
+        out = format!(
+            "{out}@>={}.{}.{}",
+            r.get_min_major(),
+            r.get_min_minor(),
+            r.get_min_patch()
+        );
     }
-    if (r.get_below_major(), r.get_below_minor()) != (0, 0) {
+    if (
+        r.get_below_major(),
+        r.get_below_minor(),
+        r.get_below_patch(),
+    ) != (0, 0, 0)
+    {
         let sep = if low { ", " } else { "@" };
-        out = format!("{out}{sep}<{}.{}", r.get_below_major(), r.get_below_minor());
+        out = format!(
+            "{out}{sep}<{}.{}.{}",
+            r.get_below_major(),
+            r.get_below_minor(),
+            r.get_below_patch()
+        );
     }
     Ok(out)
 }

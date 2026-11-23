@@ -7,6 +7,7 @@ fn records(forms: Vec<FormData>) -> FormRecords {
     FormRecords {
         provider: "fake".into(),
         forms,
+        ..FormRecords::default()
     }
 }
 

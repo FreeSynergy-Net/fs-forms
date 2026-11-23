@@ -37,35 +37,41 @@ pub(crate) fn elem<T>(i: &Item<T>) -> Cell {
     text(i.elem.as_ref().map_or("", |e| e.as_str()))
 }
 
-/// Splits `name@>=a.b.c, <d.e.f` into its capability and four integers, read from the parsed bounds of the layout check.
-/// A patch other than 0 is refused (the table holds major and minor only; patch columns wait for the contract, V-2).
-pub(crate) fn range_parts(range: &str) -> Result<(String, [i64; 4]), Coded<LayoutCode>> {
-    let refuse = |cause: &'static str| {
+/// Splits `name@>=a.b.c, <d.e.f` into its capability and six integers (major, minor, patch of both bounds), read from the parsed
+/// bounds of the layout check: the table holds all three numbers, nothing is cut off.
+pub(crate) fn range_parts(range: &str) -> Result<(String, [i64; 6]), Coded<LayoutCode>> {
+    let refuse = || {
         Coded::new(LayoutCode::ExportFailed)
-            .with("cause", cause)
+            .with("cause", "range-invalid")
             .with("range", range)
     };
-    let b = fs_forms_layout::range_bounds(range).ok_or_else(|| refuse("range-invalid"))?;
-    let n = |x: u64| i64::try_from(x).map_err(|_| refuse("range-invalid"));
-    if b.low.2 != 0 || b.below.2 != 0 {
-        return Err(refuse("range-patch"));
-    }
+    let b = fs_forms_layout::range_bounds(range).ok_or_else(refuse)?;
+    let n = |x: u64| i64::try_from(x).map_err(|_| refuse());
     Ok((
         b.name.to_owned(),
-        [n(b.low.0)?, n(b.low.1)?, n(b.below.0)?, n(b.below.1)?],
+        [
+            n(b.low.0)?,
+            n(b.low.1)?,
+            n(b.low.2)?,
+            n(b.below.0)?,
+            n(b.below.1)?,
+            n(b.below.2)?,
+        ],
     ))
 }
 
-/// The text range of the four integers of a `requires` or `source` row, e.g. `tasks@>=0.2, <0.3`.
+/// The text range of the six integers of a `requires` or `source` row, e.g. `tasks@>=0.2.0, <0.3.0`.
 pub(crate) fn range_text(r: &crate::rows::RowReader<'_>) -> String {
     let n = |c: &str| r.int(c).unwrap_or(0);
     format!(
-        "{}@>={}.{}, <{}.{}",
+        "{}@>={}.{}.{}, <{}.{}.{}",
         r.text("capability").unwrap_or_default(),
         n("min_major"),
         n("min_minor"),
+        n("min_patch"),
         n("below_major"),
-        n("below_minor")
+        n("below_minor"),
+        n("below_patch")
     )
 }
 
@@ -122,8 +128,10 @@ pub fn to_rows(layout: &Layout, meta: &LayoutMeta) -> Result<Rows, Coded<LayoutC
             .set("capability", text(&cap))
             .set("min_major", Cell::Int(v[0]))
             .set("min_minor", Cell::Int(v[1]))
-            .set("below_major", Cell::Int(v[2]))
-            .set("below_minor", Cell::Int(v[3]))
+            .set("min_patch", Cell::Int(v[2]))
+            .set("below_major", Cell::Int(v[3]))
+            .set("below_minor", Cell::Int(v[4]))
+            .set("below_patch", Cell::Int(v[5]))
             .push_into(&mut rows);
     }
     for (n, s) in d.sources.iter().enumerate() {
@@ -135,8 +143,10 @@ pub fn to_rows(layout: &Layout, meta: &LayoutMeta) -> Result<Rows, Coded<LayoutC
             .set("capability", text(&cap))
             .set("min_major", Cell::Int(v[0]))
             .set("min_minor", Cell::Int(v[1]))
-            .set("below_major", Cell::Int(v[2]))
-            .set("below_minor", Cell::Int(v[3]))
+            .set("min_patch", Cell::Int(v[2]))
+            .set("below_major", Cell::Int(v[3]))
+            .set("below_minor", Cell::Int(v[4]))
+            .set("below_patch", Cell::Int(v[5]))
             .set("data_type", text(&s.v.data_type))
             .set("scope", s.v.scope.map_or(Cell::Null, |w| text(w.word())))
             .push_into(&mut rows);
@@ -184,19 +194,19 @@ mod range_tests {
     use super::range_parts;
 
     #[test]
-    fn a_patch_is_never_cut_off_silently() {
+    fn a_patch_is_kept_in_its_own_number() {
         assert_eq!(
             range_parts("tasks@>=0.2, <0.3").unwrap(),
-            ("tasks".to_owned(), [0, 2, 0, 3])
+            ("tasks".to_owned(), [0, 2, 0, 0, 3, 0])
         );
         assert_eq!(
-            range_parts("tasks@>=0.2.0, <0.3.0").unwrap().1,
-            [0, 2, 0, 3]
+            range_parts("tasks@>=0.0.1, <0.1.0").unwrap().1,
+            [0, 0, 1, 0, 1, 0]
         );
-        for text in ["tasks@>=0.0.1, <0.1", "tasks@>=0.2, <0.3.4"] {
-            let e = range_parts(text).unwrap_err();
-            assert_eq!(e.param("cause"), Some("range-patch"), "{text}");
-        }
+        assert_eq!(
+            range_parts("tasks@>=0.2, <0.3.4").unwrap().1,
+            [0, 2, 0, 0, 3, 4]
+        );
     }
 
     #[test]
@@ -210,6 +220,9 @@ mod range_tests {
             let e = range_parts(text).unwrap_err();
             assert_eq!(e.param("cause"), Some("range-invalid"), "{text}");
         }
-        assert_eq!(range_parts("tasks@>=1.2, <2.0").unwrap().1, [1, 2, 2, 0]);
+        assert_eq!(
+            range_parts("tasks@>=1.2, <2.0").unwrap().1,
+            [1, 2, 0, 2, 0, 0]
+        );
     }
 }

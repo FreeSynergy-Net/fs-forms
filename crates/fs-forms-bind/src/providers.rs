@@ -11,8 +11,8 @@ use crate::types::{Limits, SearchKind};
 /// One installed provider version.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Provider {
-    /// `major.minor`.
-    pub version: (u32, u32),
+    /// `major.minor.patch` (`SemVer`, three parts).
+    pub version: (u32, u32, u32),
 }
 
 /// What the host learned about one capability for the asking person.

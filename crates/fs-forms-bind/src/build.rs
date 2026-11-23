@@ -204,7 +204,7 @@ fn build_sources(layout: &Resolved, providers: &Providers<'_>) -> Vec<SourcePlan
                         .iter()
                         .map(|p| p.version)
                         .max()
-                        .map_or(String::new(), |v| format!("{}.{}", v.0, v.1));
+                        .map_or(String::new(), |v| format!("{}.{}.{}", v.0, v.1, v.2));
                     Err(lock(missing(&have)))
                 }
             }

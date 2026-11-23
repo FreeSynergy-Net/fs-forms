@@ -12,7 +12,7 @@ pub const PROGRAM: &str = "fs-forms";
 /// client, which tests). The number before the
 /// dot is the main level, the one after it the minor level: a client accepts a server of the same main level whose minor
 /// level is not lower (`fs-forms-client`).
-pub const CONTRACT_VERSION: &str = "0.1";
+pub const CONTRACT_VERSION: &str = "0.1.0";
 
 type Done = Result<(), capnp::Error>;
 

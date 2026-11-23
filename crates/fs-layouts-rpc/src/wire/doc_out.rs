@@ -14,23 +14,23 @@ pub(crate) fn elem_text<T>(i: &Item<T>) -> &str {
     i.elem.as_ref().map_or("", ElemId::as_str)
 }
 
-/// Writes a range text as the wire's `Range`: the text always (it is what the reader prefers), the number fields only when the
-/// checked range has no patch (the wire holds major and minor only), then both bounds together, never one.
+/// Writes a range text as the wire's `Range`: the text always (it is what the reader prefers), the six number fields (major, minor,
+/// patch of both bounds) when the checked range is readable, all or none, never a half-filled range.
 pub(crate) fn write_range(mut out: w::range::Builder<'_>, text: &str) {
     out.set_text(text);
     out.set_capability(fs_forms_layout::split_range(text).0);
     let Some(b) = fs_forms_layout::range_bounds(text) else {
         return;
     };
-    let nums = [b.low.0, b.low.1, b.below.0, b.below.1].map(|x| u32::try_from(x).ok());
-    if b.low.2 != 0 || b.below.2 != 0 {
-        return;
-    }
-    if let [Some(a), Some(b2), Some(c), Some(d)] = nums {
+    let nums =
+        [b.low.0, b.low.1, b.low.2, b.below.0, b.below.1, b.below.2].map(|x| u32::try_from(x).ok());
+    if let [Some(a), Some(b1), Some(c), Some(d), Some(e), Some(g)] = nums {
         out.set_min_major(a);
-        out.set_min_minor(b2);
-        out.set_below_major(c);
-        out.set_below_minor(d);
+        out.set_min_minor(b1);
+        out.set_min_patch(c);
+        out.set_below_major(d);
+        out.set_below_minor(e);
+        out.set_below_patch(g);
     }
 }
 
@@ -173,7 +173,7 @@ mod range_tests {
     use super::write_range;
     use crate::layouts_capnp as w;
 
-    fn fields(text: &str) -> (String, [u32; 4]) {
+    fn fields(text: &str) -> (String, [u32; 6]) {
         let mut m = capnp::message::Builder::new_default();
         write_range(m.init_root::<w::range::Builder<'_>>(), text);
         let r = m.get_root_as_reader::<w::range::Reader<'_>>().unwrap();
@@ -182,18 +182,20 @@ mod range_tests {
             [
                 r.get_min_major(),
                 r.get_min_minor(),
+                r.get_min_patch(),
                 r.get_below_major(),
                 r.get_below_minor(),
+                r.get_below_patch(),
             ],
         )
     }
 
     #[test]
     fn the_numbers_follow_the_checked_range_all_or_none() {
-        assert_eq!(fields("tasks@>=0.0.1, <0.1.0").1, [0; 4]); // patch: text only
-        assert_eq!(fields("tasks@>=0.2, <0.3.4").1, [0; 4]); // one patch bound: no half-filled fields
-        assert_eq!(fields("tasks@>=1.2, <2.0").1, [1, 2, 2, 0]);
-        assert_eq!(fields("tasks@>= 1.2, < 2.0").1, [0; 4]); // refused spelling: no numbers
+        assert_eq!(fields("tasks@>=0.0.1, <0.1.0").1, [0, 0, 1, 0, 1, 0]); // the patch is kept
+        assert_eq!(fields("tasks@>=0.2, <0.3.4").1, [0, 2, 0, 0, 3, 4]);
+        assert_eq!(fields("tasks@>=1.2, <2.0").1, [1, 2, 0, 2, 0, 0]);
+        assert_eq!(fields("tasks@>= 1.2, < 2.0").1, [0; 6]); // refused spelling: no numbers
         assert_eq!(fields("tasks@>=1.2, <2.0").0, "tasks@>=1.2, <2.0");
     }
 }

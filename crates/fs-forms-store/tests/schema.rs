@@ -70,6 +70,7 @@ fn model_words_are_in_the_closed_lists() {
         Trigger::Key,
         Trigger::Drop,
         Trigger::QuickAdd,
+        Trigger::Submit,
     ] {
         in_list(w::TRIGGER, t.word());
     }

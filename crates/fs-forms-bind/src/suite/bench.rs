@@ -88,8 +88,8 @@ impl BindBench {
             elem: "s1".into(),
             capability: "notes".into(),
             range: Range {
-                min: (0, 1),
-                max: (0, 2),
+                min: (0, 1, 0),
+                max: (0, 2, 0),
             },
             data_type: "Note".into(),
         });

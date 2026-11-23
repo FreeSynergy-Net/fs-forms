@@ -32,6 +32,7 @@ impl Sources for Groups {
         Ok(Arc::new(FormRecords {
             provider: "fake".into(),
             forms,
+            ..FormRecords::default()
         }))
     }
 }

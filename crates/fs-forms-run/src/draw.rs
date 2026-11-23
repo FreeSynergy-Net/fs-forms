@@ -111,12 +111,12 @@ fn sidebar(ctx: &Ctx, width: f32, _height: f32) -> Div {
 }
 
 /// The rows of the form `name` the connected module gives (none: nothing is connected or the module does not offer it).
-fn rows<'a>(ctx: &'a Ctx, name: &str) -> &'a [FormRow] {
+fn rows(ctx: &Ctx, name: &str) -> Vec<FormRow> {
     ctx.records
         .forms()
         .iter()
         .find(|d| d.declared.form.name == name)
-        .map_or(&[], |d| d.rows.as_slice())
+        .map_or_else(Vec::new, |d| d.rows.clone())
 }
 
 /// The nodes under `parent` of the form `tree`: channels `parent` (the key of the node above, none for a root) and `label`.
@@ -167,7 +167,7 @@ fn roots(rows: &[FormRow]) -> Vec<TreeNode> {
 fn tree(ctx: &Ctx, width: f32, _height: f32) -> Div {
     div()
         .w(width)
-        .child(TreeView::new(roots(rows(ctx, "tree"))).build())
+        .child(TreeView::new(roots(&rows(ctx, "tree"))).build())
 }
 
 /// The channels the member list shows, in this order (the channel `records` is the list itself).

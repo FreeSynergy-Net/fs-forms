@@ -86,6 +86,8 @@ pub enum Trigger {
     Drop,
     /// Quick add.
     QuickAdd,
+    /// A form (fields) sent: the values of the fields go to a command channel of the form (SW-3).
+    Submit,
 }
 /// What an action does.
 #[derive(Clone, Debug, PartialEq, Eq)]

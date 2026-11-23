@@ -3,7 +3,7 @@
 //!
 //! Pattern: Fixture behind the port `Records`, state behind a `Mutex` (the board asks and changes from the interface thread).
 
-use std::sync::{Mutex, MutexGuard, PoisonError};
+use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 use fs_components_kanban::{Answer, Card, Column, Due, DueState, Label, Operation, Tone};
 
@@ -114,8 +114,8 @@ impl Records for SampleBoard {
     fn is_sample(&self) -> bool {
         true
     }
-    fn forms(&self) -> &[FormData] {
-        &self.forms
+    fn forms(&self) -> Arc<Vec<FormData>> {
+        Arc::new(self.forms.clone())
     }
     fn columns(&self) -> Vec<Column> {
         self.lock().clone()

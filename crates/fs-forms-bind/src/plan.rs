@@ -65,7 +65,7 @@ pub struct SourceReady {
     /// Capability.
     pub capability: String,
     /// Highest version in range.
-    pub version: (u32, u32),
+    pub version: (u32, u32, u32),
     /// Search kind for queries.
     pub search: SearchKind,
 }

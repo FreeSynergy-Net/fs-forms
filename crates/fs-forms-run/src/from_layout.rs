@@ -62,6 +62,7 @@ fn trigger_name(t: Trigger) -> &'static str {
         Trigger::Key => "key",
         Trigger::Drop => "drop",
         Trigger::QuickAdd => "quick-add",
+        Trigger::Submit => "submit",
     }
 }
 

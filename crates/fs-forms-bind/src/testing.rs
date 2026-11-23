@@ -109,11 +109,11 @@ impl ProviderFacts for FakeFacts {
     }
 }
 
-/// A provider of one version.
+/// A provider of the version `major.minor.0`.
 #[must_use]
 pub fn provider(major: u32, minor: u32) -> Provider {
     Provider {
-        version: (major, minor),
+        version: (major, minor, 0),
     }
 }
 

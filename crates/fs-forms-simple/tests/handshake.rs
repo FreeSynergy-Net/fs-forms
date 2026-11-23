@@ -42,7 +42,7 @@ fn with_server(contract: &'static str, then: impl FnOnce(&Path)) {
 
 #[test]
 fn a_server_with_a_wrong_contract_ends_the_check_with_3_and_a_message() {
-    with_server("9.0", |socket| {
+    with_server("9.0.0", |socket| {
         let out = check(socket);
         assert_eq!(out.status.code(), Some(3));
         let said = String::from_utf8_lossy(&out.stderr);
@@ -55,7 +55,7 @@ fn a_server_with_a_wrong_contract_ends_the_check_with_3_and_a_message() {
 
 #[test]
 fn a_server_with_the_right_contract_passes_the_check() {
-    with_server("0.1", |socket| {
+    with_server("0.1.0", |socket| {
         let out = check(socket);
         assert_eq!(
             out.status.code(),

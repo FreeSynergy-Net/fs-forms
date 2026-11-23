@@ -100,7 +100,10 @@ impl Enc {
     }
     fn range(&mut self, label: u16, r: &Range) {
         self.field(label, |e| {
-            for (i, n) in [r.min.0, r.min.1, r.max.0, r.max.1].into_iter().enumerate() {
+            for (i, n) in [r.min.0, r.min.1, r.min.2, r.max.0, r.max.1, r.max.2]
+                .into_iter()
+                .enumerate()
+            {
                 e.num(u16::try_from(i).unwrap_or(0), u64::from(n));
             }
         });
@@ -116,8 +119,9 @@ impl Enc {
                 e.text(1, &r.capability);
                 e.num(2, u64::from(r.version.0));
                 e.num(3, u64::from(r.version.1));
+                e.num(4, u64::from(r.version.2));
                 e.text(
-                    4,
+                    5,
                     match r.search {
                         SearchKind::Prefix => "prefix",
                         SearchKind::Words => "words",

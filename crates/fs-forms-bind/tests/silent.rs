@@ -125,8 +125,8 @@ fn warning_is_a_notice_and_makes_the_plan_partial() {
 fn highest_version_in_range_wins() {
     let mut r = tasks_resolved();
     r.sources[0].range = Range {
-        min: (0, 1),
-        max: (0, 3),
+        min: (0, 1, 0),
+        max: (0, 3, 0),
     };
     for offers in [
         vec![provider(0, 1), provider(0, 2)],
@@ -134,7 +134,7 @@ fn highest_version_in_range_wins() {
     ] {
         let f = FakeFacts(vec![("tasks".into(), Offer::Reached(offers))]);
         let p = build_with(&r, &TestCatalog::new(), &f, host());
-        assert_eq!(p.sources[0].status.as_ref().unwrap().version, (0, 2));
+        assert_eq!(p.sources[0].status.as_ref().unwrap().version, (0, 2, 0));
     }
 }
 
@@ -242,4 +242,18 @@ fn unknown_prefix_is_its_own_cause_with_the_raw_code() {
     ));
     let l = PartLock::locked(Part::Window, Coded::new("oops-no-prefix"));
     assert_eq!(l.coded().param("cause"), Some("oops-no-prefix"));
+}
+
+#[test]
+fn the_patch_decides_inside_a_range() {
+    // V-4: a range `>=0.2.1, <0.3.0` keeps 0.2.0 out and takes 0.2.1; the patch is no longer cut off
+    let r = Range {
+        min: (0, 2, 1),
+        max: (0, 3, 0),
+    };
+    assert!(!r.contains((0, 2, 0)));
+    assert!(r.contains((0, 2, 1)));
+    assert!(r.contains((0, 2, 9)));
+    assert!(!r.contains((0, 3, 0)));
+    assert_eq!(r.text(), ">=0.2.1, <0.3.0");
 }

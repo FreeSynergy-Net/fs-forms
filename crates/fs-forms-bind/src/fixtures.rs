@@ -139,8 +139,8 @@ pub fn tasks_resolved() -> Resolved {
             elem: "s0".to_owned(),
             capability: "tasks".to_owned(),
             range: Range {
-                min: (0, 2),
-                max: (0, 3),
+                min: (0, 2, 0),
+                max: (0, 3, 0),
             },
             data_type: "Task".to_owned(),
         }],

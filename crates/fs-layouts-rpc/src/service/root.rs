@@ -17,7 +17,7 @@ pub(crate) struct Root<S: LayoutStore + ?Sized> {
 }
 
 /// The contract version this adapter speaks (draft 0.1, probe).
-pub(crate) const CONTRACT_VERSION: &str = "0.1";
+pub(crate) const CONTRACT_VERSION: &str = "0.1.0";
 
 fn unsupported(what: &str) -> capnp::Error {
     crate::problem::err(&Coded::new(LayoutCode::Unsupported).with("what", what))

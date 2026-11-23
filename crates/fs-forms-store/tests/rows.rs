@@ -83,13 +83,13 @@ fn layout() -> Layout {
         requires: vec![it(
             "requires:t",
             RequiresDoc {
-                range: "tasks@>=0.2, <0.3".into(),
+                range: "tasks@>=0.2.0, <0.3.0".into(),
             },
         )],
         sources: vec![it(
             "source:1",
             SourceDoc {
-                range: "tasks@>=0.2, <0.3".into(),
+                range: "tasks@>=0.0.1, <0.1.0".into(),
                 data_type: "Task".into(),
                 scope: Some(SourceScope::SelectedList),
             },

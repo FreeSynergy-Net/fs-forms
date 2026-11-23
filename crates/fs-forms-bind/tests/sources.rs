@@ -51,7 +51,7 @@ fn not_installed() {
         "accepts-error-contract-missing",
         &[
             ("capability", "tasks"),
-            ("range", "tasks@>=0.2, <0.3"),
+            ("range", "tasks@>=0.2.0, <0.3.0"),
             ("have", ""),
         ],
     );
@@ -60,7 +60,7 @@ fn not_installed() {
 #[test]
 fn version_out_of_range() {
     let p = plan_with(Offer::Reached(vec![provider(0, 3)]));
-    check(&p, "accepts-error-contract-missing", &[("have", "0.3")]);
+    check(&p, "accepts-error-contract-missing", &[("have", "0.3.0")]);
 }
 
 #[test]
@@ -83,7 +83,7 @@ fn highest_version_in_range_wins() {
         provider(0, 2),
         provider(0, 3),
     ]));
-    assert_eq!(p.sources[0].status.as_ref().unwrap().version, (0, 2));
+    assert_eq!(p.sources[0].status.as_ref().unwrap().version, (0, 2, 0));
     assert_eq!(p.state, PlanState::Ready);
 }
 

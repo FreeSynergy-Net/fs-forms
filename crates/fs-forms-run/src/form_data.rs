@@ -2,12 +2,21 @@
 //! declaration of the module (which of its fields fill which channel). The blocks draw only by channel; no field name of a module is
 //! known here. `FormRecords` is the [`Records`] a connected module gives (the starter builds it from the `FormSource` of the module).
 //!
-//! Pattern: Value objects + Adapter (rows by channel in, the port `Records` out).
+//! The board of the form `cards-in-columns` is drawn from the channels: `column` is the KEY of a column (the value as the module
+//! gives it, never changed: a move names it), `column-label` its name, `order` the place, `progress` the bar, `facts` the facts of
+//! the card (one value per field the module maps to the channel, in the order of the map; no value = the slot is kept, not drawn).
+//! A column the module names but that holds no card ([`FormData::columns`]) is drawn too.
+//!
+//! Pattern: Value objects + Adapter (rows by channel in, the port `Records` out; a gesture out through the port `Writer`).
 
-use fs_components_kanban::{Card, Column};
-use fs_forms_bind::ModuleForm;
+use std::sync::{Arc, PoisonError, RwLock};
+
+use fs_components_fields::FieldSlot;
+use fs_components_kanban::{Answer, Card, Column};
+use fs_forms_bind::{Basic, ModuleForm};
 
 use crate::records::{Records, SideItem};
+use crate::write::{Invocation, Writer, allowed, args_of, command_key};
 
 /// One record: a key and its values by channel (a channel may have several values; a record may leave a channel out).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -16,6 +25,8 @@ pub struct FormRow {
     pub key: String,
     /// The values by channel name.
     pub values: Vec<(String, Vec<String>)>,
+    /// What the module lets the asking person do with this record: the keys of its commands (`card.move`). No statement = nothing.
+    pub may: Vec<String>,
 }
 
 impl FormRow {
@@ -28,7 +39,15 @@ impl FormRow {
                 .iter()
                 .map(|(c, v)| ((*c).to_owned(), vec![(*v).to_owned()]))
                 .collect(),
+            may: Vec::new(),
         }
+    }
+
+    /// The same row with the commands the person may use on it.
+    #[must_use]
+    pub fn allowing(mut self, keys: &[&str]) -> Self {
+        self.may = keys.iter().map(|k| (*k).to_owned()).collect();
+        self
     }
 
     /// The values of `channel` (none when the record leaves it out).
@@ -57,6 +76,27 @@ pub struct FormData {
     pub declared: ModuleForm,
     /// The rows.
     pub rows: Vec<FormRow>,
+    /// What the person may do without a record (create): the keys of the commands (the `may` of the page).
+    pub may: Vec<String>,
+    /// The command set of the module (the keys of its `commands.json`): a command that is not in it is never tried.
+    pub commands: Vec<String>,
+    /// The columns the module names in their order as `(key, label)`, also the ones without a card (the host reads them from the
+    /// description and the module). Columns of cards that are not named here follow in order of appearance.
+    pub columns: Vec<(String, String)>,
+}
+
+impl FormData {
+    /// Rows without statements about commands: nothing may be written (the controls stay locked).
+    #[must_use]
+    pub fn read_only(declared: ModuleForm, rows: Vec<FormRow>) -> Self {
+        Self {
+            declared,
+            rows,
+            may: Vec::new(),
+            commands: Vec::new(),
+            columns: Vec::new(),
+        }
+    }
 }
 
 /// The records of a connected module, by form.
@@ -64,39 +104,97 @@ pub struct FormData {
 pub struct FormRecords {
     /// The provider named by the service; `fake` is made-up data (the window then says "Sample data").
     pub provider: String,
-    /// The forms.
+    /// The forms as first read.
     pub forms: Vec<FormData>,
+    /// The connection that takes a gesture to the module; `None` = nothing can be written.
+    pub writer: Option<Arc<dyn Writer>>,
+    /// The forms read again after an accepted call (replaces `forms` while set).
+    pub fresh: Arc<RwLock<Option<Arc<Vec<FormData>>>>>,
 }
 
-/// The key of a column named `title`: lower case, words joined by `-`.
-fn slug(title: &str) -> String {
-    title
-        .split_whitespace()
-        .map(str::to_lowercase)
-        .collect::<Vec<_>>()
-        .join("-")
-}
-
-impl FormRecords {
-    fn data(&self, form: &str) -> Option<&FormData> {
-        self.forms.iter().find(|f| f.declared.form.name == form)
+/// The building block that draws a fact of this basic type (`fs-components-fields`: the catalog of kinds); a type without a
+/// component is drawn as its text.
+fn block_of(basic: Basic) -> &'static str {
+    match basic {
+        Basic::Email => "field-email",
+        Basic::Bool => "field-flag",
+        Basic::Date => "field-date",
+        Basic::DateTime => "field-date-time",
+        Basic::Choice => "field-choice",
+        Basic::Reference => "field-reference",
+        Basic::Keywords => "field-keywords",
+        Basic::Link => "field-link",
+        _ => "field-text",
     }
 }
 
+/// The bar of a card from the text of the channel `progress`: a number, cut to 0 to 100 (a text that is no number: no bar).
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "the value is cut to 0..=100 first"
+)]
+fn percent(text: &str) -> Option<u8> {
+    let p: f64 = text.trim().parse().ok()?;
+    p.is_finite().then(|| p.clamp(0.0, 100.0).round() as u8)
+}
+
+/// The card of a row: title, bar and the facts in the order of the map of the channel `facts`.
+fn card_of(data: &FormData, row: &FormRow, title: &str) -> Card {
+    let mut card = Card::new(&row.key, title);
+    card.progress = row.get("progress").and_then(percent);
+    let names: &[String] = data
+        .declared
+        .map
+        .iter()
+        .find(|(c, _)| c == "facts")
+        .map_or(&[], |(_, f)| f.as_slice());
+    for (i, field) in names.iter().enumerate() {
+        let basic = data
+            .declared
+            .fields
+            .iter()
+            .find(|(n, _)| n == field)
+            .map_or(Basic::Text, |(_, b)| *b);
+        let (block, label) = (block_of(basic), format!("fact.{field}"));
+        let value = row.all("facts").get(i).map_or("", String::as_str);
+        card = card.fact_or_more(if value.is_empty() {
+            FieldSlot::unset(block, &label)
+        } else {
+            FieldSlot::new(block, &label, value)
+        });
+    }
+    card
+}
+
 impl Records for FormRecords {
-    /// The cards of the form `cards-in-columns`: one column per value of the channel `column`, in order of appearance.
+    /// The cards of the form `cards-in-columns`: the columns the module names (also empty ones), then the others in order of
+    /// appearance. The key of a column is the value of the channel `column` unchanged; its name is `column-label` or the key.
     fn columns(&self) -> Vec<Column> {
-        let mut out: Vec<Column> = Vec::new();
-        for row in self.data("cards-in-columns").map_or(&[][..], |d| &d.rows) {
+        let forms = self.forms();
+        let Some(data) = forms
+            .iter()
+            .find(|f| f.declared.form.name == "cards-in-columns")
+        else {
+            return Vec::new();
+        };
+        let mut out: Vec<Column> = data
+            .columns
+            .iter()
+            .map(|(key, label)| Column::new(key, label))
+            .collect();
+        for row in &data.rows {
             let (Some(title), Some(column)) = (row.get("title"), row.get("column")) else {
                 continue; // required channels: a row without them cannot be placed
             };
-            let key = slug(column);
-            let at = out.iter().position(|c| c.key == key).unwrap_or_else(|| {
-                out.push(Column::new(&key, column));
+            let at = out.iter().position(|c| c.key == column).unwrap_or_else(|| {
+                out.push(Column::new(
+                    column,
+                    row.get("column-label").unwrap_or(column),
+                ));
                 out.len() - 1
             });
-            out[at].cards.push(Card::new(&row.key, title));
+            out[at].cards.push(card_of(data, row, title));
         }
         out
     }
@@ -106,66 +204,75 @@ impl Records for FormRecords {
     fn is_sample(&self) -> bool {
         self.provider == "fake"
     }
-    fn forms(&self) -> &[FormData] {
-        &self.forms
+    fn forms(&self) -> Arc<Vec<FormData>> {
+        let fresh = self.fresh.read().unwrap_or_else(PoisonError::into_inner);
+        fresh
+            .clone()
+            .unwrap_or_else(|| Arc::new(self.forms.clone()))
+    }
+    fn command_of(&self, form: &str, channel: &str) -> Option<String> {
+        let forms = self.forms();
+        let data = forms.iter().find(|f| f.declared.form.name == form)?;
+        command_key(data, channel).map(str::to_owned)
+    }
+    fn can_channel(&self, form: &str, channel: &str, record: Option<&str>) -> bool {
+        self.writer.is_some()
+            && self
+                .forms()
+                .iter()
+                .find(|f| f.declared.form.name == form)
+                .is_some_and(|d| allowed(d, channel, record))
+    }
+    fn invoke(
+        &self,
+        form: &str,
+        channel: &str,
+        record: Option<&str>,
+        values: &[(String, String)],
+    ) -> Answer {
+        let refused = |code: &str| Answer::Refused(code.to_owned());
+        let Some(writer) = &self.writer else {
+            return refused("unsupported");
+        };
+        if !self.can_channel(form, channel, record) {
+            return refused("locked");
+        }
+        let forms = self.forms();
+        let Some(data) = forms.iter().find(|f| f.declared.form.name == form) else {
+            return refused("locked");
+        };
+        let row = record.and_then(|r| data.rows.iter().find(|row| row.key == r));
+        let (Some(command), args) = (
+            command_key(data, channel),
+            args_of(data, channel, row, values),
+        ) else {
+            return refused("form-write-unmapped");
+        };
+        let args = match args {
+            Ok(args) => args,
+            Err(c) => return Answer::Refused(c.code),
+        };
+        let call = Invocation {
+            form: form.to_owned(),
+            command: command.to_owned(),
+            record: record.map(str::to_owned),
+            args,
+        };
+        if let Err(c) = writer.invoke(&call) {
+            return Answer::Refused(c.code);
+        }
+        // accepted: the module is read again, the board shows what it now says (nothing is guessed here)
+        match writer.reload() {
+            Ok(all) => {
+                *self.fresh.write().unwrap_or_else(PoisonError::into_inner) = Some(Arc::new(all));
+                Answer::Accepted
+            }
+            Err(c) => Answer::Refused(c.code),
+        }
     }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use fs_forms_bind::FormRef;
-
-    fn cards(rows: Vec<FormRow>) -> FormRecords {
-        FormRecords {
-            provider: "fake".into(),
-            forms: vec![FormData {
-                declared: ModuleForm {
-                    form: FormRef {
-                        name: "cards-in-columns".into(),
-                        major: 1,
-                        minor: 0,
-                    },
-                    map: Vec::new(),
-                    fields: Vec::new(),
-                },
-                rows,
-            }],
-        }
-    }
-
-    #[test]
-    fn the_board_is_made_from_the_channels_column_and_title_in_order_of_appearance() {
-        let r = cards(vec![
-            FormRow::of("a", &[("title", "One"), ("column", "To do")]),
-            FormRow::of("b", &[("title", "Two"), ("column", "Doing")]),
-            FormRow::of("c", &[("title", "Three"), ("column", "To do")]),
-            FormRow::of("d", &[("title", "No column")]),
-        ]);
-        let cols = r.columns();
-        let names: Vec<_> = cols.iter().map(|c| c.title.as_str()).collect();
-        assert_eq!(names, ["To do", "Doing"]);
-        let keys: Vec<Vec<_>> = cols
-            .iter()
-            .map(|c| c.cards.iter().map(|k| k.key.as_str()).collect())
-            .collect();
-        assert_eq!(keys, [vec!["a", "c"], vec!["b"]]);
-        assert!(r.is_sample());
-    }
-
-    #[test]
-    fn only_the_provider_fake_is_sample_data_and_a_missing_form_gives_no_columns() {
-        let mut r = cards(Vec::new());
-        r.provider = "tasks".into();
-        assert!(!r.is_sample() && r.columns().is_empty());
-        assert_eq!(FormRecords::default().columns().len(), 0);
-    }
-
-    #[test]
-    fn a_value_is_read_by_channel_and_an_empty_one_is_none() {
-        let row = FormRow::of("k", &[("label", "x"), ("parent", "")]);
-        assert_eq!(row.get("label"), Some("x"));
-        assert_eq!(row.get("parent"), None);
-        assert_eq!(row.all("nope").len(), 0);
-    }
-}
+mod card_tests;
+#[cfg(test)]
+mod tests;

@@ -53,6 +53,9 @@ fn tree() -> FormData {
             ],
         ),
         // two trees of unequal depth (helfa UMFRAGE-ergebnis): regions down to topic teams, and a flat academy
+        may: Vec::new(),
+        commands: Vec::new(),
+        columns: Vec::new(),
         rows: vec![
             node("nord", "", "Region Nordland", "", "true"),
             node(
@@ -93,6 +96,9 @@ fn members() -> FormData {
                 ("level", Basic::Text),
             ],
         ),
+        may: Vec::new(),
+        commands: Vec::new(),
+        columns: Vec::new(),
         rows: vec![
             row("m1", "Mara Weidner", "Moderator", "Owner"),
             row("m2", "Jonas Brink", "Deputy", "Admin"),
@@ -120,6 +126,7 @@ mod tests {
         let r = FormRecords {
             provider: "fake".into(),
             forms: groups(),
+            ..FormRecords::default()
         };
         assert!(problems("tree", &r).is_empty() && problems("table", &r).is_empty());
     }

@@ -8,7 +8,7 @@
 //! Set `FS_PICTURE_OUT=<dir>` to keep the pictures (they are then written there instead of a temp folder).
 
 mod support;
-use support::{Picture, board, draw, mean, out_dir, uniform};
+use support::{Picture, board, draw, draw_code, mean, out_dir, uniform};
 
 #[test]
 #[cfg_attr(
@@ -45,10 +45,11 @@ fn the_description_of_a_program_is_drawn_light_and_dark_and_a_missing_one_says_s
     );
     let gone = dir.join("no-such-description");
     let gone = gone.to_str().unwrap();
-    let missing = draw(
+    let missing = draw_code(
         &["--description", gone],
         "light",
         &dir.join("layout-missing-light.png"),
+        3, // the picture is written, the run ends with the code of the error
     )
     .unwrap();
     assert!(
@@ -59,10 +60,11 @@ fn the_description_of_a_program_is_drawn_light_and_dark_and_a_missing_one_says_s
         light.rgb, missing.rgb,
         "the error window is not the board window"
     );
-    let missing_dark = draw(
+    let missing_dark = draw_code(
         &["--description", gone],
         "dark",
         &dir.join("layout-missing-dark.png"),
+        3,
     )
     .unwrap();
     assert_ne!(missing.rgb, missing_dark.rgb);

@@ -12,20 +12,23 @@
 use std::sync::{Arc, Mutex, PoisonError};
 
 use fs_components_fields::Say;
-use fs_components_kanban::{Answer, BoardEvents, BoardSource, Column, Operation};
+use fs_components_kanban::{
+    Answer, BoardEvents, BoardSource, CREATE, Column, FormEvents, FormSupports, MOVE, Operation,
+};
 use fs_components_widgets::dialogs::{InputDialog, Labels};
 use fs_components_widgets::live::Live;
 
 use self::text::{Text, Words};
+use self::write_port::{BoardWrite, RecordsSource};
 use crate::records::Records;
 use crate::view::ActionView;
 
 mod text;
+mod write_port;
 
-/// The form of the board and the channels of its gestures (`forms.txt`, `cards-in-columns.1.0`).
+/// The form of the board (`forms.txt`); the channels of its gestures (`move`, `create`) and what a gesture carries are the component's
+/// (`FormEvents`, `FormSupports` of fs-components-kanban), never written out here.
 const FORM: &str = "cards-in-columns";
-const MOVE: &str = "move";
-const CREATE: &str = "create";
 
 /// The open question to the reader (at most one per window): the input dialog for a column name, and the area that draws it.
 #[derive(Default)]
@@ -101,13 +104,13 @@ impl Wiring {
         self.records.command_of(FORM, channel).is_some()
     }
 
-    /// The answer of a written gesture; after an accepted call the board is drawn again from what the module now says.
-    fn sent(&self, channel: &str, record: Option<&str>, values: &[(String, String)]) -> Answer {
-        let answer = self.records.invoke(FORM, channel, record, values);
-        if answer == Answer::Accepted {
-            self.ask.live.refresh_now();
-        }
-        answer
+    /// The write port of the form for the component: asks the module, draws the board again after an accepted call.
+    fn port(&self) -> Arc<BoardWrite> {
+        Arc::new(BoardWrite::new(
+            self.records.clone(),
+            self.ask.clone(),
+            FORM,
+        ))
     }
 
     /// The column `key` as the records show it now.
@@ -143,8 +146,11 @@ impl BoardSource for Wiring {
             _ => None,
         };
         match channel.filter(|c| self.written(c)) {
-            // a written gesture: the module says (may), the board asks the whole board (one record is enough, the drop asks exactly)
-            Some(c) => self.described(op) && self.records.can_channel(FORM, c, None),
+            // a written gesture: the component asks the port (the module says; one record is enough, the drop asks exactly)
+            Some(_) => {
+                let inner = Arc::new(RecordsSource(self.records.clone()));
+                self.described(op) && FormSupports::new(inner, self.port()).supports(op)
+            }
             None => self.described(op) && self.records.can(op),
         }
     }
@@ -157,14 +163,10 @@ fn locked() -> Answer {
 impl BoardEvents for Wiring {
     fn move_card_at(&self, key: &str, from: &str, to: &str, index: Option<usize>) -> Answer {
         if self.written(MOVE) {
-            if !self.supports(Operation::Move) || !self.records.can_channel(FORM, MOVE, Some(key)) {
+            if !self.described(Operation::Move) {
                 return locked();
             }
-            let mut values = vec![("column".to_owned(), to.to_owned())];
-            if let Some(i) = index {
-                values.push(("order".to_owned(), i.to_string()));
-            }
-            return self.sent(MOVE, Some(key), &values);
+            return FormEvents::new(self.port()).move_card_at(key, from, to, index);
         }
         if from == to {
             return Answer::Refused("unsupported".into());
@@ -185,14 +187,10 @@ impl BoardEvents for Wiring {
 
     fn add_card(&self, column: &str, title: &str) -> Answer {
         if self.written(CREATE) {
-            if !self.supports(Operation::AddCard) {
+            if !self.described(Operation::AddCard) {
                 return locked();
             }
-            let values = [
-                ("title".to_owned(), title.to_owned()),
-                ("column".to_owned(), column.to_owned()),
-            ];
-            return self.sent(CREATE, None, &values);
+            return FormEvents::new(self.port()).add_card(column, title);
         }
         if self.supports(Operation::AddCard) {
             self.records.add_card(column, title)

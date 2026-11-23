@@ -87,7 +87,7 @@ fn small(n: u64) -> u32 {
 
 /// What each block draws, as the COMPONENT declares it (`forms=` of the block contract, read by the catalog): the host holds no
 /// table of its own. A component declares a NEED (`tree@^1.0.0`), bind compares the version up to which the component draws: that is
-/// the version of the catalog when the need draws it, else `0.0` (the form is named, but no version of the catalog is drawn: the match
+/// the HIGHEST version of the catalog the need draws, else `0.0` (the form is named, but no version of the catalog is drawn: the match
 /// says `form-version-mismatch`). A form the catalog does not know is not listed.
 fn components() -> Vec<ComponentForms> {
     let catalog = catalog();
@@ -98,19 +98,19 @@ fn components() -> Vec<ComponentForms> {
             forms: forms
                 .iter()
                 .filter_map(|need| {
-                    let form = catalog.iter().find(|f| f.name == need.name())?;
-                    let offered: InterfaceVersion =
-                        format!("{}@{}", form.name, form.version).parse().ok()?;
-                    let (major, minor) = if need.draws(&offered) {
-                        (small(form.version.major), small(form.version.minor))
-                    } else {
-                        (0, 0)
-                    };
-                    Some(FormRef {
-                        name: form.name.clone(),
-                        major,
-                        minor,
-                    })
+                    // the HIGHEST version of the catalog the need draws (the catalog is in file order: `1.0.0` before `1.1.0`)
+                    let named = || catalog.iter().filter(|f| f.name == need.name());
+                    let drawn = named()
+                        .filter(|f| {
+                            format!("{}@{}", f.name, f.version)
+                                .parse::<InterfaceVersion>()
+                                .is_ok_and(|offered| need.draws(&offered))
+                        })
+                        .max_by_key(|f| f.version.clone());
+                    let name = named().next()?.name.clone();
+                    let (major, minor) =
+                        drawn.map_or((0, 0), |f| (small(f.version.major), small(f.version.minor)));
+                    Some(FormRef { name, major, minor })
                 })
                 .collect(),
         })

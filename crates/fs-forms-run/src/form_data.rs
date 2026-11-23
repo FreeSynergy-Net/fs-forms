@@ -110,6 +110,9 @@ pub struct FormRecords {
     pub writer: Option<Arc<dyn Writer>>,
     /// The forms read again after an accepted call (replaces `forms` while set).
     pub fresh: Arc<RwLock<Option<Arc<Vec<FormData>>>>>,
+    /// The code of the last failed reading after an accepted call (`host-notice-data-reload`): the module HAS written, the board shows
+    /// the old state; `None` after a good reading. The notice waits for `fs-notification` (SW-4b).
+    pub stale: Arc<RwLock<Option<String>>>,
 }
 
 /// The building block that draws a fact of this basic type (`fs-components-fields`: the catalog of kinds); a type without a
@@ -262,13 +265,21 @@ impl Records for FormRecords {
             return Answer::Refused(c.code);
         }
         // accepted: the module is read again, the board shows what it now says (nothing is guessed here)
-        match writer.reload() {
-            Ok(all) => {
-                *self.fresh.write().unwrap_or_else(PoisonError::into_inner) = Some(Arc::new(all));
-                Answer::Accepted
-            }
-            Err(c) => Answer::Refused(c.code),
+        if let Ok(all) = writer.reload() {
+            *self.fresh.write().unwrap_or_else(PoisonError::into_inner) = Some(Arc::new(all));
+            *self.stale.write().unwrap_or_else(PoisonError::into_inner) = None;
+        } else {
+            // the call was accepted, the module has written: this is no refusal; the old state stays and the failure is kept
+            *self.stale.write().unwrap_or_else(PoisonError::into_inner) =
+                Some("host-notice-data-reload".to_owned());
         }
+        Answer::Accepted
+    }
+    fn stale(&self) -> Option<String> {
+        self.stale
+            .read()
+            .unwrap_or_else(PoisonError::into_inner)
+            .clone()
     }
 }
 

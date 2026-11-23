@@ -29,3 +29,30 @@ fn every_rule_has_exactly_one_mutant() {
     flaws.dedup();
     assert_eq!(flaws.len(), 9);
 }
+
+/// The block filter of `match_form`: the frontend names a block; a block that does not carry the form is not taken.
+#[test]
+fn the_frontend_names_the_block_and_a_block_without_the_form_is_not_taken() {
+    use fs_forms_bind::form_fixtures::{fixture_catalog, form_ref, tree_component, tree_module};
+    let forms = fixture_catalog();
+    let module = tree_module();
+    let comps = [
+        tree_component(),
+        ComponentForms {
+            block: "tree2".into(),
+            forms: vec![form_ref("tree", 1, 1)],
+        },
+    ];
+    assert_eq!(
+        match_form(&forms, &module, &comps, None),
+        Matched::Blocks(vec!["tree".into(), "tree2".into()])
+    );
+    assert_eq!(
+        match_form(&forms, &module, &comps, Some("tree2")),
+        Matched::Blocks(vec!["tree2".into()])
+    );
+    assert!(matches!(
+        match_form(&forms, &module, &comps, Some("table")),
+        Matched::Fallback(_)
+    ));
+}

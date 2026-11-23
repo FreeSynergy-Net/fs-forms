@@ -25,7 +25,7 @@ fn grundtyp(art: Art) -> Grundtyp {
 }
 
 /// The field types of a channel of this art: the ONE table is `Art::allowed_basics` of `fs-interfaces` (bind has none of its own).
-/// A word the table names but bind does not know becomes `Unknown`, which no field has: the channel then stays red, never silently open.
+/// A word the table names but bind does not know becomes `Basic::Unknown`. That is a field type like any other (a field of that type would fit); it is kept out only by the equality test against the real table (no `Unknown` there) and by the starter, which reads an unknown field type as an error.
 fn kind(art: Art) -> Kind {
     Kind {
         grundtyp: grundtyp(art),

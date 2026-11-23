@@ -105,8 +105,8 @@ fn window(c: &Config, sources: &dyn Sources) -> i32 {
         Ok(mut view) => {
             let running = std::env::current_exe().unwrap_or_default();
             let opened = open(c, &view, &texts, &running, sources);
-            // real records (or a source that is not there) make "data sources are not connected in this version" untrue
-            if opened.connected || opened.notice.is_some() {
+            // real or sample records (or a source that is not there) make "data sources are not connected in this version" untrue
+            if opened.connected || opened.notice.is_some() || opened.records.is_sample() {
                 view.notices
                     .retain(|n| n.code != "host-notice-no-providers");
             }

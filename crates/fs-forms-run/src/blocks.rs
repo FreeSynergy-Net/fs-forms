@@ -8,7 +8,7 @@
 
 use std::sync::OnceLock;
 
-use fs_components_catalog::BlockCatalog;
+use fs_components_catalog::{BlockCatalog, FormRef};
 
 use crate::catalog::Catalog;
 use crate::draw;
@@ -31,6 +31,22 @@ fn catalog() -> &'static BlockCatalog {
 
 fn read() -> Result<BlockCatalog, usize> {
     BlockCatalog::read(contract::CONTRACT, contract::BLOCK_FILES).map_err(|problems| problems.len())
+}
+
+/// The forms the component of `block` says it draws (`forms=` of the block contract); none for a block that draws no whole form.
+pub(crate) fn forms_of(block: &str) -> Vec<FormRef> {
+    catalog()
+        .block(block)
+        .map_or_else(Vec::new, |b| b.forms.clone())
+}
+
+/// Every block of the contract that draws a form, with its forms.
+pub(crate) fn forms_of_blocks() -> Vec<(String, Vec<FormRef>)> {
+    catalog()
+        .iter()
+        .filter(|b| !b.forms.is_empty())
+        .map(|b| (b.name.clone(), b.forms.clone()))
+        .collect()
 }
 
 /// The registry of this build.

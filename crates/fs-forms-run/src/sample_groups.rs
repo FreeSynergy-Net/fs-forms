@@ -52,14 +52,23 @@ fn tree() -> FormData {
                 ("mine", Basic::Bool),
             ],
         ),
+        // two trees of unequal depth (helfa UMFRAGE-ergebnis): regions down to topic teams, and a flat academy
         rows: vec![
-            node("assoc", "", "Village Association", "", "true"),
-            node("board", "assoc", "Board", "bottom-up", "true"),
-            node("garden", "assoc", "Community Garden", "top-down", ""),
-            node("beds", "garden", "Bed Keepers", "single", ""),
-            node("compost", "garden", "Compost Team", "single", ""),
-            node("events", "assoc", "Events", "bottom-up", ""),
-            node("kitchen", "events", "Kitchen Crew", "single", ""),
+            node("nord", "", "Region Nordland", "", "true"),
+            node(
+                "birken",
+                "nord",
+                "Local group Birkenhain",
+                "bottom-up",
+                "true",
+            ),
+            node("garten", "birken", "Garden team", "top-down", ""),
+            node("beete", "garten", "Bed keepers", "single", ""),
+            node("kompost", "garten", "Compost crew", "single", ""),
+            node("repair", "birken", "Repair meeting", "single", ""),
+            node("seeblick", "nord", "Local group Seeblick", "bottom-up", ""),
+            node("akademie", "", "Academy Kleinwerk", "", ""),
+            node("holz", "akademie", "Course timber building", "single", ""),
         ],
     }
 }
@@ -85,11 +94,11 @@ fn members() -> FormData {
             ],
         ),
         rows: vec![
-            row("m1", "Ada Lovelace", "Chair", "Owner"),
-            row("m2", "Grace Hopper", "Deputy", "Admin"),
-            row("m3", "Alan Turing", "Gardener", ""),
-            row("m4", "Katherine Johnson", "Treasurer", "Admin"),
-            row("m5", "Linus Torvalds", "Cook", ""),
+            row("m1", "Mara Weidner", "Moderator", "Owner"),
+            row("m2", "Jonas Brink", "Deputy", "Admin"),
+            row("m3", "Tilda Ronne", "Gardener", ""),
+            row("m4", "Piet Aldermann", "Treasurer", "Admin"),
+            row("m5", "Sunniva Klar", "Cook", ""),
         ],
     }
 }

@@ -52,7 +52,7 @@ fn forms() -> Vec<FormDef> {
                 .iter()
                 .map(|c| Channel {
                     name: c.name.clone(),
-                    grundtyp: grundtyp(c.art),
+                    grundtypen: c.arts.iter().copied().map(grundtyp).collect(),
                     required: c.required,
                     count: count(c.count),
                 })

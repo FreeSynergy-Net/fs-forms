@@ -86,6 +86,40 @@ pub enum Count {
     ZeroOrOne,
     /// None up to `n` (`None` = unbounded).
     ZeroToN(Option<u32>),
+    /// From `min` to `max` (`None` = unbounded): the form of `Count` in `fs-interfaces`.
+    Range {
+        /// Fewest fields.
+        min: u32,
+        /// Most fields.
+        max: Option<u32>,
+    },
+}
+
+impl Count {
+    /// The fewest fields: `One` needs one, the others none.
+    #[must_use]
+    pub fn min(self) -> usize {
+        match self {
+            Self::One => 1,
+            Self::Range { min, .. } => min as usize,
+            _ => 0,
+        }
+    }
+
+    /// The most fields (`None` = unbounded). Mirror of `Count::allows` of `fs-interfaces`.
+    #[must_use]
+    pub fn max(self) -> Option<usize> {
+        match self {
+            Self::One | Self::ZeroOrOne => Some(1),
+            Self::ZeroToN(max) | Self::Range { max, .. } => max.map(|m| m as usize),
+        }
+    }
+
+    /// Does a module that maps `n` fields on the channel keep the count?
+    #[must_use]
+    pub fn allows(self, n: usize) -> bool {
+        n >= self.min() && self.max().is_none_or(|m| n <= m)
+    }
 }
 
 /// One channel of a form.

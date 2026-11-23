@@ -1,8 +1,8 @@
 //! `FormsSuite` (feature `conformance`): the rules of the form match, each proven by one mutant (the matcher with that rule off).
 //!
-//! Rules: `form.unknown`, `form.version-mismatch`, `form.channel-unmapped`, `form.basic-mismatch`, `form.no-component`, and the
+//! Rules: `form.unknown`, `form.version-mismatch`, `form.channel-unmapped`, `form.basic-mismatch`, `form.channel-count`, `form.count-bound`, `form.no-component`, and the
 //! rule `form.type-set` (a channel type is a set) and the negative rule `form.optional-free` (an optional channel left out stays green). Same shape as [`super::PlanSuite`]:
-//! every rule has exactly one mutant, `prove` needs 7 of 7 and a green base.
+//! every rule has exactly one mutant, `prove` needs 9 of 9 and a green base.
 //!
 //! Pattern: Specification suite + mutants.
 
@@ -16,13 +16,13 @@ const CATALOG: &str = "\
 tree@1.0 | Tree | planned | t\n\
 #   nodes      | Art: records   | Grundtyp: records | Pflicht: ja (`!`) | Anzahl: offen\n\
 #   parent     | Art: reference | Grundtyp: reference | Pflicht: ja (`!`) | Anzahl: offen\n\
-#   label      | Art: text      | Grundtyp: text | Pflicht: ja (`!`) | Anzahl: offen\n\
+#   label      | Art: text      | Grundtyp: text | Pflicht: ja (`!`) | Anzahl: 1\n\
 #   edge-kind  | Art: grouping  | Grundtyp: text | Pflicht: nein | Anzahl: offen\n\
 #   facts      | Art: text|number|time|flag | Pflicht: nein | Anzahl: 0 bis 4\n\
 tree@1.1 | Tree | planned | t\n\
 #   nodes      | Art: records   | Grundtyp: records | Pflicht: ja (`!`) | Anzahl: offen\n\
 #   parent     | Art: reference | Grundtyp: reference | Pflicht: ja (`!`) | Anzahl: offen\n\
-#   label      | Art: text      | Grundtyp: text | Pflicht: ja (`!`) | Anzahl: offen\n\
+#   label      | Art: text      | Grundtyp: text | Pflicht: ja (`!`) | Anzahl: 1\n\
 #   mark       | Art: flag      | Grundtyp: flag | Pflicht: nein | Anzahl: 0 oder 1\n";
 
 /// The matcher a rule runs against (the real one, or one with a flaw).
@@ -120,6 +120,50 @@ fn type_set(m: Matcher<'_>, f: &[FormDef]) -> Result<(), String> {
     Ok(())
 }
 
+/// A channel takes as many fields as its count allows: `label` exactly one, `facts` up to four, `mark` none or one.
+fn count(m: Matcher<'_>, f: &[FormDef]) -> Result<(), String> {
+    let many = |channel: &str, n: usize| {
+        let mut module = tree_module();
+        module.map.retain(|(c, _)| c != channel);
+        let names: Vec<String> = (0..n).map(|i| format!("f{i}")).collect();
+        module
+            .fields
+            .extend(names.iter().map(|x| (x.clone(), Basic::Text)));
+        module.map.push((channel.into(), names));
+        module
+    };
+    red_with(
+        &m(f, &many("label", 2), &[tree_component()]),
+        "form-channel-count",
+    )?;
+    red_with(
+        &m(f, &many("facts", 5), &[tree_component()]),
+        "form-channel-count",
+    )
+}
+
+/// The upper bound counts, the lower one is `unmapped` (a required channel with no field is not a count problem).
+fn count_bound(m: Matcher<'_>, f: &[FormDef]) -> Result<(), String> {
+    let mut module = tree_module();
+    let names: Vec<String> = (0..4).map(|i| format!("f{i}")).collect();
+    module
+        .fields
+        .extend(names.iter().map(|x| (x.clone(), Basic::Text)));
+    module.map.push(("facts".into(), names.clone()));
+    let at_max = m(f, &module, &[tree_component()]);
+    if at_max != Matched::Blocks(vec!["tree".into()]) {
+        return Err(format!(
+            "4 fields on `facts` (0..4) must fit, got {at_max:?}"
+        ));
+    }
+    module.map.retain(|(c, _)| c != "facts");
+    module.fields.push(("f4".into(), Basic::Text));
+    let mut five = names;
+    five.push("f4".into());
+    module.map.push(("facts".into(), five));
+    red_with(&m(f, &module, &[tree_component()]), "form-channel-count")
+}
+
 fn no_component(m: Matcher<'_>, f: &[FormDef]) -> Result<(), String> {
     for none in [
         Vec::new(),
@@ -150,11 +194,13 @@ fn optional_free(m: Matcher<'_>, f: &[FormDef]) -> Result<(), String> {
 }
 
 /// The rules with their check, and the mutant each one must catch.
-const RULES: [(&str, Check, FormFlaw); 7] = [
+const RULES: [(&str, Check, FormFlaw); 9] = [
     ("form.unknown", unknown, FormFlaw::UnknownOff),
     ("form.version-mismatch", version, FormFlaw::VersionOff),
     ("form.channel-unmapped", unmapped, FormFlaw::UnmappedOff),
     ("form.basic-mismatch", basic, FormFlaw::BasicOff),
+    ("form.channel-count", count, FormFlaw::CountOff),
+    ("form.count-bound", count_bound, FormFlaw::CountMaxIgnored),
     ("form.no-component", no_component, FormFlaw::NoComponentOff),
     ("form.type-set", type_set, FormFlaw::SetFirstOnly),
     (

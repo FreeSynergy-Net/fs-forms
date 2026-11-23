@@ -44,6 +44,10 @@ pub enum FormFlaw {
     NoComponentOff,
     /// Only the first type of a channel's set counts (the set is ignored).
     SetFirstOnly,
+    /// `form-channel-count` is not reported.
+    CountOff,
+    /// The upper bound of a count is not checked (only the lower one).
+    CountMaxIgnored,
     /// An optional channel without a field is reported as unmapped (too strict).
     OptionalRequired,
 }
@@ -141,7 +145,7 @@ fn fits(c: &crate::forms::FormRef, module: &ModuleForm) -> bool {
     c.major == module.form.major && c.minor >= module.form.minor
 }
 
-/// `form-channel-unmapped` and `form-basic-mismatch` for every channel of the form.
+/// `form-channel-unmapped`, `form-channel-count` and `form-basic-mismatch` for every channel of the form.
 fn channels(def: &FormDef, module: &ModuleForm, flaw: Option<FormFlaw>) -> Vec<Coded> {
     let mut out = Vec::new();
     for ch in &def.channels {
@@ -160,6 +164,19 @@ fn channels(def: &FormDef, module: &ModuleForm, flaw: Option<FormFlaw>) -> Vec<C
                 );
             }
             continue;
+        }
+        let count_ok = match flaw {
+            Some(FormFlaw::CountOff) => true,
+            Some(FormFlaw::CountMaxIgnored) => mapped.len() >= ch.count.min(),
+            _ => ch.count.allows(mapped.len()),
+        };
+        if !count_ok {
+            out.push(
+                Coded::new("form-channel-count")
+                    .with("form", def.name.clone())
+                    .with("channel", ch.name.clone())
+                    .with("fields", mapped.len().to_string()),
+            );
         }
         // `records` and `command` name a type or a command of the module, not a field with a basic type.
         let types: &[Grundtyp] = match flaw {

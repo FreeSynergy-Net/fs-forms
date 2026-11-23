@@ -5,6 +5,7 @@
 //! graph). Pattern: Specification suite + mutants (as the records suite of F1).
 
 pub mod bench;
+mod forms;
 mod rules;
 mod rules_menu;
 
@@ -14,6 +15,7 @@ use crate::plan::Plan;
 use crate::providers::HostCaps;
 
 pub use bench::{BindBench, Flaw, bench_mutants};
+pub use forms::FormsSuite;
 
 /// What a rule needs: the inputs and the plan built from them.
 pub trait PlanFixture {

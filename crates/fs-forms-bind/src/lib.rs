@@ -23,6 +23,8 @@ mod catalog;
 mod coded;
 mod codes;
 mod commands;
+mod form_match;
+mod forms;
 mod keys;
 mod menu;
 mod menu_std;
@@ -35,6 +37,8 @@ mod types;
 
 #[cfg(feature = "testing")]
 mod fixtures;
+#[cfg(feature = "testing")]
+pub mod form_fixtures;
 #[cfg(feature = "conformance")]
 pub mod suite;
 #[cfg(feature = "testing")]
@@ -45,6 +49,10 @@ pub use catalog::{BlockSpec, Catalog, SlotSpec, check_bindings};
 pub use coded::{Coded, Family};
 pub use codes::{BindCode, Cause, Notice, Part, PartLock, Severity};
 pub use commands::{Shown, command_id, command_plan, command_state};
+#[cfg(feature = "testing")]
+pub use form_match::match_form_flawed;
+pub use form_match::{FormFlaw, Matched, match_form};
+pub use forms::{Channel, ComponentForms, Count, FormDef, FormRef, Grundtyp, ModuleForm};
 pub use fs_components_commands::{
     CommandId, FocusContext, KeyPress, Keymap, Modifiers, Outcome, Platform, Shortcut,
 };

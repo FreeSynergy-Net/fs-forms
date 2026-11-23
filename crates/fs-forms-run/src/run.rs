@@ -31,6 +31,7 @@ const CODE_CONTRACT: i32 = EXIT_CONTRACT as i32;
 /// Run the command line (the words after the program name) and return the exit code.
 ///
 /// Same as [`run_code`], handed over as a process exit code (`ExitCode` has no accessor to read the number back).
+#[must_use = "an ignored exit code would hide a failed run"]
 pub fn run(args: &[String]) -> ExitCode {
     run_with(args, &NoSources)
 }

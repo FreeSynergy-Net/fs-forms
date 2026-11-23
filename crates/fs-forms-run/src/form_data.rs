@@ -3,7 +3,7 @@
 //! known here. `FormRecords` is the [`Records`] a connected module gives (the starter builds it from the `FormSource` of the module).
 //!
 //! The board of the form `cards-in-columns` is drawn from the channels: `column` is the KEY of a column (the value as the module
-//! gives it, never changed: a move names it), `column-label` its name, `order` the place, `progress` the bar, `facts` the facts of
+//! gives it, never changed: a move names it), `column-label` its name, `order` the place (read: the cards of a column stand in the sequence of `order`, cards without a number at the end), `progress` the bar, `facts` the facts of
 //! the card (one value per field the module maps to the channel, in the order of the map; no value = the slot is kept, not drawn).
 //! A column the module names but that holds no card ([`FormData::columns`]) is drawn too.
 //!
@@ -199,6 +199,7 @@ impl Records for FormRecords {
             });
             out[at].cards.push(card_of(data, row, title));
         }
+        order::sort_by_order(&mut out, &data.rows);
         out
     }
     fn side(&self) -> Vec<SideItem> {
@@ -285,5 +286,8 @@ impl Records for FormRecords {
 
 #[cfg(test)]
 mod card_tests;
+mod order;
+#[cfg(test)]
+mod order_tests;
 #[cfg(test)]
 mod tests;

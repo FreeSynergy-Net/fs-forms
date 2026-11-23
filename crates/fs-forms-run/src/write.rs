@@ -136,7 +136,10 @@ pub fn allowed(data: &FormData, channel: &str, record: Option<&str>) -> bool {
             .iter()
             .find(|row| row.key == r)
             .is_some_and(|row| says(&row.may)),
-        None => says(&data.may) || data.rows.iter().any(|row| says(&row.may)),
+        // `create` comes only from the page: a row's `may` never opens it
+        None => {
+            says(&data.may) || (channel != "create" && data.rows.iter().any(|row| says(&row.may)))
+        }
     }
 }
 

@@ -250,3 +250,18 @@ fn a_failed_reading_after_an_accepted_call_is_no_refusal_and_says_so() {
     );
     assert_eq!(r.stale(), None, "a good reading clears it");
 }
+
+#[test]
+fn create_comes_only_from_the_page_never_from_the_may_of_a_row() {
+    let mut d = data();
+    d.may.clear();
+    d.rows[0].may.push("task.create".into());
+    assert!(
+        !allowed(&d, "create", None),
+        "a row that names create does not open the quick add"
+    );
+    assert!(allowed(&d, "move", None), "move: one record allows it");
+    let mut d = data();
+    d.rows.iter_mut().for_each(|r| r.may.clear());
+    assert!(allowed(&d, "create", None), "the page says create");
+}

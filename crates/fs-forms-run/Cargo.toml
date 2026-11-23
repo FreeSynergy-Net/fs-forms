@@ -36,7 +36,7 @@ fs-components-words = { git = "https://github.com/FreeSynergy/fs-components", ta
 fs-components-catalog = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.33" }
 
 # The form catalog (`fs_interfaces::forms`, forms.txt) and the one form match (`fs-forms-bind`): the host holds no table of forms.
-fs-interfaces = { git = "https://github.com/FreeSynergy/fs-interfaces", branch = "unreviewed/form-source" }
+fs-interfaces = { git = "https://github.com/FreeSynergy/fs-interfaces", branch = "unreviewed/form-source-r2" }
 fs-forms-bind = { path = "../fs-forms-bind" }
 fs-rpc = { git = "https://github.com/FreeSynergy/fs-rpc", tag = "v0.0.6" }
 tokio = { version = "1", features = ["rt", "sync", "net", "time"] }

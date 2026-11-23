@@ -27,14 +27,15 @@ pub struct Opened {
 
 /// The data sources a host can offer: it connects the module service that speaks a contract.
 pub trait Sources: Send + Sync {
-    /// The records of the module that serves `contract` (the name of the range: `tasks` of `tasks >=0.2 <0.3`), or the code that
-    /// says why there are none. `socket` is the one the command line gave, `running` the running program.
+    /// The records of the module that serves `range` (the contract and its range as the description writes it: `tasks >=0.2 <0.3`;
+    /// the host compares the version of the module with it), or the code that says why there are none. `socket` is the one the
+    /// command line gave (a host may ignore it), `running` the running program.
     ///
     /// # Errors
     /// A code (`host-notice-data-*`, `host-notice-source-unknown`) for a service that is not known, not there or does not fit.
     fn connect(
         &self,
-        contract: &str,
+        range: &str,
         socket: Option<&Path>,
         running: &Path,
     ) -> Result<Arc<dyn Records>, Coded>;
@@ -45,18 +46,14 @@ pub trait Sources: Send + Sync {
 pub struct NoSources;
 
 impl Sources for NoSources {
-    fn connect(
-        &self,
-        contract: &str,
-        _: Option<&Path>,
-        _: &Path,
-    ) -> Result<Arc<dyn Records>, Coded> {
-        Err(Coded::new("host-notice-source-unknown").with("contract", contract))
+    fn connect(&self, range: &str, _: Option<&Path>, _: &Path) -> Result<Arc<dyn Records>, Coded> {
+        Err(Coded::new("host-notice-source-unknown").with("contract", name_of(range)))
     }
 }
 
 /// The name of the contract in a range (`tasks >=0.2 <0.3` is `tasks`).
-fn name_of(range: &str) -> &str {
+#[must_use]
+pub fn name_of(range: &str) -> &str {
     range.split_whitespace().next().unwrap_or("")
 }
 
@@ -84,7 +81,7 @@ pub fn open(
             connected: false,
         };
     };
-    match sources.connect(name_of(first), c.socket.as_deref(), running) {
+    match sources.connect(first, c.socket.as_deref(), running) {
         Ok(records) => Opened {
             records,
             notice: None,

@@ -51,6 +51,10 @@ fn the_frontend_names_the_block_and_a_block_without_the_form_is_not_taken() {
         match_form(&forms, &module, &comps, Some("tree2")),
         Matched::Blocks(vec!["tree2".into()])
     );
+    assert_eq!(
+        match_form(&forms, &module, &comps, Some("tree")),
+        Matched::Blocks(vec!["tree".into()])
+    );
     assert!(matches!(
         match_form(&forms, &module, &comps, Some("table")),
         Matched::Fallback(_)

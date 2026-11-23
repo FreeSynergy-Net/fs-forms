@@ -2,16 +2,20 @@
 
 Version = tag; all crates of the workspace carry the same version.
 
-## Unreleased
+## 0.0.11
 
 ### English
 
+- Lift: `fs-interfaces` v0.0.30 -> v0.0.31 (also `fs-forms-bin` and `fs-forms-run`, which used the branch `unreviewed/form-source-r2`), `fs-rpc` v0.0.6 -> v0.0.7, `fs-components` v0.0.33 -> v0.0.34; all `[patch]` sections and local paths removed, one source per library.
+- Version 0.0.11: workspace, Lock (own crates), `fs-forms-bin` package floors, README, metainfo of `simple`. Test: the block filter test also names `tree` (a prefix of `tree2`).
 - `fs-forms-run`: the host draws by form channel. New port `Sources` (the host that runs it connects the module services; `run_with`, `run_code_with`) and `FormRecords` (rows by channel, declaration of the module); the blocks `tree` and `table` draw the forms `tree@1.0` and `members@1.0`, the board draws `cards-in-columns@1.0`; a module that does not fit is locked with the code of the one match of `fs-forms-bind` (`form-channel-unmapped` ...), a picture run ends with 3. `--sample-data` shows the sample groups (tree and list, \"Sample data\"). Removed: the table `SOURCES`, `PlanningRecords` and the dependency on `fs-modules-planning-client`. Written with the help of Claude (Anthropic).
 - `fs-forms-bind`: the form match (G7 adapter, order SQ-2): `match_form(forms, module, components, block) -> Matched` with the rules `form-unknown`, `form-version-mismatch`, `form-channel-unmapped`, `form-basic-mismatch` (red) and `form-no-component` (yellow); `FormsSuite` with 6 rules and 6 mutants (feature `conformance`). Written with the help of Claude (Anthropic).
 - `fs-forms-run --picture`: the run ends with code 3 when the picture shows a host error (the error window); the PNG is written all the same.
 
 ### Deutsch
 
+- Hebung: `fs-interfaces` v0.0.30 -> v0.0.31 (auch `fs-forms-bin` und `fs-forms-run`, die den Zweig `unreviewed/form-source-r2` nutzten), `fs-rpc` v0.0.6 -> v0.0.7, `fs-components` v0.0.33 -> v0.0.34; alle `[patch]`-Abschnitte und lokale Pfade entfernt, eine Quelle je Bibliothek.
+- Version 0.0.11: Workspace, Lock (eigene Crates), Paketuntergrenzen von `fs-forms-bin`, README, metainfo von `simple`. Test: der Blockfilter-Test nennt auch `tree` (Präfix von `tree2`).
 - `fs-forms-run --picture`: rc 3, wenn das Bild einen Host-Fehler zeigt; PNG wird trotzdem geschrieben.
 
 ## 0.0.10

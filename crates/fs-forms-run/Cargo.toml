@@ -24,21 +24,21 @@ path = "src/main.rs"
 fs-forms-client = { path = "../fs-forms-client" }
 fs-forms-layout = { path = "../fs-forms-layout" }
 fs-forms-exchange = { path = "../fs-forms-exchange" }
-fs-components = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.33" }
-fs-components-app = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.33" }
-fs-components-widgets = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.33" }
-fs-components-mf2 = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.33" }
-fs-components-kanban = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.33" }
-fs-components-fields = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.33" }
-fs-components-styles = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.33" }
-fs-components-words = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.33" }
+fs-components = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.34" }
+fs-components-app = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.34" }
+fs-components-widgets = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.34" }
+fs-components-mf2 = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.34" }
+fs-components-kanban = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.34" }
+fs-components-fields = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.34" }
+fs-components-styles = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.34" }
+fs-components-words = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.34" }
 # What the blocks of the contract are (and what they accept and render): the host asks it, it has no table of its own.
-fs-components-catalog = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.33" }
+fs-components-catalog = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.34" }
 
 # The form catalog (`fs_interfaces::forms`, forms.txt) and the one form match (`fs-forms-bind`): the host holds no table of forms.
-fs-interfaces = { git = "https://github.com/FreeSynergy/fs-interfaces", branch = "unreviewed/form-source-r2" }
+fs-interfaces = { git = "https://github.com/FreeSynergy/fs-interfaces", tag = "v0.0.31" }
 fs-forms-bind = { path = "../fs-forms-bind" }
-fs-rpc = { git = "https://github.com/FreeSynergy/fs-rpc", tag = "v0.0.6" }
+fs-rpc = { git = "https://github.com/FreeSynergy/fs-rpc", tag = "v0.0.7" }
 tokio = { version = "1", features = ["rt", "sync", "net", "time"] }
 
 # Picture tests (the window drawn without a window, read back): the same dev-dependencies as fs-forms-simple.

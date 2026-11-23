@@ -21,9 +21,9 @@ path = "src/main.rs"
 fs-forms-server = { path = "../fs-forms-server" }
 fs-forms-client = { path = "../fs-forms-client" }
 # No `fs-starter` pin here (forbidden edge, ADR 0105; fs-rpc has no such crate): the host is the repo fs-starter.
-fs-rpc = { git = "https://github.com/FreeSynergy/fs-rpc", tag = "v0.0.6" }
+fs-rpc = { git = "https://github.com/FreeSynergy/fs-rpc", tag = "v0.0.7" }
 # One source per library: the same tags as fs-rpc and the client.
-fs-interfaces = { git = "https://github.com/FreeSynergy/fs-interfaces", tag = "v0.0.30" }
+fs-interfaces = { git = "https://github.com/FreeSynergy/fs-interfaces", tag = "v0.0.31" }
 fs-types = { git = "https://github.com/FreeSynergy/fs-types", tag = "v0.0.4" }
 
 # The frontend `simple` is a package of its own (one deb/rpm per Cargo package, ADR 0094 draft): the program needs it.
@@ -31,11 +31,11 @@ fs-types = { git = "https://github.com/FreeSynergy/fs-types", tag = "v0.0.4" }
 [package.metadata.deb]
 name = "fs-forms"
 # cargo-deb replaces only `$auto` in `depends`; so a fixed lower bound, not `${binary:Version}`.
-depends = "$auto, fs-forms-simple (>= 0.0.10)"
+depends = "$auto, fs-forms-simple (>= 0.0.11)"
 
 # A package with its own generate-rpm table lists its assets itself (fs-release scripts/linux-pkg.sh).
 [package.metadata.generate-rpm]
 name = "fs-forms"
 assets = [{ source = "target/release/fs-forms", dest = "/usr/bin/fs-forms", mode = "755" }]
 [package.metadata.generate-rpm.requires]
-fs-forms-simple = ">= 0.0.10"
+fs-forms-simple = ">= 0.0.11"

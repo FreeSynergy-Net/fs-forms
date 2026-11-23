@@ -1389,7 +1389,8 @@ dependencies = [
 
 [[package]]
 name = "fs-components"
-version = "0.0.33"
+version = "0.0.34"
+source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.34#48ca24797e5474e9c4d9c8f1867c66cc24889fa1"
 dependencies = [
  "blinc_animation",
  "blinc_app",
@@ -1402,7 +1403,8 @@ dependencies = [
 
 [[package]]
 name = "fs-components-app"
-version = "0.0.33"
+version = "0.0.34"
+source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.34#48ca24797e5474e9c4d9c8f1867c66cc24889fa1"
 dependencies = [
  "blinc_app",
  "blinc_cn",
@@ -1419,7 +1421,8 @@ dependencies = [
 
 [[package]]
 name = "fs-components-catalog"
-version = "0.0.33"
+version = "0.0.34"
+source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.34#48ca24797e5474e9c4d9c8f1867c66cc24889fa1"
 dependencies = [
  "fs-records",
  "fs-types",
@@ -1428,11 +1431,13 @@ dependencies = [
 
 [[package]]
 name = "fs-components-commands"
-version = "0.0.33"
+version = "0.0.34"
+source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.34#48ca24797e5474e9c4d9c8f1867c66cc24889fa1"
 
 [[package]]
 name = "fs-components-core"
-version = "0.0.33"
+version = "0.0.34"
+source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.34#48ca24797e5474e9c4d9c8f1867c66cc24889fa1"
 dependencies = [
  "blinc_cn",
  "blinc_core",
@@ -1446,7 +1451,8 @@ dependencies = [
 
 [[package]]
 name = "fs-components-fields"
-version = "0.0.33"
+version = "0.0.34"
+source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.34#48ca24797e5474e9c4d9c8f1867c66cc24889fa1"
 dependencies = [
  "blinc_core",
  "blinc_layout",
@@ -1460,7 +1466,8 @@ dependencies = [
 
 [[package]]
 name = "fs-components-kanban"
-version = "0.0.33"
+version = "0.0.34"
+source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.34#48ca24797e5474e9c4d9c8f1867c66cc24889fa1"
 dependencies = [
  "blinc_cn",
  "blinc_core",
@@ -1473,7 +1480,8 @@ dependencies = [
 
 [[package]]
 name = "fs-components-lists"
-version = "0.0.33"
+version = "0.0.34"
+source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.34#48ca24797e5474e9c4d9c8f1867c66cc24889fa1"
 dependencies = [
  "blinc_cn",
  "blinc_core",
@@ -1488,7 +1496,8 @@ dependencies = [
 
 [[package]]
 name = "fs-components-measures"
-version = "0.0.33"
+version = "0.0.34"
+source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.34#48ca24797e5474e9c4d9c8f1867c66cc24889fa1"
 dependencies = [
  "blinc_cn",
  "blinc_core",
@@ -1502,7 +1511,8 @@ dependencies = [
 
 [[package]]
 name = "fs-components-mf2"
-version = "0.0.33"
+version = "0.0.34"
+source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.34#48ca24797e5474e9c4d9c8f1867c66cc24889fa1"
 dependencies = [
  "fs-components-words",
  "mf2",
@@ -1510,7 +1520,8 @@ dependencies = [
 
 [[package]]
 name = "fs-components-overlays"
-version = "0.0.33"
+version = "0.0.34"
+source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.34#48ca24797e5474e9c4d9c8f1867c66cc24889fa1"
 dependencies = [
  "blinc_cn",
  "blinc_core",
@@ -1525,7 +1536,8 @@ dependencies = [
 
 [[package]]
 name = "fs-components-primitives"
-version = "0.0.33"
+version = "0.0.34"
+source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.34#48ca24797e5474e9c4d9c8f1867c66cc24889fa1"
 dependencies = [
  "blinc_cn",
  "blinc_core",
@@ -1537,7 +1549,8 @@ dependencies = [
 
 [[package]]
 name = "fs-components-render"
-version = "0.0.33"
+version = "0.0.34"
+source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.34#48ca24797e5474e9c4d9c8f1867c66cc24889fa1"
 dependencies = [
  "blinc_app",
  "blinc_cn",
@@ -1555,11 +1568,13 @@ dependencies = [
 
 [[package]]
 name = "fs-components-styles"
-version = "0.0.33"
+version = "0.0.34"
+source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.34#48ca24797e5474e9c4d9c8f1867c66cc24889fa1"
 
 [[package]]
 name = "fs-components-widgets"
-version = "0.0.33"
+version = "0.0.34"
+source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.34#48ca24797e5474e9c4d9c8f1867c66cc24889fa1"
 dependencies = [
  "blinc_cn",
  "blinc_core",
@@ -1582,11 +1597,12 @@ dependencies = [
 
 [[package]]
 name = "fs-components-words"
-version = "0.0.33"
+version = "0.0.34"
+source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.34#48ca24797e5474e9c4d9c8f1867c66cc24889fa1"
 
 [[package]]
 name = "fs-forms-bind"
-version = "0.0.10"
+version = "0.0.11"
 dependencies = [
  "fs-components-commands",
  "fs-forms-bind",
@@ -1595,7 +1611,7 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-client"
-version = "0.0.10"
+version = "0.0.11"
 dependencies = [
  "capnp",
  "capnp-rpc",
@@ -1608,7 +1624,7 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-core"
-version = "0.0.10"
+version = "0.0.11"
 dependencies = [
  "async-trait",
  "chrono",
@@ -1625,7 +1641,7 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-exchange"
-version = "0.0.10"
+version = "0.0.11"
 dependencies = [
  "fs-forms-layout",
  "serde_json",
@@ -1634,14 +1650,14 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-layout"
-version = "0.0.10"
+version = "0.0.11"
 dependencies = [
  "sha2 0.10.9",
 ]
 
 [[package]]
 name = "fs-forms-run"
-version = "0.0.10"
+version = "0.0.11"
 dependencies = [
  "fs-components",
  "fs-components-app",
@@ -1665,7 +1681,7 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-server"
-version = "0.0.10"
+version = "0.0.11"
 dependencies = [
  "capnp",
  "capnp-rpc",
@@ -1676,7 +1692,7 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-simple"
-version = "0.0.10"
+version = "0.0.11"
 dependencies = [
  "fs-components",
  "fs-components-app",
@@ -1691,7 +1707,7 @@ dependencies = [
 
 [[package]]
 name = "fs-forms-store"
-version = "0.0.10"
+version = "0.0.11"
 dependencies = [
  "fs-forms-layout",
  "fs-objects",
@@ -1701,7 +1717,8 @@ dependencies = [
 
 [[package]]
 name = "fs-interfaces"
-version = "0.0.30"
+version = "0.0.31"
+source = "git+https://github.com/FreeSynergy/fs-interfaces?tag=v0.0.31#e92ef7b027cbb4f8145c5e8fa92c81603ce6d4d7"
 dependencies = [
  "capnp",
  "fs-types",
@@ -1709,7 +1726,7 @@ dependencies = [
 
 [[package]]
 name = "fs-layouts-rpc"
-version = "0.0.10"
+version = "0.0.11"
 dependencies = [
  "capnp",
  "capnp-rpc",
@@ -1753,8 +1770,8 @@ dependencies = [
 
 [[package]]
 name = "fs-rpc"
-version = "0.0.6"
-source = "git+https://github.com/FreeSynergy/fs-rpc?tag=v0.0.6#7c5ba2fd6a3aea16f29dd8bc5558c210f8ca6e61"
+version = "0.0.7"
+source = "git+https://github.com/FreeSynergy/fs-rpc?tag=v0.0.7#3414c15533b021b7f8508604b3dc34e8bfc75bde"
 dependencies = [
  "capnp",
  "capnp-rpc",
@@ -1772,7 +1789,8 @@ dependencies = [
 
 [[package]]
 name = "fs-settings"
-version = "0.0.33"
+version = "0.0.34"
+source = "git+https://github.com/FreeSynergy/fs-components?tag=v0.0.34#48ca24797e5474e9c4d9c8f1867c66cc24889fa1"
 dependencies = [
  "fs-types",
 ]

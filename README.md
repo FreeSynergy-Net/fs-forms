@@ -8,7 +8,7 @@ What is different here: anonymous answers do not go into the ordinary store at a
 
 ## What it can do today
 
-Latest tag: `v0.0.9`. The version in this tree is `0.0.10` (next tag `v0.0.10`). This repository is a library (a release carries no program binary); the one executable host is `fs-starter`, which calls `fs-forms-run`.
+Latest tag: `v0.0.10`. The version in this tree is `0.0.11` (next tag `v0.0.11`). This repository is a library (a release carries no program binary); the one executable host is `fs-starter`, which calls `fs-forms-run`.
 
 - **Window and server (since 0.0.2; the command `fs-forms` is retired).** The crate `fs-forms-bin` (command `fs-forms`) is excluded from the workspace; `fs-starter` is the host and runs `fs-forms-run` on a forms description. The frontend `simple` still shows the name, the icon, what works today and what comes; what does not work yet says "coming soon".
 
@@ -49,7 +49,7 @@ Forms belongs to the democracy and project-management suites. FreeSynergy is a f
 
 **Eine Umfrage, bei der eine anonyme Antwort wirklich anonym ist, nicht nur so beschriftet.** FreeSynergy Forms lässt Menschen oder Gruppen Fragen stellen, Antworten sammeln und das Ergebnis lesen. Anonyme Antworten landen nicht im gewöhnlichen Speicher, sondern in einem eigenen Behälter ohne Protokoll und ohne Zeit; Ergebnisse erscheinen erst ab einer Mindestgruppengröße.
 
-**Was es heute kann.** Letzter Tag `v0.0.9`. Der Stand in diesem Baum ist `0.0.10` (nächster Tag `v0.0.10`). Dieses Repo ist eine Bibliothek (ein Release enthält kein Programm-Binary); der eine ausführbare Host ist `fs-starter`, der `fs-forms-run` aufruft. Der Kern (Umfragen mit Fragen und Bedingungen, namentliche und anonyme Antworten, Ergebnisse, Zählverfahren, CSV-Export, Ausweiten über Gruppen) liegt als Bibliothek vor. Fenster und Server: der Befehl `fs-forms` (Crate `fs-forms-bin`) ist ausgeklammert; `fs-starter` startet `fs-forms-run`, das Frontend `simple` zeigt Name, Symbol, „Was es heute kann“ und „Was kommt“. Was noch nicht geht, sagt „kommt noch“; fehlt der Server oder passt er nicht, steht das im Fenster. Das Fenster zeigt noch keine Umfragen, der Kern ist noch nicht daran angeschlossen.
+**Was es heute kann.** Letzter Tag `v0.0.10`. Der Stand in diesem Baum ist `0.0.11` (nächster Tag `v0.0.11`). Dieses Repo ist eine Bibliothek (ein Release enthält kein Programm-Binary); der eine ausführbare Host ist `fs-starter`, der `fs-forms-run` aufruft. Der Kern (Umfragen mit Fragen und Bedingungen, namentliche und anonyme Antworten, Ergebnisse, Zählverfahren, CSV-Export, Ausweiten über Gruppen) liegt als Bibliothek vor. Fenster und Server: der Befehl `fs-forms` (Crate `fs-forms-bin`) ist ausgeklammert; `fs-starter` startet `fs-forms-run`, das Frontend `simple` zeigt Name, Symbol, „Was es heute kann“ und „Was kommt“. Was noch nicht geht, sagt „kommt noch“; fehlt der Server oder passt er nicht, steht das im Fenster. Das Fenster zeigt noch keine Umfragen, der Kern ist noch nicht daran angeschlossen.
 
 **Was noch nicht da ist.** Umfragen im Fenster anlegen, beantworten und auswerten, Einladen von Personen, öffentlicher Link ohne Konto (kommt mit dem Server-Teil, geplant, nicht terminiert). Terminumfragen gehören zum Programm Decisions. Die vollständige Liste steht in der Feature-Liste (`todo/features/forms.md` in fs-documentation, sobald sie dort liegt).
 

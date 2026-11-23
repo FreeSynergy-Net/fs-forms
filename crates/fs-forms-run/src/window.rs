@@ -84,10 +84,14 @@ const KANBAN_KEYS: &[&str] = &[
     "kanban.refused.failed",
 ];
 
+/// The head of a column of the member list, by channel (the words come from the MF2 files, `host-channel-*`).
+const CHANNEL_KEYS: &[&str] = &["channel.person", "channel.role", "channel.badge"];
+
 /// The sentence of each key of the board (MF2 ids carry a hyphen where the key has a dot).
 fn kanban_words(texts: &Mf2Texts) -> std::collections::HashMap<String, String> {
     KANBAN_KEYS
         .iter()
+        .chain(CHANNEL_KEYS)
         .map(|k| ((*k).to_owned(), texts.plain(&k.replace('.', "-"))))
         .collect()
 }
@@ -241,14 +245,15 @@ mod tests {
         for lang in ["en", "de"] {
             let locale = Locale::from_posix(lang).expect("a locale");
             let said = kanban_words(&words(&locale));
-            assert_eq!(said.len(), KANBAN_KEYS.len());
-            for key in KANBAN_KEYS {
+            assert_eq!(said.len(), KANBAN_KEYS.len() + CHANNEL_KEYS.len());
+            for key in KANBAN_KEYS.iter().chain(CHANNEL_KEYS) {
                 let text = &said[*key];
                 assert!(
                     !text.is_empty()
                         && text != key
                         && text != &key.replace('.', "-")
-                        && !text.contains("kanban"),
+                        && !text.contains("kanban")
+                        && !text.contains("channel"),
                     "{lang}: `{key}` shows raw as `{text}`"
                 );
             }

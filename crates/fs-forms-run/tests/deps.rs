@@ -48,8 +48,8 @@ fn no_normal_dependency_leads_to_a_program_the_core_or_the_server() {
                 || rest.starts_with("forms-layout")
                 || rest.starts_with("forms-exchange")
                 || rest.starts_with("forms-run")
-                // TRANSITION (K2/K3): the client of the planning module (and what it brings) is linked for the data port
-                || rest.starts_with("modules-planning-client")
+                // the match of module and block (pure, no I/O); the data of modules comes through the port `Sources`, no module client
+                || rest.starts_with("forms-bind")
                 || rest.starts_with("jscalendar")
                 // the local head of fs-components (WIP patch, unreviewed/b3) brings the settings library
                 || rest.starts_with("settings")
@@ -60,6 +60,10 @@ fn no_normal_dependency_leads_to_a_program_the_core_or_the_server() {
                 || rest.starts_with("icons")
                 || rest.starts_with("records") // brought by fs-components-catalog (record shapes, no program)
                 || rest.starts_with("objects"); // brought by fs-rpc
+            assert!(
+                !rest.starts_with("modules-"),
+                "{n} is a module client: modules come through the port `Sources`"
+            );
             assert!(
                 allowed,
                 "{n} is a dependency: no program, core or server in the host"

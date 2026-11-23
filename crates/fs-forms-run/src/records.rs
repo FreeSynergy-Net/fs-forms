@@ -1,5 +1,5 @@
-//! The records a block draws: a port the host asks, so no block holds data of its own. In this version no provider is
-//! connected, so the real implementation is [`NoRecords`] (nothing: the blocks stay empty and say so); [`crate::SampleBoard`] is
+//! The records a block draws: a port the host asks, so no block holds data of its own. A connected module gives
+//! [`crate::FormRecords`] (rows by channel); without one the implementation is [`NoRecords`] (nothing: the blocks stay empty and say so); [`crate::SampleBoard`] is
 //! built-in, writable sample data for pictures and development (`--sample-data`), never used by a starter.
 //!
 //! The port also says which changes the records can take ([`Records::can`]) and takes them (`add_card`, `move_card`,
@@ -8,6 +8,8 @@
 //! Pattern: Port (`Records`) with a null object and a fixture.
 
 use fs_components_kanban::{Answer, Column, Operation};
+
+use crate::form_data::FormData;
 
 /// One entry of a side list (a project, a label).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -29,6 +31,10 @@ pub trait Records: Send + Sync {
     fn columns(&self) -> Vec<Column>;
     /// The entries of a side list.
     fn side(&self) -> Vec<SideItem>;
+    /// The forms the connected module offers, with the rows by channel (the blocks tree and table draw from these).
+    fn forms(&self) -> &[FormData] {
+        &[]
+    }
     /// Whether these records are made-up sample data: the window then says so (it never shows invented records as real ones).
     fn is_sample(&self) -> bool {
         false

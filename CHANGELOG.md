@@ -6,12 +6,13 @@ Version = tag; all crates of the workspace carry the same version.
 
 ### English
 
+- `fs-forms-run`: the host draws by form channel. New port `Sources` (the host that runs it connects the module services; `run_with`, `run_code_with`) and `FormRecords` (rows by channel, declaration of the module); the blocks `tree` and `table` draw the forms `tree@1.0` and `members@1.0`, the board draws `cards-in-columns@1.0`; a module that does not fit is locked with the code of the one match of `fs-forms-bind` (`form-channel-unmapped` ...), a picture run ends with 3. `--sample-data` shows the sample groups (tree and list, \"Sample data\"). Removed: the table `SOURCES`, `PlanningRecords` and the dependency on `fs-modules-planning-client`. Written with the help of Claude (Anthropic).
+- `fs-forms-bind`: the form match (G7 adapter, order SQ-2): `match_form(forms, module, components, block) -> Matched` with the rules `form-unknown`, `form-version-mismatch`, `form-channel-unmapped`, `form-basic-mismatch` (red) and `form-no-component` (yellow); `FormsSuite` with 6 rules and 6 mutants (feature `conformance`). Written with the help of Claude (Anthropic).
 - `fs-forms-run --picture`: the run ends with code 3 when the picture shows a host error (the error window); the PNG is written all the same.
 
 ### Deutsch
 
 - `fs-forms-run --picture`: rc 3, wenn das Bild einen Host-Fehler zeigt; PNG wird trotzdem geschrieben.
-- `fs-forms-bind`: the form match (G7 adapter, order SQ-2): `match_form(forms, module, components, block) -> Matched` with the rules `form-unknown`, `form-version-mismatch`, `form-channel-unmapped`, `form-basic-mismatch` (red) and `form-no-component` (yellow); `FormsSuite` with 6 rules and 6 mutants (feature `conformance`). Written with the help of Claude (Anthropic).
 
 ## 0.0.10
 

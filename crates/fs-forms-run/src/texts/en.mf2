@@ -46,3 +46,11 @@ kanban-column_name = Name of the column
 kanban-limit_placeholder = Number of cards
 kanban-limit_hint = The most cards the column should hold; 0 = no limit
 kanban-limit_invalid = That is not a whole number; type 0 for no limit
+channel-person = Person
+channel-role = Role
+channel-badge = Level
+form-unknown = The module offers a form the form catalog does not have
+form-version-mismatch = The module and the block draw different versions of the form
+form-channel-unmapped = The module leaves a required channel of the form unmapped
+form-basic-mismatch = A field of the module does not fit the kind of the channel
+form-no-component = No block draws this form; the fallback is shown

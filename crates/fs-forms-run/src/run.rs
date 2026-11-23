@@ -12,8 +12,9 @@ use crate::blocks::Blocks;
 use crate::compose::compose;
 use crate::error::{EXIT_CONTRACT, HostError};
 use crate::file::FileLink;
+use crate::form_check::lock_misfits;
 use crate::link::{LayoutLink, SocketLink};
-use crate::source::open;
+use crate::sources::{NoSources, Sources, open};
 use crate::view::View;
 use crate::window::failure;
 use crate::words::{session_locale, words};
@@ -30,15 +31,25 @@ const CODE_CONTRACT: i32 = EXIT_CONTRACT as i32;
 /// Run the command line (the words after the program name) and return the exit code.
 ///
 /// Same as [`run_code`], handed over as a process exit code (`ExitCode` has no accessor to read the number back).
-#[must_use]
 pub fn run(args: &[String]) -> ExitCode {
-    ExitCode::from(u8::try_from(run_code(args)).unwrap_or(1))
+    run_with(args, &NoSources)
+}
+
+/// [`run`] with the data sources the host offers (the starter gives the ones that connect the module services).
+pub fn run_with(args: &[String], sources: &dyn Sources) -> ExitCode {
+    ExitCode::from(u8::try_from(run_code_with(args, sources)).unwrap_or(1))
 }
 
 /// Run the command line and return the REAL exit code as a number: 0 success, 1 failure, 2 usage error, `EXIT_CONTRACT` (3)
 /// for a fatal connection or contract error. For hosts that must act on the number (an update hook in the starter, ADR 0105).
 #[must_use]
 pub fn run_code(args: &[String]) -> i32 {
+    run_code_with(args, &NoSources)
+}
+
+/// [`run_code`] with the data sources the host offers.
+#[must_use]
+pub fn run_code_with(args: &[String], sources: &dyn Sources) -> i32 {
     match parse(args) {
         Err(message) => {
             eprintln!("fs-forms-run: {message}\nTry `fs-forms-run --help`.");
@@ -62,7 +73,7 @@ pub fn run_code(args: &[String]) -> i32 {
             }
             Err(e) => end(&e),
         },
-        Ok(Command::Window(c)) => window(&c),
+        Ok(Command::Window(c)) => window(&c, sources),
     }
 }
 
@@ -83,21 +94,24 @@ fn end(e: &HostError) -> i32 {
     }
 }
 
-fn window(c: &Config) -> i32 {
+fn window(c: &Config, sources: &dyn Sources) -> i32 {
     let locale = session_locale();
     let texts = words(&locale);
     // a layout problem shown in the window: a picture run still ends with the code of that error (ADR 0094 4)
     let mut shown: Option<HostError> = None;
+    // a block whose module does not fit its form is locked with the codes of the match: a picture run ends with 3 as well
+    let mut misfit = false;
     let (view, comp, records) = match fetch(c) {
         Ok(mut view) => {
             let running = std::env::current_exe().unwrap_or_default();
-            let opened = open(c, &view, &texts, &running);
+            let opened = open(c, &view, &texts, &running, sources);
             // real records (or a source that is not there) make "data sources are not connected in this version" untrue
             if opened.connected || opened.notice.is_some() {
                 view.notices
                     .retain(|n| n.code != "host-notice-no-providers");
             }
             view.notices.extend(opened.notice);
+            misfit = lock_misfits(&mut view, opened.records.as_ref());
             let comp = compose(&view, &Blocks);
             (view, comp, opened.records)
         }
@@ -131,7 +145,7 @@ fn window(c: &Config) -> i32 {
     };
     match done {
         // the picture is written either way; the code says that the window showed an error
-        Ok(()) if c.picture.is_some() && shown.is_some() => CODE_CONTRACT,
+        Ok(()) if c.picture.is_some() && (shown.is_some() || misfit) => CODE_CONTRACT,
         Ok(()) => CODE_SUCCESS,
         Err(e) => {
             eprintln!("fs-forms-run: {e}");

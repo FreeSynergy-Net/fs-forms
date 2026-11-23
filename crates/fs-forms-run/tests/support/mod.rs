@@ -5,9 +5,6 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-#[cfg(unix)]
-pub mod service;
-
 pub struct Picture {
     pub w: u32,
     pub h: u32,

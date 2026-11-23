@@ -65,3 +65,26 @@ fn an_unknown_trigger_is_still_an_error() {
     let err = read(&file("shake"), Format::Toml).expect_err("must fail");
     assert_ne!(err, Vec::<LayoutCode>::new());
 }
+
+#[test]
+fn a_submit_action_in_format_one_is_read_and_written_on_as_format_two() {
+    // SW-3 r1: format 1 has no `elem` lines; the trigger is read the same, and the file written from it is format 2 with the trigger kept
+    let one = file("submit")
+        .lines()
+        .filter(|l| !l.starts_with("elem = "))
+        .collect::<Vec<_>>()
+        .join("\n")
+        .replace("schema = 2", "schema = 1");
+    let doc = read(&one, Format::Toml).expect("read format 1");
+    assert_eq!(doc.actions[0].v.trigger, Trigger::Submit);
+    let layout = doc.check(&OpenCatalog, &Limits::declared()).expect("check");
+    let mut out = Vec::new();
+    write_layout(&layout, Format::Toml, true, &mut out).unwrap();
+    let out = String::from_utf8(out).unwrap();
+    assert!(
+        out.starts_with("schema = 2") && out.contains("trigger = \"submit\""),
+        "{out}"
+    );
+    let again = read(&out, Format::Toml).unwrap();
+    assert_eq!(again.actions[0].v.trigger, Trigger::Submit);
+}

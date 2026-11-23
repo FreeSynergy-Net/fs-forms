@@ -5,7 +5,9 @@
 //! key and to field is in the declaration of the module (`map`), what the person may do is in `may`.
 //!
 //! The rule for the arguments (one function, [`args_of`]): for every channel the command writes, the value of the gesture is taken;
-//! without one the current value of the record (its context, e.g. `lane`); without that the channel is left out. A channel the
+//! without one, only when the gesture does not name the channel at all, the current value of the record (its context, e.g. `lane`);
+//! a channel the gesture names without a value (the place `order` of a drop at the end) is left out, NEVER filled from the record (the old
+//! place would be sent again); a channel that has neither is left out. A channel the
 //! gesture must deliver (`!`) without a value ends the call BEFORE it is sent (`form-write-missing`): the module is never asked.
 //!
 //! Pattern: Port (`Writer`: invoke and read again) + pure functions (the rule); a refusal is a code, never a panic.
@@ -93,12 +95,13 @@ pub fn args_of(
         .ok_or_else(|| Coded::new("form-write-unmapped").with("channel", channel))?;
     let mut out = Vec::new();
     for w in writes {
-        let given = values
-            .iter()
-            .find(|(c, _)| *c == w.channel)
-            .map(|(_, v)| v.as_str());
-        let context = record.and_then(|r| r.get(&w.channel));
-        let Some(value) = given.or(context) else {
+        // a channel the gesture names is the gesture's alone (an empty value: carried without a value, e.g. no place = the end);
+        // only a channel it never names takes the context of the record (`lane`). The place must never come from the record.
+        let value = match values.iter().find(|(c, _)| *c == w.channel) {
+            Some((_, v)) => Some(v.as_str()).filter(|v| !v.is_empty()),
+            None => record.and_then(|r| r.get(&w.channel)),
+        };
+        let Some(value) = value else {
             if w.required {
                 return Err(Coded::new("form-write-missing").with("channel", w.channel.clone()));
             }

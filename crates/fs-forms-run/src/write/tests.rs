@@ -41,9 +41,18 @@ fn the_arguments_are_what_the_form_says_the_command_writes_by_the_fields_of_the_
         pairs(&args),
         [("column", "doing"), ("index", "1"), ("board", "b1")]
     );
-    // without a place: `order` is optional and left out
-    let args = args_of(&d, "move", a, &gesture(&[("column", "doing")])).unwrap();
+    // without a place (named, no value): `order` is left out although the record has one (`order = 3` in the fixture)
+    let args = args_of(
+        &d,
+        "move",
+        a,
+        &gesture(&[("column", "doing"), ("order", "")]),
+    )
+    .unwrap();
     assert_eq!(pairs(&args), [("column", "doing"), ("board", "b1")]);
+    // a place the gesture does not name at all is not a place of the gesture: only the scope comes from the record
+    let args = args_of(&d, "move", a, &gesture(&[("column", "doing")])).unwrap();
+    assert!(args.iter().any(|(f, v)| f == "index" && v == "3"));
     // what the gesture carries beyond the writes is not passed on
     let args = args_of(&d, "move", a, &gesture(&[("column", "x"), ("title", "no")])).unwrap();
     assert!(!pairs(&args).iter().any(|(f, _)| *f == "title"));
@@ -215,4 +224,29 @@ fn a_locked_gesture_never_reaches_the_module_and_records_without_a_writer_cannot
         none.invoke("cards-in-columns", "move", Some("a"), &[]),
         fs_components_kanban::Answer::Refused("unsupported".into())
     );
+}
+
+#[test]
+fn a_failed_reading_after_an_accepted_call_is_no_refusal_and_says_so() {
+    // r1 SOLL 3: the module HAS written; the answer is `Accepted`, the old state stays, the failure is kept as a code
+    let w = Arc::new(FakeWriter::default());
+    *w.reload_fails.lock().unwrap() = true;
+    let r = records(&w, data());
+    let answer = r.invoke(
+        "cards-in-columns",
+        "move",
+        Some("a"),
+        &gesture(&[("column", "doing")]),
+    );
+    assert_eq!(answer, fs_components_kanban::Answer::Accepted);
+    assert_eq!(r.stale().as_deref(), Some("host-notice-data-reload"));
+    assert_eq!(r.forms().len(), 1, "the old state stays");
+    *w.reload_fails.lock().unwrap() = false;
+    r.invoke(
+        "cards-in-columns",
+        "move",
+        Some("a"),
+        &gesture(&[("column", "doing")]),
+    );
+    assert_eq!(r.stale(), None, "a good reading clears it");
 }

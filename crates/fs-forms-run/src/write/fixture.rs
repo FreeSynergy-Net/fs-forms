@@ -35,6 +35,12 @@ pub(crate) fn declared() -> ModuleForm {
         fields: vec![
             ("due".into(), Basic::DateTime),
             ("priority".into(), Basic::Text),
+            ("column".into(), Basic::Text),
+            ("title".into(), Basic::Text),
+            ("board".into(), Basic::Text),
+            ("index".into(), Basic::Number),
+            ("column_name".into(), Basic::Text),
+            ("percent".into(), Basic::Number),
         ],
     }
 }
@@ -47,6 +53,7 @@ pub(crate) fn row(key: &str, column: &str, label: &str, may: &[&str]) -> FormRow
             ("column", column),
             ("column-label", label),
             ("lane", "b1"),
+            ("order", "3"),
         ],
     )
     .allowing(may)
@@ -73,6 +80,7 @@ pub(crate) struct FakeWriter {
     pub refuse: Mutex<Option<String>>,
     pub reloads: Mutex<usize>,
     pub after: Mutex<Vec<FormData>>,
+    pub reload_fails: Mutex<bool>,
 }
 
 impl Writer for FakeWriter {
@@ -85,6 +93,9 @@ impl Writer for FakeWriter {
     }
     fn reload(&self) -> Result<Vec<FormData>, Coded> {
         *self.reloads.lock().unwrap() += 1;
+        if *self.reload_fails.lock().unwrap() {
+            return Err(Coded::new("host-notice-data-unreachable"));
+        }
         let after = self.after.lock().unwrap().clone();
         Ok(if after.is_empty() {
             vec![data()]

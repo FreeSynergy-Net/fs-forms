@@ -20,11 +20,11 @@ path = "src/main.rs"
 # ONLY the client and fs-components (ADR 0094 draft, item 6): never -core and never -server (a test checks `cargo tree`).
 fs-forms-client = { path = "../fs-forms-client" }
 # One tag of fs-components for everything; Blinc comes only through it (`fs_components::blinc`), never as a dependency here.
-fs-components = { git = "https://github.com/FreeSynergy/fs-components", rev = "520c763497180d55d92e4f599eb39634bb46b78a" }
-fs-components-app = { git = "https://github.com/FreeSynergy/fs-components", rev = "520c763497180d55d92e4f599eb39634bb46b78a" }
-fs-components-widgets = { git = "https://github.com/FreeSynergy/fs-components", rev = "520c763497180d55d92e4f599eb39634bb46b78a" }
-fs-components-mf2 = { git = "https://github.com/FreeSynergy/fs-components", rev = "520c763497180d55d92e4f599eb39634bb46b78a" }
-fs-components-words = { git = "https://github.com/FreeSynergy/fs-components", rev = "520c763497180d55d92e4f599eb39634bb46b78a" }
+fs-components = { git = "https://github.com/FreeSynergy/fs-components", rev = "45dbef3663a8e018cd4901e2ef0cdb4778e618a1" }
+fs-components-app = { git = "https://github.com/FreeSynergy/fs-components", rev = "45dbef3663a8e018cd4901e2ef0cdb4778e618a1" }
+fs-components-widgets = { git = "https://github.com/FreeSynergy/fs-components", rev = "45dbef3663a8e018cd4901e2ef0cdb4778e618a1" }
+fs-components-mf2 = { git = "https://github.com/FreeSynergy/fs-components", rev = "45dbef3663a8e018cd4901e2ef0cdb4778e618a1" }
+fs-components-words = { git = "https://github.com/FreeSynergy/fs-components", rev = "45dbef3663a8e018cd4901e2ef0cdb4778e618a1" }
 
 
 # The manifest of the frontend goes where the starter looks (`<XDG_DATA_DIRS>/freesynergy/frontends/<program>/<id>.metainfo.xml`):

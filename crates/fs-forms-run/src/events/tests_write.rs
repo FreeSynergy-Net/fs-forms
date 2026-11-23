@@ -148,3 +148,31 @@ fn a_control_stays_locked_while_the_module_says_nothing_may_be_done() {
     };
     assert!(!on.supports(Operation::Move) && !on.supports(Operation::AddCard));
 }
+
+#[test]
+fn a_drop_at_the_end_of_another_column_sends_no_place_even_when_the_record_has_one() {
+    // r1 MUSS 1: the fixture card `a` has `order = 3`; a drop without an index (the end) must not send the old place
+    let w = Arc::new(FakeWriter::default());
+    let on = wiring(described(), &w);
+    assert_eq!(
+        on.move_card_at("a", "todo", "doing", None),
+        Answer::Accepted
+    );
+    let calls = w.calls.lock().unwrap();
+    let args: Vec<_> = calls[0]
+        .args
+        .iter()
+        .map(|(a, b)| (a.as_str(), b.as_str()))
+        .collect();
+    assert_eq!(args, [("column", "doing"), ("board", "b1")]);
+}
+
+#[test]
+fn the_board_uses_the_write_port_of_the_component_not_a_copy_of_its_gestures() {
+    // r1 MUSS 3: the gesture reaches the module through `FormEvents`/`FormSupports` (fs-components-kanban) over the port
+    let src = include_str!("../events.rs");
+    assert!(src.contains("FormEvents::new(") && src.contains("FormSupports::new("));
+    for literal in ["\"column\"", "\"order\"", "\"title\""] {
+        assert!(!src.contains(literal), "the host names {literal}");
+    }
+}

@@ -64,6 +64,11 @@ pub trait Records: Send + Sync {
     fn is_sample(&self) -> bool {
         false
     }
+    /// The code (`host-notice-data-reload`) when the module accepted a call but reading it again failed: the module HAS written and the
+    /// board still shows the old state. `None` = nothing stale.
+    fn stale(&self) -> Option<String> {
+        None
+    }
     /// The sentence that says why the data source the description names is not there (the window shows it as a problem in its
     /// status line); `None` when the records are what they claim to be.
     fn unavailable(&self) -> Option<String> {

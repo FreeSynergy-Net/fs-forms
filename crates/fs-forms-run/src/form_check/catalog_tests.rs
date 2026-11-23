@@ -159,3 +159,30 @@ fn records_and_command_channels_carry_no_field_types() {
         }
     }
 }
+
+/// r1 MUSS 2: a block that needs `cards-in-columns@^1.0.0` draws up to the HIGHEST version of the catalog (`1.1.0`, after `1.0.0`
+/// in the file): the module of the fixture (`1.1.0`) fits and the board is not locked. Mutant: first version of the name (`find`)
+/// instead of the highest = `form-version-mismatch`.
+#[test]
+fn a_module_with_the_highest_version_of_the_form_does_not_lock_the_board() {
+    let board = crate::blocks::forms_of_blocks()
+        .into_iter()
+        .find(|(_, forms)| forms.iter().any(|f| f.name() == "cards-in-columns"))
+        .map(|(block, _)| block)
+        .expect("a block draws cards-in-columns");
+    let w = std::sync::Arc::new(crate::write::fixture::FakeWriter::default());
+    let records = crate::write::fixture::records(&w, crate::write::fixture::data());
+    assert_eq!(super::problems(&board, &records), Vec::new());
+    let ours = super::components();
+    let drawn = ours
+        .iter()
+        .find(|c| c.block == board)
+        .and_then(|c| c.forms.iter().find(|f| f.name == "cards-in-columns"))
+        .expect("the component is listed");
+    assert!(
+        (drawn.major, drawn.minor) >= (1, 1),
+        "{}.{}",
+        drawn.major,
+        drawn.minor
+    );
+}

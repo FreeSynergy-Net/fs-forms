@@ -22,26 +22,51 @@ pub(crate) fn check_range(text: &str, out: &mut Problems) {
     }
 }
 
-fn range_ok(text: &str) -> bool {
-    let (name, req) = split_range(text);
+/// The two bounds of a checked range, read once from the parsed `VersionReq` (the one reader of the numbers).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RangeBounds<'a> {
+    /// Capability name.
+    pub name: &'a str,
+    /// Lower bound `>=` as (major, minor, patch).
+    pub low: (u64, u64, u64),
+    /// Upper bound `<` as (major, minor, patch).
+    pub below: (u64, u64, u64),
+}
+
+/// Reads `name@>=a.b.c, <d.e.f`: the one accepted spelling is the one `semver` prints (comma and one space, no space after an operator),
+/// exactly one `>=` and one `<`, no pre-release or build part (as `fs-interfaces`), lower below upper. `None` when anything differs.
+#[must_use]
+pub fn range_bounds(text: &str) -> Option<RangeBounds<'_>> {
+    let (name, req_text) = split_range(text);
     let name_ok = !name.is_empty()
         && name
             .chars()
             .all(|c| c.is_ascii_alphanumeric() || "-_.".contains(c));
-    let Ok(req) = VersionReq::parse(req) else {
-        return false;
-    };
+    let req = VersionReq::parse(req_text).ok()?;
+    if req.to_string() != req_text {
+        return None;
+    }
     let bound = |op: Op| {
         let mut it = req.comparators.iter().filter(|c| c.op == op);
         let first = it.next()?;
         it.next().is_none().then_some(first)
     };
     let key = |c: &Comparator| (c.major, c.minor.unwrap_or(0), c.patch.unwrap_or(0));
-    req.comparators.len() == 2
+    let (l, h) = bound(Op::GreaterEq).zip(bound(Op::Less))?;
+    (req.comparators.len() == 2
         && name_ok
-        && bound(Op::GreaterEq)
-            .zip(bound(Op::Less))
-            .is_some_and(|(l, h)| key(l) < key(h))
+        && l.pre.is_empty()
+        && h.pre.is_empty()
+        && key(l) < key(h))
+    .then(|| RangeBounds {
+        name,
+        low: key(l),
+        below: key(h),
+    })
+}
+
+fn range_ok(text: &str) -> bool {
+    range_bounds(text).is_some()
 }
 
 fn key_ok(k: &str) -> bool {

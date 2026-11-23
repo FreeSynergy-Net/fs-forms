@@ -42,7 +42,7 @@ mod words;
 
 pub use apply::apply;
 pub use check::{CatalogRules, OpenCatalog};
-pub use check_text::split_range;
+pub use check_text::{RangeBounds, range_bounds, split_range};
 pub use codes::{LayoutCode, TEXTS_DE, TEXTS_EN};
 pub use doc::*;
 pub use ids::{

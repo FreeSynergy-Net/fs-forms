@@ -37,28 +37,23 @@ pub(crate) fn elem<T>(i: &Item<T>) -> Cell {
     text(i.elem.as_ref().map_or("", |e| e.as_str()))
 }
 
-/// Splits `name@>=a.b, <c.d` into its capability and four integers. The check of the layout guarantees both bounds.
+/// Splits `name@>=a.b.c, <d.e.f` into its capability and four integers, read from the parsed bounds of the layout check.
+/// A patch other than 0 is refused (the table holds major and minor only; patch columns wait for the contract, V-2).
 pub(crate) fn range_parts(range: &str) -> Result<(String, [i64; 4]), Coded<LayoutCode>> {
-    let (name, req) = fs_forms_layout::split_range(range);
-    let name = name.to_owned();
-    let mut v = [0_i64; 4];
-    for tok in req.split(',').map(str::trim) {
-        let (slot, rest) = match tok.strip_prefix(">=") {
-            Some(r) => (0, r),
-            None => (2, tok.trim_start_matches('<')),
-        };
-        let mut parts = rest.splitn(3, '.');
-        let (a, b) = (parts.next().unwrap_or("0"), parts.next().unwrap_or("0"));
-        if parts.next().is_some_and(|p| p.parse::<u64>() != Ok(0)) {
-            // The table holds major and minor only: refuse, never cut the patch off (patch columns wait for the contract, V-2).
-            return Err(Coded::new(LayoutCode::ExportFailed)
-                .with("cause", "range-patch")
-                .with("range", range));
-        }
-        v[slot] = a.parse().unwrap_or(0);
-        v[slot + 1] = b.parse().unwrap_or(0);
+    let refuse = |cause: &'static str| {
+        Coded::new(LayoutCode::ExportFailed)
+            .with("cause", cause)
+            .with("range", range)
+    };
+    let b = fs_forms_layout::range_bounds(range).ok_or_else(|| refuse("range-invalid"))?;
+    let n = |x: u64| i64::try_from(x).map_err(|_| refuse("range-invalid"));
+    if b.low.2 != 0 || b.below.2 != 0 {
+        return Err(refuse("range-patch"));
     }
-    Ok((name, v))
+    Ok((
+        b.name.to_owned(),
+        [n(b.low.0)?, n(b.low.1)?, n(b.below.0)?, n(b.below.1)?],
+    ))
 }
 
 /// The text range of the four integers of a `requires` or `source` row, e.g. `tasks@>=0.2, <0.3`.
@@ -202,5 +197,19 @@ mod range_tests {
             let e = range_parts(text).unwrap_err();
             assert_eq!(e.param("cause"), Some("range-patch"), "{text}");
         }
+    }
+
+    #[test]
+    fn a_range_the_check_would_refuse_is_never_exported_as_zeros() {
+        // semver accepts blanks after an operator; the one spelling is `>=1.2, <2.0`. The old hand reader gave [0, 2, 0, 0] for the first.
+        for text in [
+            "tasks@>= 1.2, < 2.0",
+            "tasks@>=0.2.0-rc.1, <0.3",
+            "tasks@>=0.3, <0.2",
+        ] {
+            let e = range_parts(text).unwrap_err();
+            assert_eq!(e.param("cause"), Some("range-invalid"), "{text}");
+        }
+        assert_eq!(range_parts("tasks@>=1.2, <2.0").unwrap().1, [1, 2, 2, 0]);
     }
 }

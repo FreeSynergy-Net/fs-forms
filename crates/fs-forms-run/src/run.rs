@@ -86,6 +86,8 @@ fn end(e: &HostError) -> i32 {
 fn window(c: &Config) -> i32 {
     let locale = session_locale();
     let texts = words(&locale);
+    // a layout problem shown in the window: a picture run still ends with the code of that error (ADR 0094 4)
+    let mut shown: Option<HostError> = None;
     let (view, comp, records) = match fetch(c) {
         Ok(mut view) => {
             let running = std::env::current_exe().unwrap_or_default();
@@ -103,6 +105,7 @@ fn window(c: &Config) -> i32 {
         Err(e) if e.fatal() => return end(&e),
         Err(e) => {
             eprintln!("fs-forms-run: {e}");
+            shown = Some(e.clone());
             let none: std::sync::Arc<dyn crate::records::Records> =
                 std::sync::Arc::new(crate::records::NoRecords);
             (View::default(), failure(&e), none)
@@ -127,6 +130,8 @@ fn window(c: &Config) -> i32 {
         None => launch(WindowOptions::default(), widget),
     };
     match done {
+        // the picture is written either way; the code says that the window showed an error
+        Ok(()) if c.picture.is_some() && shown.is_some() => CODE_CONTRACT,
         Ok(()) => CODE_SUCCESS,
         Err(e) => {
             eprintln!("fs-forms-run: {e}");

@@ -24,6 +24,11 @@ pub fn out_dir() -> (Option<tempfile::TempDir>, PathBuf) {
 }
 
 pub fn draw(args: &[&str], scheme: &str, path: &Path) -> Option<Picture> {
+    draw_code(args, scheme, path, 0)
+}
+
+/// Like `draw`, for a run that ends with the exit code `code` (the picture is written anyway).
+pub fn draw_code(args: &[&str], scheme: &str, path: &Path, code: i32) -> Option<Picture> {
     let out = Command::new(env!("CARGO_BIN_EXE_fs-forms-run"))
         .args(args)
         .arg("--picture")
@@ -36,7 +41,7 @@ pub fn draw(args: &[&str], scheme: &str, path: &Path) -> Option<Picture> {
         .output()
         .unwrap();
     let err = String::from_utf8_lossy(&out.stderr).into_owned();
-    if out.status.code() != Some(0) {
+    if out.status.code() != Some(code) {
         assert!(
             err.to_lowercase().contains("graphics") || err.to_lowercase().contains("adapter"),
             "failed for another reason: {err}"

@@ -42,6 +42,8 @@ pub enum FormFlaw {
     BasicOff,
     /// `form-no-component` is not reported (a missing component counts as green).
     NoComponentOff,
+    /// Only the first type of a channel's set counts (the set is ignored).
+    SetFirstOnly,
     /// An optional channel without a field is reported as unmapped (too strict).
     OptionalRequired,
 }
@@ -160,7 +162,14 @@ fn channels(def: &FormDef, module: &ModuleForm, flaw: Option<FormFlaw>) -> Vec<C
             continue;
         }
         // `records` and `command` name a type or a command of the module, not a field with a basic type.
-        if matches!(ch.grundtyp, Grundtyp::Records | Grundtyp::Command) {
+        let types: &[Grundtyp] = match flaw {
+            Some(FormFlaw::SetFirstOnly) => &ch.grundtypen[..ch.grundtypen.len().min(1)],
+            _ => &ch.grundtypen,
+        };
+        if types
+            .iter()
+            .all(|g| matches!(g, Grundtyp::Records | Grundtyp::Command))
+        {
             continue;
         }
         if flaw == Some(FormFlaw::BasicOff) {
@@ -173,13 +182,20 @@ fn channels(def: &FormDef, module: &ModuleForm, flaw: Option<FormFlaw>) -> Vec<C
                 .iter()
                 .find(|(n, _)| n == field)
                 .map(|(_, b)| *b);
-            if !basic.is_some_and(|b| ch.grundtyp.takes(b)) {
+            if !basic.is_some_and(|b| types.iter().any(|g| g.takes(b))) {
                 out.push(
                     Coded::new("form-basic-mismatch")
                         .with("form", def.name.clone())
                         .with("channel", ch.name.clone())
                         .with("field", field.clone())
-                        .with("grundtyp", ch.grundtyp.name()),
+                        .with(
+                            "grundtyp",
+                            ch.grundtypen
+                                .iter()
+                                .map(|g| g.name())
+                                .collect::<Vec<_>>()
+                                .join("|"),
+                        ),
                 );
             }
         }

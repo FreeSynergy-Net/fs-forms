@@ -1,8 +1,8 @@
 //! `FormsSuite` (feature `conformance`): the rules of the form match, each proven by one mutant (the matcher with that rule off).
 //!
 //! Rules: `form.unknown`, `form.version-mismatch`, `form.channel-unmapped`, `form.basic-mismatch`, `form.no-component`, and the
-//! negative rule `form.optional-free` (an optional channel left out stays green). Same shape as [`super::PlanSuite`]:
-//! every rule has exactly one mutant, `prove` needs 6 of 6 and a green base.
+//! rule `form.type-set` (a channel type is a set) and the negative rule `form.optional-free` (an optional channel left out stays green). Same shape as [`super::PlanSuite`]:
+//! every rule has exactly one mutant, `prove` needs 7 of 7 and a green base.
 //!
 //! Pattern: Specification suite + mutants.
 
@@ -18,6 +18,7 @@ tree@1.0 | Tree | planned | t\n\
 #   parent     | Art: reference | Grundtyp: reference | Pflicht: ja (`!`) | Anzahl: offen\n\
 #   label      | Art: text      | Grundtyp: text | Pflicht: ja (`!`) | Anzahl: offen\n\
 #   edge-kind  | Art: grouping  | Grundtyp: text | Pflicht: nein | Anzahl: offen\n\
+#   facts      | Art: text|number|time|flag | Pflicht: nein | Anzahl: 0 bis 4\n\
 tree@1.1 | Tree | planned | t\n\
 #   nodes      | Art: records   | Grundtyp: records | Pflicht: ja (`!`) | Anzahl: offen\n\
 #   parent     | Art: reference | Grundtyp: reference | Pflicht: ja (`!`) | Anzahl: offen\n\
@@ -92,6 +93,33 @@ fn basic(m: Matcher<'_>, f: &[FormDef]) -> Result<(), String> {
     red_with(&m(f, &unlisted, &[tree_component()]), "form-basic-mismatch")
 }
 
+/// A channel with a SET of types takes a field of any type in the set, and refuses one outside it.
+fn type_set(m: Matcher<'_>, f: &[FormDef]) -> Result<(), String> {
+    let facts = |basic: Basic| {
+        let mut module = tree_module();
+        module.fields.push(("extra".into(), basic));
+        module.map.push(("facts".into(), vec!["extra".into()]));
+        module
+    };
+    for (basic, in_set) in [
+        (Basic::Text, true),
+        (Basic::Number, true),
+        (Basic::DateTime, true),
+        (Basic::Bool, true),
+        (Basic::Image, false),
+    ] {
+        let got = m(f, &facts(basic), &[tree_component()]);
+        if in_set {
+            if got != Matched::Blocks(vec!["tree".into()]) {
+                return Err(format!("{basic:?} is in the set of `facts`, got {got:?}"));
+            }
+        } else {
+            red_with(&got, "form-basic-mismatch")?;
+        }
+    }
+    Ok(())
+}
+
 fn no_component(m: Matcher<'_>, f: &[FormDef]) -> Result<(), String> {
     for none in [
         Vec::new(),
@@ -122,12 +150,13 @@ fn optional_free(m: Matcher<'_>, f: &[FormDef]) -> Result<(), String> {
 }
 
 /// The rules with their check, and the mutant each one must catch.
-const RULES: [(&str, Check, FormFlaw); 6] = [
+const RULES: [(&str, Check, FormFlaw); 7] = [
     ("form.unknown", unknown, FormFlaw::UnknownOff),
     ("form.version-mismatch", version, FormFlaw::VersionOff),
     ("form.channel-unmapped", unmapped, FormFlaw::UnmappedOff),
     ("form.basic-mismatch", basic, FormFlaw::BasicOff),
     ("form.no-component", no_component, FormFlaw::NoComponentOff),
+    ("form.type-set", type_set, FormFlaw::SetFirstOnly),
     (
         "form.optional-free",
         optional_free,

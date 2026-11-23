@@ -93,8 +93,8 @@ pub enum Count {
 pub struct Channel {
     /// Channel name (`label`, `parent` …).
     pub name: String,
-    /// The base type.
-    pub grundtyp: Grundtyp,
+    /// The allowed base types: a SET (`text|number|time|flag` for `facts`); a field fits when its type is in the set.
+    pub grundtypen: Vec<Grundtyp>,
     /// Required (`!`): the module must map it.
     pub required: bool,
     /// How many fields.

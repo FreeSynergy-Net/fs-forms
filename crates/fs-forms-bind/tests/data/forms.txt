@@ -15,7 +15,7 @@ cards-in-columns@1.0 | Cards in columns | planned | Cards sorted into columns, e
 #   cards      | Art: records  | Pflicht: ja (`!`) | Anzahl: offen
 #   column     | Art: grouping | Pflicht: ja (`!`) | Anzahl: offen
 #   title      | Art: text     | Pflicht: ja (`!`) | Anzahl: offen
-#   facts      | Art: any      | Pflicht: nein     | Anzahl: 0 bis 4 (`≤4`)
+#   facts      | Art: text|number|time|flag | Pflicht: nein     | Anzahl: 0 bis 4 (`≤4`)
 #   lane       | Art: grouping | Pflicht: nein     | Anzahl: offen
 #   move       | Art: command  | Pflicht: nein     | Anzahl: offen
 
@@ -45,7 +45,7 @@ tiles@1.0 | Tiles | planned | A grid of tiles with a preview picture, name and a
 #   kind       | Art: grouping  | Grundtyp: offen    | Pflicht: nein     | Anzahl: 0 oder 1 (C: Kind screen|window, :42 / F: mediaType, :25; chooses icon and filter)
 #   time       | Art: time      | Grundtyp: DateTime | Pflicht: nein     | Anzahl: 0 oder 1 (C: time, :40 / F: updated, :34)
 #   size       | Art: number    | Grundtyp: offen    | Pflicht: nein     | Anzahl: 0 oder 1 (F: size :27 is decimal TEXT today, "no quantity kind in fs-types yet" :26: the module must give a derived number or leave it out; C has only pixels width/height, no byte size)
-#   facts      | Art: any       | Grundtyp: offen    | Pflicht: nein     | Anzahl: 0 bis 4 (`≤4`)  (like cards-in-columns facts; C: program app_name :46, width x height :48-50 go here; F: folder :29, state :30-32)
+#   facts      | Art: text|number|time|flag | Grundtyp: offen    | Pflicht: nein     | Anzahl: 0 bis 4 (`≤4`)  (like cards-in-columns facts; C: program app_name :46, width x height :48-50 go here; F: folder :29, state :30-32)
 #   order      | Art: order     | Grundtyp: offen    | Pflicht: nein     | Anzahl: 0 oder 1 (C: nr :38 numbering; tile-grid shows numbered tiles, W frames.toml:97-105 `number`)
 #   open       | Art: command   | Grundtyp: offen    | Pflicht: nein     | Anzahl: 0 oder 1 (open/preview of one tile; command ids per E:36, e.g. `capture.shot`; concrete id: offen)
 #   Why: the two sources share name, a point in time, a kind and a few facts; they differ in preview (capture has the picture, files has none) and size (files only). So preview/size/time/kind are optional and facts takes the rest. Only `items` and `label` are required, so every module with a name per record can fill the form.

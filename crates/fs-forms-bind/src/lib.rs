@@ -52,7 +52,7 @@ pub use commands::{Shown, command_id, command_plan, command_state};
 #[cfg(feature = "testing")]
 pub use form_match::match_form_flawed;
 pub use form_match::{FormFlaw, Matched, match_form};
-pub use forms::{Channel, ComponentForms, Count, FormDef, FormRef, Grundtyp, ModuleForm};
+pub use forms::{Channel, ComponentForms, Count, FormDef, FormRef, Grundtyp, Kind, ModuleForm};
 pub use fs_components_commands::{
     CommandId, FocusContext, KeyPress, Keymap, Modifiers, Outcome, Platform, Shortcut,
 };

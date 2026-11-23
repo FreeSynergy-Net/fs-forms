@@ -1,86 +1,91 @@
-//! Test doubles of the form match (feature `testing`): a reader of the DRAFT `forms.txt` and a small cards form by hand.
+//! Test doubles of the form match (feature `testing`): a small catalog and a tree module and component by hand.
 //!
-//! The real reader will be `fs_interfaces::forms` (order SQ-1b); until it is pinned, this reads the same lines. Channel lines
-//! are `#   name | Art: x | [Grundtyp: y |] Pflicht: ja (`!`) | Anzahl: z`. The type is a SET of the seven words
-//! (`text|number|time|flag`); `Grundtyp` wins over `Art`; older `Art` words map: grouping -> text, order -> number, any -> text.
+//! The real catalog is `fs_interfaces::forms` (read by the host, `fs-forms-run`, which tests the match against it); bind reads no
+//! form file. The field types a channel takes are written out here because this is a fixture of the matcher, not a second table:
+//! the host fills them from `Art::allowed_basics` of `fs-interfaces`.
 //!
-//! Pattern: Test double + parser of a line format (no I/O: the text comes from the caller).
+//! Pattern: Test double (no I/O).
 
-use crate::coded::Coded;
-use crate::forms::{Channel, ComponentForms, Count, FormDef, FormRef, Grundtyp, ModuleForm};
+use crate::forms::{Channel, ComponentForms, Count, FormDef, FormRef, Grundtyp, Kind, ModuleForm};
 use crate::types::Basic;
 
-/// Reads the form lines and their channel comment lines of a `forms.txt`.
-///
-/// # Errors
-/// `form-catalog-invalid{line}` for a line that cannot be read (never skipped silently).
-pub fn parse_forms_txt(text: &str) -> Result<Vec<FormDef>, Coded> {
-    let mut out: Vec<FormDef> = Vec::new();
-    for (n, line) in text.lines().enumerate() {
-        let bad = || Coded::new("form-catalog-invalid").with("line", (n + 1).to_string());
-        if let Some(rest) = line.strip_prefix('#') {
-            let cols: Vec<&str> = rest.split('|').map(str::trim).collect();
-            let channel = rest.starts_with("   ") && cols.iter().any(|c| c.starts_with("Pflicht:"));
-            if channel {
-                let def = out.last_mut().ok_or_else(bad)?;
-                def.channels.push(read_channel(&cols).ok_or_else(bad)?);
-            }
-        } else if line.contains('|') {
-            let key = line.split('|').next().unwrap_or("").trim();
-            let (name, version) = key.split_once('@').ok_or_else(bad)?;
-            let (major, minor) = version.split_once('.').ok_or_else(bad)?;
-            out.push(FormDef {
-                name: name.to_owned(),
-                major: major.parse().map_err(|_| bad())?,
-                minor: minor.parse().map_err(|_| bad())?,
-                channels: Vec::new(),
-            });
-        }
+fn kind(grundtyp: Grundtyp, basics: &[Basic]) -> Kind {
+    Kind {
+        grundtyp,
+        basics: basics.to_vec(),
     }
-    Ok(out)
 }
 
-fn read_channel(cols: &[&str]) -> Option<Channel> {
-    // A set is written `text|number|time|flag`; the line is cut at `|`, so bare type words after a key belong to that key.
-    let mut keyed: Vec<(&str, Vec<&str>)> = Vec::new();
-    for col in cols.iter().skip(1) {
-        match col.split_once(':') {
-            Some((k, v)) if k.chars().all(char::is_alphabetic) => keyed.push((k, vec![v.trim()])),
-            _ if Grundtyp::from_name(col).is_some() => keyed.last_mut()?.1.push(col),
-            _ => {}
-        }
-    }
-    let value = |key: &str| {
-        keyed
-            .iter()
-            .find(|(k, _)| *k == key)
-            .map(|(_, v)| v.as_slice())
-    };
-    let set = |words: &[&str]| -> Option<Vec<Grundtyp>> {
-        words.iter().map(|w| Grundtyp::from_name(w)).collect()
-    };
-    let art = value("Art")?;
-    let grundtypen = value("Grundtyp")
-        .and_then(set)
-        .or_else(|| set(art))
-        .or(match art[0] {
-            "grouping" | "any" => Some(vec![Grundtyp::Text]),
-            "order" => Some(vec![Grundtyp::Number]),
-            _ => None,
-        })?;
-    let required = value("Pflicht")?[0].starts_with("ja");
-    let count = match value("Anzahl").map_or("offen", |v| v[0]) {
-        s if s.starts_with("1 ") || s == "1" => Count::One,
-        s if s.starts_with("0 oder 1") => Count::ZeroOrOne,
-        s if s.starts_with("0 bis 4") => Count::ZeroToN(Some(4)),
-        _ => Count::ZeroToN(None),
-    };
-    Some(Channel {
-        name: (*cols.first()?).to_owned(),
-        grundtypen,
+fn channel(name: &str, kinds: Vec<Kind>, required: bool, min: u32, max: Option<u32>) -> Channel {
+    Channel {
+        name: name.to_owned(),
+        kinds,
         required,
-        count,
-    })
+        count: Count { min, max },
+    }
+}
+
+/// The fixture catalog: `tree@1.0` and `tree@1.1` (one optional channel more).
+#[must_use]
+pub fn fixture_catalog() -> Vec<FormDef> {
+    let nodes = || channel("nodes", vec![kind(Grundtyp::Records, &[])], true, 0, None);
+    let parent = || {
+        channel(
+            "parent",
+            vec![kind(Grundtyp::Reference, &[Basic::Reference])],
+            true,
+            0,
+            None,
+        )
+    };
+    let text = [
+        Basic::Text,
+        Basic::Email,
+        Basic::Choice,
+        Basic::Keywords,
+        Basic::Link,
+    ];
+    let label = || channel("label", vec![kind(Grundtyp::Text, &text)], true, 1, Some(1));
+    let facts = channel(
+        "facts",
+        vec![
+            kind(Grundtyp::Text, &text),
+            kind(Grundtyp::Number, &[Basic::Number]),
+            kind(Grundtyp::Time, &[Basic::Date, Basic::DateTime]),
+            kind(Grundtyp::Flag, &[Basic::Bool]),
+        ],
+        false,
+        0,
+        Some(4),
+    );
+    let edge_kind = channel(
+        "edge-kind",
+        vec![kind(Grundtyp::Text, &text)],
+        false,
+        0,
+        None,
+    );
+    let mark = channel(
+        "mark",
+        vec![kind(Grundtyp::Flag, &[Basic::Bool])],
+        false,
+        0,
+        Some(1),
+    );
+    vec![
+        FormDef {
+            name: "tree".into(),
+            major: 1,
+            minor: 0,
+            channels: vec![nodes(), parent(), label(), edge_kind, facts],
+        },
+        FormDef {
+            name: "tree".into(),
+            major: 1,
+            minor: 1,
+            channels: vec![nodes(), parent(), label(), mark],
+        },
+    ]
 }
 
 /// A form reference `name@H.N`.

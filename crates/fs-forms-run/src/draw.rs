@@ -136,20 +136,29 @@ fn nodes(rows: &[FormRow], parent: Option<&str>, seen: &mut Vec<String>) -> Vec<
     out
 }
 
-/// The roots: rows without a parent, and rows whose parent is not in the data (shown at the top, never dropped).
+/// The roots: rows without a parent, rows whose parent is not in the data (shown at the top), and then every row still unseen,
+/// which can only be a pure loop (a -> b -> a): the first of it becomes a root, the loop is cut there. Never dropped.
 fn roots(rows: &[FormRow]) -> Vec<TreeNode> {
     let mut seen = Vec::new();
     let mut out = nodes(rows, None, &mut seen);
+    let mut root = |row: &FormRow, seen: &mut Vec<String>| {
+        seen.push(row.key.clone());
+        let mut node = TreeNode::new(&row.key, row.get("label").unwrap_or(&row.key));
+        node.children = nodes(rows, Some(&row.key), seen);
+        node.open = true;
+        out.push(node);
+    };
     for row in rows {
         let orphan = row
             .get("parent")
             .is_some_and(|p| !rows.iter().any(|r| r.key == p));
         if orphan && !seen.contains(&row.key) {
-            seen.push(row.key.clone());
-            let mut node = TreeNode::new(&row.key, row.get("label").unwrap_or(&row.key));
-            node.children = nodes(rows, Some(&row.key), &mut seen);
-            node.open = true;
-            out.push(node);
+            root(row, &mut seen);
+        }
+    }
+    for row in rows {
+        if !seen.contains(&row.key) {
+            root(row, &mut seen);
         }
     }
     out
@@ -211,12 +220,23 @@ mod tests {
     fn a_loop_in_the_data_ends() {
         let rows = [row("a", "b"), row("b", "a")];
         assert!(nodes(&rows, Some("b"), &mut Vec::new()).len() <= 1);
-        assert!(
+        // a pure loop is not lost: both records are shown, once each
+        assert_eq!(
             roots(&rows)
                 .iter()
                 .map(fs_components_widgets::TreeNode::count)
-                .sum::<usize>()
-                <= 2
+                .sum::<usize>(),
+            2
         );
+    }
+
+    #[test]
+    fn a_loop_beside_a_normal_tree_loses_nothing() {
+        let rows = [row("a", ""), row("b", "a"), row("x", "y"), row("y", "x")];
+        let total: usize = roots(&rows)
+            .iter()
+            .map(fs_components_widgets::TreeNode::count)
+            .sum();
+        assert_eq!(total, 4);
     }
 }

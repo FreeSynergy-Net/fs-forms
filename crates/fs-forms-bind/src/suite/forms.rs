@@ -6,24 +6,10 @@
 //!
 //! Pattern: Specification suite + mutants.
 
-use crate::form_fixtures::{form_ref, parse_forms_txt, tree_component, tree_module};
+use crate::form_fixtures::{fixture_catalog, form_ref, tree_component, tree_module};
 use crate::form_match::{FormFlaw, Matched, match_form, match_form_flawed};
 use crate::forms::{ComponentForms, FormDef, ModuleForm};
 use crate::types::Basic;
-
-/// The fixture catalog: `tree@1.0` and `tree@1.1` (one optional channel more).
-const CATALOG: &str = "\
-tree@1.0 | Tree | planned | t\n\
-#   nodes      | Art: records   | Grundtyp: records | Pflicht: ja (`!`) | Anzahl: offen\n\
-#   parent     | Art: reference | Grundtyp: reference | Pflicht: ja (`!`) | Anzahl: offen\n\
-#   label      | Art: text      | Grundtyp: text | Pflicht: ja (`!`) | Anzahl: 1\n\
-#   edge-kind  | Art: grouping  | Grundtyp: text | Pflicht: nein | Anzahl: offen\n\
-#   facts      | Art: text|number|time|flag | Pflicht: nein | Anzahl: 0 bis 4\n\
-tree@1.1 | Tree | planned | t\n\
-#   nodes      | Art: records   | Grundtyp: records | Pflicht: ja (`!`) | Anzahl: offen\n\
-#   parent     | Art: reference | Grundtyp: reference | Pflicht: ja (`!`) | Anzahl: offen\n\
-#   label      | Art: text      | Grundtyp: text | Pflicht: ja (`!`) | Anzahl: 1\n\
-#   mark       | Art: flag      | Grundtyp: flag | Pflicht: nein | Anzahl: 0 oder 1\n";
 
 /// The matcher a rule runs against (the real one, or one with a flaw).
 type Matcher<'a> = &'a dyn Fn(&[FormDef], &ModuleForm, &[ComponentForms]) -> Matched;
@@ -229,9 +215,7 @@ impl FormsSuite {
     /// Runs every rule against a matcher: the failing rules with the reason.
     #[must_use]
     pub fn run(matcher: Matcher<'_>) -> Vec<(&'static str, String)> {
-        let Ok(forms) = parse_forms_txt(CATALOG) else {
-            return vec![("form.fixture", "fixture catalog unreadable".into())];
-        };
+        let forms = fixture_catalog();
         RULES
             .iter()
             .filter_map(|(name, check, _)| check(matcher, &forms).err().map(|why| (*name, why)))

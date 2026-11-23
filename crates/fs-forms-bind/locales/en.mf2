@@ -17,3 +17,9 @@ bind-error-field-hidden = hidden ({$reason})
 bind-error-settings-defaults = Settings cannot be reached; defaults apply.
 bind-error-no-selection = Select an item first.
 bind-error-elem-orphan = A note about the description refers to an element that no longer exists ({$elem}).
+# The form match (code prefix `form-`, no `-error-`; not counted in the 18 bind codes).
+form-unknown = The form “{$form}” {$version} is not in the form catalog.
+form-version-mismatch = The block “{$block}” draws {$form} in version {$component}, the module offers {$module}.
+form-channel-unmapped = The module gives no field for the required channel “{$channel}” of the form “{$form}”.
+form-basic-mismatch = The field “{$field}” does not fit the channel “{$channel}” of the form “{$form}” (needs {$grundtyp}).
+form-no-component = No block draws the form “{$form}” yet; the fallback is shown.

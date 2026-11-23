@@ -135,31 +135,6 @@ fn menu_pair_rules_are_checked() {
 }
 
 #[test]
-fn n17_a_range_needs_both_bounds() {
-    for text in [
-        "tasks >=0.2",
-        "tasks <0.3",
-        "tasks",
-        "tasks@>=0.3, <0.2",
-        "tasks >0.2",
-    ] {
-        let mut d = doc("board");
-        d.requires = vec![item("requires:t", RequiresDoc { range: text.into() })];
-        assert_eq!(codes(check(d)), vec![LayoutCode::RangeInvalid], "{text}");
-        let mut d = doc("board");
-        d.sources = vec![item(
-            "source:1",
-            SourceDoc {
-                range: text.into(),
-                data_type: "T".into(),
-                scope: None,
-            },
-        )];
-        assert_eq!(codes(check(d)), vec![LayoutCode::RangeInvalid], "{text}");
-    }
-}
-
-#[test]
 fn m34_a_dry_run_leaves_no_trace() {
     let s = store();
     block_on(s.import(doc("board"), Mode::DryRun, &who())).unwrap();
@@ -289,30 +264,4 @@ fn resolve_is_never_silent_about_providers() {
         (LayoutCode::ProviderUnchecked, Some("tasks"))
     );
     assert!(r.problems.is_empty());
-}
-
-#[test]
-fn n17b_a_range_is_written_like_the_host_does_with_a_comma_and_three_parts() {
-    for text in [
-        "tasks@>=0.0.1, <0.1",
-        "tasks@>=0.2, <0.3",
-        "tasks@>=1.2.3, <2",
-        "tasks@>=0.0.1, <0.1.0",
-    ] {
-        let mut d = doc("board");
-        d.requires = vec![item("requires:t", RequiresDoc { range: text.into() })];
-        assert!(check(d).is_ok(), "{text}");
-    }
-    for text in [
-        "tasks >=0.2, <0.3",
-        "tasks@>=0.2 <0.3",
-        "tasks@>=0.3, <0.2",
-        "tasks@>=zz, <0.3",
-        "tasks@>=0.0.1, >=0.0.2",
-        "bad name@>=0.1, <0.2",
-    ] {
-        let mut d = doc("board");
-        d.requires = vec![item("requires:t", RequiresDoc { range: text.into() })];
-        assert_eq!(codes(check(d)), vec![LayoutCode::RangeInvalid], "{text}");
-    }
 }

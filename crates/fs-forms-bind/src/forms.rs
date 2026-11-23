@@ -9,7 +9,7 @@
 
 use crate::types::Basic;
 
-/// The base type of a channel (every channel names exactly one): what kind of value the module must put there.
+/// The base type of a channel (a channel names a set of them): what kind of value the module must put there.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Grundtyp {
     /// A text (also a choice word, an address, a link, keywords).
@@ -58,68 +58,34 @@ impl Grundtyp {
         .into_iter()
         .find(|g| g.name() == word)
     }
-
-    /// Does a field of this basic type fit a channel of this base type? `records` and `command` take no field value:
-    /// they always fit here (the module names a type or a command, which the type catalog checks elsewhere).
-    #[must_use]
-    pub fn takes(self, basic: Basic) -> bool {
-        match self {
-            Self::Text => matches!(
-                basic,
-                Basic::Text | Basic::Email | Basic::Choice | Basic::Keywords | Basic::Link
-            ),
-            Self::Time => matches!(basic, Basic::Date | Basic::DateTime),
-            Self::Number => basic == Basic::Number,
-            Self::Flag => basic == Basic::Bool,
-            Self::Reference => basic == Basic::Reference,
-            Self::Records | Self::Command => true,
-        }
-    }
 }
 
-/// How many fields a channel takes.
+/// How many fields a channel takes: from `min` to `max` (`None` = unbounded). The form of `Count` in `fs-interfaces`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Count {
-    /// Exactly one.
-    One,
-    /// None or one.
-    ZeroOrOne,
-    /// None up to `n` (`None` = unbounded).
-    ZeroToN(Option<u32>),
-    /// From `min` to `max` (`None` = unbounded): the form of `Count` in `fs-interfaces`.
-    Range {
-        /// Fewest fields.
-        min: u32,
-        /// Most fields.
-        max: Option<u32>,
-    },
+pub struct Count {
+    /// Fewest fields.
+    pub min: u32,
+    /// Most fields.
+    pub max: Option<u32>,
 }
 
 impl Count {
-    /// The fewest fields: `One` needs one, the others none.
-    #[must_use]
-    pub fn min(self) -> usize {
-        match self {
-            Self::One => 1,
-            Self::Range { min, .. } => min as usize,
-            _ => 0,
-        }
-    }
-
-    /// The most fields (`None` = unbounded). Mirror of `Count::allows` of `fs-interfaces`.
-    #[must_use]
-    pub fn max(self) -> Option<usize> {
-        match self {
-            Self::One | Self::ZeroOrOne => Some(1),
-            Self::ZeroToN(max) | Self::Range { max, .. } => max.map(|m| m as usize),
-        }
-    }
-
-    /// Does a module that maps `n` fields on the channel keep the count?
+    /// Does a module that maps `n` fields on the channel keep the count? Mirror of `Count::allows` of `fs-interfaces`.
     #[must_use]
     pub fn allows(self, n: usize) -> bool {
-        n >= self.min() && self.max().is_none_or(|m| n <= m)
+        u32::try_from(n).is_ok_and(|n| n >= self.min && self.max.is_none_or(|m| n <= m))
     }
+}
+
+/// One base type a channel accepts (an `Art` of the form catalog) and the field types that fill it. The field types come from the
+/// ONE table of the catalog (`Art::allowed_basics` of `fs-interfaces`); bind holds no table of its own. Empty for `records` and
+/// `command`: they name a record type or a command, not a field.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Kind {
+    /// The base type (its name for messages, and whether it names a field at all).
+    pub grundtyp: Grundtyp,
+    /// The basic types of a field that fits.
+    pub basics: Vec<Basic>,
 }
 
 /// One channel of a form.
@@ -127,8 +93,8 @@ impl Count {
 pub struct Channel {
     /// Channel name (`label`, `parent` …).
     pub name: String,
-    /// The allowed base types: a SET (`text|number|time|flag` for `facts`); a field fits when its type is in the set.
-    pub grundtypen: Vec<Grundtyp>,
+    /// The allowed kinds: a SET (`text|number|time|flag` for `facts`); a field fits when its basic type is in one of them.
+    pub kinds: Vec<Kind>,
     /// Required (`!`): the module must map it.
     pub required: bool,
     /// How many fields.

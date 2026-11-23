@@ -7,7 +7,7 @@
 //! Pattern: Specification (each rule one small function) + total result type; no panic, no I/O.
 
 use crate::coded::Coded;
-use crate::forms::{ComponentForms, FormDef, Grundtyp, ModuleForm};
+use crate::forms::{ComponentForms, FormDef, Grundtyp, Kind, ModuleForm};
 
 /// The result of a match.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -167,7 +167,7 @@ fn channels(def: &FormDef, module: &ModuleForm, flaw: Option<FormFlaw>) -> Vec<C
         }
         let count_ok = match flaw {
             Some(FormFlaw::CountOff) => true,
-            Some(FormFlaw::CountMaxIgnored) => mapped.len() >= ch.count.min(),
+            Some(FormFlaw::CountMaxIgnored) => mapped.len() >= ch.count.min as usize,
             _ => ch.count.allows(mapped.len()),
         };
         if !count_ok {
@@ -179,13 +179,13 @@ fn channels(def: &FormDef, module: &ModuleForm, flaw: Option<FormFlaw>) -> Vec<C
             );
         }
         // `records` and `command` name a type or a command of the module, not a field with a basic type.
-        let types: &[Grundtyp] = match flaw {
-            Some(FormFlaw::SetFirstOnly) => &ch.grundtypen[..ch.grundtypen.len().min(1)],
-            _ => &ch.grundtypen,
+        let types: &[Kind] = match flaw {
+            Some(FormFlaw::SetFirstOnly) => &ch.kinds[..ch.kinds.len().min(1)],
+            _ => &ch.kinds,
         };
         if types
             .iter()
-            .all(|g| matches!(g, Grundtyp::Records | Grundtyp::Command))
+            .all(|k| matches!(k.grundtyp, Grundtyp::Records | Grundtyp::Command))
         {
             continue;
         }
@@ -199,7 +199,7 @@ fn channels(def: &FormDef, module: &ModuleForm, flaw: Option<FormFlaw>) -> Vec<C
                 .iter()
                 .find(|(n, _)| n == field)
                 .map(|(_, b)| *b);
-            if !basic.is_some_and(|b| types.iter().any(|g| g.takes(b))) {
+            if !basic.is_some_and(|b| types.iter().any(|k| k.basics.contains(&b))) {
                 out.push(
                     Coded::new("form-basic-mismatch")
                         .with("form", def.name.clone())
@@ -207,9 +207,9 @@ fn channels(def: &FormDef, module: &ModuleForm, flaw: Option<FormFlaw>) -> Vec<C
                         .with("field", field.clone())
                         .with(
                             "grundtyp",
-                            ch.grundtypen
+                            ch.kinds
                                 .iter()
-                                .map(|g| g.name())
+                                .map(|k| k.grundtyp.name())
                                 .collect::<Vec<_>>()
                                 .join("|"),
                         ),

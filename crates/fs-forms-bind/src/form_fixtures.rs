@@ -1,8 +1,8 @@
 //! Test doubles of the form match (feature `testing`): a reader of the DRAFT `forms.txt` and a small cards form by hand.
 //!
 //! The real reader will be `fs_interfaces::forms` (order SQ-1b); until it is pinned, this reads the same lines. Channel lines
-//! are `#   name | Art: x | [Grundtyp: y |] Pflicht: ja (`!`) | Anzahl: z`. A `Grundtyp` of the seven words wins; the draft
-//! still has older lines with `Art` only, which map: grouping -> text, order -> number, any -> text (facts show as text).
+//! are `#   name | Art: x | [Grundtyp: y |] Pflicht: ja (`!`) | Anzahl: z`. The type is a SET of the seven words
+//! (`text|number|time|flag`); `Grundtyp` wins over `Art`; older `Art` words map: grouping -> text, order -> number, any -> text.
 //!
 //! Pattern: Test double + parser of a line format (no I/O: the text comes from the caller).
 
@@ -41,27 +41,43 @@ pub fn parse_forms_txt(text: &str) -> Result<Vec<FormDef>, Coded> {
 }
 
 fn read_channel(cols: &[&str]) -> Option<Channel> {
-    let value = |key: &str| cols.iter().find_map(|c| c.strip_prefix(key)).map(str::trim);
-    let art = value("Art:")?;
-    let grundtyp = value("Grundtyp:")
-        .and_then(Grundtyp::from_name)
-        .or_else(|| Grundtyp::from_name(art))
-        .or(match art {
-            "grouping" | "any" => Some(Grundtyp::Text),
-            "order" => Some(Grundtyp::Number),
+    // A set is written `text|number|time|flag`; the line is cut at `|`, so bare type words after a key belong to that key.
+    let mut keyed: Vec<(&str, Vec<&str>)> = Vec::new();
+    for col in cols.iter().skip(1) {
+        match col.split_once(':') {
+            Some((k, v)) if k.chars().all(char::is_alphabetic) => keyed.push((k, vec![v.trim()])),
+            _ if Grundtyp::from_name(col).is_some() => keyed.last_mut()?.1.push(col),
+            _ => {}
+        }
+    }
+    let value = |key: &str| {
+        keyed
+            .iter()
+            .find(|(k, _)| *k == key)
+            .map(|(_, v)| v.as_slice())
+    };
+    let set = |words: &[&str]| -> Option<Vec<Grundtyp>> {
+        words.iter().map(|w| Grundtyp::from_name(w)).collect()
+    };
+    let art = value("Art")?;
+    let grundtypen = value("Grundtyp")
+        .and_then(set)
+        .or_else(|| set(art))
+        .or(match art[0] {
+            "grouping" | "any" => Some(vec![Grundtyp::Text]),
+            "order" => Some(vec![Grundtyp::Number]),
             _ => None,
         })?;
-    let required = value("Pflicht:")?.starts_with("ja");
-    let count = match value("Anzahl:").unwrap_or("offen") {
+    let required = value("Pflicht")?[0].starts_with("ja");
+    let count = match value("Anzahl").map_or("offen", |v| v[0]) {
         s if s.starts_with("1 ") || s == "1" => Count::One,
         s if s.starts_with("0 oder 1") => Count::ZeroOrOne,
         s if s.starts_with("0 bis 4") => Count::ZeroToN(Some(4)),
-        s if s.starts_with("0 bis n") => Count::ZeroToN(None),
         _ => Count::ZeroToN(None),
     };
     Some(Channel {
         name: (*cols.first()?).to_owned(),
-        grundtyp,
+        grundtypen,
         required,
         count,
     })

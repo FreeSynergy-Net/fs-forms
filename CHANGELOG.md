@@ -11,6 +11,7 @@ Version = tag; all crates of the workspace carry the same version.
 ### Deutsch
 
 - `fs-forms-run --picture`: rc 3, wenn das Bild einen Host-Fehler zeigt; PNG wird trotzdem geschrieben.
+- `fs-forms-bind`: the form match (G7 adapter, order SQ-2): `match_form(forms, module, components, block) -> Matched` with the rules `form-unknown`, `form-version-mismatch`, `form-channel-unmapped`, `form-basic-mismatch` (red) and `form-no-component` (yellow); `FormsSuite` with 6 rules and 6 mutants (feature `conformance`). Written with the help of Claude (Anthropic).
 
 ## 0.0.10
 

@@ -1,0 +1,69 @@
+# Form catalog (ENTWURF, nur Daten, kein Code). Quelle: .scratch/woche-11-23/ENTSCHEID-form.md §3 und §6 Nr. 2.
+# Format wie fs-interfaces/schema/capabilities.txt (ADR 0068): one line per form, fields separated by `|`, spaces around them ignored:
+#   key | display name | status | description
+# key: `name@Hauptversion.Neben` (Schreibweise laut §3). status: `stable` (the form exists) or `planned` (named, not built yet).
+# Channels stand in `#` lines below their form (the parser ignores comment lines). Only append, never rename or remove.
+# Open points: Grundtyp per channel (only DateTime/Text named by sources), Anzahl of the older forms, tiles `open` command id, and the `@1` vs `@1.0` spelling (see README.md). bars-in-time and tiles: set in 5d-3, see the lines below.
+
+checklist@1.0 | Checklist | planned | A list of items that can be ticked off (Entscheid §3)
+#   items      | Art: records | Pflicht: ja (`!`) | Anzahl: offen
+#   label      | Art: text    | Pflicht: ja (`!`) | Anzahl: offen
+#   done       | Art: flag    | Pflicht: ja (`!`) | Anzahl: offen
+#   order      | Art: order   | Pflicht: nein     | Anzahl: offen
+
+cards-in-columns@1.0 | Cards in columns | planned | Cards sorted into columns, e.g. a board of tasks (Entscheid §3)
+#   cards      | Art: records  | Pflicht: ja (`!`) | Anzahl: offen
+#   column     | Art: grouping | Pflicht: ja (`!`) | Anzahl: offen
+#   title      | Art: text     | Pflicht: ja (`!`) | Anzahl: offen
+#   facts      | Art: any      | Pflicht: nein     | Anzahl: 0 bis 4 (`≤4`)
+#   lane       | Art: grouping | Pflicht: nein     | Anzahl: offen
+#   move       | Art: command  | Pflicht: nein     | Anzahl: offen
+
+# 5d-3 (23.11.): bars-in-time@1.0 and tiles@1.0 set finally (still `planned`). Source tags: K = kalender/ENTSCHEID-schnitt.md (§d, line 40-43), E = ENTSCHEID-form.md, C = fs-capture crates/fs-capture/src/index.rs (Entry :36-52), F = fs-files crates/fs-files-types/src/file.rs (:24-35), W = fs-components contract/blocks (clone read 23.11., then removed).
+# Grundtyp: only where a source names it (time = DateTime, F:33; text = Text, F:24); else `offen` (fs-types BasicType list not fully read).
+bars-in-time@1.0 | Bars in time | planned | Bars on a time axis with start and end, e.g. calendar views, Gantt of tasks, Gantt of a workflow run (E:28, K:40-43)
+#   items      | Art: records   | Grundtyp: offen    | Pflicht: ja (`!`) | Anzahl: offen   (E:28; K:42)
+#   start      | Art: time      | Grundtyp: DateTime | Pflicht: ja (`!`) | Anzahl: 1       (E:28; K:42; F:33 for DateTime)
+#   end        | Art: time      | Grundtyp: DateTime | Pflicht: ja (`!`) | Anzahl: 1       (E:28; K:42; point in time = end equals start: offen)
+#   label      | Art: text      | Grundtyp: Text     | Pflicht: ja (`!`) | Anzahl: 1       (K:42 "fehlt heute", NEW vs E:28; every view needs a name on the bar)
+#   lane       | Art: grouping  | Grundtyp: offen    | Pflicht: nein     | Anzahl: 0 oder 1 (K:42: calendar | project/person | workflow/role)
+#   state      | Art: grouping  | Grundtyp: offen    | Pflicht: nein     | Anzahl: 0 oder 1 (K:42: status | task status | run verdict)
+#   depends    | Art: reference | Grundtyp: offen    | Pflicht: nein     | Anzahl: 0 bis n (E:28; K:42; arrows of the timeline)
+#   progress   | Art: number    | Grundtyp: offen    | Pflicht: nein     | Anzahl: 0 oder 1 (E:28; used by tasks and workflow only, K:42)
+#   all-day    | Art: flag      | Grundtyp: offen    | Pflicht: nein     | Anzahl: 0 oder 1 (K:42: calendar, tasks with a date)
+#   move       | Art: command   | Grundtyp: offen    | Pflicht: nein     | Anzahl: 0 oder 1 (K:42: `events.update` / `planning.move`; none for a workflow run)
+#   Range: comes as `scope` (K:42, text cut at the line end: offen, read the line before building). Nummer "n" of depends and 1/0..1 values are 5d-3 proposals (sources only say "offen"): offen for the user.
+#   Version rule: label was added to a form that is still `planned`; no one has pinned 1.0 yet, so no jump to 2.0 (K:40 "kein Sprung nötig").
+#   Workflow run (P-WORKFLOW-SICHT, K:43): items = step, label = step name, start/end = START/ENDE of the run list, depends = order of steps, state = run verdict, lane = workflow/role.
+#   Views (Components, not forms): week/day/month/agenda/Gantt (K:40, E §1 "eine Quelle, mehrere Sichten").
+#   Components: calendar-grid (W widgets.toml:81) and timeline (W widgets.toml:283) -> `forms=["bars-in-time@1"]` (see README, point 3).
+
+tiles@1.0 | Tiles | planned | A grid of tiles with a preview picture, name and a line of facts: screenshots of capture and the file grid of files (E:60 Auftrag 2, E:61; INVENTUR e.1)
+#   items      | Art: records   | Grundtyp: offen    | Pflicht: ja (`!`) | Anzahl: offen   (one record per tile; C: Entry, F: File)
+#   label      | Art: text      | Grundtyp: Text     | Pflicht: ja (`!`) | Anzahl: 1       (C: title, :44 / F: name, :24 required)
+#   preview    | Art: reference | Grundtyp: offen    | Pflicht: nein     | Anzahl: 0 oder 1 (picture to draw; C: PNG `file` :52 is the picture itself; F has no preview field :24-35, preview of a file comes from file-preview, W widgets.toml:114: so optional, else icon by `kind`)
+#   kind       | Art: grouping  | Grundtyp: offen    | Pflicht: nein     | Anzahl: 0 oder 1 (C: Kind screen|window, :42 / F: mediaType, :25; chooses icon and filter)
+#   time       | Art: time      | Grundtyp: DateTime | Pflicht: nein     | Anzahl: 0 oder 1 (C: time, :40 / F: updated, :34)
+#   size       | Art: number    | Grundtyp: offen    | Pflicht: nein     | Anzahl: 0 oder 1 (F: size :27 is decimal TEXT today, "no quantity kind in fs-types yet" :26: the module must give a derived number or leave it out; C has only pixels width/height, no byte size)
+#   facts      | Art: any       | Grundtyp: offen    | Pflicht: nein     | Anzahl: 0 bis 4 (`≤4`)  (like cards-in-columns facts; C: program app_name :46, width x height :48-50 go here; F: folder :29, state :30-32)
+#   order      | Art: order     | Grundtyp: offen    | Pflicht: nein     | Anzahl: 0 oder 1 (C: nr :38 numbering; tile-grid shows numbered tiles, W frames.toml:97-105 `number`)
+#   open       | Art: command   | Grundtyp: offen    | Pflicht: nein     | Anzahl: 0 oder 1 (open/preview of one tile; command ids per E:36, e.g. `capture.shot`; concrete id: offen)
+#   Why: the two sources share name, a point in time, a kind and a few facts; they differ in preview (capture has the picture, files has none) and size (files only). So preview/size/time/kind are optional and facts takes the rest. Only `items` and `label` are required, so every module with a name per record can fill the form.
+#   Mapping examples (proposal, field names from the sources): capture `map={items="Entry", label="title", preview="file", kind="kind", time="time", order="nr", facts=["app_name","width","height"]}`; files `map={items="File", label="name", kind="mediaType", time="updated", facts=["folder","state"]}`.
+#   Components: tile-grid (W frames.toml:97, Craft look, numbered tiles) and file-tile (W widgets.toml:92, icon/name/facts line) -> `forms=["tiles@1"]` (see README, point 3).
+
+# Added by GR3. Source for tree/members: woche-11-23/woche-11-23/groups/ENTSCHEID-schnitt.md (cited as S:line). Grundtyp per channel stays offen (as above).
+tree@1.0 | Tree | planned | A group tree: nodes joined by parent edges, optional inheritance mode per edge and owner mark (S:5, S:8-9, S:56)
+#   nodes      | Art: records   | Pflicht: ja (`!`) | Anzahl: offen   (S:56)
+#   parent     | Art: reference | Pflicht: ja (`!`) | Anzahl: offen   (S:56; edge = org:subOrganizationOf, S:8)
+#   label      | Art: text      | Pflicht: ja (`!`) | Anzahl: offen   (S:56)
+#   edge-kind  | Art: grouping  | Pflicht: nein     | Anzahl: offen   (S:56 names it; Art is a guess from the mode values BottomUp/TopDown/Single, S:5,S:13: offen; Pflicht offen)
+#   owner-mark | Art: flag      | Pflicht: nein     | Anzahl: offen   (S:5 "Eigentümer-Kennzeichnung" is only in the order text; S:56 has no such channel: offen)
+#   Block: tree (S:51). Mode lies on the edge, not on the group; the group only has default_mode (S:5).
+
+members@1.0 | Members | planned | A member list: person as PersonRef, role, optional owner level (S:15, S:56)
+#   records    | Art: records   | Pflicht: ja (`!`) | Anzahl: offen   (S:56)
+#   person     | Art: reference | Pflicht: ja (`!`) | Anzahl: offen   (S:15 PersonRef; Art "reference" is a guess: offen)
+#   role       | Art: reference | Pflicht: ja (`!`) | Anzahl: offen   (S:8 RoleRef; Pflicht and Art offen)
+#   badge      | Art: any       | Pflicht: nein     | Anzahl: offen   (S:56 "badge owner"; owner level has 3 admin stages per S:13/0095, not spelled out: offen)
+#   Blocks: table + avatar-group (S:56, S:51). A member must not be a Profile (S:15).

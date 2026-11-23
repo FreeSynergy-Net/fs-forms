@@ -35,9 +35,9 @@ fs-components-words = { git = "https://github.com/FreeSynergy/fs-components", ta
 # What the blocks of the contract are (and what they accept and render): the host asks it, it has no table of its own.
 fs-components-catalog = { git = "https://github.com/FreeSynergy/fs-components", tag = "v0.0.33" }
 
-# TRANSITION (K2/K3): the client of the planning module is LINKED into the host (the data port `PlanningRecords`); loading modules
-# at run time (ADR 0104) replaces this.
-fs-modules-planning-client = { git = "https://github.com/FreeSynergy/fs-modules-planning", tag = "v0.0.3" }
+# The form catalog (`fs_interfaces::forms`, forms.txt) and the one form match (`fs-forms-bind`): the host holds no table of forms.
+fs-interfaces = { git = "https://github.com/FreeSynergy/fs-interfaces", branch = "unreviewed/form-source" }
+fs-forms-bind = { path = "../fs-forms-bind" }
 fs-rpc = { git = "https://github.com/FreeSynergy/fs-rpc", tag = "v0.0.6" }
 tokio = { version = "1", features = ["rt", "sync", "net", "time"] }
 

@@ -1,4 +1,4 @@
-//! Sample data that takes changes in memory: three columns, five cards, a card can be added and moved and a column added. It is
+//! Sample data that takes changes in memory (and the sample groups, see `sample_groups`): three columns, five cards, a card can be added and moved and a column added. It is
 //! "Sample data (not your records)" in every picture and window (`is_sample`), and nothing leaves the process.
 //!
 //! Pattern: Fixture behind the port `Records`, state behind a `Mutex` (the board asks and changes from the interface thread).
@@ -7,18 +7,23 @@ use std::sync::{Mutex, MutexGuard, PoisonError};
 
 use fs_components_kanban::{Answer, Card, Column, Due, DueState, Label, Operation, Tone};
 
+use crate::form_data::FormData;
 use crate::records::{Records, SideItem};
+use crate::sample_groups::groups;
 
 /// Sample records the reader can change; the changes live only in memory.
 #[derive(Debug)]
 pub struct SampleBoard {
     columns: Mutex<Vec<Column>>,
+    /// The forms of the sample groups module (tree and members), by channel.
+    forms: Vec<FormData>,
 }
 
 impl Default for SampleBoard {
     fn default() -> Self {
         Self {
             columns: Mutex::new(initial()),
+            forms: groups(),
         }
     }
 }
@@ -108,6 +113,9 @@ impl SampleBoard {
 impl Records for SampleBoard {
     fn is_sample(&self) -> bool {
         true
+    }
+    fn forms(&self) -> &[FormData] {
+        &self.forms
     }
     fn columns(&self) -> Vec<Column> {
         self.lock().clone()

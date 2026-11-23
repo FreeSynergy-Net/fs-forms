@@ -1,5 +1,5 @@
 //! The blocks of `fs-components` this host draws as elements of a page, and the data each one is given: `board` is the kanban
-//! board, `sidebar` a tree of the side list. The assignment is one table (block name to drawing function); nothing is painted here and nothing is decided here.
+//! board, `sidebar` a tree of the side list, `tree` and `table` draw the forms `tree` and `members` by channel. The assignment is one table (block name to drawing function); nothing is painted here and nothing is decided here.
 //! A control of the board is unlocked only when the description has an action for it and the records can do it (see `events`);
 //! every other one is drawn locked with its hint, never silently.
 //!
@@ -13,9 +13,12 @@ use fs_components_fields::{Look, Say};
 use fs_components_kanban::KanbanBoard;
 use fs_components_styles::StyleId;
 use fs_components_widgets::dialogs::{Labels, modal};
+use fs_components_widgets::grid::Column;
+use fs_components_widgets::table::Table;
 use fs_components_widgets::{TreeNode, TreeView};
 
 use crate::events::{Ask, Wiring};
+use crate::form_data::FormRow;
 use crate::records::Records;
 use crate::view::ActionView;
 
@@ -47,7 +50,12 @@ type Drawing = fn(&Ctx, f32, f32) -> Div;
 
 /// Which function draws which block of the catalog. This is an assignment, not a decision: whether a block exists and what it
 /// takes is the catalog's (`fs-components-catalog`, see `blocks`); here stands only the component that stands behind its name.
-const DRAWINGS: &[(&str, Drawing)] = &[("board", board), ("sidebar", sidebar)];
+const DRAWINGS: &[(&str, Drawing)] = &[
+    ("board", board),
+    ("sidebar", sidebar),
+    ("tree", tree),
+    ("table", table),
+];
 
 /// Whether a function draws the block.
 pub(crate) fn has(name: &str) -> bool {
@@ -100,4 +108,115 @@ fn sidebar(ctx: &Ctx, width: f32, _height: f32) -> Div {
         .map(|i| TreeNode::new(i.key, i.label))
         .collect();
     div().w(width).child(TreeView::new(nodes).build())
+}
+
+/// The rows of the form `name` the connected module gives (none: nothing is connected or the module does not offer it).
+fn rows<'a>(ctx: &'a Ctx, name: &str) -> &'a [FormRow] {
+    ctx.records
+        .forms()
+        .iter()
+        .find(|d| d.declared.form.name == name)
+        .map_or(&[], |d| d.rows.as_slice())
+}
+
+/// The nodes under `parent` of the form `tree`: channels `parent` (the key of the node above, none for a root) and `label`.
+/// A row seen twice on the way (a loop in the data) is cut, never followed forever.
+fn nodes(rows: &[FormRow], parent: Option<&str>, seen: &mut Vec<String>) -> Vec<TreeNode> {
+    let mut out = Vec::new();
+    for row in rows.iter().filter(|r| r.get("parent") == parent) {
+        if seen.contains(&row.key) {
+            continue;
+        }
+        seen.push(row.key.clone());
+        let mut node = TreeNode::new(&row.key, row.get("label").unwrap_or(&row.key));
+        node.children = nodes(rows, Some(&row.key), seen);
+        node.open = true;
+        out.push(node);
+    }
+    out
+}
+
+/// The roots: rows without a parent, and rows whose parent is not in the data (shown at the top, never dropped).
+fn roots(rows: &[FormRow]) -> Vec<TreeNode> {
+    let mut seen = Vec::new();
+    let mut out = nodes(rows, None, &mut seen);
+    for row in rows {
+        let orphan = row
+            .get("parent")
+            .is_some_and(|p| !rows.iter().any(|r| r.key == p));
+        if orphan && !seen.contains(&row.key) {
+            seen.push(row.key.clone());
+            let mut node = TreeNode::new(&row.key, row.get("label").unwrap_or(&row.key));
+            node.children = nodes(rows, Some(&row.key), &mut seen);
+            node.open = true;
+            out.push(node);
+        }
+    }
+    out
+}
+
+fn tree(ctx: &Ctx, width: f32, _height: f32) -> Div {
+    div()
+        .w(width)
+        .child(TreeView::new(roots(rows(ctx, "tree"))).build())
+}
+
+/// The channels the member list shows, in this order (the channel `records` is the list itself).
+const MEMBER_CHANNELS: &[&str] = &["person", "role", "badge"];
+
+fn table(ctx: &Ctx, width: f32, _height: f32) -> Div {
+    let cols: Vec<Column> = MEMBER_CHANNELS
+        .iter()
+        .map(|c| Column::new(*c, ctx.say.say(&format!("channel.{c}"))))
+        .collect();
+    let cells: Vec<Vec<String>> = rows(ctx, "members")
+        .iter()
+        .map(|r| {
+            MEMBER_CHANNELS
+                .iter()
+                .map(|c| r.get(c).unwrap_or("").to_owned())
+                .collect()
+        })
+        .collect();
+    let column_w = (width / 3.0).max(80.0);
+    div().w(width).child(
+        Table::new(cols, cells)
+            .id("members")
+            .column_width(column_w)
+            .build(),
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{nodes, roots};
+    use crate::form_data::FormRow;
+
+    fn row(key: &str, parent: &str) -> FormRow {
+        FormRow::of(key, &[("parent", parent), ("label", key)])
+    }
+
+    #[test]
+    fn the_tree_is_built_from_the_channels_parent_and_label_and_an_orphan_is_a_root() {
+        let rows = [row("a", ""), row("b", "a"), row("c", "b"), row("x", "gone")];
+        let r = roots(&rows);
+        assert_eq!(
+            r.iter().map(|n| n.key.as_str()).collect::<Vec<_>>(),
+            ["a", "x"]
+        );
+        assert_eq!(r[0].count(), 3);
+    }
+
+    #[test]
+    fn a_loop_in_the_data_ends() {
+        let rows = [row("a", "b"), row("b", "a")];
+        assert!(nodes(&rows, Some("b"), &mut Vec::new()).len() <= 1);
+        assert!(
+            roots(&rows)
+                .iter()
+                .map(fs_components_widgets::TreeNode::count)
+                .sum::<usize>()
+                <= 2
+        );
+    }
 }

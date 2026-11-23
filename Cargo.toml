@@ -24,3 +24,7 @@ authors = ["FreeSynergy <support@freesynergy.net>"]
 repository = "https://github.com/FreeSynergy/fs-forms"
 # fs-rpc and fs-components need 1.89.
 rust-version = "1.89"
+
+# Develop against the local head (PLAN-quelle-und-abgleich 4b); removed at the lift to the tag.
+[patch."https://github.com/FreeSynergy/fs-interfaces"]
+fs-interfaces = { path = "../fs-interfaces/crates/fs-interfaces" }

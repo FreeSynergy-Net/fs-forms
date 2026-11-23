@@ -21,7 +21,7 @@ The forms host: opens the window that the layout of a program describes. The sta
   --style NAME       the style set for the program: what a description that says `style = \"default\"` gets (admin, simple, apple,
                      windows, craft; the preset is admin); a description that names a style keeps its own
   --sample-data      fill the board and side list with built-in sample records (pictures, development; never a starter)\n\
-  --picture FILE     draw the window to a picture, without opening it\n\
+  --picture FILE     draw the window to a picture, without opening it (exit 3 if the picture shows a host error; the PNG is written anyway)\n\
   --version, -V      print the version and exit\n\
   --help, -h         print this help and exit\n\
 Exit codes: 0 done, 1 failed, 2 wrong words, 3 the layouts or their contract are not there (the starter shows the standard frontend)";

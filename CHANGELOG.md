@@ -2,6 +2,16 @@
 
 Version = tag; all crates of the workspace carry the same version.
 
+## Unreleased
+
+### English
+
+- `fs-forms-run --picture`: the run ends with code 3 when the picture shows a host error (the error window); the PNG is written all the same.
+
+### Deutsch
+
+- `fs-forms-run --picture`: rc 3, wenn das Bild einen Host-Fehler zeigt; PNG wird trotzdem geschrieben.
+
 ## 0.0.10
 
 ### English

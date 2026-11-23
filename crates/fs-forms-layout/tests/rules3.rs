@@ -62,7 +62,7 @@ fn r1c_nested_menu_entries_are_checked() {
 fn r1d_r1e_source_numbers_have_exact_bounds() {
     for n in [0_u32, 2] {
         let mut d = doc("board");
-        d.sources = vec![item("source:1", source("tasks >=0.1 <0.2"))];
+        d.sources = vec![item("source:1", source("tasks >=0.1, <0.2"))];
         d.pages[0].v.blocks[0].v.source = Some(n);
         assert_eq!(
             codes(check(d)),
@@ -71,7 +71,7 @@ fn r1d_r1e_source_numbers_have_exact_bounds() {
         );
     }
     let mut d = doc("board");
-    d.sources = vec![item("source:1", source("tasks >=0.1 <0.2"))];
+    d.sources = vec![item("source:1", source("tasks >=0.1, <0.2"))];
     d.pages[0].v.blocks[0].v.source = Some(1);
     assert!(check(d).is_ok());
 }
@@ -94,7 +94,7 @@ fn r1h_a_view_owner_is_not_empty() {
 #[test]
 fn r2c_only_blocks_with_a_field_binding_ask_the_provider() {
     let mut d = doc("board");
-    d.sources = vec![item("source:1", source("tasks >=0.1 <0.2"))];
+    d.sources = vec![item("source:1", source("tasks >=0.1, <0.2"))];
     d.pages[0].v.blocks[0].v.source = Some(1);
     d.pages[0].v.blocks[0].v.bindings[0].v.from = BindFrom::Records; // no field: nothing to ask
     let s = store();
@@ -139,9 +139,9 @@ fn o1_the_ops_of_one_overlay_run_in_seq_order() {
 fn three_sources(block_on_source: u32) -> LayoutDoc {
     let mut d = doc("board");
     d.sources = vec![
-        item("source:1", source("tasks >=0.1 <0.2")),
-        item("source:2", source("people >=0.1 <0.2")),
-        item("source:3", source("groups >=0.1 <0.2")),
+        item("source:1", source("tasks >=0.1, <0.2")),
+        item("source:2", source("people >=0.1, <0.2")),
+        item("source:3", source("groups >=0.1, <0.2")),
     ];
     d.pages[0].v.blocks[0].v.source = Some(block_on_source);
     d

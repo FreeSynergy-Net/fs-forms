@@ -154,7 +154,7 @@ pub const LAYOUT: Table = Table {
     ],
 };
 
-/// `ContractRange` typed, never the text ">=0.2 <0.3".
+/// `ContractRange` typed, never the text ">=0.2, <0.3".
 pub const REQUIRES: Table = Table {
     name: "forms_requires",
     cols: &[

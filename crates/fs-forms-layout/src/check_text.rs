@@ -4,6 +4,8 @@
 
 use std::collections::HashSet;
 
+use semver::{Comparator, Op, VersionReq};
+
 use crate::codes::LayoutCode;
 use crate::doc::{Item, MessageDoc};
 use crate::ids::ElemId;
@@ -12,40 +14,35 @@ use crate::shim::Coded;
 
 type Problems = Vec<Coded<LayoutCode>>;
 
-/// `name >=a.b <c.d`: both bounds (the table holds four integers), the lower one below the upper one.
+/// `name >=a.b.c, <d.e` (the grammar of `semver::VersionReq`, as the host writes it): exactly one lower bound `>=` and one upper bound `<`
+/// (the table holds them as integers), the lower one below the upper one.
 pub(crate) fn check_range(text: &str, out: &mut Problems) {
     if !range_ok(text) {
         out.push(Coded::new(LayoutCode::RangeInvalid).with("text", text));
     }
 }
 
-fn version(t: &str) -> Option<(u32, u32)> {
-    let (a, b) = t.split_once('.')?;
-    Some((a.parse().ok()?, b.parse().ok()?))
-}
-
 fn range_ok(text: &str) -> bool {
-    let mut it = text.split_whitespace();
-    let name_ok = it.next().is_some_and(|n| {
-        !n.is_empty()
-            && n.chars()
-                .all(|c| c.is_ascii_alphanumeric() || "-_.".contains(c))
-    });
-    let (mut low, mut high) = (None, None);
-    for t in it {
-        if let Some(v) = t.strip_prefix(">=").and_then(version) {
-            if low.replace(v).is_some() {
-                return false;
-            }
-        } else if let Some(v) = t.strip_prefix('<').and_then(version) {
-            if high.replace(v).is_some() {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
-    name_ok && low.zip(high).is_some_and(|(l, h)| l < h)
+    let text = text.trim();
+    let (name, req) = text.split_once(char::is_whitespace).unwrap_or((text, ""));
+    let name_ok = !name.is_empty()
+        && name
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || "-_.".contains(c));
+    let Ok(req) = VersionReq::parse(req.trim()) else {
+        return false;
+    };
+    let bound = |op: Op| {
+        let mut it = req.comparators.iter().filter(|c| c.op == op);
+        let first = it.next()?;
+        it.next().is_none().then_some(first)
+    };
+    let key = |c: &Comparator| (c.major, c.minor.unwrap_or(0), c.patch.unwrap_or(0));
+    req.comparators.len() == 2
+        && name_ok
+        && bound(Op::GreaterEq)
+            .zip(bound(Op::Less))
+            .is_some_and(|(l, h)| key(l) < key(h))
 }
 
 fn key_ok(k: &str) -> bool {

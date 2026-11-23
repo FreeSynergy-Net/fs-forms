@@ -34,11 +34,11 @@ impl Range {
         v >= self.min && v < self.max
     }
 
-    /// Text form `>=0.2 <0.3`.
+    /// Text form `>=0.2, <0.3`.
     #[must_use]
     pub fn text(&self) -> String {
         format!(
-            ">={}.{} <{}.{}",
+            ">={}.{}, <{}.{}",
             self.min.0, self.min.1, self.max.0, self.max.1
         )
     }

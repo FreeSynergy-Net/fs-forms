@@ -51,7 +51,7 @@ fn not_installed() {
         "accepts-error-contract-missing",
         &[
             ("capability", "tasks"),
-            ("range", "tasks >=0.2 <0.3"),
+            ("range", "tasks >=0.2, <0.3"),
             ("have", ""),
         ],
     );

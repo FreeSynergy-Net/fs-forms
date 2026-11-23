@@ -99,7 +99,7 @@ pub struct ActionView {
 pub struct View {
     /// The actions of the description.
     pub actions: Vec<ActionView>,
-    /// The contract range of each `[[source]]` (`tasks >=0.2 <0.3`), in order: what the host picks its records by.
+    /// The contract range of each `[[source]]` (`tasks >=0.2, <0.3`), in order: what the host picks its records by.
     pub sources: Vec<String>,
     /// The frontend key.
     pub frontend: String,

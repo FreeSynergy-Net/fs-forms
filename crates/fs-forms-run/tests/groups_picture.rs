@@ -121,7 +121,7 @@ fn the_lock_names_the_code_of_the_rule() {
     let r = Groups {
         without: &["label"],
     }
-    .connect("groups >=0.1 <0.2", None, Path::new("x"))
+    .connect("groups >=0.1, <0.2", None, Path::new("x"))
     .unwrap();
     let codes = fs_forms_run::form_problems("tree", r.as_ref());
     assert!(

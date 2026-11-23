@@ -149,7 +149,7 @@ fn the_range_text_is_read_and_the_fields_are_the_fallback() {
         let fields = report(dry("", "tasks").await.unwrap());
         assert!(
             fields.iter().all(|c| code(c) != "range-invalid"),
-            "fields only must build `tasks >=0.2 <0.3`: {fields:?}"
+            "fields only must build `tasks >=0.2, <0.3`: {fields:?}"
         );
     });
 }
@@ -173,7 +173,7 @@ fn a_provider_warning_reaches_the_host_and_a_blocking_problem_stays_a_problem() 
     let source = || {
         let mut d = doc("board");
         let src = SourceDoc {
-            range: "tasks >=0.2 <0.3".into(),
+            range: "tasks >=0.2, <0.3".into(),
             data_type: "Task".into(),
             scope: None,
         };

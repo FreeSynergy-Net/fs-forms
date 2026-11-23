@@ -46,7 +46,7 @@ pub struct LayoutDoc {
     pub messages: Vec<Item<MessageDoc>>,
 }
 
-/// A required contract range, e.g. `tasks >=0.2 <0.3`.
+/// A required contract range, e.g. `tasks >=0.2, <0.3`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RequiresDoc {
     /// The range text.

@@ -37,7 +37,7 @@ pub(crate) fn elem<T>(i: &Item<T>) -> Cell {
     text(i.elem.as_ref().map_or("", |e| e.as_str()))
 }
 
-/// Splits `name >=a.b <c.d` into its capability and four integers. The check of the layout guarantees both bounds.
+/// Splits `name >=a.b, <c.d` into its capability and four integers. The check of the layout guarantees both bounds.
 pub(crate) fn range_parts(range: &str) -> (String, [i64; 4]) {
     let mut it = range.split_whitespace();
     let name = it.next().unwrap_or("").to_owned();
@@ -47,18 +47,21 @@ pub(crate) fn range_parts(range: &str) -> (String, [i64; 4]) {
             Some(r) => (0, r),
             None => (2, tok.trim_start_matches('<')),
         };
-        let (a, b) = rest.split_once('.').unwrap_or((rest, "0"));
+        let (a, b) = rest
+            .trim_end_matches(',')
+            .split_once('.')
+            .unwrap_or((rest, "0"));
         v[slot] = a.parse().unwrap_or(0);
         v[slot + 1] = b.parse().unwrap_or(0);
     }
     (name, v)
 }
 
-/// The text range of the four integers of a `requires` or `source` row, e.g. `tasks >=0.2 <0.3`.
+/// The text range of the four integers of a `requires` or `source` row, e.g. `tasks >=0.2, <0.3`.
 pub(crate) fn range_text(r: &crate::rows::RowReader<'_>) -> String {
     let n = |c: &str| r.int(c).unwrap_or(0);
     format!(
-        "{} >={}.{} <{}.{}",
+        "{} >={}.{}, <{}.{}",
         r.text("capability").unwrap_or_default(),
         n("min_major"),
         n("min_minor"),

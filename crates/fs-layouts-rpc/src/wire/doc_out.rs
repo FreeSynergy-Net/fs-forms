@@ -21,7 +21,7 @@ pub(crate) fn write_range(mut out: w::range::Builder<'_>, text: &str) {
     out.set_capability(it.next().unwrap_or(""));
     for t in it {
         let v = |s: &str| {
-            let (a, b) = s.split_once('.')?;
+            let (a, b) = s.trim_end_matches(',').split_once('.')?;
             Some((a.parse::<u32>().ok()?, b.parse::<u32>().ok()?))
         };
         if let Some((a, b)) = t.strip_prefix(">=").and_then(v) {

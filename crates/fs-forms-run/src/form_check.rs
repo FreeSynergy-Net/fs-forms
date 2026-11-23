@@ -114,3 +114,34 @@ pub(crate) fn lock_misfits(view: &mut View, records: &dyn Records) -> bool {
     }
     any
 }
+
+/// One result of the match for `--check`: the code and whether it is red (a block locked, exit 3) or yellow (a message, exit 0).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Finding {
+    /// The code with the form it is about.
+    pub code: Coded,
+    /// Red = the module does not fit (rc 3); yellow = a fallback shows the form.
+    pub red: bool,
+}
+
+/// The match of every form the module declares (`records.forms()`), by the SAME function the window uses (`match_form`, no second
+/// checker): the findings for `--check`. Green forms give none. The block is not named here (any block of the component catalog).
+#[must_use]
+pub fn report(records: &dyn Records) -> Vec<Finding> {
+    let (catalog, components) = (forms(), components());
+    records
+        .forms()
+        .iter()
+        .flat_map(|d| {
+            let said = |c: &fs_forms_bind::Coded, red| Finding {
+                code: coded(c),
+                red,
+            };
+            match match_form(&catalog, &d.declared, &components, None) {
+                Matched::Blocks(_) => Vec::new(),
+                Matched::Fallback(c) => vec![said(&c, false)],
+                Matched::Refused(codes) => codes.iter().map(|c| said(c, true)).collect(),
+            }
+        })
+        .collect()
+}

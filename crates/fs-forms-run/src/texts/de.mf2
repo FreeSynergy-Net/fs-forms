@@ -37,6 +37,8 @@ kanban-limit_hint = Wie viele Karten die Spalte höchstens fassen soll; 0 = kein
 kanban-limit_invalid = Das ist keine ganze Zahl; 0 bedeutet keine Grenze
 host-notice-data-unreachable = Die Datenquelle dieses Fensters antwortet nicht; die Tafel zeigt keine Einträge
 host-notice-data-no-socket = Für die Datenquelle ist kein Socket bekannt (kein Laufzeitordner); die Tafel zeigt keine Einträge
+host-notice-data-contract = Die Datenquelle dieses Fensters hat nicht die Version, die die Beschreibung verlangt; das Fenster zeigt keine Einträge
+host-notice-data-answer = Die Datenquelle hat etwas geantwortet, das dieses Fenster nicht annimmt; es zeigt keine Einträge
 host-notice-source-unknown = Keine Datenquelle dieses Hosts spricht den Vertrag, den die Beschreibung nennt; die Tafel zeigt keine Einträge
 kanban-refused-locked = Gesperrt: die Beschreibung erlaubt das nicht
 kanban-refused-unsupported = Die Datenquelle kann das nicht

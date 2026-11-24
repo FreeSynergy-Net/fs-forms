@@ -1,8 +1,7 @@
-//! The counting parts of the double (`FakeWindows`): stand-in records and the stand-in for the held module connection.
+//! The counting part of the double (`FakeWindows`): the stand-in records of one record of the module.
 //!
 //! Pattern: Fake (test double) – counting parts of the double, held in memory.
 
-use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use fs_components_kanban::Answer;
@@ -15,18 +14,9 @@ use crate::view::Coded;
 pub struct CountingRecords {
     calls: AtomicUsize,
     rereads: AtomicUsize,
-    _hold: Option<FakeHold>,
 }
 
 impl CountingRecords {
-    /// Records that own the held connection of their module: it falls with them (the last grip of the hub lets go of both).
-    pub(super) fn held(hold: FakeHold) -> Self {
-        Self {
-            _hold: Some(hold),
-            ..Self::default()
-        }
-    }
-
     /// How often these records were read again.
     #[must_use]
     pub fn rereads(&self) -> usize {
@@ -59,27 +49,5 @@ impl Records for CountingRecords {
     fn reread(&self) -> Result<(), Coded> {
         self.rereads.fetch_add(1, Ordering::SeqCst);
         Ok(())
-    }
-}
-
-/// Pattern: RAII (test double) – stands for the held connection to a module (`fs_rpc::hold`, not built yet): attached when made,
-/// detached when dropped.
-#[derive(Debug)]
-pub struct FakeHold {
-    detached: Arc<AtomicUsize>,
-}
-
-impl FakeHold {
-    pub(super) fn attach(attached: &AtomicUsize, detached: &Arc<AtomicUsize>) -> Self {
-        attached.fetch_add(1, Ordering::SeqCst);
-        Self {
-            detached: Arc::clone(detached),
-        }
-    }
-}
-
-impl Drop for FakeHold {
-    fn drop(&mut self) {
-        self.detached.fetch_add(1, Ordering::SeqCst);
     }
 }

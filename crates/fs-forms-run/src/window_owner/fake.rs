@@ -1,5 +1,5 @@
 //! The double of the [`WindowOwner`] (S6-2): it keeps counters instead of windows. A "window" is an entry with a composition, a
-//! counting stand-in for the module records and a [`FakeHold`] that counts attach and detach, so the conformance tests
+//! grip with its OWN connection ([`FakeHold`] counts attach and detach) to a fake module over a shared read cache, so the conformance tests
 //! (`tests/window_owner.rs`) can prove the contract without a window, a socket or `fs_rpc::hold`.
 //!
 //! Pattern: Fake (test double) – the same contract as the real owner, held in memory.
@@ -9,13 +9,12 @@ mod share;
 mod switch;
 
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, Weak};
 
 use fs_components_kanban::Answer;
 use fs_forms_layout::FrontendKey;
 
-pub use self::parts::{CountingRecords, FakeHold};
+pub use self::parts::CountingRecords;
 use super::open::{at_place, exact};
 use super::{
     Decision, OpenFrontend, Opened, OpenedFrontend, Placement, WhenOpen, WindowId, WindowOwner,
@@ -23,7 +22,9 @@ use super::{
 };
 use crate::catalog::TestCatalog;
 use crate::compose::{Composition, compose};
-use crate::record_hub::{RecordGrip, RecordHub, RecordKey};
+pub use crate::record_hub::fake::FakeHold;
+use crate::record_hub::fake::{FakeModule, HoldCounts};
+use crate::record_hub::{Module, RecordGrip, RecordHub, RecordKey};
 use crate::view::{Coded, View};
 
 /// What one open frontend holds; dropping the entry drops all of it.
@@ -37,10 +38,12 @@ struct Entry {
     scope: Option<String>,
     composition: Composition,
     grip: RecordGrip,
-    counting: Arc<CountingRecords>,
+    module: Arc<dyn Module>,
 }
 
 type Typed = HashMap<RecordKey, Weak<CountingRecords>>;
+
+type Modules = HashMap<String, Weak<FakeModule>>;
 
 type Open = HashMap<WindowId, Entry>;
 
@@ -66,10 +69,10 @@ pub struct FakeWindows {
     catalog: TestCatalog,
     known: HashMap<FrontendKey, View>,
     refusing: Vec<FrontendKey>,
-    attached: AtomicUsize,
-    detached: Arc<AtomicUsize>,
+    counts: Arc<HoldCounts>,
     hub: RecordHub,
-    typed: Mutex<Typed>,
+    typed: Arc<Mutex<Typed>>,
+    modules: Mutex<Modules>,
     open: Mutex<Open>,
 }
 
@@ -81,10 +84,10 @@ impl FakeWindows {
             catalog,
             known: HashMap::new(),
             refusing: Vec::new(),
-            attached: AtomicUsize::new(0),
-            detached: Arc::new(AtomicUsize::new(0)),
+            counts: Arc::new(HoldCounts::default()),
             hub: RecordHub::new(),
-            typed: Mutex::new(HashMap::new()),
+            typed: Arc::new(Mutex::new(HashMap::new())),
+            modules: Mutex::new(HashMap::new()),
             open: Mutex::new(HashMap::new()),
         }
     }
@@ -112,7 +115,14 @@ impl FakeWindows {
     /// A weak handle to the records of an open frontend: it is dead once the frontend is closed.
     #[must_use]
     pub fn records_of(&self, id: &WindowId) -> Option<Weak<CountingRecords>> {
-        self.lock().get(id).map(|e| Arc::downgrade(&e.counting))
+        let open = self.lock();
+        let e = open.get(id)?;
+        let key = RecordKey {
+            range: e.key.extends.clone(),
+            scope: e.scope.clone(),
+        };
+        drop(open);
+        self.typed().get(&key).cloned()
     }
 
     /// A call of the child frontend `id`: it reaches the records of that frontend only. `None` when `id` is not open.
@@ -131,10 +141,7 @@ impl FakeWindows {
     /// `(attached, detached)`: how many held connections were made and how many fell.
     #[must_use]
     pub fn holds(&self) -> (usize, usize) {
-        (
-            self.attached.load(Ordering::SeqCst),
-            self.detached.load(Ordering::SeqCst),
-        )
+        self.counts.get()
     }
 
     fn lock(&self) -> std::sync::MutexGuard<'_, Open> {
@@ -160,7 +167,7 @@ impl FakeWindows {
                 .with("extends", req.key.extends.clone())
                 .with("frontend", req.key.frontend.clone()));
         }
-        let (grip, counting) = self.grip_for(&req.key.extends, req.scope.as_deref())?;
+        let (grip, module) = self.grip_for(&req.key.extends, req.scope.as_deref())?;
         Ok(Entry {
             key: req.key.clone(),
             place,
@@ -171,7 +178,7 @@ impl FakeWindows {
             scope: req.scope.clone(),
             composition: compose(view, &self.catalog),
             grip,
-            counting,
+            module,
         })
     }
 }
@@ -204,13 +211,18 @@ impl WindowOwner for FakeWindows {
         let at = at_place(&now, &req, &place).cloned();
         match (decide(&now, &req), at) {
             (Decision::Open(WhenOpen::Switch), Some(at)) => {
-                // Same place, other record: the grip moves from the old record to the new one (same module, same hub); the new one
-                // is taken BEFORE the old falls, so a failure leaves the place as it was.
+                // Same place, other record: the grip (and its own connection, the hold) STAYS; it now watches and reads the new record
+                // (same module). The cache of the new one is taken BEFORE the old falls, so a failure leaves the place as it was.
                 let range = open[&at].key.extends.clone();
-                let (grip, counting) = self.grip_for(&range, req.scope.as_deref())?;
                 let mut e = open.remove(&at).expect("at_place names an open entry");
-                e.grip = grip;
-                e.counting = counting;
+                let key = RecordKey {
+                    range,
+                    scope: req.scope.clone(),
+                };
+                if let Err(err) = self.hub.rebind(&e.grip, key, &e.module) {
+                    open.insert(at, e);
+                    return Err(err);
+                }
                 let id = WindowId::of_record(&e.place.0, &e.place.1, req.scope.as_deref());
                 let from = std::mem::replace(&mut e.scope, req.scope.clone());
                 for c in open.values_mut().filter(|c| c.parent.as_ref() == Some(&at)) {

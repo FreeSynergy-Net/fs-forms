@@ -60,3 +60,4 @@ action-channel-mismatch = Die Aktion ruft einen anderen Befehl als den, den das 
 form-channel-unmapped = Das Modul lässt einen Pflichtkanal der Form unbelegt
 form-basic-mismatch = Ein Feld des Moduls passt nicht zur Art des Kanals
 form-no-component = Kein Block zeichnet diese Form; der Rückfall wird gezeigt
+host-notice-frame-not-built = Dieser Rahmen kann noch nicht gezeichnet werden; was darin steht, zeigt diese Version nicht

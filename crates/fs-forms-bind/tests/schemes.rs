@@ -11,7 +11,7 @@ fn with_field(basic: Basic, schemes: Option<Vec<&str>>, problems: Vec<Problem>) 
         page: "p".into(),
         seq: 0,
         frame: "form".into(),
-        places: vec![PlaceIn {
+        places: vec![NodeIn::Block(PlaceIn {
             elem: "pl".into(),
             place: "f".into(),
             seq: 0,
@@ -27,7 +27,8 @@ fn with_field(basic: Basic, schemes: Option<Vec<&str>>, problems: Vec<Problem>) 
                     schemes: schemes.map(|v| v.into_iter().map(str::to_owned).collect()),
                 },
             }],
-        }],
+            set: vec![],
+        })],
     }];
     let (warn, lock): (Vec<_>, Vec<_>) = problems
         .into_iter()

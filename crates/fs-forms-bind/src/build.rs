@@ -3,7 +3,8 @@
 //! Pattern: Builder. Every problem lands as a `PartLock` on the smallest part it concerns, or as a window `Notice`.
 
 use crate::build_menu::{MenuCtx, build_menu};
-use crate::build_place::{Env, build_place};
+use crate::build_place::Env;
+use crate::build_tree::build_nodes;
 use crate::catalog::Catalog;
 use crate::coded::Coded;
 use crate::codes::{BindCode, Notice, Part, PartLock};
@@ -75,25 +76,12 @@ impl Bind {
                     BindCode::PageEmpty.coded().with("page", page.page.clone()),
                 ));
             }
-            let mut order: Vec<_> = page.places.iter().collect();
-            order.sort_by_key(|p| p.seq);
             let env = Env {
                 catalog,
                 host: env_host,
                 sources: &sources,
             };
-            let places = order
-                .iter()
-                .map(|p| {
-                    build_place(
-                        &env,
-                        page,
-                        p,
-                        page.places.iter().filter(|q| q.seq == p.seq).count() > 1,
-                        &mut pool,
-                    )
-                })
-                .collect();
+            let places = build_nodes(&env, page, &page.places, &mut pool);
             pages.push(PagePlan {
                 page: page.page.clone(),
                 elem: page.elem.clone(),
@@ -236,7 +224,7 @@ fn lock_sources_with_problems(sources: &mut [SourcePlan], pool: &mut Pool<'_>) {
 
 fn state_of(plan: &Plan) -> PlanState {
     let drawable = plan.pages.iter().any(|p| {
-        p.places
+        p.leaves()
             .iter()
             .any(|pl| matches!(pl.status, PlaceStatus::Ready(_)))
     });

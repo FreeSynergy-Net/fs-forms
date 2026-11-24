@@ -94,6 +94,7 @@ pub(crate) fn build_place(
         seq: p.seq,
         block: p.block.clone(),
         source: p.source,
+        set: crate::build_tree::attrs(&p.set),
         status,
     }
 }

@@ -82,7 +82,7 @@ fn place(
     block: &str,
     source: Option<u32>,
     bindings: Vec<BindingIn>,
-) -> PlaceIn {
+) -> crate::model_tree::NodeIn {
     PlaceIn {
         elem: format!("pl-{page}-{name}"),
         place: name.to_owned(),
@@ -90,7 +90,9 @@ fn place(
         block: block.to_owned(),
         source,
         bindings,
+        set: vec![],
     }
+    .into()
 }
 
 fn menu_cmd(elem: &str, name: &str, on_record: bool, shortcut: Option<&str>) -> MenuIn {

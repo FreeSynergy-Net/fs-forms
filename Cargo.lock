@@ -909,7 +909,7 @@ checksum = "fe6d2e5af09e8c8ad56c969f2157a3d4238cebc7c55f0a517728c38f7b200f81"
 dependencies = [
  "serde",
  "termcolor",
- "unicode-width 0.2.3",
+ "unicode-width 0.1.14",
 ]
 
 [[package]]
@@ -1465,7 +1465,7 @@ dependencies = [
 [[package]]
 name = "fs-components-catalog"
 version = "0.1.0"
-source = "git+https://github.com/FreeSynergy-Net/fs-components?rev=9cea35b045d3fff994358b2c118d693f0cf20246#9cea35b045d3fff994358b2c118d693f0cf20246"
+source = "git+https://www.github.com/FreeSynergy-Net/fs-components?rev=8d52388ae8b0ce425fe93309f846cb70c571c12b#8d52388ae8b0ce425fe93309f846cb70c571c12b"
 dependencies = [
  "fs-records",
  "fs-types",
@@ -4814,7 +4814,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix 1.1.6",
  "windows-sys 0.61.2",

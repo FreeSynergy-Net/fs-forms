@@ -9,7 +9,7 @@ fn has(p: &Plan, code: &str) -> bool {
 }
 
 fn unknown_title_field(r: &mut Resolved) {
-    r.pages[0].places[0].bindings[1].kind = BindKind::Field {
+    r.pages[0].places[0].block_mut().unwrap().bindings[1].kind = BindKind::Field {
         field: field("title", Basic::Unknown),
         role: Role::Display,
         schemes: None,
@@ -55,7 +55,7 @@ fn p2_component_missing_next_to_a_slot_problem_on_a_locked_place() {
 #[test]
 fn q3_input_lock_of_a_ready_place_is_in_plan_locks() {
     let mut r = tasks_resolved();
-    r.pages[0].places[0].bindings[1].kind = BindKind::Field {
+    r.pages[0].places[0].block_mut().unwrap().bindings[1].kind = BindKind::Field {
         field: field("title", Basic::Text),
         role: Role::Input,
         schemes: None,
@@ -101,7 +101,7 @@ fn p5_type_right_beats_coming_with_a_locked_source() {
 #[test]
 fn c4_condition_chip_not_built_is_visible() {
     let mut r = tasks_resolved();
-    r.pages[0].places[0].bindings[1].kind = BindKind::Condition {
+    r.pages[0].places[0].block_mut().unwrap().bindings[1].kind = BindKind::Condition {
         path: vec!["done".into()],
         basic: Basic::Bool,
     };

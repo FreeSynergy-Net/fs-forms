@@ -136,6 +136,8 @@ pub struct PlaceIn {
     pub source: Option<u32>,
     /// Bindings in binding order.
     pub bindings: Vec<BindingIn>,
+    /// Attributes (`set`).
+    pub set: Vec<crate::model_tree::AttrIn>,
 }
 
 /// A page.
@@ -149,8 +151,8 @@ pub struct PageIn {
     pub seq: u32,
     /// Frame block.
     pub frame: String,
-    /// Placements.
-    pub places: Vec<PlaceIn>,
+    /// The tree of placements (a frame holds children; depth 1 is the flat list of before).
+    pub places: Vec<crate::model_tree::NodeIn>,
 }
 
 /// One node of the menu tree (order = `seq`, never sorted).
@@ -209,4 +211,12 @@ pub struct Resolved {
     pub warnings: Vec<Problem>,
     /// Open overlay conflicts.
     pub conflicts: Vec<Problem>,
+}
+
+impl PageIn {
+    /// The block placements of the tree, depth first (the flat reader).
+    #[must_use]
+    pub fn leaves(&self) -> Vec<&PlaceIn> {
+        crate::model_tree::leaves_in(&self.places)
+    }
 }

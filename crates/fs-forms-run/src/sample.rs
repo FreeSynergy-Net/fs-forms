@@ -7,7 +7,9 @@ use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 use fs_components_kanban::{Answer, Card, Column, Due, DueState, Label, Operation, Tone};
 
-use crate::form_data::FormData;
+use fs_forms_bind::{Basic, FormRef, ModuleForm};
+
+use crate::form_data::{FormData, FormRow};
 use crate::records::{Records, SideItem};
 use crate::sample_groups::groups;
 
@@ -115,10 +117,9 @@ impl Records for SampleBoard {
         true
     }
     fn forms(&self) -> Arc<Vec<FormData>> {
-        Arc::new(self.forms.clone())
-    }
-    fn columns(&self) -> Vec<Column> {
-        self.lock().clone()
+        let mut all = self.forms.clone();
+        all.push(board_form(&self.lock()));
+        Arc::new(all)
     }
     fn side(&self) -> Vec<SideItem> {
         ["Inbox", "Today", "Project A", "Project B"]
@@ -153,15 +154,14 @@ impl Records for SampleBoard {
             None => refused("no-column"),
         }
     }
-    fn move_card(&self, key: &str, from: &str, to: &str) -> Answer {
+    fn move_card(&self, key: &str, to: &str) -> Answer {
         let mut cols = self.lock();
         if !cols.iter().any(|c| c.key == to) {
             return refused("no-column");
         }
-        let Some(at) = cols
+        let Some((from, at)) = cols
             .iter()
-            .find(|c| c.key == from)
-            .and_then(|c| c.cards.iter().position(|x| x.key == key))
+            .find_map(|c| Some((c.key.clone(), c.cards.iter().position(|x| x.key == key)?)))
         else {
             return refused("no-card");
         };
@@ -184,5 +184,58 @@ impl Records for SampleBoard {
         }
         cols.push(Column::new(&key, title));
         Answer::Accepted
+    }
+}
+
+/// The board as the form `cards-in-columns` a module would give: a row per card, the labels, the due date and the assignee as its
+/// facts (the module maps them to the channel `facts`), the place in its column as `order`. Everything the window shows of the sample
+/// board goes through the same channels as the board of a real module.
+fn board_form(columns: &[Column]) -> FormData {
+    let mut rows = Vec::new();
+    for column in columns {
+        for (at, card) in column.cards.iter().enumerate() {
+            let label = card.labels.first().map_or("", |l| l.text.as_str());
+            let due = card.due.as_ref().map_or("", |d| d.text.as_str());
+            let who = card.assignee.as_deref().unwrap_or("");
+            let mut row = FormRow::of(
+                &card.key,
+                &[
+                    ("title", &card.title),
+                    ("column", &column.key),
+                    ("column-label", &column.title),
+                    ("order", &at.to_string()),
+                ],
+            );
+            row.values.push((
+                "facts".to_owned(),
+                vec![label.to_owned(), due.to_owned(), who.to_owned()],
+            ));
+            rows.push(row);
+        }
+    }
+    FormData {
+        declared: ModuleForm {
+            form: FormRef {
+                name: "cards-in-columns".to_owned(),
+                major: 1,
+                minor: 0,
+            },
+            map: vec![(
+                "facts".to_owned(),
+                vec!["label".to_owned(), "due".to_owned(), "assignee".to_owned()],
+            )],
+            fields: vec![
+                ("label".to_owned(), Basic::Text),
+                ("due".to_owned(), Basic::Text),
+                ("assignee".to_owned(), Basic::Text),
+            ],
+        },
+        rows,
+        may: Vec::new(),
+        commands: Vec::new(),
+        columns: columns
+            .iter()
+            .map(|c| (c.key.clone(), c.title.clone()))
+            .collect(),
     }
 }

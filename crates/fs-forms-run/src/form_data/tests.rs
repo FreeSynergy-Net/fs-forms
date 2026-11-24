@@ -1,57 +1,53 @@
-//! The board made from the channels of a form (order of appearance, labels, columns).
+//! The records of a form (the board itself is read by `fs-components-kanban`, its tests are there): sample data, a row by channel.
 //!
 //! Pattern: none (tests).
 
 use super::*;
 use fs_forms_bind::FormRef;
 
-fn cards(rows: Vec<FormRow>) -> FormRecords {
-    FormRecords {
-        provider: "fake".into(),
-        forms: vec![FormData {
-            may: Vec::new(),
-            commands: Vec::new(),
-            columns: Vec::new(),
-            declared: ModuleForm {
-                form: FormRef {
-                    name: "cards-in-columns".into(),
-                    major: 1,
-                    minor: 0,
-                },
-                map: Vec::new(),
-                fields: Vec::new(),
-            },
-            rows,
-        }],
-        ..FormRecords::default()
+fn declared() -> ModuleForm {
+    ModuleForm {
+        form: FormRef {
+            name: "cards-in-columns".into(),
+            major: 1,
+            minor: 0,
+        },
+        map: vec![("facts".into(), vec!["due".into(), "mine".into()])],
+        fields: vec![("due".into(), Basic::Date), ("mine".into(), Basic::Bool)],
     }
 }
 
 #[test]
-fn the_board_is_made_from_the_channels_column_and_title_in_order_of_appearance() {
-    let r = cards(vec![
-        FormRow::of("a", &[("title", "One"), ("column", "To do")]),
-        FormRow::of("b", &[("title", "Two"), ("column", "Doing")]),
-        FormRow::of("c", &[("title", "Three"), ("column", "To do")]),
-        FormRow::of("d", &[("title", "No column")]),
-    ]);
-    let cols = r.columns();
-    let names: Vec<_> = cols.iter().map(|c| c.title.as_str()).collect();
-    assert_eq!(names, ["To do", "Doing"]);
-    let keys: Vec<Vec<_>> = cols
-        .iter()
-        .map(|c| c.cards.iter().map(|k| k.key.as_str()).collect())
-        .collect();
-    assert_eq!(keys, [vec!["a", "c"], vec!["b"]]);
-    assert!(r.is_sample());
+fn the_input_of_a_component_has_the_channels_with_their_fields_and_the_named_columns() {
+    let data = FormData {
+        declared: declared(),
+        rows: vec![FormRow::of("a", &[("title", "One")])],
+        may: Vec::new(),
+        commands: Vec::new(),
+        columns: vec![("todo".into(), "To do".into())],
+    };
+    let input = input_of(&data);
+    assert_eq!(input.form, "cards-in-columns@1.0.0");
+    let facts = input.channel("facts").expect("channel facts");
+    let blocks: Vec<_> = facts.fields.iter().map(|f| f.block.as_str()).collect();
+    assert_eq!(blocks, ["field-date", "field-flag"]);
+    assert_eq!(
+        input.channel("column"),
+        None,
+        "only channels the module maps are listed"
+    );
+    assert_eq!(input.rows.len(), 1);
 }
 
 #[test]
-fn only_the_provider_fake_is_sample_data_and_a_missing_form_gives_no_columns() {
-    let mut r = cards(Vec::new());
+fn only_the_provider_fake_is_sample_data() {
+    let mut r = FormRecords {
+        provider: "fake".into(),
+        ..FormRecords::default()
+    };
+    assert!(r.is_sample());
     r.provider = "tasks".into();
-    assert!(!r.is_sample() && r.columns().is_empty());
-    assert_eq!(FormRecords::default().columns().len(), 0);
+    assert!(!r.is_sample());
 }
 
 #[test]

@@ -4,7 +4,7 @@
 //! (`k3-pictures/k3-<action>-before.png`, `-after.png`).
 //!
 //! Tests: after each action the next drawing differs from the one before; two drawings without an action are equal (the
-//! difference is the action, not noise). The data path of the gestures is tested in `src/events/tests.rs`.
+//! difference is the action, not noise). The data path of the gestures is tested in `src/write/tests.rs` and `fs-components-kanban`.
 
 mod support;
 use std::sync::Arc;
@@ -28,7 +28,7 @@ fn actions() -> Vec<(&'static str, Step)> {
         (
             "move-card",
             Box::new(|b| {
-                b.move_card("FS-1", "todo", "doing");
+                b.move_card("FS-1", "doing");
             }),
         ),
         (

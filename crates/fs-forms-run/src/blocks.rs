@@ -131,14 +131,14 @@ mod tests {
     }
 
     #[test]
-    fn a_block_the_catalog_gives_a_widget_is_drawn_when_the_widget_has_an_adapter_and_listed_when_not()
-     {
+    fn a_block_the_catalog_gives_a_widget_is_drawn_when_the_widget_has_a_view_and_listed_when_not()
+    {
         let b = super::Blocks;
-        // widgets with an adapter: drawn without a name of the block anywhere in the host
-        for block in ["board", "contact-row", "field-card"] {
+        // widgets with a view: drawn without a name of the block anywhere in the host
+        for block in ["board", "contact-row", "field-card", "tree", "table"] {
             assert!(b.draws(block), "{block} is not drawn");
         }
-        // a widget without an adapter stays honestly not built and is in the list with its reason
+        // a widget without a view stays honestly not built and is in the list with its reason
         let list = super::not_built_list();
         assert!(
             list.iter()

@@ -9,7 +9,7 @@
 
 use std::sync::Arc;
 
-use fs_components_kanban::{Answer, Column, Operation};
+use fs_components_kanban::{Answer, Operation};
 
 use crate::form_data::FormData;
 
@@ -29,8 +29,6 @@ fn unsupported() -> Answer {
 
 /// What the blocks of the host draw their records from, and which changes they take.
 pub trait Records: Send + Sync {
-    /// The columns with their cards of a board.
-    fn columns(&self) -> Vec<Column>;
     /// The entries of a side list.
     fn side(&self) -> Vec<SideItem>;
     /// The forms the connected module offers, with the rows by channel (the blocks tree and table draw from these). Read again
@@ -82,8 +80,8 @@ pub trait Records: Send + Sync {
     fn add_card(&self, _column: &str, _title: &str) -> Answer {
         unsupported()
     }
-    /// The card `key` from column `from` to column `to` (only called when [`Records::can`] says [`Operation::Move`]).
-    fn move_card(&self, _key: &str, _from: &str, _to: &str) -> Answer {
+    /// The card `key` to column `to` (only called when [`Records::can`] says [`Operation::Move`]).
+    fn move_card(&self, _key: &str, _to: &str) -> Answer {
         unsupported()
     }
     /// A column named `title` (only called when [`Records::can`] says [`Operation::AddColumn`]).
@@ -106,9 +104,6 @@ pub trait Records: Send + Sync {
 pub struct NoRecords;
 
 impl Records for NoRecords {
-    fn columns(&self) -> Vec<Column> {
-        Vec::new()
-    }
     fn side(&self) -> Vec<SideItem> {
         Vec::new()
     }
@@ -119,9 +114,6 @@ impl Records for NoRecords {
 pub struct Unavailable(pub String);
 
 impl Records for Unavailable {
-    fn columns(&self) -> Vec<Column> {
-        Vec::new()
-    }
     fn side(&self) -> Vec<SideItem> {
         Vec::new()
     }

@@ -202,6 +202,22 @@ pub fn app_styled(
     Ok(widget)
 }
 
+/// Sets the status line of `app` from the state of the composition and the records it shows (open and frontend switch alike).
+/// Pattern: Template Method (one place decides how the line is made; callers only name their inputs).
+pub(crate) fn set_status_line(
+    app: &AppWidget,
+    texts: &Mf2Texts,
+    state: HostState,
+    records: &dyn Records,
+) {
+    app.set_status(Some(status(
+        texts,
+        state,
+        records.is_sample(),
+        records.unavailable().as_deref(),
+    )));
+}
+
 /// How the host stands; sample data is said in the same line (a made-up record is never shown as a real one), and so is a data
 /// source that is not there (`down`: always a problem).
 pub(crate) fn status(

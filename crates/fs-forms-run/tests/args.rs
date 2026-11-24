@@ -99,3 +99,28 @@ fn the_style_set_for_the_program_is_a_style_name_and_a_wrong_one_is_a_message() 
         "a missing value"
     );
 }
+
+#[test]
+fn scope_is_one_record_per_start_and_never_empty() {
+    let Ok(Command::Window(c)) = parse(&words("--frontend a --extends b --scope urn:uuid:7")) else {
+        panic!("not a window");
+    };
+    assert_eq!(c.scope.as_deref(), Some("urn:uuid:7"));
+    let Ok(Command::Window(c)) = parse(&words("--frontend a --extends b")) else {
+        panic!();
+    };
+    assert_eq!(c.scope, None, "no --scope: no record");
+    assert!(
+        parse(&words("--frontend a --extends b --scope"))
+            .unwrap_err()
+            .contains("needs a value")
+    );
+    let empty = ["--frontend", "a", "--extends", "b", "--scope", " "].map(str::to_owned);
+    assert!(parse(&empty).unwrap_err().contains("empty"));
+    assert!(
+        parse(&words("--frontend a --extends b --scope x --scope y"))
+            .unwrap_err()
+            .contains("twice")
+    );
+    assert!(fs_forms_run::HELP.contains("--scope AS2-ID"));
+}

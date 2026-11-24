@@ -102,7 +102,8 @@ fn the_style_set_for_the_program_is_a_style_name_and_a_wrong_one_is_a_message() 
 
 #[test]
 fn scope_is_one_record_per_start_and_never_empty() {
-    let Ok(Command::Window(c)) = parse(&words("--frontend a --extends b --scope urn:uuid:7")) else {
+    let Ok(Command::Window(c)) = parse(&words("--frontend a --extends b --scope urn:uuid:7"))
+    else {
         panic!("not a window");
     };
     assert_eq!(c.scope.as_deref(), Some("urn:uuid:7"));

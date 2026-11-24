@@ -44,6 +44,8 @@ fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", tag 
 fs-types = { git = "https://github.com/FreeSynergy-Net/fs-types", tag = "v0.0.6", version = "0.0.5" }
 fs-forms-bind = { path = "../fs-forms-bind", version = "0.1.0" }
 fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", tag = "v0.1.3", version = "0.1.3" }
+# `UndoState` (the depth of the undo of one actor) for `Records::history`: one type, no copy. The rev is the one of S3-3 (v0.0.11); only the type is used.
+fs-objects = { git = "https://github.com/FreeSynergy-Net/fs-objects", rev = "f6409f2a5378ba1464e69ae216efd4d27d249182", version = "0.0.11" }
 tokio = { version = "1", features = ["rt", "sync", "net", "time"] }
 
 # Picture tests (the window drawn without a window, read back): the same dev-dependencies as fs-forms-simple.

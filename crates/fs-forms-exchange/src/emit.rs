@@ -27,6 +27,18 @@ fn toml_str(s: &str, out: &mut String) {
     out.push('"');
 }
 
+/// A bare key when the TOML grammar allows it, else a quoted one.
+fn key(k: &str, out: &mut String) {
+    if !k.is_empty()
+        && k.bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
+    {
+        out.push_str(k);
+    } else {
+        toml_str(k, out);
+    }
+}
+
 fn scalar(t: &Tree, out: &mut String) -> bool {
     match t {
         Tree::Str(s) => toml_str(s, out),
@@ -44,7 +56,19 @@ fn scalar(t: &Tree, out: &mut String) -> bool {
             }
             out.push(']');
         }
-        _ => return false,
+        Tree::Obj(o, _) => {
+            out.push_str("{ ");
+            for (i, (k, x)) in o.iter().enumerate() {
+                if i > 0 {
+                    out.push_str(", ");
+                }
+                key(k, out);
+                out.push_str(" = ");
+                scalar(x, out);
+            }
+            out.push_str(" }");
+        }
+        Tree::Arr(_) => return false,
     }
     true
 }

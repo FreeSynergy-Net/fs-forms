@@ -26,7 +26,7 @@ pub fn key(frontend: &str) -> FrontendKey {
     }
 }
 
-/// One page `board`, one block `main`, one binding `title`, one message; format 2 with every elem.
+/// One page `board`, one block `main`, one binding `title`, one message; format 3 with every elem.
 pub fn doc(frontend: &str) -> LayoutDoc {
     let binding = BindingDoc {
         slot: "title".into(),
@@ -54,7 +54,7 @@ pub fn doc(frontend: &str) -> LayoutDoc {
         places: vec![],
     };
     LayoutDoc {
-        format: 2,
+        format: 3,
         key: key(frontend),
         exec: "fs-forms-run".into(),
         title_key: "board-title".into(),

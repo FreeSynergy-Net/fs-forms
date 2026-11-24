@@ -5,7 +5,7 @@ use std::path::Path;
 use fs_forms_exchange::{Format, read_layout, write_layout};
 use fs_forms_layout::{Limits, OpenCatalog};
 
-const UNSORTED: &str = r#"schema = 2
+const UNSORTED: &str = r#"schema = 3
 kind = "frontend"
 id = "board"
 extends = "net.example.Tasks"
@@ -18,34 +18,34 @@ page = "board"
 frame = "workbench"
 navigation = "single"
 
-[[page.block]]
+[[page.place]]
 elem = "block:board/main"
-place = "main"
+at = "main"
 block = "board"
 
-[[page.block.bind]]
+[[page.place.bind]]
 elem = "binding:board/main/value/0"
 slot = "value"
 nth = 0
 field = "homepage"
 role = "input"
 
-[[page.block.bind.schemes]]
+[[page.place.bind.schemes]]
 elem = "scheme:a"
 scheme = "ssh"
 
-[[page.block.bind.schemes]]
+[[page.place.bind.schemes]]
 elem = "scheme:b"
 scheme = "https"
 
-[[page.block.bind]]
+[[page.place.bind]]
 elem = "binding:board/main/title/1"
 slot = "title"
 nth = 1
 field = "title"
 role = "display"
 
-[[page.block.bind]]
+[[page.place.bind]]
 elem = "binding:board/main/title/0"
 slot = "title"
 nth = 0
@@ -71,7 +71,7 @@ lang = "de"
 text = "Eins"
 "#;
 
-const GOLDEN: &str = r#"schema = 2
+const GOLDEN: &str = r#"schema = 3
 kind = "frontend"
 id = "board"
 extends = "net.example.Tasks"
@@ -84,37 +84,37 @@ page = "board"
 frame = "workbench"
 navigation = "single"
 
-[[page.block]]
+[[page.place]]
 elem = "block:board/main"
-place = "main"
+at = "main"
 block = "board"
 
-[[page.block.bind]]
+[[page.place.bind]]
 elem = "binding:board/main/title/0"
 slot = "title"
 nth = 0
 field = "title"
 role = "display"
 
-[[page.block.bind]]
+[[page.place.bind]]
 elem = "binding:board/main/title/1"
 slot = "title"
 nth = 1
 field = "title"
 role = "display"
 
-[[page.block.bind]]
+[[page.place.bind]]
 elem = "binding:board/main/value/0"
 slot = "value"
 nth = 0
 field = "homepage"
 role = "input"
 
-[[page.block.bind.schemes]]
+[[page.place.bind.schemes]]
 elem = "scheme:a"
 scheme = "ssh"
 
-[[page.block.bind.schemes]]
+[[page.place.bind.schemes]]
 elem = "scheme:b"
 scheme = "https"
 

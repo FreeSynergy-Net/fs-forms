@@ -2,9 +2,11 @@
 
 Version = tag; all crates of the workspace carry the same version.
 
-## 0.1.0 (24.11.2026)
+## 0.1.0
 
 ### English
+
+Released 24.11.2026.
 
 - The host draws a block by the WIDGET the catalog (SB-29) names for it, not by a list of block names; one table keyed by the widget plus three compositions of general blocks (`sidebar`, `tree`, `table`). A block whose widget this host has no drawing for is said as `not built`, never silently dropped; `--list-blocks` prints those blocks of the contract with the reason (no widget in the contract, or a widget without an adapter). A test keeps every adapter tied to a widget of the catalog.
 - `draw.rs` is split into `draw/compositions.rs` and `draw/adapters.rs` (no change in behaviour).
@@ -14,6 +16,8 @@ Version = tag; all crates of the workspace carry the same version.
 - BREAKING: the version moves from 0.0.12 to 0.1.0. A module that offers only the form `members` is no longer drawn by the block `table` (it must offer `rows@1.0`); the data of `sample_groups()` is a form `rows` now (public function, other form name and channels). Written with the help of Claude (Anthropic).
 
 ### Deutsch
+
+Veröffentlicht am 24.11.2026.
 
 - Der Host zeichnet einen Baustein nach dem WIDGET, das der Katalog (SB-29) dafür nennt, nicht nach einer Liste von Baustein-Namen; eine Tabelle nach Widget und drei Zusammensetzungen allgemeiner Bausteine (`sidebar`, `tree`, `table`). Ein Baustein, für dessen Widget der Host keine Zeichnung hat, wird als `nicht gebaut` gesagt, nie stillschweigend weggelassen; `--list-blocks` gibt diese Bausteine des Vertrags mit dem Grund aus (kein Widget im Vertrag oder ein Widget ohne Adapter). Ein Test hält jeden Adapter an ein Widget des Katalogs.
 - `draw.rs` ist in `draw/compositions.rs` und `draw/adapters.rs` aufgeteilt (Verhalten unverändert).

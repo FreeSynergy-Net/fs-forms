@@ -20,7 +20,7 @@ impl LayoutWrite for RpcLayouts {
     fn create<'a>(&'a self, doc: LayoutDoc, who: &'a Who) -> Pending<'a, Report> {
         Box::pin(self.ctx.call(async move |c| {
             let mut req = c.create_request();
-            write_doc(req.get().init_doc(), &doc);
+            write_doc(req.get().init_doc(), &doc)?;
             req.get().set_author(&who.author.0);
             let r = req.send().promise.await?;
             Ok(read_report(r.get()?.get_report()?)?)
@@ -30,7 +30,7 @@ impl LayoutWrite for RpcLayouts {
     fn import<'a>(&'a self, doc: LayoutDoc, mode: Mode, who: &'a Who) -> Pending<'a, Report> {
         Box::pin(self.ctx.call(async move |c| {
             let mut req = c.import_request();
-            write_doc(req.get().init_doc(), &doc);
+            write_doc(req.get().init_doc(), &doc)?;
             req.get().set_dry_run(dry(mode));
             req.get().set_author(&who.author.0);
             let r = req.send().promise.await?;
@@ -49,7 +49,7 @@ impl LayoutWrite for RpcLayouts {
             let mut req = c.save_request();
             write_id(req.get().init_id(), &id.0)?;
             req.get().set_expected_rev(expected.0);
-            write_doc(req.get().init_doc(), &doc);
+            write_doc(req.get().init_doc(), &doc)?;
             req.get().set_author(&who.author.0);
             let r = req.send().promise.await?;
             Ok(read_report(r.get()?.get_report()?)?)
@@ -78,7 +78,7 @@ impl PackageLayouts for RpcLayouts {
     ) -> Pending<'a, Report> {
         Box::pin(self.ctx.call(async move |c| {
             let mut req = c.install_request();
-            write_doc(req.get().init_doc(), &doc);
+            write_doc(req.get().init_doc(), &doc)?;
             req.get().set_package(&package.package);
             req.get().set_version(&package.version);
             req.get().set_dry_run(dry(mode));

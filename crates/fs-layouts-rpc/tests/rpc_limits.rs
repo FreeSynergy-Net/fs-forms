@@ -33,6 +33,7 @@ fn limited(all: u32, per_actor: u32) -> fs_layouts_rpc::Layouts<dyn LayoutStore>
         watchers_max: all,
         watchers_per_actor_max: per_actor,
         by: LimitSource::Person,
+        ..ServiceLimits::declared()
     };
     svc.per_connection(&Hub::new())
 }

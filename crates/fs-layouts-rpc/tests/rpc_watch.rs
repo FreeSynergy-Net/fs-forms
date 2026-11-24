@@ -78,6 +78,7 @@ fn the_watcher_limit_is_a_setting_with_its_source() {
             watchers_max: 1,
             watchers_per_actor_max: 8,
             by: LimitSource::Person,
+            ..ServiceLimits::declared()
         };
         svc
     });

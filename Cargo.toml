@@ -25,3 +25,8 @@ repository = "https://github.com/FreeSynergy/fs-forms"
 # fs-rpc and fs-components need 1.89.
 rust-version = "1.89"
 
+
+# Development state only (ENTWURF-a5-schnitt section 4b, A5 F5): the new layouts types (Attr, Frame, PlaceNode, Block.set, Page.places)
+# are read from the head of fs-interfaces branch unreviewed/a5-i1. Not tagged; replaced by the tag after the review of bundle 1.
+[patch."https://github.com/FreeSynergy-Net/fs-interfaces"]
+fs-interfaces = { git = "https://www.github.com/FreeSynergy-Net/fs-interfaces", rev = "60256ee02b2fffa1079a65175f8e5dd2a8e8ad72" }

@@ -15,6 +15,7 @@ use super::doc_in::read_doc;
 use super::doc_out::write_doc;
 use super::ids::{layout_id, read_cursor, write_id, write_nil};
 use super::text::{R, bad, n, read_problems, txt, word, write_problems};
+use super::tree_guard::TreeLimits;
 use super::words::Words;
 use crate::layouts_capnp as w;
 
@@ -27,7 +28,7 @@ pub(crate) fn write_resolved(
         Some(s) => write_summary(out.reborrow().init_summary(), s)?,
         None => write_summary_part(out.reborrow().init_summary(), resolved)?,
     }
-    write_doc(out.reborrow().init_layout(), &resolved.layout.to_doc());
+    write_doc(out.reborrow().init_layout(), &resolved.layout.to_doc())?;
     out.set_stamp(resolved.stamp.0);
     write_layers(out.reborrow().init_layers(n(&resolved.layers)), resolved)?;
     let mut conflicts = out.reborrow().init_conflicts(n(&resolved.conflicts));
@@ -114,7 +115,7 @@ fn write_provenance(
 pub(crate) type Check<'a> = &'a dyn Fn(fs_forms_layout::LayoutDoc) -> R<Layout>;
 
 pub(crate) fn read_layout(r: w::layout_doc::Reader<'_>, check: Check<'_>) -> R<Layout> {
-    check(read_doc(r)?)
+    check(read_doc(r, &TreeLimits::declared())?)
 }
 
 pub(crate) fn read_resolved(r: w::resolved::Reader<'_>, check: Check<'_>) -> R<Resolved> {

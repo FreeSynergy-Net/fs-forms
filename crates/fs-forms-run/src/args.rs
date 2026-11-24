@@ -1,7 +1,8 @@
 //! The command line of the host: the words the starter hands over (`--forms-socket`, `--socket`, `--frontend`, `--extends`,
 //! `--fresh` or `--resumed`); a person never types it.
 //!
-//! Pattern: Command: the words become one `Command`, or a message for exit code 2.
+//! Pattern: Command: the words become one `Command`, or a message for exit code 2. `Command` is `non_exhaustive`: a host
+//! always has a fallback arm with a visible message; appended commands never break a host build.
 
 use std::path::PathBuf;
 
@@ -59,7 +60,13 @@ pub struct Config {
 }
 
 /// What to do.
+///
+/// `non_exhaustive`: commands are only ever appended (the last was `ListBlocks`), and an appended command must not break a
+/// host build. Rule: a host has always a fallback arm with a visible message, for example
+/// `Ok(_) => { eprintln!("host: this command is not supported by this host"); ExitCode::from(2) }`; it hands the words on to
+/// `fs_forms_run::run_code` when it can. Inside this crate the match stays complete (no wildcard).
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Command {
     /// Print the version.
     Version,

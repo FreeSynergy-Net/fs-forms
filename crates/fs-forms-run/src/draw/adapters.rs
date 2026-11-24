@@ -50,7 +50,7 @@ pub(super) fn board(ctx: &Ctx, width: f32, height: f32) -> Div {
     div().w(width).h(height).child(area)
 }
 
-/// The people the form `members` gives, for the contact list: the channel `person` is the name; `role` and `badge` are the fields of the sheet.
+/// The people the form `rows` gives, for the contact list: the channel `label` is the name; the first two values of `columns` (role, level) are the fields of the sheet.
 /// Read only: the source can do nothing else (no edit, no create), so the workbench shows those controls locked, never working.
 struct MemberPeople(Vec<FormRow>);
 
@@ -65,14 +65,14 @@ impl PeopleSource for MemberPeople {
             .0
             .iter()
             .filter(|r| {
-                r.get("person")
+                r.get("label")
                     .unwrap_or(&r.key)
                     .to_lowercase()
                     .contains(&term)
             })
             .skip(offset)
             .take(limit)
-            .map(|r| PersonRow::new(&r.key, vec![r.get("person").unwrap_or(&r.key).to_owned()]))
+            .map(|r| PersonRow::new(&r.key, vec![r.get("label").unwrap_or(&r.key).to_owned()]))
             .collect())
     }
 
@@ -80,19 +80,23 @@ impl PeopleSource for MemberPeople {
         let row = self.0.iter().find(|r| r.key == key);
         let fields = ["role", "badge"]
             .iter()
-            .filter_map(|c| row.and_then(|r| r.get(c)).map(|v| PersonField::new(*c, v)))
+            .enumerate()
+            .filter_map(|(i, c)| {
+                let value = row.and_then(|r| r.all("columns").get(i))?;
+                (!value.is_empty()).then(|| PersonField::new(*c, value))
+            })
             .collect();
         Ok(PersonSheet::new(
-            row.and_then(|r| r.get("person")).unwrap_or(key),
+            row.and_then(|r| r.get("label")).unwrap_or(key),
             vec![PersonSection::new("", fields)],
         ))
     }
 }
 
-/// The block `contact-row`: the people workbench (compact: list and detail) over the rows of the form `members`.
+/// The block `contact-row`: the people workbench (compact: list and detail) over the rows of the form `rows`.
 /// The widget holds the state (selection, search, "more"), so it is kept in the context over a rebuild and made anew only when the rows change.
 pub(super) fn contact_row(ctx: &Ctx, width: f32, height: f32) -> Div {
-    let members = rows(ctx, "members");
+    let members = rows(ctx, "rows");
     let people = {
         let mut slot = ctx.people.lock().unwrap_or_else(PoisonError::into_inner);
         match slot.as_ref() {
@@ -113,14 +117,14 @@ pub(super) fn contact_row(ctx: &Ctx, width: f32, height: f32) -> Div {
         .child(people.build(width, height.max(MIN_H)))
 }
 
-/// The block `field-card`: one card per row of the form `members` (the role is the label, the person the value).
+/// The block `field-card`: one card per row of the form `rows` (the role is the label, the person the value).
 pub(super) fn field_card(ctx: &Ctx, width: f32, _height: f32) -> Div {
     let mut out = div().w(width).flex_col();
-    for (n, row) in rows(ctx, "members").iter().enumerate() {
+    for (n, row) in rows(ctx, "rows").iter().enumerate() {
         let card = FieldCard::new(
             Glyph::Person,
-            row.get("role").unwrap_or(""),
-            row.get("person").unwrap_or(&row.key),
+            row.all("columns").first().map_or("", String::as_str),
+            row.get("label").unwrap_or(&row.key),
         );
         out = out.child(card.build(&format!("field-card-{n}")));
     }

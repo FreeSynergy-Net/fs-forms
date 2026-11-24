@@ -1,5 +1,5 @@
 //! The blocks of `fs-components` this host draws as elements of a page, and the data each one is given. Which block has which widget is the catalog's (`widget` of the contract); `board` is the kanban
-//! board, `sidebar` a tree of the side list, `tree` and `table` draw the forms `tree` and `members` by channel. The assignment is one table keyed by the WIDGET the catalog names (and three compositions of general blocks); nothing is painted here and nothing is decided here.
+//! board, `sidebar` a tree of the side list, `tree` and `table` draw the forms `tree` and `rows` by channel. The assignment is one table keyed by the WIDGET the catalog names (and three compositions of general blocks); nothing is painted here and nothing is decided here.
 //! A control of the board is unlocked only when the description has an action for it and the records can do it (see `events`);
 //! every other one is drawn locked with its hint, never silently.
 //!

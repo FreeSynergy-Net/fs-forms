@@ -80,27 +80,35 @@ pub(super) fn tree(ctx: &Ctx, width: f32, _height: f32) -> Div {
         .child(TreeView::new(roots(&rows(ctx, "tree"))).build())
 }
 
-/// The channels the member list shows, in this order (the channel `records` is the list itself).
-const MEMBER_CHANNELS: &[&str] = &["person", "role", "badge"];
+/// The heads of the columns of the form `rows`: the `label` first, then the values of the channel `columns` in the order of the map
+/// (the words come from the MF2 files, `host-channel-*`; more columns are not drawn yet).
+const ROWS_HEADS: &[&str] = &["person", "role", "badge"];
 
 pub(super) fn table(ctx: &Ctx, width: f32, _height: f32) -> Div {
-    let cols: Vec<Column> = MEMBER_CHANNELS
+    let data = rows(ctx, "rows");
+    let n_cols = data
         .iter()
+        .map(|r| r.all("columns").len())
+        .max()
+        .unwrap_or(0)
+        .min(ROWS_HEADS.len() - 1);
+    let cols: Vec<Column> = ROWS_HEADS
+        .iter()
+        .take(n_cols + 1)
         .map(|c| Column::new(*c, ctx.say.say(&format!("channel.{c}"))))
         .collect();
-    let cells: Vec<Vec<String>> = rows(ctx, "members")
+    let cells: Vec<Vec<String>> = data
         .iter()
         .map(|r| {
-            MEMBER_CHANNELS
-                .iter()
-                .map(|c| r.get(c).unwrap_or("").to_owned())
-                .collect()
+            let mut cells = vec![r.get("label").unwrap_or(&r.key).to_owned()];
+            cells.extend((0..n_cols).map(|i| r.all("columns").get(i).cloned().unwrap_or_default()));
+            cells
         })
         .collect();
-    let column_w = (width / 3.0).max(80.0);
+    let column_w = (width / cols.len().max(1) as f32).max(80.0);
     div().w(width).child(
         Table::new(cols, cells)
-            .id("members")
+            .id("rows")
             .column_width(column_w)
             .build(),
     )

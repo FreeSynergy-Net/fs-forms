@@ -15,7 +15,7 @@ use crate::sample_groups::groups;
 #[derive(Debug)]
 pub struct SampleBoard {
     columns: Mutex<Vec<Column>>,
-    /// The forms of the sample groups module (tree and members), by channel.
+    /// The forms of the sample groups module (tree and rows), by channel.
     forms: Vec<FormData>,
 }
 

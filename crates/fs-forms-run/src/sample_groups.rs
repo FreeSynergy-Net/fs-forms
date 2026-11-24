@@ -76,26 +76,38 @@ fn tree() -> FormData {
     }
 }
 
-/// The member list of the groups.
+/// The member list of the groups, in the shape `rows@1.0`: the person names the row, role and level are its columns.
 fn members() -> FormData {
-    let row = |key: &str, person: &str, role: &str, badge: &str| {
-        FormRow::of(key, &[("person", person), ("role", role), ("badge", badge)])
+    let row = |key: &str, person: &str, role: &str, badge: &str| FormRow {
+        key: key.to_owned(),
+        values: vec![
+            ("label".to_owned(), vec![person.to_owned()]),
+            (
+                "columns".to_owned(),
+                vec![role.to_owned(), badge.to_owned()],
+            ),
+        ],
+        may: Vec::new(),
     };
+    let mut declared = declared(
+        "rows",
+        &[
+            ("items", "Member"),
+            ("label", "person"),
+            ("columns", "role"),
+        ],
+        &[
+            ("person", Basic::Reference),
+            ("role", Basic::Reference),
+            ("level", Basic::Text),
+        ],
+    );
+    // the channel `columns` has two fields, in the order of the columns (the helper `declared` gives one field a channel)
+    if let Some((_, fields)) = declared.map.iter_mut().find(|(c, _)| c == "columns") {
+        fields.push("level".to_owned());
+    }
     FormData {
-        declared: declared(
-            "members",
-            &[
-                ("records", "Member"),
-                ("person", "person"),
-                ("role", "role"),
-                ("badge", "level"),
-            ],
-            &[
-                ("person", Basic::Reference),
-                ("role", Basic::Reference),
-                ("level", Basic::Text),
-            ],
-        ),
+        declared,
         may: Vec::new(),
         commands: Vec::new(),
         columns: Vec::new(),

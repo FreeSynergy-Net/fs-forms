@@ -1,4 +1,4 @@
-//! SQ-3: the blocks `tree` and `table` draw the forms `tree@1.0` and `members@1.0` BY CHANNEL, from the port `Sources` (no module
+//! SQ-3: the blocks `tree` and `table` draw the forms `tree@1.0` and `rows@1.0` BY CHANNEL, from the port `Sources` (no module
 //! client in the host). Tests: (1) `--sample-data` with the groups description draws a window that differs from the empty one and
 //! says "Sample data"; (2) a module that leaves a required channel out is locked with `form-channel-unmapped` and a picture run
 //! ends with 3 (the PNG is written); (3) a contract the host cannot connect is said, not ignored.
@@ -110,11 +110,11 @@ fn a_connected_module_fits_and_a_required_channel_left_out_locks_the_block_and_e
     let bad = run(
         &[],
         &Groups {
-            without: &["person"],
+            without: &["items"],
         },
         &dir.join("groups-unmapped2.png"),
     );
-    assert_eq!(bad, 3, "a channel of the other form");
+    assert_eq!(bad, 3, "the channel `items` is only in the form `rows`");
 }
 
 #[test]
@@ -130,5 +130,6 @@ fn the_lock_names_the_code_of_the_rule() {
             && c.params.iter().any(|(k, v)| k == "channel" && v == "label")),
         "{codes:?}"
     );
-    assert_eq!(fs_forms_run::form_problems("table", r.as_ref()), vec![]);
+    // `rows` names its rows by `label` too, so the same channel left out locks the table as well
+    assert!(!fs_forms_run::form_problems("table", r.as_ref()).is_empty());
 }

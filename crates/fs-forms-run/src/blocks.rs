@@ -18,7 +18,7 @@ mod contract {
 }
 
 /// The frames: the screens of the shell.
-const FRAMES: &[&str] = &["workbench", "detail-page", "sidebar"];
+const FRAMES: &[&str] = &["app-window", "workbench", "detail-page", "sidebar"];
 
 /// The blocks of the states the window draws itself (a notice, an empty page, a placeholder).
 const STATE_BLOCKS: &[&str] = &["empty-state", "partial-notice", "skeleton"];
@@ -38,6 +38,21 @@ pub(crate) fn forms_of(block: &str) -> Vec<FormRef> {
     catalog()
         .block(block)
         .map_or_else(Vec::new, |b| b.forms.clone())
+}
+
+/// The widget or crate the contract names for `block` (`widget` of its block file); none for a general block or an unknown one.
+pub(crate) fn widget_of(block: &str) -> Option<String> {
+    catalog().block(block).and_then(|b| b.widget.clone())
+}
+
+/// Every block of the contract with how this build stands for it: `None` = drawn (or a frame or a state), `Some(reason)` = not built.
+pub(crate) fn not_built_list() -> Vec<(String, String)> {
+    let b = Blocks;
+    catalog()
+        .iter()
+        .filter(|s| !b.built(&s.name) && !b.draws(&s.name))
+        .map(|s| (s.name.clone(), draw::missing(&s.name)))
+        .collect()
 }
 
 /// Every block of the contract that draws a form, with its forms.
@@ -104,6 +119,28 @@ mod tests {
         assert!(
             b.known("board-detail") && !b.built("board-detail"),
             "known, not drawn yet"
+        );
+    }
+
+    #[test]
+    fn a_block_the_catalog_gives_a_widget_is_drawn_when_the_widget_has_an_adapter_and_listed_when_not()
+     {
+        let b = super::Blocks;
+        // widgets with an adapter: drawn without a name of the block anywhere in the host
+        for block in ["board", "contact-row", "field-card"] {
+            assert!(b.draws(block), "{block} is not drawn");
+        }
+        // a widget without an adapter stays honestly not built and is in the list with its reason
+        let list = super::not_built_list();
+        assert!(
+            list.iter()
+                .any(|(n, why)| n == "avatar-group" && why.contains("AvatarGroup"))
+        );
+        assert!(list.iter().all(|(n, _)| !b.draws(n)));
+        assert!(
+            !list
+                .iter()
+                .any(|(n, _)| n == "contact-row" || n == "field-card")
         );
     }
 }

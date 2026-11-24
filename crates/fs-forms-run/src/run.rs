@@ -64,6 +64,12 @@ pub fn run_code_with(args: &[String], sources: &dyn Sources) -> i32 {
             println!("{HELP}");
             CODE_SUCCESS
         }
+        Ok(Command::ListBlocks) => {
+            for (block, why) in crate::blocks::not_built_list() {
+                println!("{block}: {why}");
+            }
+            CODE_SUCCESS
+        }
         Ok(Command::Check(c)) => match fetch(&c) {
             Ok(view) => {
                 println!(

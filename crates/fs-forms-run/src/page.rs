@@ -12,7 +12,6 @@ use fs_components::blinc::layout::div::{Div, div};
 use fs_components::blinc::layout::widgets::scroll::{Scroll, ScrollPhysics};
 use fs_components_app::{Element, Surface};
 use fs_components_widgets::states::{self, EmptyState};
-use fs_components_widgets::styles;
 
 use crate::draw::{self, Ctx};
 use crate::parts::{Part, notice};
@@ -137,7 +136,7 @@ impl Surface for Page {
     fn styles(&self) -> String {
         format!(
             "{}{}.fs-forms-side {{ flex-shrink: 0; border-right-width: 1px; border-right-color: var(--border); background: var(--surface); }}\n",
-            styles(),
+            fs_components_workbenches::people::styles(),
             states::STYLES
         )
     }

@@ -9,7 +9,7 @@ use fs_components_styles::StyleId;
 
 /// The help text.
 pub const HELP: &str = "fs-forms-run (--description PATH | PATH | --frontend ID --extends APPSTREAM-ID [--forms-socket PATH]) [--socket PATH] [--fresh | --resumed]\n\
-    [--check] [--picture FILE.png [--size WIDTHxHEIGHT] [--screen PAGE]]\n\
+    [--check] [--list-blocks] [--picture FILE.png [--size WIDTHxHEIGHT] [--screen PAGE]]\n\
 The forms host: opens the window that the layout of a program describes. The starter runs it; start the program, not this.\n\
   --description P    a blueprint folder (scaffold.toml, `[frontend] layout`), a folder with forms/*.toml, or one description file;\n\
                      the host reads it and draws the window; the same as a bare PATH. Nothing of the program is built into the host\n\
@@ -21,6 +21,8 @@ The forms host: opens the window that the layout of a program describes. The sta
   --style NAME       the style set for the program: what a description that says `style = \"default\"` gets (admin, simple, apple,
                      windows, craft; the preset is admin); a description that names a style keeps its own
   --sample-data      fill the board and side list with built-in sample records (pictures, development; never a starter)\n\
+  --list-blocks      print the blocks of the contract this build does not draw, each with its reason (no widget in the contract, or a widget\n\
+                     without an adapter), then exit 0; the same list the window says one by one as `host-error-block-not-built`\n\
   --picture FILE     draw the window to a picture, without opening it (exit 3 if the picture shows a host error; the PNG is written anyway)\n\
   --version, -V      print the version and exit\n\
   --help, -h         print this help and exit\n\
@@ -58,6 +60,8 @@ pub enum Command {
     Version,
     /// Print the help.
     Help,
+    /// Print the blocks of the contract this build does not draw.
+    ListBlocks,
     /// Connect, fetch the layout, exit.
     Check(Config),
     /// Open the window.
@@ -81,6 +85,7 @@ pub fn parse(words: &[String]) -> Result<Command, String> {
         match word.as_str() {
             "--version" | "-V" => return Ok(Command::Version),
             "--help" | "-h" => return Ok(Command::Help),
+            "--list-blocks" => return Ok(Command::ListBlocks),
             "--check" => check = true,
             "--sample-data" => c.sample_data = true,
             "--fresh" => c.resumed = false,
@@ -127,5 +132,18 @@ fn parse_size(text: &str) -> Result<(u32, u32), String> {
         Ok((w, h))
     } else {
         Err(bad())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Command, parse};
+
+    #[test]
+    fn list_blocks_needs_no_description_and_is_its_own_command() {
+        assert_eq!(
+            parse(&["--list-blocks".to_owned()]),
+            Ok(Command::ListBlocks)
+        );
     }
 }

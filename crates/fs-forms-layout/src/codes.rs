@@ -126,6 +126,8 @@ codes! {
     PlaceCount => "place-count",
     /// `{elem, name, owner}` K20, warning only: the key is not in the `sets` of the block or frame `owner`.
     SetUnknown => "set-unknown",
+    /// `{found, known}` a file in a format before 3 (`[[page.block]]`); it is not read, write it again in format 3.
+    FormatOld => "format-old",
 }
 
 /// The error texts of the layouts interface, German (ADR 0057, `MessageFormat` 2); one line per code: `layout-error-<code> = text`.

@@ -7,7 +7,7 @@ use fs_forms_layout::{ActionDoc, LayoutCode, Limits, OpenCatalog, Trigger};
 
 fn file(trigger: &str) -> String {
     format!(
-        r#"schema = 2
+        r#"schema = 3
 kind = "frontend"
 id = "board"
 extends = "net.example.Tasks"
@@ -41,7 +41,7 @@ fn read(text: &str, f: Format) -> Result<fs_forms_layout::LayoutDoc, Vec<LayoutC
 }
 
 #[test]
-fn a_submit_action_is_read_and_written_in_format_two() {
+fn a_submit_action_is_read_and_written_in_format_three() {
     let doc = read(&file("submit"), Format::Toml).expect("read");
     let actions: Vec<&ActionDoc> = doc.actions.iter().map(|a| &a.v).collect();
     assert_eq!(actions.len(), 1);
@@ -67,24 +67,15 @@ fn an_unknown_trigger_is_still_an_error() {
 }
 
 #[test]
-fn a_submit_action_in_format_one_is_read_and_written_on_as_format_two() {
-    // SW-3 r1: format 1 has no `elem` lines; the trigger is read the same, and the file written from it is format 2 with the trigger kept
+fn a_submit_action_in_format_one_is_refused_as_old() {
     let one = file("submit")
         .lines()
         .filter(|l| !l.starts_with("elem = "))
         .collect::<Vec<_>>()
         .join("\n")
-        .replace("schema = 2", "schema = 1");
-    let doc = read(&one, Format::Toml).expect("read format 1");
-    assert_eq!(doc.actions[0].v.trigger, Trigger::Submit);
-    let layout = doc.check(&OpenCatalog, &Limits::declared()).expect("check");
-    let mut out = Vec::new();
-    write_layout(&layout, Format::Toml, true, &mut out).unwrap();
-    let out = String::from_utf8(out).unwrap();
-    assert!(
-        out.starts_with("schema = 2") && out.contains("trigger = \"submit\""),
-        "{out}"
+        .replace("schema = 3", "schema = 1");
+    assert_eq!(
+        read(&one, Format::Toml).unwrap_err(),
+        vec![LayoutCode::FormatOld]
     );
-    let again = read(&out, Format::Toml).unwrap();
-    assert_eq!(again.actions[0].v.trigger, Trigger::Submit);
 }

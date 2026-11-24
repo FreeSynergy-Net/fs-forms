@@ -4,7 +4,7 @@ use std::path::Path;
 use fs_forms_exchange::{Format, read_layout, write_layout};
 use fs_forms_layout::{Layout, LayoutCode, Limits, OpenCatalog};
 
-const FILE: &str = r#"schema = 2
+const FILE: &str = r#"schema = 3
 kind = "frontend"
 id = "board"
 extends = "net.example.Tasks"
@@ -36,24 +36,24 @@ page = "board"
 frame = "workbench"
 navigation = "list-detail"
 
-[[page.block]]
+[[page.place]]
 elem = "block:board/main"
-place = "main"
+at = "main"
 block = "board"
 source = 1
 
-[[page.block.bind]]
+[[page.place.bind]]
 elem = "binding:board/main/link/0"
 slot = "value"
 nth = 0
 field = "homepage"
 role = "input"
 
-[[page.block.bind.schemes]]
+[[page.place.bind.schemes]]
 elem = "scheme:board/main/link/0/0"
 scheme = "ssh"
 
-[[page.block.bind.schemes]]
+[[page.place.bind.schemes]]
 elem = "scheme:board/main/link/0/1"
 scheme = "https"
 
@@ -142,20 +142,22 @@ fn k64_problems_have_codes_and_lines() {
 #[test]
 fn missing_key_and_wrong_format_are_visible() {
     assert!(codes(&FILE.replace("id = \"board\"\n", "")).contains(&LayoutCode::ImportInvalid));
-    let d = read(&FILE.replace("schema = 2", "schema = 3"), Format::Toml).unwrap();
+    let d = read(&FILE.replace("schema = 3", "schema = 4"), Format::Toml).unwrap();
     let e = d.check(&OpenCatalog, &Limits::declared()).unwrap_err();
     assert_eq!(e[0].code, LayoutCode::FormatNewer);
 }
 
 #[test]
-fn format_one_without_elems_reads_and_checks() {
-    let one = FILE
-        .lines()
-        .filter(|l| !l.starts_with("elem = "))
-        .collect::<Vec<_>>()
-        .join("\n")
-        .replace("schema = 2", "schema = 1");
-    assert!(layout(&one).doc().pages[0].elem.is_some());
+fn format_one_and_two_are_refused_as_old() {
+    for old in ["schema = 1", "schema = 2"] {
+        let e = read(&FILE.replace("schema = 3", old), Format::Toml).unwrap_err();
+        assert_eq!(e.len(), 1, "only the format problem is reported");
+        assert_eq!(e[0].code, LayoutCode::FormatOld);
+        assert_eq!(
+            (e[0].param("found"), e[0].param("known")),
+            (Some(&old[9..]), Some("3"))
+        );
+    }
 }
 
 #[cfg(feature = "json")]

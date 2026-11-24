@@ -117,11 +117,33 @@ pub fn input_of(data: &FormData) -> FormInput {
     let f = &data.declared.form;
     FormInput {
         form: format!("{}@{}.{}.0", f.name, f.major, f.minor),
-        rows: data.rows.clone(),
+        rows: shown_rows(data),
         channels,
         may: data.may.clone(),
         load: Load::Ready,
     }
+}
+
+/// The rows as shown: a value of a field of type `DateTime` is given as its display text (`due_text`), the others as the module gives them.
+fn shown_rows(data: &FormData) -> Vec<FormRow> {
+    let is_time = |field: &str| {
+        data.declared
+            .fields
+            .iter()
+            .any(|(n, b)| n == field && *b == Basic::DateTime)
+    };
+    let mut rows = data.rows.clone();
+    for row in &mut rows {
+        for (channel, values) in &mut row.values {
+            let fields = data.declared.map.iter().find(|(c, _)| c == channel);
+            for (value, field) in values.iter_mut().zip(fields.iter().flat_map(|(_, f)| f)) {
+                if is_time(field) {
+                    *value = crate::due_text::display(value);
+                }
+            }
+        }
+    }
+    rows
 }
 
 /// Nothing to draw: the module does not offer the form (or the block names none).
@@ -197,7 +219,12 @@ impl Records for FormRecords {
             record: record.map(str::to_owned),
             args,
         };
-        if let Err(c) = writer.invoke(&call) {
+        let answer = writer.invoke(&call);
+        eprintln!(
+            "fs-forms-run: {}",
+            crate::write::log::line(&self.provider, &call, &answer)
+        );
+        if let Err(c) = answer {
             return refused(&c.code);
         }
         // accepted: the module is read again, the board shows what it now says (nothing is guessed here)

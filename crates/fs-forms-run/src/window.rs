@@ -6,7 +6,7 @@
 
 use std::sync::Arc;
 
-use fs_components_app::{AppError, AppWidget, Screen, Status};
+use fs_components_app::{AppError, AppWidget, Status};
 use fs_components_mf2::Mf2Texts;
 use fs_components_widgets::states;
 use fs_components_words::{Locale, Localized};
@@ -15,8 +15,6 @@ use crate::compose::{Composition, HostState, Node, ScreenTree};
 use crate::draw::Ctx;
 use crate::error::HostError;
 use crate::menus::program_menu;
-use crate::page::Page;
-use crate::parts::{Part, line, parts};
 use crate::records::{NoRecords, Records};
 use crate::style::{StyleCell, StyleSource, resolve};
 use crate::view::{Coded, View};
@@ -159,41 +157,7 @@ pub fn app_styled(
     } else {
         view.title.clone()
     };
-    let mut screens: Vec<Screen> = comp
-        .screens
-        .iter()
-        .map(|s| {
-            let page = Page {
-                ctx: Ctx {
-                    mounts: Arc::default(),
-                    ..ctx.clone()
-                },
-                empty: texts.plain("host-page-empty"),
-                frame: s.frame.clone(),
-                parts: parts(texts, &s.nodes),
-                labels: labels.clone(),
-            };
-            Screen::new(s.page.clone(), s.page.clone(), Arc::new(page))
-        })
-        .collect();
-    if !comp.notices.is_empty() || screens.is_empty() {
-        let lines: Vec<String> = comp.notices.iter().map(|c| line(texts, c)).collect();
-        let page = Page {
-            ctx: ctx.clone(),
-            empty: texts.plain("host-page-empty"),
-            frame: String::new(),
-            parts: vec![Part::Locked {
-                name: String::new(),
-                lines,
-            }],
-            labels,
-        };
-        screens.push(Screen::new(
-            "notices",
-            texts.plain("host-screen-error"),
-            Arc::new(page),
-        ));
-    }
+    let screens = crate::screens::screens_of(texts, comp, &ctx, &labels, &title);
     let widget = AppWidget::new(title, screens)?;
     if let Some(menu) = program_menu(texts, view) {
         widget.set_menus(vec![menu], |_| {})?;

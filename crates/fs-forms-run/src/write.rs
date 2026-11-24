@@ -143,6 +143,8 @@ pub fn allowed(data: &FormData, channel: &str, record: Option<&str>) -> bool {
     }
 }
 
+pub(crate) mod log;
+
 #[cfg(test)]
 pub(crate) mod fixture;
 #[cfg(test)]

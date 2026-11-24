@@ -72,6 +72,15 @@ fn each_action_on_the_sample_board_shows_in_the_next_drawing_of_the_same_window(
             dir.join(format!("k3-{name}-again.png")),
             dir.join(format!("k3-{name}-after.png")),
         );
+        // the first drawing settles the state the mounted board keeps (it is kept over a rebuild now, not made anew each time): it is a warm-up
+        let warm = dir.join(format!("k3-{name}-warm.png"));
+        if let Err(e) = widget.picture(WIDE, 760, &warm) {
+            let e = e.to_string().to_lowercase();
+            assert!(e.contains("graphics") || e.contains("adapter"), "{e}");
+            eprintln!("skipped: no graphics adapter ({e})");
+            return;
+        }
+        std::fs::remove_file(&warm).unwrap();
         if let Err(e) = widget.picture(WIDE, 760, &before) {
             let e = e.to_string().to_lowercase();
             assert!(e.contains("graphics") || e.contains("adapter"), "{e}");

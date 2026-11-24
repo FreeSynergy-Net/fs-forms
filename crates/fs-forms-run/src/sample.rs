@@ -220,11 +220,22 @@ fn board_form(columns: &[Column]) -> FormData {
                 major: 1,
                 minor: 0,
             },
-            map: vec![(
-                "facts".to_owned(),
-                vec!["label".to_owned(), "due".to_owned(), "assignee".to_owned()],
-            )],
+            map: vec![
+                ("cards".to_owned(), vec!["Card".to_owned()]),
+                ("title".to_owned(), vec!["title".to_owned()]),
+                ("column".to_owned(), vec!["column".to_owned()]),
+                ("column-label".to_owned(), vec!["column_name".to_owned()]),
+                ("order".to_owned(), vec!["index".to_owned()]),
+                (
+                    "facts".to_owned(),
+                    vec!["label".to_owned(), "due".to_owned(), "assignee".to_owned()],
+                ),
+            ],
             fields: vec![
+                ("title".to_owned(), Basic::Text),
+                ("column".to_owned(), Basic::Text),
+                ("column_name".to_owned(), Basic::Text),
+                ("index".to_owned(), Basic::Number),
                 ("label".to_owned(), Basic::Text),
                 ("due".to_owned(), Basic::Text),
                 ("assignee".to_owned(), Basic::Text),

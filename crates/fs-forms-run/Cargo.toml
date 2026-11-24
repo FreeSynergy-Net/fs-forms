@@ -43,7 +43,7 @@ fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev 
 # `InterfaceVersion` (V-1, fs-types v0.0.6, the same tag as fs-components): the one reader of "name@x.y.z"; the block catalog answers `draws(&InterfaceVersion)`.
 fs-types = { git = "https://github.com/FreeSynergy-Net/fs-types", tag = "v0.0.6", version = "0.0.5" }
 fs-forms-bind = { path = "../fs-forms-bind", version = "0.1.0" }
-fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "4f023428fab11b0343d44638fcc36671f642acd6", version = "0.1.3" }
+fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "11cdf71482cfcd8de14038c4e7fc796f2611e02c", version = "0.1.4" }
 # `UndoState` (the depth of the undo of one actor) for `Records::history`: one type, no copy. The rev is the one of S3-3 (v0.0.11); only the type is used.
 fs-objects = { git = "https://github.com/FreeSynergy-Net/fs-objects", rev = "f6409f2a5378ba1464e69ae216efd4d27d249182", version = "0.0.11" }
 tokio = { version = "1", features = ["rt", "sync", "net", "time"] }

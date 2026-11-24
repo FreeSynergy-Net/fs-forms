@@ -89,9 +89,9 @@ pub struct PageDoc {
     pub frame: String,
     /// Navigation kind.
     pub navigation: Navigation,
-    /// Blocks of format 2 (flat list); read until the exchange reads format 3. Use [`PageDoc::leaves`] to see all blocks.
+    /// Blocks of format 2 (flat list): the exchange no longer fills it (format 3 has the tree `places`); the stores and the wire still do. Use [`PageDoc::leaves`] to see all blocks.
     pub blocks: Vec<Item<BlockDoc>>,
-    /// Tree of places (format 3): blocks and frames. Wire and tables do not carry it yet.
+    /// Tree of places (format 3): blocks and frames. The exchange reads and writes it; wire and tables do not carry it yet.
     pub places: Vec<Item<crate::place::PlaceNode>>,
 }
 /// A block placed on a page.

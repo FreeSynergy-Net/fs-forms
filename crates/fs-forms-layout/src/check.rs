@@ -123,7 +123,7 @@ impl LayoutDoc {
         walk(self, &mut |v| {
             count += 1;
             if v.elem.is_none() {
-                if format >= 2 {
+                if format >= 2 && v.kind != ElemKind::Attr {
                     out.push(Coded::new(LayoutCode::ElemMissing).with("line", *v.line));
                 } else {
                     let parts: Vec<&str> = v.parts.iter().map(String::as_str).collect();

@@ -5,6 +5,7 @@
 //! Pattern: Fake (test double) – the same contract as the real owner, held in memory.
 
 mod parts;
+mod switch;
 
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -14,7 +15,7 @@ use fs_components_kanban::Answer;
 use fs_forms_layout::FrontendKey;
 
 pub use self::parts::{CountingRecords, FakeHold};
-use super::open::at_place;
+use super::open::{at_place, exact};
 use super::{
     Decision, OpenFrontend, Opened, OpenedFrontend, Placement, WhenOpen, WindowId, WindowOwner,
     decide,
@@ -27,6 +28,7 @@ use crate::view::{Coded, View};
 /// What one open frontend holds; dropping the entry drops all of it.
 struct Entry {
     key: FrontendKey,
+    place: (String, String),
     mode: Placement,
     switchable: bool,
     raised: usize,
@@ -134,7 +136,12 @@ impl FakeWindows {
             .unwrap_or_else(std::sync::PoisonError::into_inner)
     }
 
-    fn fresh(&self, req: &OpenFrontend, parent: Option<WindowId>) -> Result<Entry, Coded> {
+    fn fresh(
+        &self,
+        req: &OpenFrontend,
+        parent: Option<WindowId>,
+        place: (String, String),
+    ) -> Result<Entry, Coded> {
         let missing = || {
             Coded::new("host-notice-frontend-missing")
                 .with("extends", req.key.extends.clone())
@@ -148,6 +155,7 @@ impl FakeWindows {
         }
         Ok(Entry {
             key: req.key.clone(),
+            place,
             mode: req.mode,
             switchable: req.switchable,
             raised: 0,
@@ -177,16 +185,20 @@ impl WindowOwner for FakeWindows {
             None => (req.key.extends.clone(), req.key.frontend.clone(), None),
         };
         let id = WindowId::of_record(&program, &elem, req.scope.as_deref());
-        if let Some(e) = open.get_mut(&id) {
-            e.raised += 1; // brought to the front, the mode and the record stay
-            return Ok(Opened::Raised(id));
-        }
         let now = snapshot(&open);
-        let at = at_place(&now, &WindowId::of(&program, &elem)).cloned();
+        let place = (program, elem);
+        if let Some(same) = exact(&now, &req, &place).cloned() {
+            if let Some(e) = open.get_mut(&same) {
+                e.raised += 1; // brought to the front, the mode and the record stay
+            }
+            return Ok(Opened::Raised(same));
+        }
+        let at = at_place(&now, &req, &place).cloned();
         match (decide(&now, &req), at) {
             (Decision::Open(WhenOpen::Switch), Some(at)) => {
                 // Same place, other record: records and hold stay (same module), only the record changes.
                 let mut e = open.remove(&at).expect("at_place names an open entry");
+                let id = WindowId::of_record(&e.place.0, &e.place.1, req.scope.as_deref());
                 let from = std::mem::replace(&mut e.scope, req.scope.clone());
                 for c in open.values_mut().filter(|c| c.parent.as_ref() == Some(&at)) {
                     c.parent = Some(id.clone());
@@ -198,7 +210,10 @@ impl WindowOwner for FakeWindows {
                 Err(Coded::new("host-notice-open-unanswered").with("at", at.as_str()))
             }
             _ => {
-                let entry = self.fresh(&req, parent)?;
+                if open.contains_key(&id) {
+                    return Err(Coded::new("host-notice-window-id-taken").with("id", id.as_str()));
+                }
+                let entry = self.fresh(&req, parent, place)?;
                 open.insert(id.clone(), entry);
                 Ok(Opened::New(id))
             }
@@ -245,5 +260,9 @@ impl WindowOwner for FakeWindows {
 
     fn open_now(&self) -> Vec<OpenedFrontend> {
         snapshot(&self.lock())
+    }
+
+    fn use_frontend(&self, id: &WindowId, frontend: &str) -> Result<(), Coded> {
+        self.switch_frontend(id, frontend)
     }
 }

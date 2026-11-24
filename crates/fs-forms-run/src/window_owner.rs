@@ -157,7 +157,8 @@ pub struct OpenedFrontend {
     pub scope: Option<String>,
     /// Its stable id.
     pub id: WindowId,
-    /// What was opened.
+    /// What is open NOW: the frontend of the surface. [`WindowOwner::use_frontend`] changes it; the `id` stays the name of the place.
+    /// Roots are found by this key and the record (`scope`), never by the text of the id ([`decide`]).
     pub key: FrontendKey,
     /// How it appears.
     pub mode: Placement,
@@ -195,6 +196,25 @@ pub trait WindowOwner: Send + Sync {
     /// `host-notice-window-unknown` when `id` is not open; `host-notice-placement-locked{id}` when the program locked the switch
     /// (no flag `window` on the node), the frontend stays as it is.
     fn place(&self, id: &WindowId, placement: Placement) -> Result<(), Coded>;
+
+    /// The person changes the frontend of the open surface `id` (same program): the surface stays, only what draws it is exchanged.
+    /// The [`WindowId`] (the name of the place, given on `open`), the `scope`, the records and the held connection stay the same (no
+    /// new hold, none dropped); the composition is built from the new description and the key in [`OpenedFrontend`] is the new one.
+    /// Anything that is not the same is refused and nothing changes.
+    ///
+    /// Pattern: Bridge – the surface is the abstraction (id, record, records, hold), the frontend its implementation; only the
+    /// implementation is exchanged, while the program runs.
+    ///
+    /// Where the state of the person lives today (checked, stage 6 P2): the selection of a board sits in the mounted component of
+    /// the page (`draw.rs` `MountSlot`, `Ctx.mounts`; `fs-components-kanban` `state.rs` `selected`), kept over a rebuild by the key
+    /// (block, look) and dropped with `slots.retain` when the block is gone; it is not a datum of the surface yet. A rule for
+    /// open input (ask first) does not exist in the host. Both come with the real owner (`HostWindows`, O4a, C1), not here.
+    ///
+    /// # Errors
+    /// `host-notice-window-unknown{id}`; `host-notice-frontend-unknown{id,available}` (no frontend of that name in any program);
+    /// `host-notice-frontend-other-program{id,frontend}` (the name belongs to another program); `host-notice-frontend-refused`
+    /// (the module says no); `host-notice-frontend-open-elsewhere{id}` (that frontend already shows this record in another place).
+    fn use_frontend(&self, id: &WindowId, frontend: &str) -> Result<(), Coded>;
 
     /// What is open, as data.
     fn open_now(&self) -> Vec<OpenedFrontend>;

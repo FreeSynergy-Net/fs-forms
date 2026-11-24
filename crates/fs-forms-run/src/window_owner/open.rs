@@ -52,43 +52,81 @@ pub enum Decision {
     },
 }
 
-/// The open frontend at `place` (any record) with the smallest id.
-pub(super) fn at_place<'a>(
+/// The place a request lands in: `(program, elem)`. A root is `(program, frontend)`, a child the node of its parent; `None` when the
+/// parent is not open.
+pub(super) fn place_of(
+    open_now: &[OpenedFrontend],
+    req: &OpenFrontend,
+) -> Option<(String, String)> {
+    match &req.parent {
+        Some((pid, e)) => {
+            let p = open_now.iter().find(|o| &o.id == pid)?;
+            Some((p.key.extends.clone(), e.as_str().to_owned()))
+        }
+        None => Some((req.key.extends.clone(), req.key.frontend.clone())),
+    }
+}
+
+/// A root is found by its CURRENT `key` (and the record), never by the text of its id: `use_frontend` changes the key, the id stays
+/// the name of the place. A child is found by the id of its node.
+fn at<'a>(
     open_now: &'a [OpenedFrontend],
-    place: &WindowId,
+    req: &OpenFrontend,
+    place: &(String, String),
+    same_record: bool,
 ) -> Option<&'a WindowId> {
+    let place_id = WindowId::of(&place.0, &place.1);
+    let target = WindowId::of_record(&place.0, &place.1, req.scope.as_deref());
     open_now
         .iter()
-        .filter(|o| o.id.scope_in(place).is_some())
+        .filter(|o| match (&req.parent, &o.parent) {
+            (None, None) => o.key == req.key && (!same_record || o.scope == req.scope),
+            (Some(_), _) => {
+                if same_record {
+                    o.id == target
+                } else {
+                    o.id.scope_in(&place_id).is_some()
+                }
+            }
+            (None, Some(_)) => false,
+        })
         .map(|o| &o.id)
         .min()
+}
+
+/// The open frontend that shows exactly this request (same place, same record).
+pub(super) fn exact<'a>(
+    open_now: &'a [OpenedFrontend],
+    req: &OpenFrontend,
+    place: &(String, String),
+) -> Option<&'a WindowId> {
+    at(open_now, req, place, true)
+}
+
+/// The open frontend at the place of the request (any record) with the smallest id.
+pub(super) fn at_place<'a>(
+    open_now: &'a [OpenedFrontend],
+    req: &OpenFrontend,
+    place: &(String, String),
+) -> Option<&'a WindowId> {
+    at(open_now, req, place, false)
 }
 
 /// Pattern: Policy (Strategy as a pure function) – "is it already open?" is decided from data, testable without a window. The owner
 /// only carries it out and never asks itself.
 ///
-/// The target is the place (`program/elem`) of `req`. Not open: `Open(Window)` (new, nothing to ask). Exactly this record open:
+/// The target is the place (`program/elem`) of `req`; a root is found by its current key and record, not by the text of an id. Not open: `Open(Window)` (new, nothing to ask). Exactly this record open:
 /// `Open(Switch)` (the owner raises it). The place is open with another record: `Switch` and `Window` are taken as said, `Ask` and
 /// `Tab` give `Ask { at }` with the open one at the smallest id. A parent that is not open gives `Open(Window)`; the owner then reports it.
 #[must_use]
 pub fn decide(open_now: &[OpenedFrontend], req: &OpenFrontend) -> Decision {
-    let program = match &req.parent {
-        Some((pid, _)) => match open_now.iter().find(|o| &o.id == pid) {
-            Some(p) => p.key.extends.clone(),
-            None => return Decision::Open(WhenOpen::Window),
-        },
-        None => req.key.extends.clone(),
+    let Some(place) = place_of(open_now, req) else {
+        return Decision::Open(WhenOpen::Window);
     };
-    let elem = match &req.parent {
-        Some((_, e)) => e.as_str().to_owned(),
-        None => req.key.frontend.clone(),
-    };
-    let place = WindowId::of(&program, &elem);
-    let target = WindowId::of_record(&program, &elem, req.scope.as_deref());
-    if open_now.iter().any(|o| o.id == target) {
+    if exact(open_now, req, &place).is_some() {
         return Decision::Open(WhenOpen::Switch);
     }
-    match (at_place(open_now, &place), req.when_open) {
+    match (at_place(open_now, req, &place), req.when_open) {
         (None, _) => Decision::Open(WhenOpen::Window),
         (Some(_), w @ (WhenOpen::Switch | WhenOpen::Window)) => Decision::Open(w),
         // `Tab` waits for the frame `dock` (phase 2): until then it asks, with two answers.

@@ -3,7 +3,7 @@
 mod window_owner_common;
 
 use fs_forms_run::{OpenFrontend, Placement, WindowId, WindowOwner};
-use window_owner_common::{child, elem, fake, root, settings};
+use window_owner_common::{child, elem, fake, id, root, settings};
 
 #[test]
 fn w2b_opening_an_open_id_brings_it_forward_and_keeps_the_mode() {
@@ -49,15 +49,9 @@ fn w7_place_switches_only_the_place_the_form_state_stays() {
 fn w7b_a_locked_switch_is_refused_with_a_code_and_nothing_changes() {
     let owner = fake();
     let r = root(&owner);
-    let c = owner
-        .open(OpenFrontend {
-            key: settings(),
-            mode: Placement::Panel,
-            parent: Some((r, elem("fixed"))),
-            switchable: false,
-            scope: None,
-        })
-        .unwrap();
+    let c = id(owner
+        .open(OpenFrontend::new(settings(), Placement::Panel).with_parent(r, elem("fixed")))
+        .unwrap());
     let e = owner.place(&c, Placement::Window).unwrap_err();
     assert_eq!(e.code, "host-notice-placement-locked");
     assert!(e.params.contains(&("id".into(), c.as_str().into())));

@@ -9,8 +9,12 @@
 //! Pattern: Facade: this file holds the contract; the double lives in the submodule.
 
 pub mod fake;
+mod open;
+
+pub use open::{Decision, Opened, WhenOpen, decide};
 
 use fs_forms_layout::{ElemId, FrontendKey};
+use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, percent_decode_str, utf8_percent_encode};
 
 use crate::view::Coded;
 
@@ -28,7 +32,15 @@ pub enum Placement {
     Window,
 }
 
+/// RFC 3986 "unreserved" stays as it is, everything else (also `/`, `#`, `%` and every non-ASCII byte) is encoded.
+const SCOPE: &AsciiSet = &NON_ALPHANUMERIC
+    .remove(b'-')
+    .remove(b'.')
+    .remove(b'_')
+    .remove(b'~');
+
 /// Pattern: Value Object – the stable name of one open frontend, `<program>/<elem>` (ADR 0069: stable, never a counter).
+/// With a record (`scope`) the id is `<program>/<elem>/<scope>`, the scope percent-encoded; without one it is as before.
 ///
 /// The program part is the FULL `AppStream` id (`net.freesynergy.Tasks/settings-embed`); the display name is separate. The root frontend of a program is `<id>/<frontend>`; an embedded one is `<id of the parent program>/<elem of the node>`.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -41,6 +53,33 @@ impl WindowId {
         Self(format!("{program}/{elem}"))
     }
 
+    /// The id of the node `elem` of `program` showing the record `scope`: `<program>/<elem>/<scope>`, the scope percent-encoded
+    /// (RFC 3986, crate `percent-encoding`). Without a scope it is exactly [`WindowId::of`] (old ids never change). Two different
+    /// scopes never give the same id, and [`WindowId::scope_in`] reads the scope back.
+    #[must_use]
+    pub fn of_record(program: &str, elem: &str, scope: Option<&str>) -> Self {
+        match scope {
+            None => Self::of(program, elem),
+            Some(s) => Self(format!(
+                "{program}/{elem}/{}",
+                utf8_percent_encode(s, SCOPE)
+            )),
+        }
+    }
+
+    /// The reverse of [`WindowId::of_record`]: `Some(scope)` when this id names the place `place` (made by `of`), where `scope` is
+    /// `None` for the place itself and `Some(record)` for a record shown there; `None` when the id belongs to another place.
+    #[must_use]
+    pub fn scope_in(&self, place: &WindowId) -> Option<Option<String>> {
+        let rest = self.0.strip_prefix(place.as_str())?;
+        if rest.is_empty() {
+            return Some(None);
+        }
+        let enc = rest.strip_prefix('/')?;
+        let dec = percent_decode_str(enc).decode_utf8().ok()?;
+        Some(Some(dec.into_owned()))
+    }
+
     /// The text of the id.
     #[must_use]
     pub fn as_str(&self) -> &str {
@@ -49,7 +88,10 @@ impl WindowId {
 }
 
 /// Pattern: Value Object – the request to open one frontend (what the parent node says, nothing else).
+///
+/// `non_exhaustive`: build it with [`OpenFrontend::new`] and the `with_*` setters, so later data (a floating `rect`) only adds.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct OpenFrontend {
     /// The frontend to open: `(AppStream id of the program, frontend name)`, never a module.
     pub key: FrontendKey,
@@ -61,11 +103,58 @@ pub struct OpenFrontend {
     pub switchable: bool,
     /// The record chosen in a neighbour node (an AS2 id), given as `scope` to the child; only a reference, no data goes with it.
     pub scope: Option<String>,
+    /// What to do when the place is already open with another record (rule of the program, overwritten by the person); see [`decide`].
+    pub when_open: WhenOpen,
+}
+
+impl OpenFrontend {
+    /// A root frontend `key` in `mode`: locked, no record, `when_open` = ask.
+    #[must_use]
+    pub fn new(key: FrontendKey, mode: Placement) -> Self {
+        Self {
+            key,
+            mode,
+            parent: None,
+            switchable: false,
+            scope: None,
+            when_open: WhenOpen::default(),
+        }
+    }
+
+    /// Placed in the node `elem` of the open window `parent`.
+    #[must_use]
+    pub fn with_parent(mut self, parent: WindowId, elem: ElemId) -> Self {
+        self.parent = Some((parent, elem));
+        self
+    }
+
+    /// The person may switch panel and window later.
+    #[must_use]
+    pub fn with_switchable(mut self, switchable: bool) -> Self {
+        self.switchable = switchable;
+        self
+    }
+
+    /// The record (an AS2 id) the child shows.
+    #[must_use]
+    pub fn with_scope(mut self, scope: impl Into<String>) -> Self {
+        self.scope = Some(scope.into());
+        self
+    }
+
+    /// What to do when the place is already open with another record.
+    #[must_use]
+    pub fn with_when_open(mut self, when_open: WhenOpen) -> Self {
+        self.when_open = when_open;
+        self
+    }
 }
 
 /// Pattern: Value Object – one open frontend as data (for the scaffold form "open views"; it draws nothing).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct OpenedFrontend {
+    /// The record it shows (the `scope` of its id), `None` = none.
+    pub scope: Option<String>,
     /// Its stable id.
     pub id: WindowId,
     /// What was opened.
@@ -82,13 +171,16 @@ pub struct OpenedFrontend {
 /// composition as a child node, a window goes through `fs-components-app`. It holds only what decides the lifetime: the
 /// composition, the records and the held connection of the module. Dropping them is signing off.
 pub trait WindowOwner: Send + Sync {
-    /// Opens `req.key` in `req.mode`. When the same [`WindowId`] is already open, that id comes back and no second frontend is made
-    /// (the circle people, calendar, people ends here).
+    /// Opens `req.key` in `req.mode` and says what it did ([`Opened`]). The same [`WindowId`] already open: [`Opened::Raised`], no
+    /// second frontend (the circle people, calendar, people ends here). The same place open with another record: `req.when_open`
+    /// decides ([`decide`]): `Switch` keeps records and hold and only changes the record ([`Opened::Switched`]), `Window` opens a
+    /// second one. The owner never asks: `Ask` (and `Tab`, phase 2) is answered by the host before it calls.
     ///
     /// # Errors
     /// `host-notice-frontend-missing{extends,frontend}` (no such description), `host-notice-frontend-refused` (the module said no),
-    /// `host-notice-window-unknown` (the parent is not open). The part stays visible and locked with the code, never empty.
-    fn open(&self, req: OpenFrontend) -> Result<WindowId, Coded>;
+    /// `host-notice-window-unknown` (the parent is not open), `host-notice-open-unanswered{at}` (the place is open with another
+    /// record and `when_open` is still `Ask`). The part stays visible and locked with the code, never empty.
+    fn open(&self, req: OpenFrontend) -> Result<Opened, Coded>;
 
     /// Closes the frontend and every child inside it; the connections of their modules fall (= sign off).
     ///

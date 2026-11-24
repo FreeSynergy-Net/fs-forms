@@ -1,4 +1,4 @@
-//! The 20 tables: names, word lists against the model enums (K59), foreign keys, strict DDL, and the way a layout goes to rows and back.
+//! The 24 tables: names, word lists against the model enums (K59), foreign keys, strict DDL, and the way a layout goes to rows and back.
 use std::collections::HashSet;
 
 use fs_forms_layout::*;
@@ -6,11 +6,11 @@ use fs_forms_store::spec::Logical;
 use fs_forms_store::*;
 
 #[test]
-fn there_are_twenty_tables_and_four_steps() {
-    assert_eq!(ALL.len(), 20);
+fn there_are_twenty_four_tables_and_four_steps() {
+    assert_eq!(ALL.len(), 24);
     assert_eq!(STEPS.len(), 4);
     let names: HashSet<_> = ALL.iter().map(|t| t.name).collect();
-    assert_eq!(names.len(), 20);
+    assert_eq!(names.len(), 24);
     assert!(names.iter().all(|n| n.starts_with("forms_")));
 }
 

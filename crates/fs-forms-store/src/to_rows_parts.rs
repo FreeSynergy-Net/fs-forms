@@ -7,8 +7,10 @@ use fs_forms_layout::{
 };
 
 use crate::rows::{Cell, RowBuilder, Rows, int, opt_int, opt_text, text};
+use crate::spec::Table;
 use crate::tables as t;
 use crate::to_rows::elem;
+use crate::to_rows_tree::{attr_rows, node_rows};
 
 pub(crate) fn menu_rows(
     items: &[Item<MenuDoc>],
@@ -44,7 +46,7 @@ pub(crate) fn menu_rows(
     }
 }
 
-pub(crate) fn pages(layout: &Layout, id: &Cell, rows: &mut Rows) {
+pub(crate) fn pages(layout: &Layout, id: &Cell, rows: &mut Rows) -> Result<(), Coded<LayoutCode>> {
     for (pn, p) in layout.doc().pages.iter().enumerate() {
         let page = text(&p.v.page);
         RowBuilder::new(&t::PAGE)
@@ -68,18 +70,28 @@ pub(crate) fn pages(layout: &Layout, id: &Cell, rows: &mut Rows) {
                 .set("title_key", opt_text(b.v.title_key.as_ref()))
                 .set("text_key", opt_text(b.v.text_key.as_ref()))
                 .push_into(rows);
+            attr_rows(&b.v.set, "block", &elem(b), id, rows);
             for bd in &b.v.bindings {
-                binding(bd, id, &page, &place, rows);
+                let key = |r: RowBuilder<'static>| {
+                    r.set("layout", id.clone())
+                        .set("page", page.clone())
+                        .set("place", place.clone())
+                        .set("slot", text(&bd.v.slot))
+                        .set("nth", int(bd.v.nth))
+                };
+                binding_rows(bd, (&t::BINDING, &t::BINDING_SCHEME), &key, rows);
             }
         }
+        node_rows(&p.v.places, None, id, &page, rows)?;
     }
+    Ok(())
 }
 
-fn binding(
+/// The rows of one binding and its scheme list, in the tables `tables` (binding, scheme); `key` sets the key columns of the owner.
+pub(crate) fn binding_rows(
     bd: &Item<fs_forms_layout::BindingDoc>,
-    id: &Cell,
-    page: &Cell,
-    place: &Cell,
+    tables: (&'static Table, &'static Table),
+    key: &dyn Fn(RowBuilder<'static>) -> RowBuilder<'static>,
     rows: &mut Rows,
 ) {
     let (from, path, role, name) = match &bd.v.from {
@@ -91,14 +103,7 @@ fn binding(
         BindFrom::Lock => ("lock", Cell::Null, Cell::Null, Cell::Null),
         BindFrom::Condition => ("condition", Cell::Null, Cell::Null, Cell::Null),
     };
-    let key = |b: RowBuilder<'static>| {
-        b.set("layout", id.clone())
-            .set("page", page.clone())
-            .set("place", place.clone())
-            .set("slot", text(&bd.v.slot))
-            .set("nth", int(bd.v.nth))
-    };
-    key(RowBuilder::new(&t::BINDING))
+    key(RowBuilder::new(tables.0))
         .set("elem", elem(bd))
         .set("bind_from", text(from))
         .set("path", path)
@@ -106,7 +111,7 @@ fn binding(
         .set("name", name)
         .push_into(rows);
     for (n, s) in bd.v.schemes.iter().flatten().enumerate() {
-        key(RowBuilder::new(&t::BINDING_SCHEME))
+        key(RowBuilder::new(tables.1))
             .set("seq", int(u32::try_from(n).unwrap_or(0)))
             .set("elem", elem(s))
             .set("scheme", text(&s.v))

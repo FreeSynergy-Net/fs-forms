@@ -11,7 +11,7 @@
 pub mod fake;
 mod open;
 
-pub use open::{Decision, Opened, WhenOpen, decide};
+pub use open::{Decision, Opened, WhenOpen, decide, notice_of};
 
 use fs_forms_layout::{ElemId, FrontendKey};
 use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, percent_decode_str, utf8_percent_encode};

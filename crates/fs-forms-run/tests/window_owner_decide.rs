@@ -4,8 +4,7 @@
 //! W12 `Ask` calls the owner never (G4): the counters stand until an answer comes, and the fake refuses an unanswered `Ask`.
 //! The setting `fs.open.when-open` ("always so") is O3 (fs-settings) and not part of this repo yet.
 //!
-//! Mutants (each makes the named test fail): M12 `Ask` is taken as `Switch` -> W11, W12; M13 `Tab` is passed on as `Open(Tab)` ->
-//! W11; M14 `decide` ignores the scope and sees "same record" at once -> W11; M15 the fake opens on an unanswered `Ask` -> W12.
+//! Mutants (each run red, see BERICHT-s6-o1): M12 `Ask` is taken as `Switch` -> W11, W12 (G4); M15 the fake opens on an unanswered `Ask` -> W12.
 
 mod window_owner_common;
 

@@ -155,6 +155,7 @@ pub fn app_styled(
         actions: Arc::new(view.actions.clone()),
         ask: Arc::default(),
         labels: dialogs::Labels::for_locale(locale),
+        people: Arc::default(),
     };
     let labels = states::Labels::for_locale(locale);
     let title = if view.title.is_empty() {
@@ -167,7 +168,10 @@ pub fn app_styled(
         .iter()
         .map(|s| {
             let page = Page {
-                ctx: ctx.clone(),
+                ctx: Ctx {
+                    people: Arc::default(),
+                    ..ctx.clone()
+                },
                 empty: texts.plain("host-page-empty"),
                 frame: s.frame.clone(),
                 parts: parts(texts, &s.nodes),

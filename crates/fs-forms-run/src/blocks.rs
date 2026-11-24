@@ -45,6 +45,14 @@ pub(crate) fn widget_of(block: &str) -> Option<String> {
     catalog().block(block).and_then(|b| b.widget.clone())
 }
 
+/// Whether a block of the contract names `widget` (the key of an adapter must be one of these, or the adapter is dead).
+#[cfg(test)]
+pub(crate) fn names_widget(widget: &str) -> bool {
+    catalog()
+        .iter()
+        .any(|b| b.widget.as_deref() == Some(widget))
+}
+
 /// Every block of the contract with how this build stands for it: `None` = drawn (or a frame or a state), `Some(reason)` = not built.
 pub(crate) fn not_built_list() -> Vec<(String, String)> {
     let b = Blocks;

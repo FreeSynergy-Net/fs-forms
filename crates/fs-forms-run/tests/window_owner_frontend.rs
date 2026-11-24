@@ -5,9 +5,8 @@
 //! its key (`open(list, A)` is `Raised`, not `New`; `decide` agrees) and a second open of the old name does not overwrite the id;
 //! GC5 a frontend that already shows this record elsewhere is refused.
 //!
-//! Mutants (each run red, see BERICHT-s6-p12): M1 `use_frontend` builds a new entry (new hold) -> GC1; M2 it forgets to set the key
-//! -> GC1, GC3; M3 other program is answered as unknown -> GC2; M4 `exact` compares the id text -> GC3; M5 no `id-taken` guard ->
-//! GC3b; M6 no `open-elsewhere` guard -> GC5.
+//! Mutants (each run red, see BERICHT-s6-p12): M1 `use_frontend` makes a new hold -> GC1, `gc3c`; M2 it forgets to set the key -> GC1, GC3, `gc3b`, `gc3c`; M3 other program
+//! is answered as unknown -> GC2; M4 roots are found by the id text -> GC3, `gc3c`; M5 no `id-taken` guard -> `gc3c`; M6 no `open-elsewhere` guard -> GC5.
 
 mod window_owner_common;
 

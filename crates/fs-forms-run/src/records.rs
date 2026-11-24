@@ -59,8 +59,8 @@ pub trait Records: Send + Sync {
     ) -> Answer {
         unsupported()
     }
-    /// Read the state of the module again. Called after every change: today after every OWN accepted call (the hub does it), later also
-    /// when the `watch` of the module says someone else changed it. Default: nothing to read (records that keep no state).
+    /// Read the state of the module again. Called when the `watch` of the module says the record changed (by WHOMEVER, also by the own
+    /// window: a view learns of a change only through its own `watch`, never from its own write). Default: nothing to read (records that keep no state).
     ///
     /// Pattern: Observer – a change anywhere means "read again, count the generation".
     ///

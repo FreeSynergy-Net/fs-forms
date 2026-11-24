@@ -25,6 +25,11 @@ const STATE_BLOCKS: &[&str] = &["empty-state", "partial-notice", "skeleton"];
 
 /// The catalog of the contract, read once. A contract that cannot be read leaves it empty: then every block is unknown and says so.
 fn catalog() -> &'static BlockCatalog {
+    contract()
+}
+
+/// The same, for the rules adapter.
+pub(crate) fn contract() -> &'static BlockCatalog {
     static CATALOG: OnceLock<BlockCatalog> = OnceLock::new();
     CATALOG.get_or_init(|| read().unwrap_or_default())
 }

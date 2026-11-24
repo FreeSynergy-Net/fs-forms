@@ -38,9 +38,10 @@ fn rich() -> Plan {
 
 #[test]
 fn golden_digest_of_the_tasks_plan() {
+    // A5 F6: the digest changed ON PURPOSE (a node is a variant `block`/`frame`, `set` is a field); tests/tree.rs holds the counter-proofs.
     assert_eq!(
         hex(tasks_plan().digest_without_style()),
-        "e477ed93efafa70888fba4910c5557db41540c8a0e49a7e3270db4fd534d1c99"
+        "c5200e3d738581f48afd13f3431ad76da3105a8c86018ffc703571e63f361b31"
     );
 }
 
@@ -56,7 +57,7 @@ fn golden_digest_of_a_plan_with_notices_and_locks() {
     assert!(!p.notices.is_empty() && !p.menu.locks.is_empty() && p.sources[0].status.is_err());
     assert_eq!(
         hex(p.digest_without_style()),
-        "0a2a6b50d4490a22bae0ded717f718616d53359d3bbe183738b0e57f52957f3b"
+        "9d78d7c8e6976b9ec9facee7b9a584aaea2ddcd95a5ba2d0d2781df6128f5665"
     );
 }
 

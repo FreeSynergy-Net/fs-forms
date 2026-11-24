@@ -18,6 +18,7 @@
 mod build;
 mod build_menu;
 mod build_place;
+mod build_tree;
 mod canon;
 mod catalog;
 mod coded;
@@ -29,8 +30,10 @@ mod keys;
 mod menu;
 mod menu_std;
 mod model;
+mod model_tree;
 mod plan;
 mod plan_query;
+mod plan_tree;
 mod providers;
 mod runtime;
 mod types;
@@ -60,7 +63,9 @@ pub use keys::{KeyPlan, RESERVED, list_only, reserved};
 pub use menu::{Arranged, MenuEntry, MenuNode, MenuPlan};
 pub use menu_std::{StandardMenus, StdEntry};
 pub use model::*;
+pub use model_tree::{AttrIn, FrameIn, NodeIn, leaves_in};
 pub use plan::*;
+pub use plan_tree::{AttrPlan, FramePlan, NodePlan, leaves_of, leaves_of_mut};
 pub use providers::{
     HostCaps, Offer, Provider, ProviderFacts, Providers, SettingsFacts, SettingsHealth,
 };

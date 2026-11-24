@@ -15,7 +15,9 @@ use crate::menu::{MenuEntry, MenuNode};
 use crate::model::{
     BindKind, BindingIn, MenuIn, MenuKind, PageIn, PlaceIn, Problem, Range, Resolved, SourceIn,
 };
+use crate::model_tree::NodeIn;
 use crate::plan::{CommandPlan, Fill, PlaceStatus, Plan, PlanState, ReadyPlace};
+use crate::plan_tree::NodePlan;
 use crate::providers::{HostCaps, Offer, Providers};
 use crate::testing::{FakeFacts, TestCatalog, cmd, field, settings, tasks_facts, tasks_resolved};
 use crate::types::{Basic, Role};
@@ -100,25 +102,28 @@ impl BindBench {
             block: "notes-list".into(),
             source: Some(1),
             bindings: vec![],
+            set: vec![],
         };
         r.pages.push(PageIn {
             elem: "pg-notes".into(),
             page: "notes".into(),
             seq: 2,
             frame: "workbench".into(),
-            places: vec![note_place("a", 0), note_place("b", 1)],
+            places: vec![note_place("a", 0).into(), note_place("b", 1).into()],
         });
         let link = BindKind::Field {
             field: field("homepage", Basic::Link),
             role: Role::Display,
             schemes: Some(vec!["ssh".into(), "https".into()]),
         };
-        r.pages[1].places[0].bindings.push(BindingIn {
-            elem: "b-homepage".into(),
-            slot: "properties".into(),
-            nth: 1,
-            kind: link,
-        });
+        if let NodeIn::Block(b) = &mut r.pages[1].places[0] {
+            b.bindings.push(BindingIn {
+                elem: "b-homepage".into(),
+                slot: "properties".into(),
+                nth: 1,
+                kind: link,
+            });
+        }
         let mut set_cols = cmd("setColumns", false, false, false);
         set_cols.source = 0;
         r.menu[1].children.push(MenuIn {
@@ -177,7 +182,11 @@ fn each_command(plan: &mut Plan, mut f: impl FnMut(&mut CommandPlan)) {
 }
 
 fn each_field(plan: &mut Plan, mut f: impl FnMut(&mut crate::plan::FieldFill)) {
-    for pl in plan.pages.iter_mut().flat_map(|p| &mut p.places) {
+    for pl in plan
+        .pages
+        .iter_mut()
+        .flat_map(|p| crate::plan_tree::leaves_of_mut(&mut p.places))
+    {
         if let PlaceStatus::Ready(r) = &mut pl.status {
             for s in &mut r.slots {
                 if let Fill::Field(ff) = &mut s.fill {
@@ -200,16 +209,20 @@ fn apply(flaw: Flaw, plan: &mut Plan, style: Option<&str>, call: u32) {
     match flaw {
         Flaw::PlaceDropped => {
             if let Some(p) = plan.pages.iter_mut().find(|p| {
-                p.places
+                p.leaves()
                     .iter()
                     .any(|q| matches!(q.status, PlaceStatus::Locked(_)))
             }) {
                 p.places
-                    .retain(|q| !matches!(q.status, PlaceStatus::Locked(_)));
+                    .retain(|q| !matches!(q, NodePlan::Block(b) if matches!(b.status, PlaceStatus::Locked(_))));
             }
         }
         Flaw::LockUncoded => {
-            for pl in plan.pages.iter_mut().flat_map(|p| &mut p.places) {
+            for pl in plan
+                .pages
+                .iter_mut()
+                .flat_map(|p| crate::plan_tree::leaves_of_mut(&mut p.places))
+            {
                 if let PlaceStatus::Locked(v) = &mut pl.status {
                     for l in v.iter_mut() {
                         l.cause = Cause::Bind(Coded::new("oops"));
@@ -219,7 +232,11 @@ fn apply(flaw: Flaw, plan: &mut Plan, style: Option<&str>, call: u32) {
         }
         Flaw::SourceLockLocal => {
             let mut first = true;
-            for pl in plan.pages.iter_mut().flat_map(|p| &mut p.places) {
+            for pl in plan
+                .pages
+                .iter_mut()
+                .flat_map(|p| crate::plan_tree::leaves_of_mut(&mut p.places))
+            {
                 if matches!(pl.status, PlaceStatus::Locked(_)) {
                     if !first {
                         pl.status = PlaceStatus::Ready(ReadyPlace { slots: vec![] });
@@ -244,7 +261,11 @@ fn apply(flaw: Flaw, plan: &mut Plan, style: Option<&str>, call: u32) {
         }),
         Flaw::MenuSortedByLabel => plan.menu.roots.sort_by_key(label),
         Flaw::NthIgnored => {
-            for pl in plan.pages.iter_mut().flat_map(|p| &mut p.places) {
+            for pl in plan
+                .pages
+                .iter_mut()
+                .flat_map(|p| crate::plan_tree::leaves_of_mut(&mut p.places))
+            {
                 if let PlaceStatus::Ready(r) = &mut pl.status {
                     r.slots.sort_by_key(|s| std::cmp::Reverse(s.nth));
                 }

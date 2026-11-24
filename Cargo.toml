@@ -30,3 +30,9 @@ rust-version = "1.89"
 # are read from the head of fs-interfaces branch unreviewed/a5-i1. Not tagged; replaced by the tag after the review of bundle 1.
 [patch."https://github.com/FreeSynergy-Net/fs-interfaces"]
 fs-interfaces = { git = "https://www.github.com/FreeSynergy-Net/fs-interfaces", rev = "60256ee02b2fffa1079a65175f8e5dd2a8e8ad72" }
+
+# Development state only (ENTWURF-a5-schnitt section 4b, A5 F6): the catalog reads the places and the attribute vocabulary of the blocks
+# (A5 C2). Head of fs-components branch unreviewed/a5-c2; only this crate (it depends on none of the other fs-components crates).
+# Not tagged; replaced by the tag after the review of bundle 1. The "www." spelling is the way to a second source (see F5).
+[patch."https://github.com/FreeSynergy-Net/fs-components"]
+fs-components-catalog = { git = "https://www.github.com/FreeSynergy-Net/fs-components", rev = "8d52388ae8b0ce425fe93309f846cb70c571c12b" }

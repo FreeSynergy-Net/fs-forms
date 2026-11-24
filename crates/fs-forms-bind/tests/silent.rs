@@ -178,7 +178,7 @@ fn style_of_the_person_wins() {
 #[test]
 fn same_seq_on_a_page_locks_both_placements() {
     let mut r = tasks_resolved();
-    r.pages[1].places[1].seq = 0;
+    r.pages[1].places[1].block_mut().unwrap().seq = 0;
     let p = build_with(&r, &TestCatalog::new(), &tasks_facts(), host());
     for pl in ["props", "empty"] {
         let codes: Vec<String> = locks_of(&p, "detail", pl).iter().map(code_of).collect();

@@ -20,9 +20,11 @@ use crate::catalog::Catalog;
 use crate::compose::compose;
 use crate::frontend_cell::root_page;
 use crate::menus::{line_prefix, menus_of};
+use crate::parts::line;
 use crate::repaint::Repaint;
 use crate::style::StyleCell;
 use crate::view::Coded;
+use crate::window::status;
 use crate::words::words;
 
 /// What the change needs from the owner; the owner holds it in an `Arc`, a menu handler only a `Weak` of it (no cycle through the entry).
@@ -57,7 +59,12 @@ impl Core {
             extends: e.key.extends.clone(),
             frontend: frontend.to_owned(),
         };
-        let rows = rows(&*self_arc.descriptions, &e.key);
+        let listed = self_arc.descriptions.list(&e.key.extends).map_err(|c| {
+            Coded::new("host-notice-frontend-list-failed")
+                .with("extends", e.key.extends.clone())
+                .with("cause", c.code)
+        })?;
+        let rows: Vec<FrontendRow> = listed.into_iter().map(FrontendRow::new).collect();
         if !rows.iter().any(|r| r.id == frontend) {
             let names: Vec<&str> = rows.iter().map(|r| r.id.as_str()).collect();
             return Err(Coded::new("host-notice-frontend-unknown")
@@ -94,6 +101,13 @@ impl Core {
         e.app
             .set_menus(menus, Self::handler(self_arc, e.token))
             .map_err(|_| refused(&Coded::new("menu-duplicate")))?;
+        let records = e.grip.records();
+        e.app.set_status(Some(status(
+            &texts,
+            comp.state,
+            records.is_sample(),
+            records.unavailable().as_deref(),
+        )));
         e.cell.set(page);
         if let Some(e) = open.get_mut(id) {
             e.key = key;
@@ -110,9 +124,9 @@ impl Core {
         token: u64,
     ) -> impl Fn(&str) + Send + Sync + 'static + use<> {
         let weak = Arc::downgrade(core);
-        move |line: &str| {
+        move |chosen: &str| {
             let (Some(core), Some(frontend)) =
-                (weak.upgrade(), line.strip_prefix(line_prefix().as_str()))
+                (weak.upgrade(), chosen.strip_prefix(line_prefix().as_str()))
             else {
                 return;
             };
@@ -125,7 +139,8 @@ impl Core {
             if let Some((id, app)) = found
                 && let Err(refused) = Self::switch(&core, &id, frontend)
             {
-                app.set_status(Some(Status::Problem(refused.code)));
+                let sentence = line(&words(&core.locale), &refused);
+                app.set_status(Some(Status::Problem(sentence)));
             }
         }
     }

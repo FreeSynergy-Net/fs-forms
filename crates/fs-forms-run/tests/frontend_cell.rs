@@ -13,8 +13,10 @@ mod host_common;
 use std::sync::Arc;
 
 use fs_components_app::Status;
+use fs_forms_layout::FrontendKey;
+use fs_forms_run::{Coded, Descriptions, Records, Unavailable, View};
 use fs_forms_run::{WindowId, WindowOpened as Opened, WindowOwner};
-use host_common::{key, req, world};
+use host_common::{Files, key, req, world, world_over};
 
 const A: &str = "urn:a";
 
@@ -149,8 +151,9 @@ fn gc4h_a_refused_click_is_said_in_the_status_line_and_changes_nothing() {
     assert!(window.choose("layout.frontend.board-compact"));
     let said = window.with_shell(|s| s.status().cloned());
     assert!(
-        matches!(&said, Some(Status::Problem(c)) if c == "host-notice-frontend-open-elsewhere"),
-        "{said:?}"
+        matches!(&said, Some(Status::Problem(t))
+            if t.contains("already shows this record") && !t.starts_with("host-notice-")),
+        "the sentence, not the raw code: {said:?}"
     );
     let keys: Vec<_> = host
         .owner
@@ -178,4 +181,44 @@ fn gc4h_the_cell_and_the_menus_draw_nothing() {
             assert!(!code.contains(drawn), "{file} draws: {drawn}");
         }
     }
+}
+
+/// The port of the fixtures whose `list` fails.
+struct NoList;
+impl Descriptions for NoList {
+    fn view(&self, k: &FrontendKey) -> Result<View, Coded> {
+        Files.view(k)
+    }
+    fn list(&self, _: &str) -> Result<Vec<String>, Coded> {
+        Err(Coded::new("source-down"))
+    }
+}
+
+#[test]
+fn gc5h_a_list_that_cannot_be_read_is_said_as_such_not_as_unknown() {
+    let host = world_over(
+        Arc::new(NoList),
+        Box::new(|_| Arc::new(fs_forms_run::SampleBoard::default()) as Arc<dyn Records>),
+    );
+    let Opened::New(id) = host.owner.open(req("board", A)).unwrap() else {
+        panic!("a new window")
+    };
+    let err = host.owner.use_frontend(&id, "board-compact").unwrap_err();
+    assert_eq!(err.code, "host-notice-frontend-list-failed", "{err:?}");
+    assert_eq!(host.owner.open_now()[0].key, key("board"));
+}
+
+#[test]
+fn gc6h_a_window_over_a_module_that_is_not_there_says_so_in_its_status_line() {
+    let host = world_over(
+        Arc::new(Files),
+        Box::new(|_| Arc::new(Unavailable("down".into())) as Arc<dyn Records>),
+    );
+    host.owner.open(req("board", A)).unwrap();
+    let window = host.shown.widgets.lock().unwrap()[0].1.clone();
+    let said = window.with_shell(|s| s.status().cloned());
+    assert!(
+        matches!(&said, Some(Status::Problem(t)) if t == "down"),
+        "{said:?}"
+    );
 }

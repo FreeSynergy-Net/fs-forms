@@ -204,7 +204,12 @@ pub fn app_styled(
 
 /// How the host stands; sample data is said in the same line (a made-up record is never shown as a real one), and so is a data
 /// source that is not there (`down`: always a problem).
-fn status(texts: &Mf2Texts, state: HostState, sample: bool, down: Option<&str>) -> Status {
+pub(crate) fn status(
+    texts: &Mf2Texts,
+    state: HostState,
+    sample: bool,
+    down: Option<&str>,
+) -> Status {
     if let Some(why) = down {
         return Status::Problem(why.to_owned());
     }

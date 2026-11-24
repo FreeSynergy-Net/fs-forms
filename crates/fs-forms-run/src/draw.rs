@@ -28,6 +28,9 @@ use compositions::{sidebar, table, tree};
 /// The least height of the board, in pixels.
 pub(crate) const MIN_H: f32 = 380.0;
 
+/// The people workbench with the rows it was made from, shared by the clones of a page's context.
+pub(crate) type PeopleSlot = Arc<Mutex<Option<(Vec<FormRow>, PeopleWidget)>>>;
+
 /// What a drawn block needs besides its name.
 #[derive(Clone)]
 pub(crate) struct Ctx {
@@ -42,7 +45,7 @@ pub(crate) struct Ctx {
     /// The words of the buttons of a dialog.
     pub labels: Labels,
     /// The people workbench of this page with the rows it was made from: its state (selection, search, "more") lives in the widget, so the widget is kept over a rebuild and made anew only when the rows change.
-    pub people: Arc<Mutex<Option<(Vec<FormRow>, PeopleWidget)>>>,
+    pub people: PeopleSlot,
 }
 
 /// Whether the reader of this window sees the dark scheme.

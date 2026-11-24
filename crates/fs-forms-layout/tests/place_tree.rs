@@ -18,6 +18,7 @@ fn blk(place: &str, name: &str) -> Item<PlaceNode> {
         source: None,
         title_key: None,
         text_key: None,
+        set: vec![],
         bindings: vec![],
     };
     Item {

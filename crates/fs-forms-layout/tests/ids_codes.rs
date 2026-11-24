@@ -28,7 +28,7 @@ fn natural_ids_are_deterministic_and_valid() {
 
 #[test]
 fn k59_codes_are_unique_kebab_and_round_trip() {
-    assert_eq!(LayoutCode::ALL.len(), 45);
+    assert_eq!(LayoutCode::ALL.len(), 49);
     let mut seen = std::collections::HashSet::new();
     for c in LayoutCode::ALL {
         let name = c.as_str();
@@ -75,7 +75,7 @@ fn k59_every_code_has_a_german_and_an_english_text() {
             "{line}"
         );
     }
-    let last_two: Vec<&str> = LayoutCode::ALL[43..].iter().map(|c| c.as_str()).collect();
+    let last_two: Vec<&str> = LayoutCode::ALL[43..45].iter().map(|c| c.as_str()).collect();
     assert_eq!(last_two, ["menu-invalid", "source-unknown"]); // append only
 }
 
@@ -116,4 +116,13 @@ fn k59_texts_name_the_parameters_of_their_code() {
             assert_eq!(&braces(text), &documented[key], "{lang} {key}");
         }
     }
+}
+
+#[test]
+fn a5_f2_codes_come_last() {
+    let new: Vec<&str> = LayoutCode::ALL[45..].iter().map(|c| c.as_str()).collect();
+    assert_eq!(
+        new,
+        ["place-unknown", "place-takes", "place-count", "set-unknown"]
+    );
 }

@@ -94,10 +94,13 @@ fn in_tree(pages: &[Item<PageDoc>], kind: ElemKind, id: &ElemId) -> bool {
                     || (kind == ElemKind::Attr && has(&f.set, id))
                     || go(&f.children, kind, id)
             }
-            _ => false,
+            PlaceNode::Block(b) => kind == ElemKind::Attr && has(&b.set, id),
         })
     }
-    pages.iter().any(|p| go(&p.v.places, kind, id))
+    pages.iter().any(|p| {
+        (kind == ElemKind::Attr && p.v.blocks.iter().any(|b| has(&b.v.set, id)))
+            || go(&p.v.places, kind, id)
+    })
 }
 
 /// Removes blocks, frames or attributes with this id from a tree (a frame takes its children with it).
@@ -110,11 +113,17 @@ fn drop_place(items: &mut Vec<Item<PlaceNode>>, kind: ElemKind, id: &ElemId) {
         !(is_kind && is(i.elem.as_ref(), id))
     });
     for i in items {
-        if let PlaceNode::Frame(f) = &mut i.v {
-            if kind == ElemKind::Attr {
-                f.set.retain(|a| !is(a.elem.as_ref(), id));
+        match &mut i.v {
+            PlaceNode::Frame(f) => {
+                if kind == ElemKind::Attr {
+                    f.set.retain(|a| !is(a.elem.as_ref(), id));
+                }
+                drop_place(&mut f.children, kind, id);
             }
-            drop_place(&mut f.children, kind, id);
+            PlaceNode::Block(b) if kind == ElemKind::Attr => {
+                b.set.retain(|a| !is(a.elem.as_ref(), id));
+            }
+            PlaceNode::Block(_) => {}
         }
     }
 }

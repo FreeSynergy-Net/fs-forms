@@ -97,6 +97,7 @@ pub fn full_doc() -> LayoutDoc {
         source: Some(1),
         title_key: Some("t".into()),
         text_key: Some("tx".into()),
+        set: Vec::new(),
         bindings: vec![
             it("binding:a", bind("value", 0, field, schemes)),
             it(

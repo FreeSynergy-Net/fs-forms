@@ -44,3 +44,7 @@ layout-error-export-failed = The export to {$file} failed ({$kind}).
 layout-error-content-too-large = {$name} has {$bytes} bytes, {$max} are allowed (set by {$by}).
 layout-error-menu-invalid = {$elem}: the menu entry is invalid ({$cause}).
 layout-error-source-unknown = {$elem}: there is no source {$source} in this description.
+layout-error-place-unknown = {$elem}: the frame {$frame} has no place {$place}.
+layout-error-place-takes = {$elem}: the place {$place} does not take {$name}.
+layout-error-place-count = {$elem}: the place {$place} has {$count} children, {$min} to {$max} are allowed.
+layout-error-set-unknown = {$elem}: {$owner} has no setting {$name}; it is ignored.

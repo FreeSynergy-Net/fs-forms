@@ -13,7 +13,7 @@
 mod window_owner_common;
 
 use fs_forms_run::{OpenFrontend, Placement, WindowId, WindowOwner};
-use window_owner_common::{child, elem, fake, key, root, settings, tasks, view};
+use window_owner_common::{child, elem, fake, id, key, root, settings, tasks, view};
 
 #[test]
 fn the_id_is_program_slash_elem_and_stable() {
@@ -97,13 +97,11 @@ fn w4_an_unknown_or_refused_frontend_is_an_error_with_a_code_never_empty() {
     let owner = fake().refusing(key("net.freesynergy.Calendar", "month"));
     let r = root(&owner);
     let missing = owner
-        .open(OpenFrontend {
-            key: key("net.freesynergy.Nothing", "none"),
-            mode: Placement::Panel,
-            parent: Some((r.clone(), elem("nothing"))),
-            switchable: true,
-            scope: None,
-        })
+        .open(
+            OpenFrontend::new(key("net.freesynergy.Nothing", "none"), Placement::Panel)
+                .with_parent(r.clone(), elem("nothing"))
+                .with_switchable(true),
+        )
         .unwrap_err();
     assert_eq!(missing.code, "host-notice-frontend-missing");
     assert!(
@@ -113,13 +111,11 @@ fn w4_an_unknown_or_refused_frontend_is_an_error_with_a_code_never_empty() {
     );
     assert!(missing.params.contains(&("frontend".into(), "none".into())));
     let unknown_parent = owner
-        .open(OpenFrontend {
-            key: settings(),
-            mode: Placement::Panel,
-            parent: Some((WindowId("net.freesynergy.Tasks/gone".into()), elem("x"))),
-            switchable: true,
-            scope: None,
-        })
+        .open(
+            OpenFrontend::new(settings(), Placement::Panel)
+                .with_parent(WindowId("net.freesynergy.Tasks/gone".into()), elem("x"))
+                .with_switchable(true),
+        )
         .unwrap_err();
     assert_eq!(unknown_parent.code, "host-notice-window-unknown");
     // Nothing was opened by the failures, and no connection was made for them.
@@ -135,13 +131,11 @@ fn w4b_a_refusing_module_is_said_as_refused() {
         .refusing(calendar.clone());
     let r = root(&owner);
     let e = owner
-        .open(OpenFrontend {
-            key: calendar,
-            mode: Placement::Panel,
-            parent: Some((r, elem("cal"))),
-            switchable: true,
-            scope: None,
-        })
+        .open(
+            OpenFrontend::new(calendar, Placement::Panel)
+                .with_parent(r, elem("cal"))
+                .with_switchable(true),
+        )
         .unwrap_err();
     assert_eq!(e.code, "host-notice-frontend-refused");
     assert_eq!(owner.holds(), (1, 0), "a refused module is never attached");
@@ -167,15 +161,14 @@ fn w6_the_parent_closed_closes_its_children() {
     let a = child(&owner, &r, "settings-embed", Placement::Panel);
     let b = child(&owner, &r, "settings-window", Placement::Window);
     // A grandchild: a frontend inside the child.
-    let g = owner
-        .open(OpenFrontend {
-            key: tasks(),
-            mode: Placement::Panel,
-            parent: Some((a.clone(), elem("tasks-again"))),
-            switchable: true,
-            scope: Some("urn:uuid:1".into()),
-        })
-        .unwrap();
+    let g = id(owner
+        .open(
+            OpenFrontend::new(tasks(), Placement::Panel)
+                .with_parent(a.clone(), elem("tasks-again"))
+                .with_switchable(true)
+                .with_scope("urn:uuid:1"),
+        )
+        .unwrap());
     let weak: Vec<_> = [&r, &a, &b, &g]
         .iter()
         .map(|i| owner.records_of(i).unwrap())

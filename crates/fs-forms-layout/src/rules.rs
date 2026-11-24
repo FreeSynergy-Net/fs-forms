@@ -30,8 +30,8 @@ pub(crate) fn doc_rules(doc: &LayoutDoc, limits: &Limits, out: &mut Problems) {
     let sources = u32::try_from(doc.sources.len()).unwrap_or(u32::MAX);
     menu_rules(&doc.menu, sources, out);
     for p in &doc.pages {
-        for b in &p.v.blocks {
-            source_ref(elem(b), b.v.source, sources, out);
+        for b in p.v.leaves() {
+            source_ref(b.elem.as_ref().map_or("", ElemId::as_str), b.v.source, sources, out);
             for bd in &b.v.bindings {
                 if let Some(list) = &bd.v.schemes {
                     let names: Vec<String> = list.iter().map(|x| x.v.clone()).collect();

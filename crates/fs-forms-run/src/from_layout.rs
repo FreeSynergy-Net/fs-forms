@@ -81,8 +81,7 @@ pub fn view_of(layout: &Layout, lang: &str) -> View {
             locks: Vec::new(),
             places: p
                 .v
-                .blocks
-                .iter()
+                .leaves()
                 .zip(0u32..)
                 .map(|(b, seq)| PlaceView {
                     place: b.v.place.clone(),

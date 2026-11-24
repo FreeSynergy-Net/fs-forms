@@ -187,6 +187,7 @@ fn pages(rows: &Rows, id: &str) -> Vec<Item<PageDoc>> {
                     frame: p.text("frame").unwrap_or_default(),
                     navigation: nav,
                     blocks,
+                    places: Vec::new(),
                 },
             )
         })

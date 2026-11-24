@@ -6,6 +6,7 @@
 use crate::doc::{BindFrom, BindingDoc, BlockDoc, Item, LayoutDoc, MenuDoc, MessageDoc, PageDoc};
 use crate::ids::{ElemId, ElemKind, ElemRef};
 use crate::overlay::{Field, Value};
+use crate::place::PlaceNode;
 
 /// A found element.
 pub(crate) enum Node<'a> {
@@ -52,9 +53,10 @@ pub(crate) fn find<'a>(doc: &'a mut LayoutDoc, r: &ElemRef) -> Option<Node<'a>> 
         ElemKind::Block => doc
             .pages
             .iter_mut()
-            .flat_map(|p| p.v.blocks.iter_mut())
+            .flat_map(|p| p.v.leaves_mut())
             .find(|b| is(b.elem.as_ref(), id))
-            .map(|b| Node::Block(&mut b.v)),
+            .map(|b| Node::Block(b.v)),
+        ElemKind::Frame | ElemKind::Attr => in_tree(&doc.pages, r.kind, id).then_some(Node::Other),
         ElemKind::Binding => bindings(doc)
             .find(|b| is(b.elem.as_ref(), id))
             .map(|b| Node::Binding(&mut b.v)),
@@ -79,8 +81,42 @@ pub(crate) fn find<'a>(doc: &'a mut LayoutDoc, r: &ElemRef) -> Option<Node<'a>> 
 fn bindings(doc: &mut LayoutDoc) -> impl Iterator<Item = &mut Item<BindingDoc>> {
     doc.pages
         .iter_mut()
-        .flat_map(|p| p.v.blocks.iter_mut())
+        .flat_map(|p| p.v.leaves_mut())
         .flat_map(|b| b.v.bindings.iter_mut())
+}
+
+/// Is there a frame or attribute with this id in the trees of the pages?
+fn in_tree(pages: &[Item<PageDoc>], kind: ElemKind, id: &ElemId) -> bool {
+    fn go(items: &[Item<PlaceNode>], kind: ElemKind, id: &ElemId) -> bool {
+        items.iter().any(|i| match &i.v {
+            PlaceNode::Frame(f) => {
+                (kind == ElemKind::Frame && is(i.elem.as_ref(), id))
+                    || (kind == ElemKind::Attr && has(&f.set, id))
+                    || go(&f.children, kind, id)
+            }
+            _ => false,
+        })
+    }
+    pages.iter().any(|p| go(&p.v.places, kind, id))
+}
+
+/// Removes blocks, frames or attributes with this id from a tree (a frame takes its children with it).
+fn drop_place(items: &mut Vec<Item<PlaceNode>>, kind: ElemKind, id: &ElemId) {
+    items.retain(|i| {
+        let is_kind = match &i.v {
+            PlaceNode::Block(_) => kind == ElemKind::Block,
+            PlaceNode::Frame(_) => kind == ElemKind::Frame,
+        };
+        !(is_kind && is(i.elem.as_ref(), id))
+    });
+    for i in items {
+        if let PlaceNode::Frame(f) = &mut i.v {
+            if kind == ElemKind::Attr {
+                f.set.retain(|a| !is(a.elem.as_ref(), id));
+            }
+            drop_place(&mut f.children, kind, id);
+        }
+    }
 }
 
 fn opt(v: Option<&String>) -> Value {
@@ -159,10 +195,10 @@ pub(crate) fn remove(doc: &mut LayoutDoc, r: &ElemRef) -> bool {
     match r.kind {
         ElemKind::Menu => drop_menu(&mut doc.menu, id),
         ElemKind::Page => doc.pages.retain(|p| !is(p.elem.as_ref(), id)),
-        ElemKind::Block => doc
-            .pages
-            .iter_mut()
-            .for_each(|p| p.v.blocks.retain(|b| !is(b.elem.as_ref(), id))),
+        ElemKind::Block | ElemKind::Frame | ElemKind::Attr => doc.pages.iter_mut().for_each(|p| {
+            p.v.blocks.retain(|b| !is(b.elem.as_ref(), id));
+            drop_place(&mut p.v.places, r.kind, id);
+        }),
         ElemKind::Binding => bindings_parents(doc, |l| l.retain(|b| !is(b.elem.as_ref(), id))),
         ElemKind::BindingScheme => {
             bindings(doc).for_each(|b| {
@@ -186,6 +222,6 @@ pub(crate) fn remove(doc: &mut LayoutDoc, r: &ElemRef) -> bool {
 fn bindings_parents(doc: &mut LayoutDoc, mut f: impl FnMut(&mut Vec<Item<BindingDoc>>)) {
     doc.pages
         .iter_mut()
-        .flat_map(|p| p.v.blocks.iter_mut())
+        .flat_map(|p| p.v.leaves_mut())
         .for_each(|b| f(&mut b.v.bindings));
 }

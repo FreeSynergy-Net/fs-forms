@@ -79,6 +79,7 @@ pub(crate) fn layout_doc(root: &Tree, cx: &mut Ctx<'_>) -> Option<LayoutDoc> {
         frame: f.req_str(cx, "frame"),
         navigation: word(f, cx, "navigation").unwrap_or(fs_forms_layout::Navigation::Single),
         blocks: items(f.list(cx, "block"), "block", cx, block),
+        places: Vec::new(),
     });
     let actions = items(f.list(cx, "action"), "action", cx, action);
     let views = items(f.list(cx, "view"), "view", cx, view);

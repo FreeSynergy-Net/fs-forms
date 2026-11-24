@@ -31,7 +31,7 @@ pub fn check_providers<'a>(
         let doc = layout.doc();
         let mut out: Vec<Coded<LayoutCode>> = Vec::new();
         for page in &doc.pages {
-            for block in &page.v.blocks {
+            for block in page.v.leaves() {
                 let Some(n) = block.v.source else { continue };
                 let Some(src) = doc.sources.get((n as usize).wrapping_sub(1)) else {
                     let at = block.elem.as_ref().map_or("", |e| e.as_str());
@@ -87,7 +87,7 @@ pub fn split_provider_codes(
 pub fn unchecked_capabilities(layout: &Layout) -> Vec<Coded<LayoutCode>> {
     let doc = layout.doc();
     let mut out: Vec<Coded<LayoutCode>> = Vec::new();
-    for block in doc.pages.iter().flat_map(|p| &p.v.blocks) {
+    for block in doc.pages.iter().flat_map(|p| p.v.leaves()) {
         let src = block
             .v
             .source

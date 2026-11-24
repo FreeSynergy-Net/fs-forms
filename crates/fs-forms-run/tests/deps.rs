@@ -59,7 +59,7 @@ fn no_normal_dependency_leads_to_a_program_the_core_or_the_server() {
                 || rest.starts_with("types")
                 || rest.starts_with("icons")
                 || rest.starts_with("records") // brought by fs-components-catalog (record shapes, no program)
-                || rest.starts_with("trusted-path") // brought by fs-rpc v0.0.8 (WH2, trust check of the socket path; on Windows in the graph), no program
+                || rest.starts_with("trusted-path") // brought by fs-rpc v0.1.0 (WH2, trust check of the socket path; on Windows in the graph), no program
                 || rest.starts_with("objects"); // brought by fs-rpc
             assert!(
                 !rest.starts_with("modules-"),

@@ -24,26 +24,26 @@ path = "src/main.rs"
 fs-forms-client = { path = "../fs-forms-client" }
 fs-forms-layout = { path = "../fs-forms-layout" }
 fs-forms-exchange = { path = "../fs-forms-exchange" }
-fs-components = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "982115c68761f48c55b5d28322b1e46859aa778a" }
-fs-components-app = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "982115c68761f48c55b5d28322b1e46859aa778a" }
-fs-components-widgets = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "982115c68761f48c55b5d28322b1e46859aa778a" }
-fs-components-mf2 = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "982115c68761f48c55b5d28322b1e46859aa778a" }
-fs-components-kanban = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "982115c68761f48c55b5d28322b1e46859aa778a" }
-fs-components-fields = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "982115c68761f48c55b5d28322b1e46859aa778a" }
-fs-components-styles = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "982115c68761f48c55b5d28322b1e46859aa778a" }
-fs-components-words = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "982115c68761f48c55b5d28322b1e46859aa778a" }
+fs-components = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "fb0a9d29591349b9626fb1b61325f14974cb5550" }
+fs-components-app = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "fb0a9d29591349b9626fb1b61325f14974cb5550" }
+fs-components-widgets = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "fb0a9d29591349b9626fb1b61325f14974cb5550" }
+fs-components-mf2 = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "fb0a9d29591349b9626fb1b61325f14974cb5550" }
+fs-components-kanban = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "fb0a9d29591349b9626fb1b61325f14974cb5550" }
+fs-components-fields = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "fb0a9d29591349b9626fb1b61325f14974cb5550" }
+fs-components-styles = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "fb0a9d29591349b9626fb1b61325f14974cb5550" }
+fs-components-words = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "fb0a9d29591349b9626fb1b61325f14974cb5550" }
 # What the blocks of the contract are (and what they accept and render): the host asks it, it has no table of its own.
-fs-components-catalog = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "982115c68761f48c55b5d28322b1e46859aa778a" }
-fs-components-core = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "982115c68761f48c55b5d28322b1e46859aa778a" }
+fs-components-catalog = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "fb0a9d29591349b9626fb1b61325f14974cb5550" }
+fs-components-core = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "fb0a9d29591349b9626fb1b61325f14974cb5550" }
 # The people workbench (widget of the block `contact-row`; `fs-components-widgets` does not hold it): one dependency, nothing copied.
-fs-components-workbenches = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "982115c68761f48c55b5d28322b1e46859aa778a" }
+fs-components-workbenches = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "fb0a9d29591349b9626fb1b61325f14974cb5550" }
 
 # The form catalog (`fs_interfaces::forms`, forms.txt) and the one form match (`fs-forms-bind`): the host holds no table of forms.
-fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", tag = "v0.0.34" }
+fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", tag = "v0.0.35" }
 # `InterfaceVersion` (V-1, fs-types v0.0.6, the same tag as fs-components): the one reader of "name@x.y.z"; the block catalog answers `draws(&InterfaceVersion)`.
 fs-types = { git = "https://github.com/FreeSynergy-Net/fs-types", tag = "v0.0.6" }
 fs-forms-bind = { path = "../fs-forms-bind" }
-fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", tag = "v0.0.8" }
+fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", tag = "v0.1.0" }
 tokio = { version = "1", features = ["rt", "sync", "net", "time"] }
 
 # Picture tests (the window drawn without a window, read back): the same dev-dependencies as fs-forms-simple.

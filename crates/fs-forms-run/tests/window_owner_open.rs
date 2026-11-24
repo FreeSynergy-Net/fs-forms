@@ -2,7 +2,7 @@
 //! Helpers: `window_owner_common`. The pure decision is in `window_owner_decide.rs`.
 //!
 //! Tests: W8 `of_record` (no scope = the old id; scope percent-encoded; two scopes never one id; reversible; proptest, G3);
-//! W9 other record at an open place: `Window` = second id and second hold, `Switch` = one entry, records and hold stay (G1);
+//! W9 other record at an open place: `Window` = second id and second hold, `Switch` = one entry, the grip moves to the records of the new record (G1, P3);
 //! W10 no scope twice = the old id, `Raised` (G2, the old ids never change).
 //!
 //! Mutants (each run red, see BERICHT-s6-o1): M7 `of_record` ignores the scope -> W8, W9; M8 `of_record` does not encode `/` -> W8; M9 `Switch` opens a new hold -> W9b (G1);
@@ -80,13 +80,12 @@ fn w9_another_record_in_a_window_is_a_second_id_and_a_second_hold() {
 }
 
 #[test]
-fn w9b_switch_keeps_one_entry_the_records_and_the_hold() {
+fn w9b_switch_keeps_one_entry_and_moves_the_grip() {
     let owner = fake();
     let a = id(at(&owner, "urn:a", WhenOpen::Window).unwrap());
     let records = owner.records_of(&a).unwrap();
     let comp = owner.composition_of(&a).unwrap();
     owner.invoke(&a, "values", "value.set").unwrap();
-    let holds = owner.holds();
     let r = at(&owner, "urn:b", WhenOpen::Switch).unwrap();
     let b = WindowId::of_record(P, "board", Some("urn:b"));
     assert_eq!(
@@ -96,19 +95,20 @@ fn w9b_switch_keeps_one_entry_the_records_and_the_hold() {
             from: Some("urn:a".into())
         }
     );
-    assert_eq!(owner.holds(), holds, "no new connection, none dropped");
+    // P3: the grip moves to the records of the new record; the new hold is taken before the old one falls (the real owner keeps
+    // one connection per module, the double counts one hold per record)
+    assert_eq!(owner.holds(), (2, 1));
     assert_eq!(owner.open_now().len(), 1);
     let now = &owner.open_now()[0];
     assert_eq!((&now.id, now.scope.as_deref()), (&b, Some("urn:b")));
     assert!(owner.composition_of(&a).is_none());
     assert_eq!(owner.composition_of(&b).unwrap(), comp);
-    // the same records answer: the call counted before is still counted
-    assert_eq!(records.upgrade().unwrap().calls(), 1);
+    // the records of the old record are shown nowhere now; the new ones count from zero
+    assert!(records.upgrade().is_none());
     owner.invoke(&b, "values", "value.set").unwrap();
-    assert_eq!(records.upgrade().unwrap().calls(), 2);
-    // closing the one entry lets the one hold fall
+    assert_eq!(owner.records_of(&b).unwrap().upgrade().unwrap().calls(), 1);
     owner.close(&b).unwrap();
-    assert_eq!(owner.holds(), (1, 1));
+    assert_eq!(owner.holds(), (2, 2));
 }
 
 #[test]

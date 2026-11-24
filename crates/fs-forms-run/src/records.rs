@@ -12,6 +12,7 @@ use std::sync::Arc;
 use fs_components_kanban::{Answer, Operation};
 
 use crate::form_data::FormData;
+use crate::view::Coded;
 
 /// One entry of a side list (a project, a label).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -57,6 +58,16 @@ pub trait Records: Send + Sync {
         _values: &[(String, String)],
     ) -> Answer {
         unsupported()
+    }
+    /// Read the state of the module again. Called after every change: today after every OWN accepted call (the hub does it), later also
+    /// when the `watch` of the module says someone else changed it. Default: nothing to read (records that keep no state).
+    ///
+    /// Pattern: Observer – a change anywhere means "read again, count the generation".
+    ///
+    /// # Errors
+    /// The code of the failed read (`host-notice-data-reload`); [`Records::stale`] then says the board shows the old state.
+    fn reread(&self) -> Result<(), Coded> {
+        Ok(())
     }
     /// Whether these records are made-up sample data: the window then says so (it never shows invented records as real ones).
     fn is_sample(&self) -> bool {

@@ -173,9 +173,10 @@ fn w6_the_parent_closed_closes_its_children() {
         .iter()
         .map(|i| owner.records_of(i).unwrap())
         .collect();
-    assert_eq!(owner.holds(), (4, 0));
+    // a and b show the same record of the same program: they share records and hold (stage 6, P3), so 3 holds for 4 frontends
+    assert_eq!(owner.holds(), (3, 0));
     owner.close(&r).unwrap();
     assert_eq!(owner.open_now(), Vec::new());
     assert!(weak.iter().all(|w| w.upgrade().is_none()));
-    assert_eq!(owner.holds(), (4, 4), "every connection fell");
+    assert_eq!(owner.holds(), (3, 3), "every connection fell");
 }

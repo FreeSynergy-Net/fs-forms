@@ -25,6 +25,7 @@ mod from_layout;
 mod link;
 mod page;
 mod parts;
+mod record_hub;
 mod records;
 mod run;
 mod sample;
@@ -49,6 +50,7 @@ pub use form_check::{Finding, action_report, problems as form_problems, report a
 pub use form_data::{FormData, FormRecords, FormRow};
 pub use from_layout::view_of;
 pub use link::{FixtureLink, LayoutLink, SocketLink};
+pub use record_hub::{RecordGrip, RecordHub, RecordKey};
 pub use records::{NoRecords, Records, SideItem, Unavailable};
 pub use run::{run, run_code, run_code_with, run_with};
 pub use sample::SampleBoard;

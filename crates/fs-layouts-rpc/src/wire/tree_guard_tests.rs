@@ -116,3 +116,27 @@ fn a_wide_list_is_refused_by_its_length() {
         (LayoutCode::TooMany, "place-nodes", "default")
     );
 }
+
+/// An empty frame at depth `max` is a valid layout (checker and store take it), so the wire reads it; a child inside it is
+/// depth `max + 1` and is still refused.
+#[test]
+fn an_empty_frame_at_the_limit_is_read_a_child_in_it_is_refused() {
+    let lim = TreeLimits {
+        depth_max: 2,
+        nodes_max: 1000,
+        ..TreeLimits::declared()
+    };
+    let empty = doc(vec![frame(
+        None,
+        "main",
+        vec![],
+        vec![frame(None, "main", vec![], vec![])],
+    )]);
+    assert_eq!(read(&wire(&empty), &lim).unwrap(), empty);
+    let full = doc(chain(3));
+    let e = read(&wire(&full), &lim).unwrap_err();
+    assert_eq!(
+        (e.code, found(&e, "what").as_str()),
+        (LayoutCode::TooMany, "place-depth")
+    );
+}

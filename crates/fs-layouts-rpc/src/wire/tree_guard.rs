@@ -73,7 +73,9 @@ fn level(
     depth: u32,
     b: &mut Budget<'_>,
 ) -> R<()> {
-    if depth > b.lim.depth_max {
+    // An EMPTY list one level too deep is no node: the checker (`check_places`) and the store (`from_rows_tree`) take an empty
+    // frame at depth `max`, so the wire must read it too (three layers, one count).
+    if !nodes.is_empty() && depth > b.lim.depth_max {
         return Err(b.lim.refuse("place-depth", b.lim.depth_max));
     }
     b.take(nodes.len())?;

@@ -229,11 +229,8 @@ impl Loaded {
     /// `frontend <id> from <file>`: the line a host or check logs, from what was loaded and not from what was asked.
     #[must_use]
     pub fn line(&self) -> String {
-        format!(
-            "frontend {} from {}",
-            self.view.frontend,
-            self.file.display()
-        )
+        let file = self.file.to_string_lossy().replace('\\', "/");
+        format!("frontend {} from {file}", self.view.frontend)
     }
 }
 

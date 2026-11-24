@@ -82,7 +82,7 @@ pub(crate) async fn original<S: LayoutStore + ?Sized>(
     let mut out = r.get();
     out.set_found(found.is_some());
     if let Some((layout, summary)) = found {
-        write_doc(out.reborrow().init_layout(), &layout.to_doc());
+        write_doc(out.reborrow().init_layout(), &layout.to_doc())?;
         write_summary(out.init_summary(), &summary)?;
     }
     Ok(())

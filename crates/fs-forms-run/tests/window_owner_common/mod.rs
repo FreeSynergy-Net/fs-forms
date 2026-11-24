@@ -5,7 +5,7 @@
 use fs_forms_layout::{ElemId, FrontendKey};
 use fs_forms_run::{
     FakeWindows, MenuItem, MenuState, OpenFrontend, PageView, PlaceView, Placement, TestCatalog,
-    View, WindowId, WindowOwner,
+    View, WindowId, WindowOpened as Opened, WindowOwner,
 };
 
 pub fn key(extends: &str, frontend: &str) -> FrontendKey {
@@ -59,30 +59,30 @@ pub fn fake() -> FakeWindows {
         .knowing(settings(), view("Settings", "field-card"))
 }
 
+/// The id an `open` gave, whatever it did.
+pub fn id(o: Opened) -> WindowId {
+    match o {
+        Opened::New(id) | Opened::Raised(id) | Opened::Switched { id, .. } => id,
+        _ => unreachable!("unknown Opened"),
+    }
+}
+
 pub fn elem(text: &str) -> ElemId {
     ElemId::parse(text).unwrap()
 }
 
 pub fn root(owner: &FakeWindows) -> WindowId {
-    owner
-        .open(OpenFrontend {
-            key: tasks(),
-            mode: Placement::Window,
-            parent: None,
-            switchable: true,
-            scope: None,
-        })
-        .unwrap()
+    id(owner
+        .open(OpenFrontend::new(tasks(), Placement::Window).with_switchable(true))
+        .unwrap())
 }
 
 pub fn child(owner: &FakeWindows, parent: &WindowId, at: &str, mode: Placement) -> WindowId {
-    owner
-        .open(OpenFrontend {
-            key: settings(),
-            mode,
-            parent: Some((parent.clone(), elem(at))),
-            switchable: true,
-            scope: None,
-        })
-        .unwrap()
+    id(owner
+        .open(
+            OpenFrontend::new(settings(), mode)
+                .with_parent(parent.clone(), elem(at))
+                .with_switchable(true),
+        )
+        .unwrap())
 }

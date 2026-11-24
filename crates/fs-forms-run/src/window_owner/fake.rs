@@ -4,6 +4,8 @@
 //!
 //! Pattern: Fake (test double) – the same contract as the real owner, held in memory.
 
+mod parts;
+
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, Weak};
@@ -11,64 +13,16 @@ use std::sync::{Arc, Mutex, Weak};
 use fs_components_kanban::Answer;
 use fs_forms_layout::FrontendKey;
 
-use super::{OpenFrontend, OpenedFrontend, Placement, WindowId, WindowOwner};
+pub use self::parts::{CountingRecords, FakeHold};
+use super::open::at_place;
+use super::{
+    Decision, OpenFrontend, Opened, OpenedFrontend, Placement, WhenOpen, WindowId, WindowOwner,
+    decide,
+};
 use crate::catalog::TestCatalog;
 use crate::compose::{Composition, compose};
-use crate::records::{Records, SideItem};
+use crate::records::Records;
 use crate::view::{Coded, View};
-
-/// Pattern: Fake (test double) – stand-in for the records of one module that counts the calls it takes.
-#[derive(Debug, Default)]
-pub struct CountingRecords {
-    calls: AtomicUsize,
-}
-
-impl CountingRecords {
-    /// How many calls these records took.
-    #[must_use]
-    pub fn calls(&self) -> usize {
-        self.calls.load(Ordering::SeqCst)
-    }
-}
-
-impl Records for CountingRecords {
-    fn side(&self) -> Vec<SideItem> {
-        Vec::new()
-    }
-
-    fn invoke(
-        &self,
-        _form: &str,
-        _channel: &str,
-        _record: Option<&str>,
-        _values: &[(String, String)],
-    ) -> Answer {
-        self.calls.fetch_add(1, Ordering::SeqCst);
-        Answer::Accepted
-    }
-}
-
-/// Pattern: RAII (test double) – stands for the held connection to a module (`fs_rpc::hold`, not built yet): attached when made,
-/// detached when dropped.
-#[derive(Debug)]
-pub struct FakeHold {
-    detached: Arc<AtomicUsize>,
-}
-
-impl FakeHold {
-    fn attach(attached: &AtomicUsize, detached: &Arc<AtomicUsize>) -> Self {
-        attached.fetch_add(1, Ordering::SeqCst);
-        Self {
-            detached: Arc::clone(detached),
-        }
-    }
-}
-
-impl Drop for FakeHold {
-    fn drop(&mut self) {
-        self.detached.fetch_add(1, Ordering::SeqCst);
-    }
-}
 
 /// What one open frontend holds; dropping the entry drops all of it.
 struct Entry {
@@ -77,9 +31,27 @@ struct Entry {
     switchable: bool,
     raised: usize,
     parent: Option<WindowId>,
+    scope: Option<String>,
     composition: Composition,
     records: Arc<CountingRecords>,
     _hold: FakeHold,
+}
+
+type Open = HashMap<WindowId, Entry>;
+
+fn snapshot(open: &Open) -> Vec<OpenedFrontend> {
+    let mut now: Vec<OpenedFrontend> = open
+        .iter()
+        .map(|(id, e)| OpenedFrontend {
+            id: id.clone(),
+            key: e.key.clone(),
+            mode: e.mode,
+            parent: e.parent.clone(),
+            scope: e.scope.clone(),
+        })
+        .collect();
+    now.sort_by(|a, b| a.id.cmp(&b.id));
+    now
 }
 
 /// Pattern: Fake (test double) – a [`WindowOwner`] that keeps counters instead of windows.
@@ -91,7 +63,7 @@ pub struct FakeWindows {
     refusing: Vec<FrontendKey>,
     attached: AtomicUsize,
     detached: Arc<AtomicUsize>,
-    open: Mutex<HashMap<WindowId, Entry>>,
+    open: Mutex<Open>,
 }
 
 impl FakeWindows {
@@ -156,15 +128,40 @@ impl FakeWindows {
         )
     }
 
-    fn lock(&self) -> std::sync::MutexGuard<'_, HashMap<WindowId, Entry>> {
+    fn lock(&self) -> std::sync::MutexGuard<'_, Open> {
         self.open
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner)
     }
+
+    fn fresh(&self, req: &OpenFrontend, parent: Option<WindowId>) -> Result<Entry, Coded> {
+        let missing = || {
+            Coded::new("host-notice-frontend-missing")
+                .with("extends", req.key.extends.clone())
+                .with("frontend", req.key.frontend.clone())
+        };
+        let view = self.known.get(&req.key).ok_or_else(missing)?;
+        if self.refusing.contains(&req.key) {
+            return Err(Coded::new("host-notice-frontend-refused")
+                .with("extends", req.key.extends.clone())
+                .with("frontend", req.key.frontend.clone()));
+        }
+        Ok(Entry {
+            key: req.key.clone(),
+            mode: req.mode,
+            switchable: req.switchable,
+            raised: 0,
+            parent,
+            scope: req.scope.clone(),
+            composition: compose(view, &self.catalog),
+            records: Arc::new(CountingRecords::default()),
+            _hold: FakeHold::attach(&self.attached, &self.detached),
+        })
+    }
 }
 
 impl WindowOwner for FakeWindows {
-    fn open(&self, req: OpenFrontend) -> Result<WindowId, Coded> {
+    fn open(&self, req: OpenFrontend) -> Result<Opened, Coded> {
         let mut open = self.lock();
         let (program, elem, parent) = match &req.parent {
             Some((pid, elem)) => {
@@ -179,34 +176,33 @@ impl WindowOwner for FakeWindows {
             }
             None => (req.key.extends.clone(), req.key.frontend.clone(), None),
         };
-        let id = WindowId::of(&program, &elem);
+        let id = WindowId::of_record(&program, &elem, req.scope.as_deref());
         if let Some(e) = open.get_mut(&id) {
-            e.raised += 1; // brought to the front, the mode stays
-            return Ok(id);
+            e.raised += 1; // brought to the front, the mode and the record stay
+            return Ok(Opened::Raised(id));
         }
-        let missing = || {
-            Coded::new("host-notice-frontend-missing")
-                .with("extends", req.key.extends.clone())
-                .with("frontend", req.key.frontend.clone())
-        };
-        let view = self.known.get(&req.key).ok_or_else(missing)?;
-        if self.refusing.contains(&req.key) {
-            return Err(Coded::new("host-notice-frontend-refused")
-                .with("extends", req.key.extends.clone())
-                .with("frontend", req.key.frontend.clone()));
+        let now = snapshot(&open);
+        let at = at_place(&now, &WindowId::of(&program, &elem)).cloned();
+        match (decide(&now, &req), at) {
+            (Decision::Open(WhenOpen::Switch), Some(at)) => {
+                // Same place, other record: records and hold stay (same module), only the record changes.
+                let mut e = open.remove(&at).expect("at_place names an open entry");
+                let from = std::mem::replace(&mut e.scope, req.scope.clone());
+                for c in open.values_mut().filter(|c| c.parent.as_ref() == Some(&at)) {
+                    c.parent = Some(id.clone());
+                }
+                open.insert(id.clone(), e);
+                Ok(Opened::Switched { id, from })
+            }
+            (Decision::Ask { at }, _) => {
+                Err(Coded::new("host-notice-open-unanswered").with("at", at.as_str()))
+            }
+            _ => {
+                let entry = self.fresh(&req, parent)?;
+                open.insert(id.clone(), entry);
+                Ok(Opened::New(id))
+            }
         }
-        let entry = Entry {
-            key: req.key.clone(),
-            mode: req.mode,
-            switchable: req.switchable,
-            raised: 0,
-            parent,
-            composition: compose(view, &self.catalog),
-            records: Arc::new(CountingRecords::default()),
-            _hold: FakeHold::attach(&self.attached, &self.detached),
-        };
-        open.insert(id.clone(), entry);
-        Ok(id)
     }
 
     fn close(&self, id: &WindowId) -> Result<(), Coded> {
@@ -248,17 +244,6 @@ impl WindowOwner for FakeWindows {
     }
 
     fn open_now(&self) -> Vec<OpenedFrontend> {
-        let mut now: Vec<OpenedFrontend> = self
-            .lock()
-            .iter()
-            .map(|(id, e)| OpenedFrontend {
-                id: id.clone(),
-                key: e.key.clone(),
-                mode: e.mode,
-                parent: e.parent.clone(),
-            })
-            .collect();
-        now.sort_by(|a, b| a.id.cmp(&b.id));
-        now
+        snapshot(&self.lock())
     }
 }

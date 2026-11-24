@@ -54,7 +54,7 @@ impl BlincSurfaces {
 
 impl Surfaces for BlincSurfaces {
     fn show(&self, app: AppWidget, on_closed: Box<dyn FnOnce() + Send>) -> Result<(), Coded> {
-        open_more(self.options.clone(), app, on_closed)
+        open_more(self.options, app, on_closed)
             .map_err(|e| Coded::new("host-notice-window-failed").with("cause", e.to_string()))
     }
 }

@@ -156,7 +156,9 @@ pub fn notes() -> (Notifications, Arc<Toast>) {
 
 pub type Seen = Arc<Mutex<Vec<Result<Opened, Coded>>>>;
 
-pub fn done() -> (Seen, Arc<dyn Fn(Result<Opened, Coded>) + Send + Sync>) {
+pub type Done = Arc<dyn Fn(Result<Opened, Coded>) + Send + Sync>;
+
+pub fn done() -> (Seen, Done) {
     let seen: Seen = Arc::default();
     let sink = Arc::clone(&seen);
     (seen, Arc::new(move |r| sink.lock().unwrap().push(r)))

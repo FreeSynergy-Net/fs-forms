@@ -11,16 +11,16 @@
 //! engine with a backend is open.
 
 mod ask;
+mod entry;
 mod ports;
 
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
+use std::sync::{Arc, Mutex};
 
 use fs_components_app::AppWidget;
 use fs_components_words::Locale;
-use fs_forms_layout::FrontendKey;
 
 pub use self::ask::{Asked, OpenAsk};
+use self::entry::{Entry, Open, family, lock, snapshot};
 pub use self::ports::{BlincSurfaces, Descriptions, Modules, Surfaces};
 use super::open::{at_place, exact};
 use super::{
@@ -29,62 +29,11 @@ use super::{
 };
 use crate::catalog::Catalog;
 use crate::compose::compose;
-use crate::record_hub::{Module, RecordGrip, RecordHub, RecordKey};
+use crate::record_hub::{RecordGrip, RecordHub, RecordKey};
 use crate::repaint::Repaint;
 use crate::view::Coded;
 use crate::window::app_with;
 use crate::words::words;
-
-/// What one open window holds; dropping the entry drops the grip (= its connection, signing off) and the widget.
-struct Entry {
-    key: FrontendKey,
-    place: (String, String),
-    scope: Option<String>,
-    parent: Option<WindowId>,
-    grip: RecordGrip,
-    module: Arc<dyn Module>,
-    app: AppWidget,
-    raised: usize,
-}
-
-type Open = HashMap<WindowId, Entry>;
-
-fn lock(open: &Mutex<Open>) -> MutexGuard<'_, Open> {
-    open.lock().unwrap_or_else(PoisonError::into_inner)
-}
-
-fn snapshot(open: &Open) -> Vec<OpenedFrontend> {
-    let mut now: Vec<OpenedFrontend> = open
-        .iter()
-        .map(|(id, e)| OpenedFrontend {
-            id: id.clone(),
-            key: e.key.clone(),
-            mode: Placement::Window,
-            parent: e.parent.clone(),
-            scope: e.scope.clone(),
-        })
-        .collect();
-    now.sort_by(|a, b| a.id.cmp(&b.id));
-    now
-}
-
-/// `id` and every window whose parent chain reaches it.
-fn family(open: &Open, id: &WindowId) -> Vec<WindowId> {
-    let mut doomed = vec![id.clone()];
-    loop {
-        let more: Vec<WindowId> = open
-            .iter()
-            .filter(|(k, e)| {
-                !doomed.contains(k) && e.parent.as_ref().is_some_and(|p| doomed.contains(p))
-            })
-            .map(|(k, _)| k.clone())
-            .collect();
-        if more.is_empty() {
-            return doomed;
-        }
-        doomed.extend(more);
-    }
-}
 
 /// Pattern: Strategy (the real [`WindowOwner`], `Window` only) – see the module.
 pub struct HostWindows {

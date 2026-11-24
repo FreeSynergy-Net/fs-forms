@@ -25,7 +25,7 @@ const TOL: u8 = 2;
 /// The failure case must differ in at least this many pixels (a card moved: far more).
 const MIN_DIFF: usize = 400;
 
-fn read(path: &Path) -> (u32, u32, Vec<u8>) {
+fn read(path: &Path) -> Pixels {
     let d = png::Decoder::new(std::io::BufReader::new(std::fs::File::open(path).unwrap()));
     let mut r = d.read_info().unwrap();
     let mut buf = vec![0; r.output_buffer_size().unwrap()];
@@ -39,16 +39,20 @@ fn read(path: &Path) -> (u32, u32, Vec<u8>) {
 }
 
 /// How many pixels differ by more than `TOL` in any channel.
-fn diff(a: &(u32, u32, Vec<u8>), b: &(u32, u32, Vec<u8>)) -> usize {
-    assert_eq!((a.0, a.1), (b.0, b.1), "same size");
-    a.2.chunks(3)
-        .zip(b.2.chunks(3))
-        .filter(|(p, q)| p.iter().zip(*q).any(|(x, y)| x.abs_diff(*y) > TOL))
+type Pixels = (u32, u32, Vec<u8>);
+
+fn diff(first: &Pixels, second: &Pixels) -> usize {
+    assert_eq!((first.0, first.1), (second.0, second.1), "same size");
+    first
+        .2
+        .chunks(3)
+        .zip(second.2.chunks(3))
+        .filter(|(left, right)| left.iter().zip(*right).any(|(x, y)| x.abs_diff(*y) > TOL))
         .count()
 }
 
-fn draw(w: &fs_components_app::AppWidget, path: &Path) -> Option<(u32, u32, Vec<u8>)> {
-    match w.picture(900, 560, path) {
+fn draw(window: &fs_components_app::AppWidget, path: &Path) -> Option<Pixels> {
+    match window.picture(900, 560, path) {
         Ok(()) => Some(read(path)),
         Err(e) => {
             let m = e.to_string().to_lowercase();
@@ -76,21 +80,21 @@ fn two_windows_one_record_the_other_window_shows_the_move() {
         |d| (Some(d.into()), None),
     );
     let (out, _keep) = (dir.0.unwrap(), dir.1);
-    let w = world();
-    let (Opened::New(a), Opened::New(b)) = (
-        w.owner.open(req("board", "urn:a")).unwrap(),
-        w.owner.open(req("board-compact", "urn:a")).unwrap(),
+    let host = world();
+    let (Opened::New(first), Opened::New(second)) = (
+        host.owner.open(req("board", "urn:a")).unwrap(),
+        host.owner.open(req("board-compact", "urn:a")).unwrap(),
     ) else {
         panic!("two new windows")
     };
-    let widget = |n: usize| w.shown.widgets.lock().unwrap()[n].1.clone();
+    let widget = |n: usize| host.shown.widgets.lock().unwrap()[n].1.clone();
     let Some(a_before) = draw(&widget(0), &out.join("two-windows-a-before.png")) else {
         return;
     };
     let b_before = draw(&widget(1), &out.join("two-windows-b-before.png")).unwrap();
     assert_eq!(
-        w.owner
-            .grip_of(&a)
+        host.owner
+            .grip_of(&first)
             .unwrap()
             .records()
             .move_card("FS-1", "done"),
@@ -99,21 +103,21 @@ fn two_windows_one_record_the_other_window_shows_the_move() {
     let b_after = draw(&widget(1), &out.join("two-windows-b-after.png")).unwrap();
     let a_after = draw(&widget(0), &out.join("two-windows-a-after.png")).unwrap();
     // C: a fresh window on the same record AFTER the move (B's place is free once B is closed): the reference no path of B went through
-    w.owner.close(&b).unwrap();
-    let Opened::New(_) = w.owner.open(req("board-compact", "urn:a")).unwrap() else {
+    host.owner.close(&second).unwrap();
+    let Opened::New(_) = host.owner.open(req("board-compact", "urn:a")).unwrap() else {
         panic!("a new window")
     };
-    let c = draw(&widget(1), &out.join("two-windows-c-fresh.png")).unwrap();
+    let fresh = draw(&widget(1), &out.join("two-windows-c-fresh.png")).unwrap();
     assert!(
         diff(&a_before, &a_after) >= MIN_DIFF,
         "the move shows in A (else the test moves nothing)"
     );
     assert_eq!(
-        diff(&b_after, &c),
+        diff(&b_after, &fresh),
         0,
         "B shows what a fresh window shows: the moved card"
     );
-    let stale = diff(&b_before, &c);
+    let stale = diff(&b_before, &fresh);
     assert!(
         stale >= MIN_DIFF,
         "the failure case (B stale) is {stale} pixels away from the reference, far over the tolerance"

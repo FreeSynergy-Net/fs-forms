@@ -53,6 +53,8 @@ fn no_normal_dependency_leads_to_a_program_the_core_or_the_server() {
                 || rest.starts_with("jscalendar")
                 // the local head of fs-components (WIP patch, unreviewed/b3) brings the settings library
                 || rest.starts_with("settings")
+                // the question of the host when a place is open with another record (`Notification::ask`, fs-components family, no program)
+                || rest.starts_with("notification")
                 || rest.starts_with("components")
                 || rest.starts_with("rpc")
                 || rest.starts_with("interfaces")

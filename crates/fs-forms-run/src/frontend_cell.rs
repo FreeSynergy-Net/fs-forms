@@ -19,7 +19,7 @@ use crate::page::Page;
 use crate::parts::{Part, line, parts};
 use crate::records::Records;
 use crate::style::StyleSource;
-use crate::view::View;
+use crate::view::{Coded, View};
 use crate::window::ctx_of;
 
 /// The id of the one screen of a window made over a cell.
@@ -76,10 +76,19 @@ pub(crate) fn root_page(
     let ctx: Ctx = ctx_of(texts, locale, view, records, program_style);
     let first = comp.screens.first();
     let mut shown = first.map(|s| parts(texts, &s.nodes)).unwrap_or_default();
-    if !comp.notices.is_empty() || first.is_none() {
+    let mut lines: Vec<String> = comp.notices.iter().map(|c| line(texts, c)).collect();
+    if comp.screens.len() > 1 {
+        // no silent drop: the pages 2..n are not reachable in this window yet, and the window says so (a cell per page needs a fixed
+        // screen count at open, which a change to a frontend with another count would break)
+        lines.push(line(
+            texts,
+            &Coded::new("host-notice-more-pages").with("pages", comp.screens.len().to_string()),
+        ));
+    }
+    if !lines.is_empty() || first.is_none() {
         shown.push(Part::Locked {
             name: String::new(),
-            lines: comp.notices.iter().map(|c| line(texts, c)).collect(),
+            lines,
         });
     }
     Page {

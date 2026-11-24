@@ -38,6 +38,7 @@ use crate::record_hub::{RecordGrip, RecordHub, RecordKey};
 use crate::repaint::Repaint;
 use crate::style::StyleCell;
 use crate::view::Coded;
+use crate::window::status;
 use crate::words::words;
 
 /// Pattern: Strategy (the real [`WindowOwner`], `Window` only) – see the module.
@@ -140,6 +141,13 @@ impl HostWindows {
             view.title.clone()
         };
         let app = AppWidget::new(title, vec![cell.screen()]).map_err(failed)?;
+        let records = grip.records();
+        app.set_status(Some(status(
+            &texts,
+            comp.state,
+            records.is_sample(),
+            records.unavailable().as_deref(),
+        )));
         let token = self.serial.fetch_add(1, Ordering::SeqCst);
         let menus = menus_of(
             &texts,

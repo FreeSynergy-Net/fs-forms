@@ -11,7 +11,7 @@ permissions:
   packages: write
 jobs:
   release:
-    uses: FreeSynergy-Net/fs-release/.github/workflows/release.yml@72fc21ce1c5865c427f868d963ab16fa9a511933
+    uses: FreeSynergy-Net/fs-release/.github/workflows/release.yml@9eed5c95eb7311f2b68266a012ec778f51e3ac38
     with:
       kind: library
       name: fs-forms

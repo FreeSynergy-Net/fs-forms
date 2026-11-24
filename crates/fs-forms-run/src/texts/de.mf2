@@ -64,5 +64,4 @@ form-basic-mismatch = Ein Feld des Moduls passt nicht zur Art des Kanals
 form-no-component = Kein Block zeichnet diese Form; der Rückfall wird gezeigt
 host-notice-frame-not-built = Dieser Rahmen kann noch nicht gezeichnet werden; was darin steht, zeigt diese Version nicht
 host-notice-raised = Dieser Datensatz ist schon offen; sein Fenster wurde nach vorn geholt
-host-notice-style-of-parent = Die Beschreibung verlangt einen anderen Stil; dieses Fenster wird im Stil des Programms gezeichnet, das es geöffnet hat (wanted, used)
 host-notice-open-unanswered = An diesem Platz ist schon ein anderer Datensatz offen und niemand hat gesagt, was geschehen soll; es wurde nichts geöffnet

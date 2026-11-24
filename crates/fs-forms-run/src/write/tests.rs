@@ -57,7 +57,10 @@ fn the_arguments_are_what_the_form_says_the_command_writes_by_the_fields_of_the_
     assert_eq!(pairs(&args), [("column", "doing"), ("board", "b1")]);
     // a place the gesture does not name at all is not a place of the gesture: only the scope comes from the record
     let args = args_of(&d, "move", a, &gesture(&[("column", "doing")])).unwrap();
-    assert!(!args.iter().any(|(f, _)| f == "index"), "order is never written");
+    assert!(
+        !args.iter().any(|(f, _)| f == "index"),
+        "order is never written"
+    );
     // what the gesture carries beyond the writes is not passed on
     let args = args_of(&d, "move", a, &gesture(&[("column", "x"), ("title", "no")])).unwrap();
     assert!(!pairs(&args).iter().any(|(f, _)| *f == "title"));

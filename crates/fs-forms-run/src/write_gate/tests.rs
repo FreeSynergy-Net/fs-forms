@@ -176,9 +176,13 @@ fn a_drop_is_one_call_with_the_column_the_place_and_the_lane_of_the_record() {
     g.send(
         MOVE,
         Some("a"),
-        &[text("column", "doing"), text("after", "c"), text("before", "d")],
+        &[
+            text("column", "doing"),
+            text("after", "c"),
+            text("before", "d"),
+        ],
     )
-        .expect("accepted");
+    .expect("accepted");
     let calls = w.calls.lock().unwrap();
     assert_eq!(calls.len(), 1);
     assert_eq!(calls[0].command, "card.move");
@@ -187,12 +191,15 @@ fn a_drop_is_one_call_with_the_column_the_place_and_the_lane_of_the_record() {
         .iter()
         .map(|(a, b)| (a.as_str(), b.as_str()))
         .collect();
-    assert_eq!(args, [
+    assert_eq!(
+        args,
+        [
             ("column", "doing"),
             ("after_id", "c"),
             ("before_id", "d"),
             ("board", "b1")
-        ]);
+        ]
+    );
 }
 
 #[test]

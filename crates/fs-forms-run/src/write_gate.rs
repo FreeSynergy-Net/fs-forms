@@ -14,9 +14,8 @@ use std::sync::{Arc, Mutex, PoisonError};
 
 use fs_components_core::form_write::{FormWrite, WriteArg, WriteDone, WriteRefused, WriteValue};
 use fs_components_kanban::{
-    Answer, BoardEvents, Card, Column, COLUMN_CREATE, COLUMN_LIMIT, COLUMN_RENAME, CREATE, FixedBoard, FormEvents,
-    MOVE,
-    Operation,
+    Answer, BoardEvents, COLUMN_CREATE, COLUMN_LIMIT, COLUMN_RENAME, CREATE, Card, Column,
+    FixedBoard, FormEvents, MOVE, Operation,
 };
 
 use crate::records::Records;
@@ -102,7 +101,10 @@ fn carried() -> Vec<String> {
     // A column with two cards, so a drop between them names both neighbours (`after`, `before`); the probe sees the channels only.
     let mut column = Column::new("", "");
     column.cards = vec![Card::new("a", ""), Card::new("b", "")];
-    let board = FixedBoard { columns: vec![column], ops: Vec::new() };
+    let board = FixedBoard {
+        columns: vec![column],
+        ops: Vec::new(),
+    };
     let events = FormEvents::new(probe.clone(), Arc::new(board));
     let _ = events.move_card_at("", "", "", Some(1));
     let _ = events.add_card("", "");

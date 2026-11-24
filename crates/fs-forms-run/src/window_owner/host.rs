@@ -13,6 +13,7 @@
 mod ask;
 mod entry;
 mod ports;
+mod switch;
 
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -23,6 +24,7 @@ use fs_components_words::Locale;
 pub use self::ask::{Asked, OpenAsk};
 use self::entry::{Entry, Open, family, lock, snapshot};
 pub use self::ports::{BlincSurfaces, Descriptions, Modules, Surfaces};
+use self::switch::{Core, rows};
 use super::open::{at_place, exact};
 use super::{
     Decision, OpenFrontend, Opened, OpenedFrontend, Placement, WhenOpen, WindowId, WindowOwner,
@@ -30,10 +32,12 @@ use super::{
 };
 use crate::catalog::Catalog;
 use crate::compose::compose;
+use crate::frontend_cell::{FrontendCell, root_page};
+use crate::menus::menus_of;
 use crate::record_hub::{RecordGrip, RecordHub, RecordKey};
 use crate::repaint::Repaint;
+use crate::style::StyleCell;
 use crate::view::Coded;
-use crate::window::app_with;
 use crate::words::words;
 
 /// Pattern: Strategy (the real [`WindowOwner`], `Window` only) – see the module.
@@ -45,6 +49,7 @@ pub struct HostWindows {
     surfaces: Arc<dyn Surfaces>,
     hub: RecordHub,
     open: Arc<Mutex<Open>>,
+    core: Arc<Core>,
     serial: AtomicU64,
 }
 
@@ -59,6 +64,14 @@ impl HostWindows {
         repaint: Arc<dyn Repaint>,
     ) -> Self {
         let (descriptions, modules, surfaces) = ports;
+        let open: Arc<Mutex<Open>> = Arc::default();
+        let core = Arc::new(Core {
+            catalog: Arc::clone(&catalog),
+            locale: locale.clone(),
+            descriptions: Arc::clone(&descriptions),
+            open: Arc::clone(&open),
+            repaint: Arc::clone(&repaint),
+        });
         Self {
             catalog,
             locale,
@@ -66,7 +79,8 @@ impl HostWindows {
             modules,
             surfaces,
             hub: RecordHub::with_repaint(repaint),
-            open: Arc::default(),
+            open,
+            core,
             serial: AtomicU64::new(0),
         }
     }
@@ -108,8 +122,35 @@ impl HostWindows {
         let grip = self.hub.attach(&key, &module).map_err(|c| refused(&c))?;
         let comp = compose(&view, &*self.catalog);
         let texts = words(&self.locale);
-        let app = app_with(&texts, &self.locale, &view, &comp, grip.records())
-            .map_err(|_| Coded::new("host-notice-window-failed").with("id", id.as_str()))?;
+        let page = root_page(
+            &texts,
+            &self.locale,
+            &view,
+            &comp,
+            grip.records(),
+            Arc::new(StyleCell::default()),
+        );
+        let cell = FrontendCell::new(page);
+        let failed = |_: fs_components_app::AppError| {
+            Coded::new("host-notice-window-failed").with("id", id.as_str())
+        };
+        let title = if view.title.is_empty() {
+            texts.plain("host-title")
+        } else {
+            view.title.clone()
+        };
+        let app = AppWidget::new(title, vec![cell.screen()]).map_err(failed)?;
+        let token = self.serial.fetch_add(1, Ordering::SeqCst);
+        let menus = menus_of(
+            &texts,
+            &view,
+            &rows(&*self.descriptions, &req.key),
+            &req.key.frontend,
+        );
+        if !menus.is_empty() {
+            app.set_menus(menus, Core::handler(&self.core, token))
+                .map_err(failed)?;
+        }
         Ok(Entry {
             key: req.key.clone(),
             place,
@@ -118,8 +159,9 @@ impl HostWindows {
             grip,
             module,
             app,
+            cell,
             raised: 0,
-            token: self.serial.fetch_add(1, Ordering::SeqCst),
+            token,
         })
     }
 
@@ -244,12 +286,8 @@ impl WindowOwner for HostWindows {
         Err(Coded::new("host-notice-placement-unsupported").with("id", id.as_str()))
     }
 
-    fn use_frontend(&self, id: &WindowId, _frontend: &str) -> Result<(), Coded> {
-        if !lock(&self.open).contains_key(id) {
-            return Err(Coded::new("host-notice-window-unknown").with("id", id.as_str()));
-        }
-        // the cell that exchanges the root of a window is C1 (`FrontendCell`); nothing is half done here
-        Err(Coded::new("host-notice-use-frontend-not-built").with("id", id.as_str()))
+    fn use_frontend(&self, id: &WindowId, frontend: &str) -> Result<(), Coded> {
+        Core::switch(&self.core, id, frontend)
     }
 
     fn open_now(&self) -> Vec<OpenedFrontend> {

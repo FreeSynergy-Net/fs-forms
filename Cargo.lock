@@ -1880,6 +1880,7 @@ dependencies = [
  "fs-components",
  "fs-components-app",
  "fs-components-catalog",
+ "fs-components-commands",
  "fs-components-core",
  "fs-components-fields",
  "fs-components-kanban",

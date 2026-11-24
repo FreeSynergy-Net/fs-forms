@@ -17,6 +17,12 @@ pub trait Descriptions: Send + Sync {
     /// # Errors
     /// `host-notice-frontend-missing{extends,frontend}` when there is none.
     fn view(&self, key: &FrontendKey) -> Result<View, Coded>;
+
+    /// The names of the frontends the program `extends` has, sorted (the rows of the menu `View`, what `frontend-unknown` offers).
+    ///
+    /// # Errors
+    /// The code of the source that could not say.
+    fn list(&self, extends: &str) -> Result<Vec<String>, Coded>;
 }
 
 /// Pattern: Port – the module of a program (the starter connects it; each window then makes its OWN connection to it).

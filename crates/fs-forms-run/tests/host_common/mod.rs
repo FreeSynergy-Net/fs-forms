@@ -37,6 +37,13 @@ impl Descriptions for Files {
                 Coded::new("host-notice-frontend-missing").with("frontend", key.frontend.clone())
             })
     }
+
+    fn list(&self, extends: &str) -> Result<Vec<String>, Coded> {
+        let root = format!("{}/tests/fixtures", env!("CARGO_MANIFEST_DIR"));
+        FileLink::new(root, "en")
+            .available(extends)
+            .map_err(|_| Coded::new("host-notice-frontend-missing"))
+    }
 }
 
 pub struct One(Arc<FakeModule>);

@@ -4,12 +4,14 @@
 //! Pattern: Adapter (wire -> model), one small function per struct.
 
 use fs_forms_layout::{
-    ActionDoc, ActionTarget, BindFrom, BindingDoc, BlockDoc, FrontendKey, Item, LayoutDoc, MenuDoc,
+    ActionDoc, ActionTarget, BindFrom, BindingDoc, FrontendKey, Item, LayoutDoc, MenuDoc,
     MessageDoc, PageDoc, Reference, RequiresDoc, SourceDoc,
 };
 
 use super::filter::read_view;
 use super::text::{R, bad, elem, opt, txt, word};
+use super::tree_guard::{TreeLimits, guard};
+use super::tree_in::{read_block, read_places};
 use super::words::menu_from_words;
 use crate::layouts_capnp as w;
 
@@ -53,7 +55,7 @@ fn lost(
     move |_| bad(what)
 }
 
-fn item<T>(e: Option<fs_forms_layout::ElemId>, v: T) -> Item<T> {
+pub(crate) fn item<T>(e: Option<fs_forms_layout::ElemId>, v: T) -> Item<T> {
     Item {
         elem: e,
         line: 0,
@@ -61,7 +63,9 @@ fn item<T>(e: Option<fs_forms_layout::ElemId>, v: T) -> Item<T> {
     }
 }
 
-pub(crate) fn read_doc(d: w::layout_doc::Reader<'_>) -> R<LayoutDoc> {
+pub(crate) fn read_doc(d: w::layout_doc::Reader<'_>, lim: &TreeLimits) -> R<LayoutDoc> {
+    // The guard first: depth and number of nodes are measured before anything is unpacked.
+    guard(d.get_pages().map_err(lost("pages"))?, lim)?;
     let requires = d
         .get_requires()
         .map_err(lost("requires"))?
@@ -180,26 +184,7 @@ fn read_page(p: w::page::Reader<'_>) -> R<Item<PageDoc>> {
         .get_blocks()
         .map_err(|_| bad("blocks"))?
         .iter()
-        .map(|b| {
-            let bindings = b
-                .get_binds()
-                .map_err(|_| bad("binds"))?
-                .iter()
-                .map(read_binding)
-                .collect::<R<Vec<_>>>()?;
-            Ok(item(
-                elem(b.get_elem())?,
-                BlockDoc {
-                    place: txt(b.get_place())?,
-                    block: txt(b.get_block())?,
-                    source: (b.get_source() != 0).then(|| b.get_source()),
-                    title_key: opt(b.get_title_key())?,
-                    text_key: opt(b.get_text_key())?,
-                    bindings,
-                    set: Vec::new(),
-                },
-            ))
-        })
+        .map(|b| Ok(item(elem(b.get_elem())?, read_block(b)?)))
         .collect::<R<Vec<_>>>()?;
     Ok(item(
         elem(p.get_elem())?,
@@ -208,12 +193,12 @@ fn read_page(p: w::page::Reader<'_>) -> R<Item<PageDoc>> {
             frame: txt(p.get_frame())?,
             navigation: word(p.get_navigation())?,
             blocks,
-            places: Vec::new(),
+            places: read_places(p.get_places())?,
         },
     ))
 }
 
-fn read_binding(b: w::binding::Reader<'_>) -> R<Item<BindingDoc>> {
+pub(crate) fn read_binding(b: w::binding::Reader<'_>) -> R<Item<BindingDoc>> {
     let name = || txt(b.get_name());
     let from = txt(b.get_from())?;
     let from = match from.as_str() {

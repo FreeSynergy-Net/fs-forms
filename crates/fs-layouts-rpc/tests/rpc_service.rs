@@ -58,6 +58,7 @@ fn a_page_over_the_limit_names_the_limit_and_where_it_came_from() {
             watchers_max: 1,
             watchers_per_actor_max: 8,
             by: LimitSource::Ceiling,
+            ..ServiceLimits::declared()
         };
         svc
     });

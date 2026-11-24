@@ -9,7 +9,7 @@ use crate::doc::{BindFrom, LayoutDoc};
 use crate::ids::ElemId;
 
 /// The format version this crate reads.
-pub const FORMAT_KNOWN: u32 = 2;
+pub const FORMAT_KNOWN: u32 = 3;
 
 /// A checked element: id plus value.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -55,7 +55,7 @@ impl Layout {
     pub fn doc(&self) -> &LayoutDoc {
         &self.doc
     }
-    /// Back to layer 1 for the exchange writer: format 2, every id set. `to_doc` then `check` gives the same layout.
+    /// Back to layer 1 for the exchange writer: format 3 (`FORMAT_KNOWN`), every id set. `to_doc` then `check` gives the same layout.
     #[must_use]
     pub fn to_doc(&self) -> LayoutDoc {
         LayoutDoc {

@@ -1,33 +1,34 @@
-//! The model to the canonical tree (always format 2). Order: lists in the order of the model (= their `seq`), bindings by
+//! The model to the canonical tree (always format 3). Order: lists in the order of the model (= their `seq`), bindings by
 //! (slot in byte order, nth), scheme lists NEVER sorted (suggestion order), messages by (key, lang) in byte order.
 //! Views of a person (with `owner`) are left out unless asked for: they are the person's data, not the package's.
 //!
 //! Pattern: Adapter (model to tree).
 
 use fs_forms_layout::{
-    ActionTarget, BindFrom, BindingDoc, BlockDoc, Coded, Item, Layout, LayoutCode, MenuDoc, PageDoc,
+    ActionTarget, BindFrom, BindingDoc, Coded, Item, Layout, LayoutCode, MenuDoc, PageDoc,
 };
 
 use crate::tree::Tree;
+use crate::write_place::places;
 use fs_forms_layout::Words;
 
-type Pairs = Vec<(&'static str, Tree)>;
+pub(crate) type Pairs = Vec<(&'static str, Tree)>;
 
-fn elem<T>(i: &Item<T>) -> (&'static str, Tree) {
+pub(crate) fn elem<T>(i: &Item<T>) -> (&'static str, Tree) {
     ("elem", Tree::s(i.elem.as_ref().map_or("", |e| e.as_str())))
 }
-fn int(v: u32) -> Tree {
+pub(crate) fn int(v: u32) -> Tree {
     Tree::Int(i64::from(v))
 }
-fn opt(p: &mut Pairs, k: &'static str, v: Option<&String>) {
+pub(crate) fn opt(p: &mut Pairs, k: &'static str, v: Option<&String>) {
     if let Some(v) = v {
         p.push((k, Tree::s(v)));
     }
 }
-fn list<T>(items: &[Item<T>], f: impl Fn(&Item<T>) -> Tree) -> Tree {
+pub(crate) fn list<T>(items: &[Item<T>], f: impl Fn(&Item<T>) -> Tree) -> Tree {
     Tree::Arr(items.iter().map(f).collect())
 }
-fn obj(p: Pairs) -> Tree {
+pub(crate) fn obj(p: Pairs) -> Tree {
     Tree::obj(p)
 }
 
@@ -36,7 +37,7 @@ fn obj(p: Pairs) -> Tree {
 pub(crate) fn layout_tree(l: &Layout, own_views: bool) -> Result<Tree, Coded<LayoutCode>> {
     let d = l.doc();
     let mut p: Pairs = vec![
-        ("schema", Tree::Int(2)),
+        ("schema", Tree::Int(3)),
         ("kind", Tree::s("frontend")),
         ("id", Tree::s(&d.key.frontend)),
         ("extends", Tree::s(&d.key.extends)),
@@ -64,7 +65,8 @@ pub(crate) fn layout_tree(l: &Layout, own_views: bool) -> Result<Tree, Coded<Lay
     });
     p.push(("source", Tree::Arr(sources.collect())));
     p.push(("menu", list(&d.menu, menu)));
-    p.push(("page", list(&d.pages, page)));
+    let pages = d.pages.iter().map(page).collect::<Result<Vec<_>, _>>()?;
+    p.push(("page", Tree::Arr(pages)));
     p.push((
         "action",
         list(&d.actions, |i| {
@@ -137,35 +139,18 @@ fn menu(i: &Item<MenuDoc>) -> Tree {
     obj(q)
 }
 
-fn page(i: &Item<PageDoc>) -> Tree {
+fn page(i: &Item<PageDoc>) -> Result<Tree, Coded<LayoutCode>> {
     let p = &i.v;
-    obj(vec![
+    Ok(obj(vec![
         elem(i),
         ("page", Tree::s(&p.page)),
         ("frame", Tree::s(&p.frame)),
         ("navigation", Tree::s(p.navigation.word())),
-        ("block", list(&p.blocks, block)),
-    ])
+        ("place", places(p)?),
+    ]))
 }
 
-fn block(i: &Item<BlockDoc>) -> Tree {
-    let b = &i.v;
-    let mut q = vec![
-        elem(i),
-        ("place", Tree::s(&b.place)),
-        ("block", Tree::s(&b.block)),
-    ];
-    if let Some(s) = b.source {
-        q.push(("source", int(s)));
-    }
-    opt(&mut q, "title", b.title_key.as_ref());
-    opt(&mut q, "text", b.text_key.as_ref());
-    // order of bindings: (slot, nth), kept by the invariant of `Layout` (see there), not sorted a second time here
-    q.push(("bind", list(&b.bindings, binding)));
-    obj(q)
-}
-
-fn binding(i: &Item<BindingDoc>) -> Tree {
+pub(crate) fn binding(i: &Item<BindingDoc>) -> Tree {
     let b = &i.v;
     let mut q = vec![elem(i), ("slot", Tree::s(&b.slot)), ("nth", int(b.nth))];
     match &b.from {

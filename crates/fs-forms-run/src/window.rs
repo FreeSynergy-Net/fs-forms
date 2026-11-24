@@ -40,7 +40,7 @@ pub fn failure(error: &HostError) -> Composition {
     }
 }
 
-/// The keys the kanban board asks for (`kanban.refused.*` codes come from the provider and show as their key until it names them).
+/// The keys the kanban board asks for (`kanban.refused.*` codes come from the provider; the port names its own codes in `fs_components_kanban::form::words`).
 const KANBAN_KEYS: &[&str] = &[
     "kanban.add_column",
     "kanban.add_card",

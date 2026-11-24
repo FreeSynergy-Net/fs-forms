@@ -168,7 +168,9 @@ impl FormWrite for WriteGate {
             Answer::Accepted => Ok(WriteDone::default()),
             Answer::Refused(reason) => Err(WriteRefused::new(&reason.code)),
             // the gate asks no question of the reader: a question is a refusal with its own code, never a silent "unsupported"
-            Answer::Ask(_) => Err(WriteRefused::new("ask-unsupported")),
+            Answer::Ask(_) => Err(WriteRefused::new(
+                fs_components_core::form_write::ASK_UNSUPPORTED,
+            )),
             // an answer of a later version of the board is not carried out
             _ => Err(WriteRefused::new("unsupported")),
         }

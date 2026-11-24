@@ -44,5 +44,8 @@ fn a_question_of_the_records_is_refused_with_its_own_code_not_as_unsupported() {
         value: WriteValue::Text("done".into()),
     };
     let refused = gate.send(MOVE, Some("k"), &[column]).unwrap_err();
-    assert_eq!(refused.code, "ask-unsupported");
+    assert_eq!(
+        refused.code,
+        fs_components_core::form_write::ASK_UNSUPPORTED
+    );
 }

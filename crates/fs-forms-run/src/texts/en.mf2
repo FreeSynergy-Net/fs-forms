@@ -51,7 +51,7 @@ kanban-limit_hint = The most cards the column should hold; 0 = no limit
 kanban-limit_invalid = That is not a whole number; type 0 for no limit
 channel-label = Person
 channel-role = Role
-channel-badge = Level
+channel-level = Level
 form-unknown = The module offers a form the form catalog does not have
 form-version-mismatch = The module and the block draw different versions of the form
 form-write-missing = The gesture did not deliver a value the form needs; nothing was sent

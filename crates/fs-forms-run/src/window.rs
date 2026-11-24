@@ -85,7 +85,7 @@ const KANBAN_KEYS: &[&str] = &[
 ];
 
 /// The head of a column of the member list, by channel (the words come from the MF2 files, `host-channel-*`).
-const CHANNEL_KEYS: &[&str] = &["channel.label", "channel.role", "channel.badge"];
+const CHANNEL_KEYS: &[&str] = &["channel.label", "channel.role", "channel.level"];
 
 /// The sentence of each key of the board (MF2 ids carry a hyphen where the key has a dot).
 fn kanban_words(texts: &Mf2Texts) -> std::collections::HashMap<String, String> {

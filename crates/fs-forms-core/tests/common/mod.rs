@@ -150,8 +150,8 @@ pub struct Env {
 }
 
 pub async fn env() -> Env {
-    let main = Arc::new(TursoStore::open_in_memory().await.unwrap());
-    let ballots = Arc::new(TursoStore::open_in_memory().await.unwrap());
+    let main = Arc::new(mem_store().await);
+    let ballots = Arc::new(mem_store().await);
     let groups = GroupRepo::default();
     let delivery = Arc::new(Collect::default());
     let repo = SurveyRepo::new(main.clone(), ballots.clone(), ME)
@@ -275,4 +275,11 @@ impl Env {
             Some(o) => o.content["people"]["tokens"].as_array().unwrap().is_empty(),
         }
     }
+}
+
+/// A volatile store WITH an owner (fs-objects 0.0.11 takes no write without one): the test owner and options of fs-objects.
+pub async fn mem_store() -> TursoStore {
+    TursoStore::open_with(":memory:", fs_objects::testing::options())
+        .await
+        .unwrap()
 }

@@ -17,7 +17,11 @@ async fn file_store(opts: OpenOptions) -> (Arc<TursoStore>, std::path::PathBuf) 
     let path =
         std::env::temp_dir().join(format!("fs-forms-test-{}-{nanos}.db", std::process::id()));
     (
-        Arc::new(TursoStore::open_with(&path, opts).await.unwrap()),
+        Arc::new(
+            TursoStore::open_with(&path, opts.with_owner(fs_objects::testing::owner()))
+                .await
+                .unwrap(),
+        ),
         path,
     )
 }
@@ -33,7 +37,7 @@ const HEALTH: &str = "pd:Health";
 #[tokio::test]
 async fn an_unencrypted_store_refuses_the_categories() {
     let (main, path) = file_store(OpenOptions::default()).await;
-    let ballots = Arc::new(TursoStore::open_in_memory().await.unwrap());
+    let ballots = Arc::new(mem_store().await);
     let repo = SurveyRepo::new(main, ballots, ME);
     let s = repo
         .create("Health check", Anonymity::AnonymousOpen, &[])
@@ -59,7 +63,7 @@ async fn opted_out_the_survey_and_the_box_carry_the_categories() {
         ..OpenOptions::default()
     };
     let (main, path) = file_store(opts).await;
-    let ballots = Arc::new(TursoStore::open_in_memory().await.unwrap());
+    let ballots = Arc::new(mem_store().await);
     let repo = SurveyRepo::new(main, ballots.clone(), ME)
         .with_ai_marking(std::sync::Arc::new(common::ai::Marks));
     let s = repo
@@ -93,7 +97,7 @@ async fn opted_out_the_survey_and_the_box_carry_the_categories() {
 
 #[tokio::test]
 async fn an_unencrypted_ballot_store_refuses_the_box_of_a_sensitive_survey() {
-    let main = Arc::new(TursoStore::open_in_memory().await.unwrap());
+    let main = Arc::new(mem_store().await);
     let (ballots, path) = file_store(OpenOptions::default()).await;
     let repo =
         SurveyRepo::new(main, ballots, ME).with_ai_marking(std::sync::Arc::new(common::ai::Marks));

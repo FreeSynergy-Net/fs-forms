@@ -36,9 +36,9 @@ use crate::frontend_cell::{FrontendCell, root_page};
 use crate::menus::menus_of;
 use crate::record_hub::{RecordGrip, RecordHub, RecordKey};
 use crate::repaint::Repaint;
+use crate::status::set_status_line;
 use crate::style::StyleCell;
 use crate::view::Coded;
-use crate::status::set_status_line;
 use crate::words::words;
 
 /// Pattern: Strategy (the real [`WindowOwner`], `Window` only) – see the module.

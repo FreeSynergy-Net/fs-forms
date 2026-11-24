@@ -22,9 +22,9 @@ use crate::frontend_cell::root_page;
 use crate::menus::{line_prefix, menus_of};
 use crate::parts::line;
 use crate::repaint::Repaint;
+use crate::status::set_status_line;
 use crate::style::StyleCell;
 use crate::view::Coded;
-use crate::status::set_status_line;
 use crate::words::words;
 
 /// What the change needs from the owner; the owner holds it in an `Arc`, a menu handler only a `Weak` of it (no cycle through the entry).

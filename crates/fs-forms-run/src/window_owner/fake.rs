@@ -74,6 +74,8 @@ impl Drop for FakeHold {
 struct Entry {
     key: FrontendKey,
     mode: Placement,
+    switchable: bool,
+    raised: usize,
     parent: Option<WindowId>,
     composition: Composition,
     records: Arc<CountingRecords>,
@@ -90,16 +92,6 @@ pub struct FakeWindows {
     attached: AtomicUsize,
     detached: Arc<AtomicUsize>,
     open: Mutex<HashMap<WindowId, Entry>>,
-}
-
-/// The program part of an `AppStream` id: its last segment, lower case (`net.freesynergy.Tasks` is `tasks`), the `<program>` of
-/// ADR 0069.
-fn program_of(extends: &str) -> String {
-    extends
-        .rsplit('.')
-        .next()
-        .unwrap_or(extends)
-        .to_ascii_lowercase()
 }
 
 impl FakeWindows {
@@ -149,6 +141,12 @@ impl FakeWindows {
         Some(records.invoke(form, channel, None, &[]))
     }
 
+    /// How often an open of this id found it already open (it is brought to the front, the mode stays).
+    #[must_use]
+    pub fn raised(&self, id: &WindowId) -> usize {
+        self.lock().get(id).map_or(0, |e| e.raised)
+    }
+
     /// `(attached, detached)`: how many held connections were made and how many fell.
     #[must_use]
     pub fn holds(&self) -> (usize, usize) {
@@ -174,15 +172,16 @@ impl WindowOwner for FakeWindows {
                     Coded::new("host-notice-window-unknown").with("id", pid.as_str())
                 })?;
                 (
-                    program_of(&p.key.extends),
+                    p.key.extends.clone(),
                     elem.as_str().to_owned(),
                     Some(pid.clone()),
                 )
             }
-            None => (program_of(&req.key.extends), req.key.frontend.clone(), None),
+            None => (req.key.extends.clone(), req.key.frontend.clone(), None),
         };
         let id = WindowId::of(&program, &elem);
-        if open.contains_key(&id) {
+        if let Some(e) = open.get_mut(&id) {
+            e.raised += 1; // brought to the front, the mode stays
             return Ok(id);
         }
         let missing = || {
@@ -199,6 +198,8 @@ impl WindowOwner for FakeWindows {
         let entry = Entry {
             key: req.key.clone(),
             mode: req.mode,
+            switchable: req.switchable,
+            raised: 0,
             parent,
             composition: compose(view, &self.catalog),
             records: Arc::new(CountingRecords::default()),
@@ -231,6 +232,18 @@ impl WindowOwner for FakeWindows {
         let gone: Vec<Entry> = doomed.iter().filter_map(|d| open.remove(d)).collect();
         drop(open);
         drop(gone);
+        Ok(())
+    }
+
+    fn place(&self, id: &WindowId, placement: Placement) -> Result<(), Coded> {
+        let mut open = self.lock();
+        let e = open
+            .get_mut(id)
+            .ok_or_else(|| Coded::new("host-notice-window-unknown").with("id", id.as_str()))?;
+        if !e.switchable {
+            return Err(Coded::new("host-notice-placement-locked").with("id", id.as_str()));
+        }
+        e.mode = placement;
         Ok(())
     }
 

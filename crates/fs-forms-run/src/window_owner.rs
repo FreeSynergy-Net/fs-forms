@@ -30,7 +30,7 @@ pub enum Placement {
 
 /// Pattern: Value Object – the stable name of one open frontend, `<program>/<elem>` (ADR 0069: stable, never a counter).
 ///
-/// The root frontend of a program is `<program>/<frontend>`; an embedded one is `<program of the parent>/<elem of the node>`.
+/// The program part is the FULL `AppStream` id (`net.freesynergy.Tasks/settings-embed`); the display name is separate. The root frontend of a program is `<id>/<frontend>`; an embedded one is `<id of the parent program>/<elem of the node>`.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct WindowId(pub String);
 
@@ -57,6 +57,8 @@ pub struct OpenFrontend {
     pub mode: Placement,
     /// The window and the node it is placed in; `None` = a root frontend of its program.
     pub parent: Option<(WindowId, ElemId)>,
+    /// Whether the person may switch panel and window later (`place`); the flag `window` of the node. Absent = locked.
+    pub switchable: bool,
     /// The record chosen in a neighbour node (an AS2 id), given as `scope` to the child; only a reference, no data goes with it.
     pub scope: Option<String>,
 }
@@ -74,7 +76,7 @@ pub struct OpenedFrontend {
     pub parent: Option<WindowId>,
 }
 
-/// Pattern: Strategy – the owner of the open frontends: `open` is told the [`Placement`] by the parent node and the owner acts by it.
+/// Pattern: Strategy – the owner of the open frontends: `open` is told the [`Placement`] by the parent node and the owner acts by it. `place` is the one command that changes it later (S6-9).
 ///
 /// Abweichung: it is also a registry (one entry per [`WindowId`], like a Multiton), and it draws nothing: a panel goes into the
 /// composition as a child node, a window goes through `fs-components-app`. It holds only what decides the lifetime: the
@@ -93,6 +95,14 @@ pub trait WindowOwner: Send + Sync {
     /// # Errors
     /// `host-notice-window-unknown` when `id` is not open.
     fn close(&self, id: &WindowId) -> Result<(), Coded>;
+
+    /// The person switches the open frontend `id` between panel and window. It is the same frontend afterwards (same composition,
+    /// records and held connection; the state of its form stays); only the place changes. Placing it where it already is is no error.
+    ///
+    /// # Errors
+    /// `host-notice-window-unknown` when `id` is not open; `host-notice-placement-locked{id}` when the program locked the switch
+    /// (no flag `window` on the node), the frontend stays as it is.
+    fn place(&self, id: &WindowId, placement: Placement) -> Result<(), Coded>;
 
     /// What is open, as data.
     fn open_now(&self) -> Vec<OpenedFrontend>;

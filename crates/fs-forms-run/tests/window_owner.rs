@@ -1,6 +1,6 @@
 //! Conformance of the `WindowOwner` contract (S6-2), run against the double `FakeWindows` (counters instead of windows).
 //!
-//! Tests: W1 the same description, only `mode` differs, gives the same child composition; W2 `open` of an id that is open returns
+//! Tests (W7 = S6-9 `place`): W1 the same description, only `mode` differs, gives the same child composition; W2 `open` of an id that is open returns
 //! that id and makes no second frontend; W3 `close` lets records and held connection fall; W4 an unknown or refused frontend is an
 //! error with its code (locked, never empty); W5 a call in the child reaches the records of the child only; W6 the parent closed
 //! closes its children. What hangs on `fs_rpc::hold` (a real attach and detach on a module socket) is NOT built here: the double
@@ -77,6 +77,7 @@ fn root(owner: &FakeWindows) -> WindowId {
             key: tasks(),
             mode: Placement::Window,
             parent: None,
+            switchable: true,
             scope: None,
         })
         .unwrap()
@@ -88,6 +89,7 @@ fn child(owner: &FakeWindows, parent: &WindowId, at: &str, mode: Placement) -> W
             key: settings(),
             mode,
             parent: Some((parent.clone(), elem(at))),
+            switchable: true,
             scope: None,
         })
         .unwrap()
@@ -97,9 +99,9 @@ fn child(owner: &FakeWindows, parent: &WindowId, at: &str, mode: Placement) -> W
 fn the_id_is_program_slash_elem_and_stable() {
     let owner = fake();
     let r = root(&owner);
-    assert_eq!(r, WindowId("tasks/board".into()));
+    assert_eq!(r, WindowId("net.freesynergy.Tasks/board".into()));
     let c = child(&owner, &r, "settings-embed", Placement::Panel);
-    assert_eq!(c, WindowId("tasks/settings-embed".into()));
+    assert_eq!(c, WindowId("net.freesynergy.Tasks/settings-embed".into()));
     // Another owner, the same request: the same id (never a counter).
     let other = fake();
     let r2 = root(&other);
@@ -179,6 +181,7 @@ fn w4_an_unknown_or_refused_frontend_is_an_error_with_a_code_never_empty() {
             key: key("net.freesynergy.Nothing", "none"),
             mode: Placement::Panel,
             parent: Some((r.clone(), elem("nothing"))),
+            switchable: true,
             scope: None,
         })
         .unwrap_err();
@@ -193,7 +196,8 @@ fn w4_an_unknown_or_refused_frontend_is_an_error_with_a_code_never_empty() {
         .open(OpenFrontend {
             key: settings(),
             mode: Placement::Panel,
-            parent: Some((WindowId("tasks/gone".into()), elem("x"))),
+            parent: Some((WindowId("net.freesynergy.Tasks/gone".into()), elem("x"))),
+            switchable: true,
             scope: None,
         })
         .unwrap_err();
@@ -215,6 +219,7 @@ fn w4b_a_refusing_module_is_said_as_refused() {
             key: calendar,
             mode: Placement::Panel,
             parent: Some((r, elem("cal"))),
+            switchable: true,
             scope: None,
         })
         .unwrap_err();
@@ -247,6 +252,7 @@ fn w6_the_parent_closed_closes_its_children() {
             key: tasks(),
             mode: Placement::Panel,
             parent: Some((a.clone(), elem("tasks-again"))),
+            switchable: true,
             scope: Some("urn:uuid:1".into()),
         })
         .unwrap();
@@ -259,4 +265,64 @@ fn w6_the_parent_closed_closes_its_children() {
     assert!(owner.open_now().is_empty());
     assert!(weak.iter().all(|w| w.upgrade().is_none()));
     assert_eq!(owner.holds(), (4, 4), "every connection fell");
+}
+
+#[test]
+fn w2b_opening_an_open_id_brings_it_forward_and_keeps_the_mode() {
+    let owner = fake();
+    let r = root(&owner);
+    let c = child(&owner, &r, "settings-embed", Placement::Panel);
+    assert_eq!(owner.raised(&c), 0);
+    child(&owner, &r, "settings-embed", Placement::Window);
+    assert_eq!(owner.raised(&c), 1);
+}
+
+#[test]
+fn w7_place_switches_only_the_place_the_form_state_stays() {
+    let owner = fake();
+    let r = root(&owner);
+    let c = child(&owner, &r, "settings-embed", Placement::Panel);
+    let records = owner.records_of(&c).unwrap();
+    owner.invoke(&c, "values", "value.set").unwrap();
+    let before = owner.composition_of(&c).unwrap();
+    let holds = owner.holds();
+    owner.place(&c, Placement::Window).unwrap();
+    // The same description, the same content; only the placement differs.
+    assert_eq!(owner.composition_of(&c).unwrap(), before);
+    let now = owner.open_now().into_iter().find(|o| o.id == c).unwrap();
+    assert_eq!(now.mode, Placement::Window);
+    // The state stays: the same records (with their call), no new connection, none dropped.
+    assert_eq!(records.upgrade().unwrap().calls(), 1);
+    assert_eq!(owner.holds(), holds);
+    // And back; placing where it is already is no error.
+    owner.place(&c, Placement::Panel).unwrap();
+    owner.place(&c, Placement::Panel).unwrap();
+    assert_eq!(owner.holds(), holds);
+    assert_eq!(
+        owner
+            .place(&WindowId("a/b".into()), Placement::Window)
+            .unwrap_err()
+            .code,
+        "host-notice-window-unknown"
+    );
+}
+
+#[test]
+fn w7b_a_locked_switch_is_refused_with_a_code_and_nothing_changes() {
+    let owner = fake();
+    let r = root(&owner);
+    let c = owner
+        .open(OpenFrontend {
+            key: settings(),
+            mode: Placement::Panel,
+            parent: Some((r, elem("fixed"))),
+            switchable: false,
+            scope: None,
+        })
+        .unwrap();
+    let e = owner.place(&c, Placement::Window).unwrap_err();
+    assert_eq!(e.code, "host-notice-placement-locked");
+    assert!(e.params.contains(&("id".into(), c.as_str().into())));
+    let now = owner.open_now().into_iter().find(|o| o.id == c).unwrap();
+    assert_eq!(now.mode, Placement::Panel);
 }

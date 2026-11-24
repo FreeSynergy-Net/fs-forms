@@ -25,7 +25,7 @@ pub fn line(provider: &str, call: &Invocation, answer: &Result<(), Coded>) -> St
         "command {} form={} record={record} args=[{}]: host -> {who} -> {answer}",
         call.command,
         call.form,
-        args.join(" ")
+        args.join(",")
     )
 }
 

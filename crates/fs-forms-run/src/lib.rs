@@ -60,13 +60,13 @@ pub use run::{run, run_code, run_code_with, run_with};
 pub use sample::SampleBoard;
 pub use sample_groups::groups as sample_groups;
 pub use sources::{NoSources, Opened, Sources, name_of, open};
-pub use style::{DEFAULT_STYLE, StyleCell, StyleSource, resolve, unknown};
+pub use style::{ChildStyle, DEFAULT_STYLE, StyleCell, StyleSource, in_parent, resolve, unknown};
 pub use view::{ActionView, Coded, MenuItem, MenuState, PageView, PlaceView, View};
 pub use window::{app, app_styled, app_with};
 pub use window_owner::fake::{CountingRecords, FakeHold, FakeWindows};
 pub use window_owner::{
     Decision, OpenFrontend, Opened as WindowOpened, OpenedFrontend, Placement, WhenOpen, WindowId,
-    WindowOwner, decide,
+    WindowOwner, decide, notice_of,
 };
 pub use words::{TEXTS, session_locale, words};
 pub use write::{Invocation, Writer, allowed, args_of, command_key};

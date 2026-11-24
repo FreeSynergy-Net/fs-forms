@@ -9,6 +9,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use fs_components_styles::StyleId;
 
+use crate::view::Coded;
+
 /// The word of a description that means "the style set for the program".
 pub const DEFAULT_STYLE: &str = "default";
 
@@ -62,6 +64,44 @@ pub fn resolve(description: Option<&str>, program: StyleId) -> StyleId {
     match description.map(str::trim) {
         None | Some("" | DEFAULT_STYLE) => program,
         Some(name) => StyleId::from_name(name).unwrap_or(program),
+    }
+}
+
+/// What a child frontend is drawn with: the style (always the one of the parent) and the yellow line, if there is one.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ChildStyle {
+    /// The style to draw with: the style of the parent program, in every case.
+    pub style: StyleId,
+    /// `host-notice-style-of-parent{wanted,used}` (the child names another style) or `host-notice-style-unknown{style}`, else none.
+    pub notice: Option<Coded>,
+}
+
+/// The style of a child frontend (panel or extra window) that runs in the process of its parent: one process has one theme, so the
+/// style of the parent wins (NACHTRAG stage 6, d). `default`, none or the very style of the parent: no line. Another known style:
+/// the parent style plus the yellow line `style-of-parent`. A name this build does not know: the parent style plus the existing
+/// `style-unknown` line.
+///
+/// Pattern: Fallback Chain (Chain of Responsibility, data only) – the parent first, then the preset; the same shape as [`resolve`] with
+/// the order swapped; every step that does not give the wish is said.
+#[must_use]
+pub fn in_parent(child: Option<&str>, parent: StyleId) -> ChildStyle {
+    let notice = match child.map(str::trim) {
+        None | Some("" | DEFAULT_STYLE) => None,
+        Some(name) => match StyleId::from_name(name) {
+            Some(wanted) if wanted == parent => None,
+            Some(wanted) => Some(
+                Coded::new("host-notice-style-of-parent")
+                    .with("wanted", wanted.name())
+                    .with("used", parent.name()),
+            ),
+            None => {
+                unknown(child).map(|n| Coded::new("host-notice-style-unknown").with("style", n))
+            }
+        },
+    };
+    ChildStyle {
+        style: parent,
+        notice,
     }
 }
 

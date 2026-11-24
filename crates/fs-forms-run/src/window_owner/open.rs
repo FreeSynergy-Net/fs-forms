@@ -95,3 +95,17 @@ pub fn decide(open_now: &[OpenedFrontend], req: &OpenFrontend) -> Decision {
         (Some(at), _) => Decision::Ask { at: at.clone() },
     }
 }
+
+/// The status line (yellow, a [`Coded`]) the host shows for what `open` did, or none. `Raised` is `host-notice-raised{id}`: Blinc cannot
+/// bring a window forward by itself yet, so the host says so instead of staying silent.
+///
+/// Pattern: Policy – a pure function from the answer to the line, testable without a window.
+#[must_use]
+pub fn notice_of(opened: &Opened) -> Option<crate::view::Coded> {
+    match opened {
+        Opened::Raised(id) => {
+            Some(crate::view::Coded::new("host-notice-raised").with("id", id.as_str()))
+        }
+        Opened::New(_) | Opened::Switched { .. } => None,
+    }
+}

@@ -9,7 +9,7 @@ use std::path::PathBuf;
 use fs_components_styles::StyleId;
 
 /// The help text.
-pub const HELP: &str = "fs-forms-run (--description PATH | PATH | --frontend ID --extends APPSTREAM-ID [--forms-socket PATH]) [--socket PATH] [--fresh | --resumed]\n\
+pub const HELP: &str = "fs-forms-run (--description PATH | PATH | --frontend ID --extends APPSTREAM-ID [--forms-socket PATH]) [--socket PATH] [--scope AS2-ID] [--fresh | --resumed]\n\
     [--check] [--list-blocks] [--picture FILE.png [--size WIDTHxHEIGHT] [--screen PAGE] [--steps FILE.json]]\n\
 The forms host: opens the window that the layout of a program describes. The starter runs it; start the program, not this.\n\
   --description P    a blueprint folder (scaffold.toml, `[frontend] layout`), a folder with forms/*.toml, or one description file;\n\
@@ -19,6 +19,8 @@ The forms host: opens the window that the layout of a program describes. The sta
   --forms-socket P   the socket of `fs-forms serve` (default: $XDG_RUNTIME_DIR/freesynergy/forms.sock)\n\
   --socket PATH      the socket of the program (handed on to the data sources)\n\
   --check            only connect and fetch the layout, then exit (0 fits, 3 contract differs or no layouts, 1 failed)\n\
+  --scope AS2-ID     the record (an ActivityStreams id) the frontend shows; once per start, not empty. With a program that already runs the
+                     starter hands it on and the running host decides (switch, new window); a later start never copies the data
   --style NAME       the style set for the program: what a description that says `style = \"default\"` gets (admin, simple, apple,
                      windows, craft; the preset is admin); a description that names a style keeps its own
   --sample-data      fill the board and side list with built-in sample records (pictures, development; never a starter)\n\
@@ -53,6 +55,8 @@ pub struct Config {
     pub steps: Option<PathBuf>,
     /// Fill the records blocks with the built-in sample data (pictures, development).
     pub sample_data: bool,
+    /// The record (AS2 id) the frontend opens with (`--scope`); how a record reaches a program that already runs.
+    pub scope: Option<String>,
     /// The page to show first.
     pub page: Option<String>,
     /// The style set for the program (`--style`); `None` is the preset, `admin`.
@@ -110,6 +114,15 @@ pub fn parse(words: &[String]) -> Result<Command, String> {
             "--steps" => c.steps = Some(PathBuf::from(value("--steps")?)),
             "--size" => size = parse_size(&value("--size")?)?,
             "--screen" => c.page = Some(value("--screen")?),
+            "--scope" => {
+                let id = value("--scope")?;
+                if id.trim().is_empty() {
+                    return Err("--scope needs an AS2 id, not an empty word".to_owned());
+                }
+                if c.scope.replace(id).is_some() {
+                    return Err("--scope is given twice; one record per start".to_owned());
+                }
+            }
             "--style" => {
                 let name = value("--style")?;
                 c.style = Some(StyleId::from_name(&name).ok_or_else(|| {

@@ -15,6 +15,7 @@ use fs_components_widgets::states::{self, EmptyState};
 
 use crate::draw::{self, Ctx};
 use crate::parts::{Part, notice};
+use crate::unfinished;
 
 /// The frame whose page has a strip beside the main area.
 const WORKBENCH: &str = "workbench";
@@ -86,9 +87,14 @@ impl Page {
                 Part::Locked { name, lines } => {
                     column.child(notice(&self.labels, name, lines).build())
                 }
-                Part::Empty(sentence) => column.child(EmptyState::new(sentence).build()),
-                Part::Block { block, title, .. } if block == "empty-state" => {
-                    column.child(EmptyState::new(title.as_deref().unwrap_or(&self.empty)).build())
+                Part::Empty(sentence) => column.child(self.empty_slot("page", sentence)),
+                Part::Block {
+                    place,
+                    block,
+                    title,
+                    ..
+                } if block == "empty-state" => {
+                    column.child(self.empty_slot(place, title.as_deref().unwrap_or(&self.empty)))
                 }
                 Part::Block { place, block, .. } => {
                     match draw::block(
@@ -105,6 +111,15 @@ impl Page {
             };
         }
         column
+    }
+
+    /// An empty slot: the sentence only when nothing is there; with records present the slot is not bound yet and says so as a
+    /// tooltip ("not finished yet"), never "empty".
+    fn empty_slot(&self, place: &str, sentence: &str) -> Div {
+        match unfinished::slot(unfinished::has_data(&*self.ctx.records)) {
+            unfinished::Slot::Empty => div().child(EmptyState::new(sentence).build()),
+            unfinished::Slot::Unfinished => unfinished::unfinished(&self.ctx.locale, place, place),
+        }
     }
 
     /// A region that scrolls down: `parts` in a column of `width`, in a box of `height`.
@@ -135,9 +150,10 @@ impl Surface for Page {
 
     fn styles(&self) -> String {
         format!(
-            "{}{}.fs-forms-side {{ flex-shrink: 0; border-right-width: 1px; border-right-color: var(--border); background: var(--surface); }}\n",
+            "{}{}{}.fs-forms-side {{ flex-shrink: 0; border-right-width: 1px; border-right-color: var(--border); background: var(--surface); }}\n",
             fs_components_workbenches::people::styles(),
-            states::STYLES
+            states::STYLES,
+            fs_components_widgets::disabled::STYLES,
         )
     }
 }

@@ -24,7 +24,7 @@ use crate::parts::line;
 use crate::repaint::Repaint;
 use crate::style::StyleCell;
 use crate::view::Coded;
-use crate::window::set_status_line;
+use crate::status::set_status_line;
 use crate::words::words;
 
 /// What the change needs from the owner; the owner holds it in an `Arc`, a menu handler only a `Weak` of it (no cycle through the entry).
@@ -102,7 +102,7 @@ impl Core {
             .set_menus(menus, Self::handler(self_arc, e.token))
             .map_err(|_| refused(&Coded::new("menu-duplicate")))?;
         let records = e.grip.records();
-        set_status_line(&e.app, &texts, comp.state, &*records);
+        set_status_line(&e.app, &texts, &comp, &*records);
         e.cell.set(page);
         if let Some(e) = open.get_mut(id) {
             e.key = key;

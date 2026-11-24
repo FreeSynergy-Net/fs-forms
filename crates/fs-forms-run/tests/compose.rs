@@ -287,3 +287,41 @@ fn both_languages_have_the_same_ids_and_a_code_has_a_sentence() {
         .plain("host-error-block-not-built");
     assert!(!en.is_empty() && !de.is_empty() && en != de);
 }
+
+// Karte (a), Ehrlichkeit: the strip "some parts are locked" is for a real lack only, and it names the parts.
+//
+// Mutants: M8 every `Locked`/`Empty` counts as a lack again (`_ => true`) -> `only_empty_parts_make_no_lack_strip`;
+// M9 the lacking list is left empty -> `a_real_lack_makes_the_strip_and_names_the_part`.
+
+#[test]
+fn a_real_lack_makes_the_strip_and_names_the_part() {
+    let mut v = tasks_board();
+    v.pages[0]
+        .places
+        .iter_mut()
+        .find(|p| p.place == "board")
+        .unwrap()
+        .locks = vec![Coded::new("bind-error-provider-unreachable").with("capability", "tasks")];
+    let c = compose(&v, &everything());
+    assert_eq!(c.state, HostState::Partial);
+    assert_eq!(
+        c.lacking,
+        ["board"],
+        "the part that is not reachable is named"
+    );
+}
+
+#[test]
+fn only_empty_parts_make_no_lack_strip() {
+    let mut v = tasks_board();
+    // a page without placements: the plan locks it with `page-empty`, the host composes an empty page
+    v.pages.push(page("empty", 3, Vec::new()));
+    v.pages[2].locks = vec![Coded::new("bind-error-locked").with("cause", "bind-error-page-empty")];
+    let c = compose(&v, &everything());
+    assert!(
+        c.lacking.is_empty(),
+        "an empty page lacks nothing: {:?}",
+        c.lacking
+    );
+    assert_eq!(c.state, HostState::Ready, "nothing lacks, so no strip");
+}

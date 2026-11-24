@@ -4,6 +4,8 @@
 //! Pattern: Interpreter (plan in, tree out) with the catalog asked for every block (Abstract Factory seen from the host: it never
 //! picks, it only asks whether the chosen block is built). Nothing is dropped: every lock of the plan is in the tree.
 
+use fs_forms_bind::BindCode;
+
 use crate::catalog::Catalog;
 use crate::view::{Coded, PageView, View};
 
@@ -64,6 +66,9 @@ pub struct Composition {
     pub state: HostState,
     /// The screens in `seq` order.
     pub screens: Vec<ScreenTree>,
+    /// The parts that are really lacking (not reachable, not allowed, no module or command): their names, once each; `""` = the
+    /// window itself (a notice). A part that is only empty is never in it. Empty = nothing lacks.
+    pub lacking: Vec<String>,
     /// Notices of the window (from the plan, and the host's own).
     pub notices: Vec<Coded>,
 }
@@ -126,6 +131,40 @@ fn screen(page: &PageView, catalog: &dyn Catalog) -> ScreenTree {
     }
 }
 
+/// Whether a code only says "there is nothing here" (an empty page): that is no lack of a command or a module.
+fn only_empty(c: &Coded) -> bool {
+    let empty = BindCode::PageEmpty.key();
+    c.code == empty || c.params.iter().any(|(k, v)| k == "cause" && *v == empty)
+}
+
+/// The names of the parts that really lack something: a placement with a lock of a slot, a part that is locked for another reason
+/// than being empty (not reachable, not allowed, no module, block not built). An empty page or an empty part never counts.
+///
+/// Pattern: Specification (one predicate "really lacks", asked of every node).
+fn lacking_of(screens: &[ScreenTree], notice: bool) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for s in screens {
+        for n in &s.nodes {
+            let name = match n {
+                Node::Block {
+                    place, slot_locks, ..
+                } if !slot_locks.is_empty() => place.clone(),
+                Node::Locked { place, codes } if !codes.iter().all(only_empty) => {
+                    place.clone().unwrap_or_else(|| s.page.clone())
+                }
+                _ => continue,
+            };
+            if !out.contains(&name) {
+                out.push(name);
+            }
+        }
+    }
+    if notice {
+        out.push(String::new());
+    }
+    out
+}
+
 /// Put the plan together. Never fails, never panics; a part that cannot be drawn is a `Locked` node with the reason.
 #[must_use]
 pub fn compose(view: &View, catalog: &dyn Catalog) -> Composition {
@@ -140,19 +179,16 @@ pub fn compose(view: &View, catalog: &dyn Catalog) -> Composition {
         .iter()
         .flat_map(|s| &s.nodes)
         .any(|n| matches!(n, Node::Block { .. }));
-    let problem = !notices.is_empty()
-        || screens.iter().flat_map(|s| &s.nodes).any(|n| match n {
-            Node::Block { slot_locks, .. } => !slot_locks.is_empty(),
-            _ => true,
-        });
-    let state = match (drawn, problem) {
-        (true, false) => HostState::Ready,
-        (true, true) => HostState::Partial,
+    let lacking = lacking_of(&screens, !notices.is_empty());
+    let state = match (drawn, lacking.is_empty()) {
+        (true, true) => HostState::Ready,
+        (true, false) => HostState::Partial,
         (false, _) => HostState::Refused,
     };
     Composition {
         state,
         screens,
+        lacking,
         notices,
     }
 }

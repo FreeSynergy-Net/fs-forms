@@ -6,7 +6,7 @@
 
 use std::sync::Arc;
 
-use fs_components_app::{AppError, AppWidget, Status};
+use fs_components_app::{AppError, AppWidget};
 use fs_components_mf2::Mf2Texts;
 use fs_components_widgets::states;
 use fs_components_words::{Locale, Localized};
@@ -36,6 +36,7 @@ pub fn failure(error: &HostError) -> Composition {
                 codes: vec![coded],
             }],
         }],
+        lacking: Vec::new(),
         notices: Vec::new(),
     }
 }
@@ -163,60 +164,20 @@ pub fn app_styled(
     if let Some(menu) = program_menu(texts, view) {
         widget.set_menus(vec![menu], |_| {})?;
     }
-    widget.set_status(Some(status(texts, comp.state, sample, down.as_deref())));
+    widget.set_status(Some(crate::status::status(
+        texts,
+        comp.state,
+        &comp.lacking,
+        sample,
+        down.as_deref(),
+    )));
     Ok(widget)
-}
-
-/// Sets the status line of `app` from the state of the composition and the records it shows (open and frontend switch alike).
-/// Pattern: Template Method (one place decides how the line is made; callers only name their inputs).
-pub(crate) fn set_status_line(
-    app: &AppWidget,
-    texts: &Mf2Texts,
-    state: HostState,
-    records: &dyn Records,
-) {
-    let down = records.unavailable();
-    let line = status(texts, state, records.is_sample(), down.as_deref());
-    app.set_status(Some(line));
-}
-
-/// How the host stands; sample data is said in the same line (a made-up record is never shown as a real one), and so is a data
-/// source that is not there (`down`: always a problem).
-pub(crate) fn status(
-    texts: &Mf2Texts,
-    state: HostState,
-    sample: bool,
-    down: Option<&str>,
-) -> Status {
-    if let Some(why) = down {
-        return Status::Problem(why.to_owned());
-    }
-    let (problem, mut text) = match state {
-        HostState::Ready => (false, texts.plain("host-status-ready")),
-        HostState::Partial => (false, texts.plain("host-status-partial")),
-        HostState::Refused => (true, texts.plain("host-status-refused")),
-    };
-    if sample {
-        text = format!("{text} · {}", texts.plain("host-status-sample"));
-    }
-    if problem {
-        Status::Problem(text)
-    } else {
-        Status::Info(text)
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::words::words;
-
-    fn info(s: &Status) -> &str {
-        match s {
-            Status::Info(t) | Status::Problem(t) => t,
-            _ => "",
-        }
-    }
 
     #[test]
     fn every_key_of_the_board_has_a_sentence_in_both_languages_never_its_raw_key() {
@@ -236,30 +197,5 @@ mod tests {
                 );
             }
         }
-    }
-
-    #[test]
-    fn sample_data_is_said_in_the_status_in_both_languages_and_real_data_says_nothing() {
-        for (lang, said) in [("en", "Sample data"), ("de", "Beispieldaten")] {
-            let locale = Locale::from_posix(lang).expect("a locale");
-            let texts = words(&locale);
-            let with = status(&texts, HostState::Partial, true, None);
-            assert!(info(&with).contains(said), "{lang}: {}", info(&with));
-            assert!(
-                info(&with).contains(&texts.plain("host-status-partial")),
-                "the state stays in the line"
-            );
-            let without = status(&texts, HostState::Partial, false, None);
-            assert!(!info(&without).contains(said), "{lang}: {}", info(&without));
-            let refused = status(&texts, HostState::Refused, true, None);
-            assert!(matches!(refused, Status::Problem(_)), "a problem stays one");
-        }
-    }
-
-    #[test]
-    fn a_data_source_that_is_not_there_is_a_problem_in_the_status_line_with_its_reason() {
-        let texts = words(&Locale::from_posix("en").expect("a locale"));
-        let down = status(&texts, HostState::Ready, false, Some("no answer: socket x"));
-        assert!(matches!(&down, Status::Problem(t) if t == "no answer: socket x"));
     }
 }

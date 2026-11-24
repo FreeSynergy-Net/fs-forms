@@ -38,7 +38,7 @@ use crate::record_hub::{RecordGrip, RecordHub, RecordKey};
 use crate::repaint::Repaint;
 use crate::style::StyleCell;
 use crate::view::Coded;
-use crate::window::set_status_line;
+use crate::status::set_status_line;
 use crate::words::words;
 
 /// Pattern: Strategy (the real [`WindowOwner`], `Window` only) – see the module.
@@ -142,7 +142,7 @@ impl HostWindows {
         };
         let app = AppWidget::new(title, vec![cell.screen()]).map_err(failed)?;
         let records = grip.records();
-        set_status_line(&app, &texts, comp.state, &*records);
+        set_status_line(&app, &texts, &comp, &*records);
         let token = self.serial.fetch_add(1, Ordering::SeqCst);
         let menus = menus_of(
             &texts,

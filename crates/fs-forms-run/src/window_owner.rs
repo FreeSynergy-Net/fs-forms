@@ -170,11 +170,11 @@ pub struct OpenedFrontend {
 ///
 /// Abweichung: it is also a registry (one entry per [`WindowId`], like a Multiton), and it draws nothing: a panel goes into the
 /// composition as a child node, a window goes through `fs-components-app`. It holds only what decides the lifetime: the
-/// composition, the records and the held connection of the module. Dropping them is signing off.
+/// composition, a grip on the read cache of the records and its OWN held connection to the module. Dropping them is signing off.
 pub trait WindowOwner: Send + Sync {
     /// Opens `req.key` in `req.mode` and says what it did ([`Opened`]). The same [`WindowId`] already open: [`Opened::Raised`], no
     /// second frontend (the circle people, calendar, people ends here). The same place open with another record: `req.when_open`
-    /// decides ([`decide`]): `Switch` keeps the place and the module and moves the grip of the hub from the old record to the new one ([`Opened::Switched`]), `Window` opens a
+    /// decides ([`decide`]): `Switch` keeps the place, the module and the hold (the own connection of the view) and lets the grip show the new record ([`Opened::Switched`]), `Window` opens a
     /// second one. The owner never asks: `Ask` (and `Tab`, phase 2) is answered by the host before it calls.
     ///
     /// # Errors

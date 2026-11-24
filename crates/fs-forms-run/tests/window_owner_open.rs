@@ -95,9 +95,8 @@ fn w9b_switch_keeps_one_entry_and_moves_the_grip() {
             from: Some("urn:a".into())
         }
     );
-    // P3: the grip moves to the records of the new record; the new hold is taken before the old one falls (the real owner keeps
-    // one connection per module, the double counts one hold per record)
-    assert_eq!(owner.holds(), (2, 1));
+    // P3+: the grip moves to the new record and keeps its own connection: no second hold, none dropped
+    assert_eq!(owner.holds(), (1, 0));
     assert_eq!(owner.open_now().len(), 1);
     let now = &owner.open_now()[0];
     assert_eq!((&now.id, now.scope.as_deref()), (&b, Some("urn:b")));
@@ -108,7 +107,7 @@ fn w9b_switch_keeps_one_entry_and_moves_the_grip() {
     owner.invoke(&b, "values", "value.set").unwrap();
     assert_eq!(owner.records_of(&b).unwrap().upgrade().unwrap().calls(), 1);
     owner.close(&b).unwrap();
-    assert_eq!(owner.holds(), (2, 2));
+    assert_eq!(owner.holds(), (1, 1));
 }
 
 #[test]

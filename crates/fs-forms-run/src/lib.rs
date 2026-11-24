@@ -18,7 +18,6 @@ mod catalog;
 mod changes;
 mod compose;
 mod draw;
-mod due_text;
 mod error;
 mod file;
 mod form_check;

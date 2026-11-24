@@ -1,8 +1,8 @@
 //! One log line per bound command: what the host sent (Host -> service) and what the service answered (-> answer).
-//! The line names the provider, the form, the command key, the record and the arguments as they went out, and the answer: `accepted`,
+//! The line names the provider, the form, the command key, the record and the argument keys (never the values), and the answer: `accepted`,
 //! or `refused <code>`. It holds no program name and no field name of its own; everything in it comes from the call.
 //!
-//! Pattern: Observer (a pure line maker; the one caller in `FormRecords::invoke` writes it) – deviation: no subscriber list, one sink.
+//! Pattern: Decorator (a call and its answer become one text line; the one caller in `FormRecords::invoke` writes it) – deviation: nothing wrapped, a pure formatter.
 
 use super::Invocation;
 use crate::view::Coded;
@@ -16,7 +16,7 @@ pub fn line(provider: &str, call: &Invocation, answer: &Result<(), Coded>) -> St
         provider
     };
     let record = call.record.as_deref().unwrap_or("-");
-    let args: Vec<String> = call.args.iter().map(|(k, v)| format!("{k}={v}")).collect();
+    let args: Vec<&str> = call.args.iter().map(|(k, _)| k.as_str()).collect();
     let answer = match answer {
         Ok(()) => "accepted".to_owned(),
         Err(c) => format!("refused {}", c.code),
@@ -47,7 +47,7 @@ mod tests {
         let l = line("planning", &call(), &Ok(()));
         assert_eq!(
             l,
-            "command card.move form=cards-in-columns record=a args=[column=doing]: host -> planning -> accepted"
+            "command card.move form=cards-in-columns record=a args=[column]: host -> planning -> accepted"
         );
     }
 

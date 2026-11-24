@@ -2,7 +2,7 @@
 //! are a part of the page when there is ONE page, else a screen of their own. With one page the shell shows no list of screens and the
 //! window carries its title, never the raw page id (it was `board` in the list, plus an entry "Problem").
 //!
-//! Pattern: Builder (the screens out of the composition); split off `window.rs` to keep both files short.
+//! Pattern: Simple Factory (the screens out of the composition) – deviation: plain functions, no product hierarchy; split off `window.rs` to keep both files short.
 
 use std::sync::Arc;
 

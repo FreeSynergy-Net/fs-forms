@@ -10,7 +10,7 @@ rust-version.workspace = true
 
 [dependencies]
 # One source per library: the same tags as fs-rpc (it pins fs-types, fs-interfaces and fs-objects by tag itself).
-fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "7f214f935e9913e8cca5e275ab1fcd5b9dcfc170", version = "0.1.4" }
+fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "0120f9afadf5b74540e8df3f0dfdd1b2edb4e1d4", version = "0.1.4" }
 fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "e6f69213b68b47e139fc8038c8a095f9ed1fef3c", version = "0.2.0" }
 capnp = "0.27"
 capnp-rpc = "0.27"

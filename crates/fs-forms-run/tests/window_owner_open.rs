@@ -5,9 +5,8 @@
 //! W9 other record at an open place: `Window` = second id and second hold, `Switch` = one entry, records and hold stay (G1);
 //! W10 no scope twice = the old id, `Raised` (G2, the old ids never change).
 //!
-//! Mutants (each makes the named test fail): M7 `of_record` ignores the scope -> W8, W9; M8 `of_record` does not encode `/` -> W8
-//! (G3); M9 `Switch` opens a new hold -> W9 (G1); M10 `Switch` forgets the record (`from` stays `None`) -> W9; M11 a request
-//! without scope gets a suffix -> W10 (G2).
+//! Mutants (each run red, see BERICHT-s6-o1): M7 `of_record` ignores the scope -> W8, W9; M8 `of_record` does not encode `/` -> W8; M9 `Switch` opens a new hold -> W9b (G1);
+//! M11 a request without scope gets a suffix -> W10 (G2).
 
 mod window_owner_common;
 

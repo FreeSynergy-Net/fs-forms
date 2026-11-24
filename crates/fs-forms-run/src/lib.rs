@@ -17,6 +17,7 @@ mod blocks;
 mod catalog;
 mod compose;
 mod draw;
+mod draw_people;
 mod error;
 mod events;
 mod file;

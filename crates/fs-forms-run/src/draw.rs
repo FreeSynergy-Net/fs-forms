@@ -15,13 +15,9 @@ use fs_components_styles::StyleId;
 use fs_components_widgets::dialogs::{Labels, modal};
 use fs_components_widgets::grid::Column;
 use fs_components_widgets::table::Table;
-use fs_components_widgets::{FieldCard, Glyph, TreeNode, TreeView};
-use fs_components_workbenches::SourceError;
-use fs_components_workbenches::people::{
-    PeopleCapabilities, PeopleLabels, PeopleSource, PeopleWidget, PersonField, PersonRow,
-    PersonSection, PersonSheet,
-};
+use fs_components_widgets::{TreeNode, TreeView};
 
+use crate::draw_people as people;
 use crate::events::{Ask, Wiring};
 use crate::form_data::FormRow;
 use crate::records::Records;
@@ -64,8 +60,8 @@ const COMPOSITIONS: &[(&str, Drawing)] = &[("sidebar", sidebar), ("tree", tree),
 /// (listed by `--list-blocks`), never silently dropped.
 const ADAPTERS: &[(&str, Drawing)] = &[
     ("fs-components-kanban", board),
-    ("PeopleWidget", contact_row),
-    ("FieldCard", field_card),
+    ("PeopleWidget", people::contact_row),
+    ("FieldCard", people::field_card),
 ];
 
 /// The function that draws the block: the host's composition of a general block, or the adapter of the widget the catalog names.
@@ -136,7 +132,7 @@ fn sidebar(ctx: &Ctx, width: f32, _height: f32) -> Div {
 }
 
 /// The rows of the form `name` the connected module gives (none: nothing is connected or the module does not offer it).
-fn rows(ctx: &Ctx, name: &str) -> Vec<FormRow> {
+pub(crate) fn rows(ctx: &Ctx, name: &str) -> Vec<FormRow> {
     ctx.records
         .forms()
         .iter()
@@ -219,71 +215,6 @@ fn table(ctx: &Ctx, width: f32, _height: f32) -> Div {
             .column_width(column_w)
             .build(),
     )
-}
-
-/// The people the form `members` gives, for the contact list: the channel `person` is the name; `role` and `badge` are the fields of the sheet.
-/// Read only: the source can do nothing else (no edit, no create), so the workbench shows those controls locked, never working.
-struct MemberPeople(Vec<FormRow>);
-
-impl PeopleSource for MemberPeople {
-    fn capabilities(&self) -> PeopleCapabilities {
-        PeopleCapabilities::default()
-    }
-
-    fn rows(&self, term: &str, offset: usize, limit: usize) -> Result<Vec<PersonRow>, SourceError> {
-        let term = term.to_lowercase();
-        Ok(self
-            .0
-            .iter()
-            .filter(|r| {
-                r.get("person")
-                    .unwrap_or(&r.key)
-                    .to_lowercase()
-                    .contains(&term)
-            })
-            .skip(offset)
-            .take(limit)
-            .map(|r| PersonRow::new(&r.key, vec![r.get("person").unwrap_or(&r.key).to_owned()]))
-            .collect())
-    }
-
-    fn read(&self, key: &str) -> Result<PersonSheet, SourceError> {
-        let row = self.0.iter().find(|r| r.key == key);
-        let fields = ["role", "badge"]
-            .iter()
-            .filter_map(|c| row.and_then(|r| r.get(c)).map(|v| PersonField::new(*c, v)))
-            .collect();
-        Ok(PersonSheet::new(
-            row.and_then(|r| r.get("person")).unwrap_or(key),
-            vec![PersonSection::new("", fields)],
-        ))
-    }
-}
-
-/// The block `contact-row`: the people workbench (compact: list and detail) over the rows of the form `members`.
-fn contact_row(ctx: &Ctx, width: f32, height: f32) -> Div {
-    let people = PeopleWidget::compact(
-        Arc::new(MemberPeople(rows(ctx, "members"))),
-        PeopleLabels::default(),
-    );
-    div()
-        .w(width)
-        .h(height.max(MIN_H))
-        .child(people.build(width, height.max(MIN_H)))
-}
-
-/// The block `field-card`: one card per row of the form `members` (the role is the label, the person the value).
-fn field_card(ctx: &Ctx, width: f32, _height: f32) -> Div {
-    let mut out = div().w(width).flex_col();
-    for (n, row) in rows(ctx, "members").iter().enumerate() {
-        let card = FieldCard::new(
-            Glyph::Person,
-            row.get("role").unwrap_or(""),
-            row.get("person").unwrap_or(&row.key),
-        );
-        out = out.child(card.build(&format!("field-card-{n}")));
-    }
-    out
 }
 
 #[cfg(test)]

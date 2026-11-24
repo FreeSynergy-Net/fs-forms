@@ -4,7 +4,9 @@
 //! it: a channel the module binds to a command goes to the module ([`Records::invoke`], the rights are the module's), any other one is
 //! asked the old way ([`Records::can`] and the operations of the records). Every other control stays locked and says so.
 //!
-//! The host knows no gesture of a component and no channel name: what a gesture carries is read from the component itself ([`carried`]).
+//! The host knows no layout of a component: what a gesture carries is read from the component itself ([`carried`]). It does still know
+//! the gestures of the board by name (the channels `move`, `create`, `column.*` and their operations, "the old way") for records that
+//! bind no command; they leave with the column pseudo-channels once the form names them (card form-neu).
 //!
 //! Pattern: Adapter (`FormWrite` over `Records`), gated by the actions of the description.
 
@@ -135,6 +137,10 @@ impl FormWrite for WriteGate {
         record: Option<&str>,
         args: &[WriteArg],
     ) -> Result<WriteDone, WriteRefused> {
+        // the gate decides on its own: a caller that did not ask `can` first still gets `locked`
+        if !self.can(channel, record) {
+            return Err(WriteRefused::new("locked"));
+        }
         let answer = if self.bound(channel).is_some() {
             let mut values: Vec<(String, String)> = args
                 .iter()
@@ -174,3 +180,6 @@ impl WriteGate {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

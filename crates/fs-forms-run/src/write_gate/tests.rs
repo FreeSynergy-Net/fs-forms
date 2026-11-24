@@ -1,0 +1,255 @@
+//! The locks and the rights of the write gate (moved from the tests of the old `events/` wiring, now on `WriteGate::can` and `send`):
+//! a control is unlocked only when the description has an action for it AND the records can do it; the module's own command goes to
+//! the module, with exactly what the gesture carries; anything else is refused `locked` and nobody is asked.
+//!
+//! Tests: description without action, records that cannot, one action per operation, the key of the contract against the channel
+//! name, a card the module does not allow, one call per drop with column/place/lane, no old place at the end of a column, a refusal
+//! given back as its code, `send` refuses on its own, the old way (records without commands).
+//!
+//! Pattern: none (tests).
+
+use std::sync::{Arc, Mutex, PoisonError};
+
+use fs_components_core::form_write::{FormWrite, WriteArg, WriteValue};
+use fs_components_kanban::{Answer, COLUMN_CREATE, COLUMN_LIMIT, COLUMN_RENAME, CREATE, MOVE};
+
+use super::WriteGate;
+use crate::records::{NoRecords, Records, SideItem};
+use crate::view::ActionView;
+use crate::write::fixture::{FakeWriter, data, records};
+
+fn action(trigger: &str, command: &str) -> ActionView {
+    ActionView {
+        trigger: trigger.into(),
+        command: command.into(),
+    }
+}
+
+/// The actions of a description that names the commands by the key of the contract.
+fn described() -> Vec<ActionView> {
+    vec![
+        action("drop", "card.move"),
+        action("quick-add", "task.create"),
+    ]
+}
+
+fn gate(actions: Vec<ActionView>, records: Arc<dyn Records>) -> WriteGate {
+    WriteGate {
+        records,
+        actions: Arc::new(actions),
+        form: "cards-in-columns".into(),
+    }
+}
+
+fn module(actions: Vec<ActionView>, w: &Arc<FakeWriter>) -> WriteGate {
+    gate(actions, Arc::new(records(w, data())))
+}
+
+fn text(name: &str, value: &str) -> WriteArg {
+    WriteArg {
+        name: name.into(),
+        value: WriteValue::Text(value.into()),
+    }
+}
+
+/// Records without a bound command: the operations of the old way, counted.
+#[derive(Default)]
+struct Old {
+    can: Vec<fs_components_kanban::Operation>,
+    calls: Mutex<Vec<String>>,
+}
+
+impl Records for Old {
+    fn side(&self) -> Vec<SideItem> {
+        Vec::new()
+    }
+    fn can(&self, op: fs_components_kanban::Operation) -> bool {
+        self.can.contains(&op)
+    }
+    fn move_card(&self, key: &str, to: &str) -> Answer {
+        self.calls
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .push(format!("move {key} {to}"));
+        Answer::Accepted
+    }
+    fn add_column(&self, title: &str) -> Answer {
+        self.calls
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .push(format!("column {title}"));
+        Answer::Accepted
+    }
+}
+
+#[test]
+fn without_an_action_in_the_description_everything_stays_locked() {
+    let w = Arc::new(FakeWriter::default());
+    for actions in [Vec::new(), vec![action("menu", "delete")]] {
+        let g = module(actions, &w);
+        for channel in [MOVE, CREATE, COLUMN_CREATE, COLUMN_RENAME, COLUMN_LIMIT] {
+            assert!(!g.can(channel, None), "{channel} stays locked");
+        }
+    }
+}
+
+#[test]
+fn a_control_is_unlocked_by_the_key_of_the_contract_the_module_says_may_be_used() {
+    let w = Arc::new(FakeWriter::default());
+    let on = module(described(), &w);
+    assert!(on.can(MOVE, Some("a")) && on.can(CREATE, None));
+    // the description names the CHANNEL, not the key of the contract: no action for this command, the control stays locked
+    let by_channel = module(
+        vec![action("drop", "move"), action("quick-add", "create")],
+        &w,
+    );
+    assert!(!by_channel.can(MOVE, Some("a")) && !by_channel.can(CREATE, None));
+    // rename and limit are not channels of this form: locked
+    assert!(!on.can(COLUMN_RENAME, Some("todo")) && !on.can(COLUMN_LIMIT, Some("todo")));
+}
+
+#[test]
+fn each_operation_needs_its_own_action() {
+    let w = Arc::new(FakeWriter::default());
+    let only_quick = module(vec![action("quick-add", "task.create")], &w);
+    assert!(only_quick.can(CREATE, None));
+    assert!(!only_quick.can(MOVE, Some("a")) && !only_quick.can(COLUMN_CREATE, None));
+    let wrong = module(
+        vec![action("quick-add", "delete"), action("drop", "task.create")],
+        &w,
+    );
+    assert!(!wrong.can(CREATE, None) && !wrong.can(MOVE, Some("a")));
+}
+
+#[test]
+fn a_control_stays_locked_while_the_module_says_nothing_may_be_done() {
+    let w = Arc::new(FakeWriter::default());
+    let mut silent = data();
+    silent.may.clear();
+    silent.rows.iter_mut().for_each(|r| r.may.clear());
+    let g = gate(described(), Arc::new(records(&w, silent)));
+    assert!(!g.can(MOVE, Some("a")) && !g.can(CREATE, None));
+}
+
+#[test]
+fn records_that_cannot_keep_every_control_locked_even_with_all_actions() {
+    let all = vec![
+        action("quick-add", "create"),
+        action("drop", "move"),
+        action("button", COLUMN_CREATE),
+    ];
+    let g = gate(all, Arc::new(NoRecords));
+    for channel in [MOVE, CREATE, COLUMN_CREATE] {
+        assert!(!g.can(channel, None), "{channel} stays locked");
+    }
+}
+
+#[test]
+fn a_card_the_module_does_not_allow_is_refused_locked_and_the_module_is_not_asked() {
+    let w = Arc::new(FakeWriter::default());
+    let g = module(described(), &w);
+    let refused = g
+        .send(MOVE, Some("b"), &[text("column", "todo")])
+        .unwrap_err();
+    assert_eq!(refused.code, "locked");
+    assert!(w.calls.lock().unwrap().is_empty());
+}
+
+#[test]
+fn send_refuses_on_its_own_when_the_description_has_no_action() {
+    let w = Arc::new(FakeWriter::default());
+    let g = module(Vec::new(), &w);
+    let refused = g.send(CREATE, None, &[text("title", "x")]).unwrap_err();
+    assert_eq!(refused.code, "locked");
+    assert!(w.calls.lock().unwrap().is_empty());
+    let old = Arc::new(Old::default());
+    let g = gate(Vec::new(), old.clone());
+    assert!(g.send(COLUMN_CREATE, None, &[text("name", "x")]).is_err());
+    assert!(old.calls.lock().unwrap().is_empty());
+}
+
+#[test]
+fn a_drop_is_one_call_with_the_column_the_place_and_the_lane_of_the_record() {
+    let w = Arc::new(FakeWriter::default());
+    let g = module(described(), &w);
+    let place = WriteArg {
+        name: "order".into(),
+        value: WriteValue::Number(1.0),
+    };
+    g.send(MOVE, Some("a"), &[text("column", "doing"), place])
+        .expect("accepted");
+    let calls = w.calls.lock().unwrap();
+    assert_eq!(calls.len(), 1);
+    assert_eq!(calls[0].command, "card.move");
+    let args: Vec<_> = calls[0]
+        .args
+        .iter()
+        .map(|(a, b)| (a.as_str(), b.as_str()))
+        .collect();
+    assert_eq!(args, [("column", "doing"), ("index", "1"), ("board", "b1")]);
+}
+
+#[test]
+fn a_drop_at_the_end_of_another_column_sends_no_place_even_when_the_record_has_one() {
+    // the fixture card `a` has an order of its own; a drop without a place (the end) must not send the old one
+    let w = Arc::new(FakeWriter::default());
+    let g = module(described(), &w);
+    g.send(MOVE, Some("a"), &[text("column", "doing")])
+        .expect("accepted");
+    let calls = w.calls.lock().unwrap();
+    let args: Vec<_> = calls[0]
+        .args
+        .iter()
+        .map(|(a, b)| (a.as_str(), b.as_str()))
+        .collect();
+    assert_eq!(args, [("column", "doing"), ("board", "b1")]);
+}
+
+#[test]
+fn a_quick_add_creates_with_title_and_column_and_a_refusal_is_given_back_as_its_code() {
+    let w = Arc::new(FakeWriter::default());
+    let g = module(described(), &w);
+    g.send(
+        CREATE,
+        None,
+        &[text("title", "Ship it"), text("column", "todo")],
+    )
+    .expect("accepted");
+    let call = w.calls.lock().unwrap()[0].clone();
+    assert_eq!((call.command.as_str(), call.record), ("task.create", None));
+    let args: Vec<_> = call
+        .args
+        .iter()
+        .map(|(a, b)| (a.as_str(), b.as_str()))
+        .collect();
+    assert_eq!(args, [("title", "Ship it"), ("column", "todo")]);
+    *w.refuse.lock().unwrap() = Some("host-notice-invoke-refused".into());
+    let refused = g
+        .send(CREATE, None, &[text("title", "x"), text("column", "todo")])
+        .unwrap_err();
+    assert_eq!(refused.code, "host-notice-invoke-refused");
+}
+
+#[test]
+fn the_old_way_asks_the_records_for_each_operation_and_needs_the_action_too() {
+    use fs_components_kanban::Operation;
+    let old = Arc::new(Old {
+        can: vec![Operation::Move, Operation::AddColumn],
+        ..Old::default()
+    });
+    let all = vec![action("drop", MOVE), action("button", COLUMN_CREATE)];
+    let g = gate(all, old.clone());
+    assert!(g.can(MOVE, Some("k")) && g.can(COLUMN_CREATE, None));
+    // rename and limit: records cannot, and there is no action
+    assert!(!g.can(COLUMN_RENAME, Some("todo")) && !g.can(COLUMN_LIMIT, Some("todo")));
+    // the records can add a card, but the description has no quick-add: locked
+    assert!(!g.can(CREATE, None));
+    g.send(MOVE, Some("k"), &[text("column", "done")])
+        .expect("accepted");
+    g.send(COLUMN_CREATE, None, &[text("name", "Review")])
+        .expect("accepted");
+    assert_eq!(
+        *old.calls.lock().unwrap(),
+        ["move k done".to_owned(), "column Review".to_owned()]
+    );
+}

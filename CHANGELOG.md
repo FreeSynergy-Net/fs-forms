@@ -2,6 +2,22 @@
 
 Version = tag; all crates of the workspace carry the same version.
 
+## Unreleased
+
+### English
+
+- The host draws a block through the component the catalog names: `fs_components::views()` (feature `views`, A1-A4 of ENTSCHEID-zeichnen) gives the view of a widget, the host feeds it the form the block names (`forms=`) and keeps the mounted view per page and block over a rebuild. `ADAPTERS`, `draw/adapters.rs`, the wiring `events/` and the compositions of `tree` and `table` are gone; only `sidebar` stays a composition (it needs `tree@1.1.0`). `--list-blocks` says "widget X has no view" or "no widget in the contract".
+- New `write_gate.rs` (`WriteGate`, the `FormWrite` of the host): a gesture is allowed only when the description has an action for it and the records can do it; `send` checks this itself and refuses with `locked`. Column gestures run as the pseudo-channels `column.create`, `column.rename` and `column.limit` (the old way for records that bind no command). **Breaking:** `Records::columns()` is gone, `Records::move_card(key, to)` has no `from`. The 23 tests of the old wiring on locks and rights moved to `write_gate/tests.rs`.
+- The sample board is a form (`cards-in-columns` by channel); the sample member list gives the level as the channel `state` (not a second column of `columns`), the head words are `channel.level` and `channel.label`.
+- `fs-components` is pinned by `rev` (the head of the branch `unreviewed/formview-r3`) until the bundled release returns it to a tag. Written with the help of Claude (Anthropic).
+
+### Deutsch
+
+- Der Host zeichnet einen Baustein ueber die Component, die der Katalog nennt: `fs_components::views()` (Feature `views`, A1-A4 von ENTSCHEID-zeichnen) liefert die View eines Widgets, der Host gibt ihr die Form des Bausteins (`forms=`) und haelt die eingehaengte View je Seite und Baustein ueber einen Neuaufbau. `ADAPTERS`, `draw/adapters.rs`, die Verdrahtung `events/` und die Kompositionen von `tree` und `table` sind weg; nur `sidebar` bleibt Komposition (braucht `tree@1.1.0`). `--list-blocks` sagt "widget X has no view" oder "no widget in the contract".
+- Neu `write_gate.rs` (`WriteGate`, das `FormWrite` des Hosts): eine Geste ist nur erlaubt, wenn die Beschreibung eine Aktion dafuer hat und die Records es koennen; `send` prueft das selbst und lehnt mit `locked` ab. Spaltengesten laufen als Pseudokanaele `column.create`, `column.rename`, `column.limit` (alter Weg fuer Records ohne gebundenen Befehl). **Bruch:** `Records::columns()` entfaellt, `Records::move_card(key, to)` hat kein `from`. Die 23 Tests der alten Verdrahtung zu Sperren und Rechten sind nach `write_gate/tests.rs` umgezogen.
+- Das Beispielbrett ist eine Form (`cards-in-columns` nach Kanaelen); die Beispiel-Mitgliederliste gibt die Stufe als Kanal `state` (nicht als zweite Spalte von `columns`), die Kopfwoerter sind `channel.level` und `channel.label`.
+- `fs-components` haengt per `rev` (Kopf des Zweigs `unreviewed/formview-r3`), bis das gebuendelte Release es wieder auf einen Tag setzt. Mit Hilfe von Claude (Anthropic) geschrieben.
+
 ## 0.1.0
 
 ### English

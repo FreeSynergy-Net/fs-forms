@@ -63,5 +63,4 @@ form-channel-unmapped = Das Modul lässt einen Pflichtkanal der Form unbelegt
 form-basic-mismatch = Ein Feld des Moduls passt nicht zur Art des Kanals
 form-no-component = Kein Block zeichnet diese Form; der Rückfall wird gezeigt
 host-notice-raised = Dieser Datensatz ist schon offen; sein Fenster wurde nach vorn geholt
-host-notice-style-of-parent = Die Beschreibung verlangt einen anderen Stil; dieses Fenster wird im Stil des Programms gezeichnet, das es geöffnet hat (wanted, used)
 host-notice-open-unanswered = An diesem Platz ist schon ein anderer Datensatz offen und niemand hat gesagt, was geschehen soll; es wurde nichts geöffnet

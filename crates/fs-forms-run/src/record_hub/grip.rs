@@ -85,10 +85,14 @@ impl Inner {
             return crate::records::refused("conflict");
         }
         let seen = self.seen.load(Ordering::SeqCst);
-        let answer = f(&*self.link.writer(scope.as_deref(), seen));
-        if answer == Answer::Accepted {
-            self.seen
-                .store(self.link.rev(scope.as_deref()), Ordering::SeqCst);
+        let mut f = Some(f);
+        let (answer, made) = self.link.write(scope.as_deref(), seen, &mut |w| {
+            f.take()
+                .map_or_else(|| crate::records::refused("conflict"), |f| f(w))
+        });
+        if let (Answer::Accepted, Some(rev)) = (&answer, made) {
+            // exactly the revision of the own change, never what the module has now (a neighbour may have written since)
+            self.seen.store(rev, Ordering::SeqCst);
         }
         answer
     }

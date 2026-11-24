@@ -73,7 +73,7 @@ impl RecordHub {
         let link = module.connect(Arc::clone(&sink) as Arc<dyn ChangeSink>)?;
         let shared = self.cache_of(key, module, &link);
         sink.point_at(&shared);
-        link.watch(key.scope.as_deref());
+        Self::watch_then_read(&link, key.scope.as_deref(), &shared, &sink);
         let seen = AtomicU64::new(shared.rev());
         Ok(RecordGrip {
             inner: Arc::new(Inner {
@@ -102,11 +102,26 @@ impl RecordHub {
         }
         let shared = self.cache_of(&key, module, &inner.link);
         inner.sink.point_at(&shared);
-        inner.link.watch(key.scope.as_deref());
+        Self::watch_then_read(&inner.link, key.scope.as_deref(), &shared, &inner.sink);
         inner.seen.store(shared.rev(), Ordering::SeqCst);
         *inner.shared.lock().unwrap_or_else(PoisonError::into_inner) = shared;
         inner.sink.bump(); // the view shows another record: it draws again
         Ok(())
+    }
+
+    /// First `watch`, then read the revision (subscribe-then-read): a write between the first read of the cache and the `watch` would
+    /// never be told to the view; so after the `watch` the module is asked once more and a newer revision is taken as told.
+    fn watch_then_read(
+        link: &Arc<dyn Link>,
+        scope: Option<&str>,
+        shared: &Shared,
+        sink: &GripSink,
+    ) {
+        link.watch(scope);
+        let now = link.rev(scope);
+        if now > shared.rev() {
+            sink.changed(now);
+        }
     }
 
     fn cache_of(

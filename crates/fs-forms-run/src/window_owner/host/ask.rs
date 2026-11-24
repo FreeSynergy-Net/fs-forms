@@ -30,7 +30,8 @@ pub enum Asked {
 /// Pattern: Command over Observer – see the module. Implemented for a shared [`HostWindows`].
 pub trait OpenAsk {
     /// Opens `req`; when the place is open with another record and the rule is `Ask`, asks the person through `notes` first.
-    /// `done` gets the result of the open after the answer (also an error; an answer that does not fit nothing is opened).
+    /// `done` gets the result of the open after the answer (also an error), exactly once; a question that is dismissed, expired or
+    /// closed without an answer ends with `done(Err(host-notice-open-unanswered))` and lets everything go; an answer that fits nothing opens nothing.
     ///
     /// # Errors
     /// What `open` says; `host-notice-open-ask-failed{cause}` when the question could not be shown.
@@ -82,19 +83,26 @@ impl OpenAsk for Arc<HostWindows> {
         let owner = Arc::clone(self);
         let (mine, slot) = (id.clone(), Arc::clone(&keep));
         let sub = notes.subscribe(Arc::new(move |e: &Event| {
-            let Event::Answered { id, action } = e else {
-                return;
-            };
-            if *id != mine {
-                return;
-            }
-            let rule = match action.as_str() {
-                SWITCH => WhenOpen::Switch,
-                WINDOW => WhenOpen::Window,
+            let rule = match e {
+                Event::Answered { id, action } if *id == mine => match action.as_str() {
+                    SWITCH => Some(WhenOpen::Switch),
+                    WINDOW => Some(WhenOpen::Window),
+                    _ => return, // an answer that fits nothing: the `Closed` that follows ends the question
+                },
+                // dismissed, expired or replaced without an answer: nobody will answer any more
+                Event::Closed { id, .. } if *id == mine => None,
                 _ => return,
             };
-            slot.lock().unwrap_or_else(PoisonError::into_inner).take();
-            done(owner.open(req.clone().with_when_open(rule)));
+            // once: the subscription lets itself go (it holds this closure and the owner), whichever event came first
+            let taken = slot.lock().unwrap_or_else(PoisonError::into_inner).take();
+            if taken.is_none() {
+                return;
+            }
+            drop(taken);
+            done(match rule {
+                Some(rule) => owner.open(req.clone().with_when_open(rule)),
+                None => Err(Coded::new("host-notice-open-unanswered").with("at", at.as_str())),
+            });
         }));
         *keep.lock().unwrap_or_else(PoisonError::into_inner) = Some(sub);
         Ok(Asked::Pending(id))

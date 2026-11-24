@@ -111,6 +111,18 @@ pub struct World {
 }
 
 pub fn world() -> World {
+    let shown = Arc::new(Shown::default());
+    let (owner, counts, wakes) = world_with(Arc::clone(&shown) as Arc<dyn Surfaces>);
+    World {
+        owner,
+        counts,
+        shown,
+        wakes,
+    }
+}
+
+/// The same world over windows of the caller (one that closes late, say).
+pub fn world_with(surfaces: Arc<dyn Surfaces>) -> (Arc<HostWindows>, Arc<HoldCounts>, Arc<Wakes>) {
     let counts = Arc::new(HoldCounts::default());
     let boards: Mutex<HashMap<Option<String>, Arc<SampleBoard>>> = Mutex::default();
     let module = FakeModule::new(
@@ -120,23 +132,14 @@ pub fn world() -> World {
             Arc::clone(m.entry(scope.map(str::to_owned)).or_default()) as Arc<dyn Records>
         }),
     );
-    let (shown, wakes) = (Arc::new(Shown::default()), Arc::new(Wakes::default()));
+    let wakes = Arc::new(Wakes::default());
     let owner = HostWindows::new(
         Arc::new(Blocks),
         fs_forms_run::session_locale(),
-        (
-            Arc::new(Files),
-            Arc::new(One(module)),
-            Arc::clone(&shown) as Arc<dyn Surfaces>,
-        ),
+        (Arc::new(Files), Arc::new(One(module)), surfaces),
         Arc::clone(&wakes) as Arc<dyn Repaint>,
     );
-    World {
-        owner: Arc::new(owner),
-        counts,
-        shown,
-        wakes,
-    }
+    (Arc::new(owner), counts, wakes)
 }
 
 pub fn req(frontend: &str, scope: &str) -> OpenFrontend {

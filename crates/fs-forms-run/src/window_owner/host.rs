@@ -14,6 +14,7 @@ mod ask;
 mod entry;
 mod ports;
 
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 
 use fs_components_app::AppWidget;
@@ -44,6 +45,7 @@ pub struct HostWindows {
     surfaces: Arc<dyn Surfaces>,
     hub: RecordHub,
     open: Arc<Mutex<Open>>,
+    serial: AtomicU64,
 }
 
 impl HostWindows {
@@ -65,6 +67,7 @@ impl HostWindows {
             surfaces,
             hub: RecordHub::with_repaint(repaint),
             open: Arc::default(),
+            serial: AtomicU64::new(0),
         }
     }
 
@@ -116,22 +119,22 @@ impl HostWindows {
             module,
             app,
             raised: 0,
+            token: self.serial.fetch_add(1, Ordering::SeqCst),
         })
     }
 
-    /// The window is shown; when the person closes it, the entry (and its children) fall.
-    fn show(&self, id: &WindowId, app: &AppWidget) -> Result<(), Coded> {
+    /// The window of the entry with `token` is shown; when it is gone, that entry (and its children) fall.
+    fn show(&self, token: u64, app: &AppWidget) -> Result<(), Coded> {
         let open = Arc::clone(&self.open);
-        let gone = id.clone();
         self.surfaces.show(
             app.clone(),
             Box::new(move || {
                 let doomed: Vec<Entry> = {
                     let mut o = lock(&open);
-                    let ids = if o.contains_key(&gone) {
-                        family(&o, &gone)
-                    } else {
-                        Vec::new()
+                    // by token, not by id: a switch moved the entry to another id, a later window may own the old one
+                    let ids = match o.iter().find(|(_, e)| e.token == token) {
+                        Some((at, _)) => family(&o, at),
+                        None => Vec::new(),
                     };
                     ids.iter().filter_map(|d| o.remove(d)).collect()
                 };
@@ -204,10 +207,10 @@ impl WindowOwner for HostWindows {
                     return Err(Coded::new("host-notice-window-id-taken").with("id", id.as_str()));
                 }
                 let entry = self.fresh(&req, &id, parent, place)?;
-                let app = entry.app.clone();
+                let (app, token) = (entry.app.clone(), entry.token);
                 open.insert(id.clone(), entry);
                 drop(open);
-                if let Err(e) = self.show(&id, &app) {
+                if let Err(e) = self.show(token, &app) {
                     drop(lock(&self.open).remove(&id)); // nothing stays that is not shown
                     return Err(e);
                 }

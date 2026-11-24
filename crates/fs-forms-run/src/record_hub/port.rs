@@ -5,6 +5,8 @@
 
 use std::sync::Arc;
 
+use fs_components_kanban::Answer;
+
 use crate::records::Records;
 use crate::view::Coded;
 
@@ -39,4 +41,13 @@ pub trait Link: Send + Sync {
     /// moved on is refused with `conflict` (409), like an `If-Match` that no longer fits (RFC 9110 section 13.1.1, status 412). The
     /// check of the client is only a pre-check.
     fn writer(&self, scope: Option<&str>, seen: u64) -> Arc<dyn Records>;
+    /// One write on THIS connection, checked and taken by the module in one step like [`Link::writer`]; besides the answer it says the
+    /// revision that THIS change made (`None` when it was not accepted). The view takes exactly that as seen: the module may be
+    /// ahead of it already because a neighbour wrote right after, and that change the view has NOT seen.
+    fn write(
+        &self,
+        scope: Option<&str>,
+        seen: u64,
+        change: &mut dyn FnMut(&dyn Records) -> Answer,
+    ) -> (Answer, Option<u64>);
 }

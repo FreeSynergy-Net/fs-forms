@@ -22,6 +22,9 @@ pub(super) struct Entry {
     pub(super) module: Arc<dyn Module>,
     pub(super) app: AppWidget,
     pub(super) raised: usize,
+    /// Names THIS window for good (a switch changes the id, never the token): the `on_closed` of the surface finds the entry by it, so
+    /// a closed window never removes the entry of a later window that got the same id.
+    pub(super) token: u64,
 }
 
 pub(super) type Open = HashMap<WindowId, Entry>;

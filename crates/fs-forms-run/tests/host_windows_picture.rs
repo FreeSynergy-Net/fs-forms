@@ -2,7 +2,8 @@
 //! a card; B, which never wrote, shows the moved card after its own `watch` (the drawing reads the shared cache, read again once).
 //!
 //! Reference: there is no stored picture. The reference of "B shows the change" is a third window C opened AFTER the move on the same
-//! record: it reads the new state fresh, by no path that B took. B after the move must equal C (tolerance 0 pixels beyond rounding of
+//! record: it draws the state of the cache fresh. C hangs on the SAME cache as B (A keeps it alive), so C does not prove how the cache
+//! got the change; that mechanism is proven by `host_windows` H1 and `record_hub` GA5. B after the move must equal C (tolerance 0 pixels beyond rounding of
 //! `TOL` per channel). Counter-test against the tolerance trap: B BEFORE the move (the failure case: B did not learn of the change)
 //! must differ from C by at least `MIN_DIFF` pixels, far over the tolerance, so a window that stays stale cannot pass as equal.
 //!

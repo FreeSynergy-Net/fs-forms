@@ -187,6 +187,21 @@ impl Link for FakeLink {
             store: self.module.records(scope),
         })
     }
+
+    fn write(
+        &self,
+        scope: Option<&str>,
+        seen: u64,
+        change: &mut dyn FnMut(&dyn Records) -> Answer,
+    ) -> (Answer, Option<u64>) {
+        LinkWriter {
+            module: Arc::clone(&self.module),
+            seen,
+            scope: scope.map(str::to_owned),
+            store: self.module.records(scope),
+        }
+        .guarded_rev(change)
+    }
 }
 
 /// The writing side on one connection: an accepted change makes the module count a revision and tell the watchers.
@@ -201,10 +216,21 @@ impl LinkWriter {
     /// The module takes the change only when the record is still at the revision this view saw: checked and written under the gate,
     /// then (outside it) every watching connection is told.
     fn guarded(&self, change: impl FnOnce(&dyn Records) -> Answer) -> Answer {
+        let mut change = Some(change);
+        self.guarded_rev(&mut |s| {
+            change
+                .take()
+                .map_or_else(|| crate::records::refused("conflict"), |c| c(s))
+        })
+        .0
+    }
+
+    /// The same, and the revision the accepted change made (`None` when refused).
+    fn guarded_rev(&self, change: &mut dyn FnMut(&dyn Records) -> Answer) -> (Answer, Option<u64>) {
         let (answer, rev) = {
             let _gate = lock(&self.module.gate);
             if self.module.rev_of(&self.scope) > self.seen {
-                return crate::records::refused("conflict");
+                return (crate::records::refused("conflict"), None);
             }
             let answer = change(&*self.store);
             let rev = (answer == Answer::Accepted).then(|| self.module.bump(&self.scope));
@@ -213,7 +239,7 @@ impl LinkWriter {
         if let Some(rev) = rev {
             self.module.wrote(&self.scope, rev);
         }
-        answer
+        (answer, rev)
     }
 }
 

@@ -173,7 +173,10 @@ fn locate(root: &Path, extends: &str, frontend: &str) -> Result<(PathBuf, Layout
             link_inside(root, Path::new(&rel))?;
             let file = root.join(rel);
             let layout = read_file(&file)?;
-            return Ok((file, layout));
+            // the blueprint names the standard: it wins only when it is what was asked for (empty asks for the standard)
+            if asked_for(&layout, extends, frontend) {
+                return Ok((file, layout));
+            }
         }
     }
     link_inside(root, Path::new("forms"))?;
@@ -192,7 +195,63 @@ fn locate(root: &Path, extends: &str, frontend: &str) -> Result<(PathBuf, Layout
     }
     match found.len() {
         1 => Ok(found.remove(0)),
+        0 if !frontend.is_empty() => Err(HostError::FrontendUnknown {
+            id: frontend.to_owned(),
+            available: available_in(&dir)?,
+        }),
         _ => Err(missing(&dir)),
+    }
+}
+
+/// The ids of all frontends the folder describes, sorted (what `frontend-unknown` offers).
+fn available_in(dir: &Path) -> Result<Vec<String>, HostError> {
+    let mut ids: Vec<String> = Vec::new();
+    for file in descriptions_in(dir)? {
+        ids.push(read_file(&file)?.doc().key.frontend.clone());
+    }
+    ids.sort();
+    ids.dedup();
+    Ok(ids)
+}
+
+/// A description that was really loaded: the view, the file it came from and the id it carries.
+///
+/// Pattern: Value object: the answer of [`FileLink::load`], so a host or a check can say which file it shows.
+#[derive(Clone, Debug)]
+pub struct Loaded {
+    /// The resolved description.
+    pub view: View,
+    /// The file that was read, relative to the folder the link was made with (the path itself for a single file).
+    pub file: PathBuf,
+}
+
+impl Loaded {
+    /// `frontend <id> from <file>`: the line a host or check logs, from what was loaded and not from what was asked.
+    #[must_use]
+    pub fn line(&self) -> String {
+        format!(
+            "frontend {} from {}",
+            self.view.frontend,
+            self.file.display()
+        )
+    }
+}
+
+impl FileLink {
+    /// Like `resolve`, but says which file was loaded.
+    ///
+    /// # Errors
+    /// The same as `resolve`; a `frontend` that no description carries is `frontend-unknown` with the ids that exist.
+    pub fn load(&self, extends: &str, frontend: &str) -> Result<Loaded, HostError> {
+        let (file, layout) = locate(&self.root, extends, frontend)?;
+        let file = file
+            .strip_prefix(&self.root)
+            .map(Path::to_path_buf)
+            .unwrap_or(file);
+        Ok(Loaded {
+            view: view_of(&layout, &self.lang),
+            file,
+        })
     }
 }
 

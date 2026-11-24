@@ -44,7 +44,7 @@ pub use blocks::Blocks;
 pub use catalog::{Catalog, TestCatalog};
 pub use compose::{Composition, HostState, Node, ScreenTree, compose};
 pub use error::{EXIT_CONTRACT, HostError};
-pub use file::FileLink;
+pub use file::{FileLink, Loaded};
 pub use form_check::{Finding, action_report, problems as form_problems, report as form_report};
 pub use form_data::{FormData, FormRecords, FormRow};
 pub use from_layout::view_of;

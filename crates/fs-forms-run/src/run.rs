@@ -70,8 +70,11 @@ pub fn run_code_with(args: &[String], sources: &dyn Sources) -> i32 {
             }
             CODE_SUCCESS
         }
-        Ok(Command::Check(c)) => match fetch(&c) {
-            Ok(view) => {
+        Ok(Command::Check(c)) => match fetch_from(&c) {
+            Ok((view, line)) => {
+                if let Some(line) = line {
+                    println!("fs-forms-run: {line}");
+                }
                 println!(
                     "fs-forms-run: the description of the frontend {} is there",
                     view.frontend
@@ -85,11 +88,19 @@ pub fn run_code_with(args: &[String], sources: &dyn Sources) -> i32 {
 }
 
 fn fetch(c: &Config) -> Result<View, HostError> {
+    fetch_from(c).map(|(view, _file)| view)
+}
+
+/// The view and, for a description on disk, the file that was really loaded (the line `frontend <id> from <file>`).
+fn fetch_from(c: &Config) -> Result<(View, Option<String>), HostError> {
     if let Some(path) = &c.description {
         let lang = session_locale().primary().to_owned();
-        return FileLink::new(path, lang).resolve(&c.extends, &c.frontend);
+        let loaded = FileLink::new(path, lang).load(&c.extends, &c.frontend)?;
+        let line = loaded.line();
+        return Ok((loaded.view, Some(line)));
     }
-    SocketLink::open(c.forms_socket.as_deref())?.resolve(&c.extends, &c.frontend)
+    let view = SocketLink::open(c.forms_socket.as_deref())?.resolve(&c.extends, &c.frontend)?;
+    Ok((view, None))
 }
 
 fn end(e: &HostError) -> i32 {

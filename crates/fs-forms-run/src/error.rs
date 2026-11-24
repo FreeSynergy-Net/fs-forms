@@ -30,6 +30,13 @@ pub enum HostError {
         /// The frontend.
         frontend: String,
     },
+    /// No description carries the frontend that was asked for (`frontend-unknown`; fatal: the starter falls back).
+    FrontendUnknown {
+        /// The id that was asked for.
+        id: String,
+        /// The ids that exist.
+        available: Vec<String>,
+    },
     /// The description named by a path is not there (no file, no folder with one).
     DescriptionMissing {
         /// The path that was looked at.
@@ -60,6 +67,7 @@ impl HostError {
             Self::LayoutMissing { .. } | Self::DescriptionMissing { .. } => "layout-missing",
             Self::LayoutUnreadable { .. } => "layout-unreadable",
             Self::LayoutStore { .. } => "layout-store",
+            Self::FrontendUnknown { .. } => "frontend-unknown",
         }
     }
 
@@ -79,6 +87,12 @@ impl HostError {
                 vec![("file", file.clone()), ("problems", problems.join(" | "))]
             }
             Self::LayoutStore { code } => vec![("code", code.clone())],
+            Self::FrontendUnknown { id, available } => {
+                vec![
+                    ("id", id.clone()),
+                    ("available", format!("[{}]", available.join(", "))),
+                ]
+            }
         }
     }
 

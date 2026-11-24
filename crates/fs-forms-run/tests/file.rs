@@ -188,7 +188,8 @@ fn several_descriptions_need_the_frontend_to_choose() {
         "layout-missing",
         "two files and no choice is not a guess"
     );
-    assert_eq!(resolve(&d, "nope").unwrap_err().code(), "layout-missing");
+    // since `frontend-unknown` (ursache-frontend-wahl): an id nobody carries names the ids that exist
+    assert_eq!(resolve(&d, "nope").unwrap_err().code(), "frontend-unknown");
 }
 
 #[test]

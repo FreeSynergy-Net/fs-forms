@@ -20,12 +20,12 @@ fn b5_every_combination_is_visible() {
             bits & 16 != 0,
         );
         let mut r = tasks_resolved();
-        r.pages[0].places[0].bindings[1].kind = BindKind::Condition {
+        r.pages[0].places[0].block_mut().unwrap().bindings[1].kind = BindKind::Condition {
             path: vec!["done".into()],
             basic: Basic::Bool,
         };
         if field_lock {
-            r.pages[0].places[0].bindings[2].kind = BindKind::Field {
+            r.pages[0].places[0].block_mut().unwrap().bindings[2].kind = BindKind::Field {
                 field: field("due", Basic::Unknown),
                 role: Role::Compact,
                 schemes: None,
@@ -93,14 +93,14 @@ fn b5_every_combination_is_visible() {
 #[test]
 fn b5_chip_alone_locks_the_slot_only() {
     let mut r = tasks_resolved();
-    r.pages[0].places[0].bindings[1].kind = BindKind::Condition {
+    r.pages[0].places[0].block_mut().unwrap().bindings[1].kind = BindKind::Condition {
         path: vec!["done".into()],
         basic: Basic::Bool,
     };
     let mut cat = TestCatalog::new();
     cat.unbuilt.push("field-bool".into());
     let p = build_with(&r, &cat, &tasks_facts(), host());
-    let st = &p.pages[0].places[0].status;
+    let st = &p.pages[0].places[0].block().unwrap().status;
     assert!(matches!(st, PlaceStatus::Ready(_)), "{st:?}");
 }
 

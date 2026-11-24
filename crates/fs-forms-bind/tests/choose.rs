@@ -13,25 +13,30 @@ fn one_field_resolved(basic: Basic, target: Option<&str>, role: Role) -> Resolve
         page: "p".into(),
         seq: 0,
         frame: "form".into(),
-        places: vec![PlaceIn {
+        places: vec![NodeIn::Block(PlaceIn {
             elem: "pl".into(),
             place: "f".into(),
             seq: 0,
             block: "probe-field".into(),
             source: None,
             bindings: vec![],
-        }],
+            set: vec![],
+        })],
     }];
-    r.pages[0].places[0].bindings.push(BindingIn {
-        elem: "b".into(),
-        slot: "any".into(),
-        nth: 0,
-        kind: BindKind::Field {
-            field: f,
-            role,
-            schemes: Some(vec!["https".into()]),
-        },
-    });
+    r.pages[0].places[0]
+        .block_mut()
+        .unwrap()
+        .bindings
+        .push(BindingIn {
+            elem: "b".into(),
+            slot: "any".into(),
+            nth: 0,
+            kind: BindKind::Field {
+                field: f,
+                role,
+                schemes: Some(vec!["https".into()]),
+            },
+        });
     r
 }
 

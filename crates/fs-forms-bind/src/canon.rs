@@ -16,8 +16,10 @@ use crate::codes::{Cause, Notice, PartLock, Severity};
 use crate::menu::{MenuEntry, MenuNode};
 use crate::model::{Range, Target};
 use crate::plan::{
-    CommandPlan, Fill, InputState, PagePlan, PlaceStatus, Plan, PlanState, SlotFill, SourcePlan,
+    CommandPlan, Fill, InputState, PagePlan, PlacePlan, PlaceStatus, Plan, PlanState, SlotFill,
+    SourcePlan,
 };
+use crate::plan_tree::{AttrPlan, NodePlan};
 use crate::types::SearchKind;
 
 struct Enc(Vec<u8>);
@@ -197,19 +199,42 @@ impl Enc {
         self.num(2, u64::from(p.seq));
         self.text(3, &p.frame);
         self.locks(4, &p.locks);
-        self.list(5, &p.places, |e, pl| {
-            e.text(0, &pl.place);
-            e.text(1, &pl.elem);
-            e.num(2, u64::from(pl.seq));
-            e.text(3, &pl.block);
-            e.opt(4, pl.source.as_ref(), |e, s| {
-                e.0.extend_from_slice(&u64::from(*s).to_be_bytes());
-            });
-            match &pl.status {
-                PlaceStatus::Ready(r) => e.variant(5, "ready", |e| e.list(1, &r.slots, Self::slot)),
-                PlaceStatus::Locked(v) => e.variant(5, "locked", |e| e.locks(1, v)),
-            }
+        self.list(5, &p.places, Self::node_plan);
+    }
+
+    fn attr(&mut self, a: &AttrPlan) {
+        self.text(0, &a.name);
+        self.text(1, &a.value);
+    }
+
+    fn place(&mut self, pl: &PlacePlan) {
+        self.text(0, &pl.place);
+        self.text(1, &pl.elem);
+        self.num(2, u64::from(pl.seq));
+        self.text(3, &pl.block);
+        self.opt(4, pl.source.as_ref(), |e, s| {
+            e.0.extend_from_slice(&u64::from(*s).to_be_bytes());
         });
+        match &pl.status {
+            PlaceStatus::Ready(r) => self.variant(5, "ready", |e| e.list(1, &r.slots, Self::slot)),
+            PlaceStatus::Locked(v) => self.variant(5, "locked", |e| e.locks(1, v)),
+        }
+        self.list(6, &pl.set, Self::attr);
+    }
+
+    fn node_plan(&mut self, n: &NodePlan) {
+        match n {
+            NodePlan::Block(pl) => self.variant(0, "block", |e| e.place(pl)),
+            NodePlan::Frame(f) => self.variant(0, "frame", |e| {
+                e.text(1, &f.place);
+                e.text(2, &f.elem);
+                e.num(3, u64::from(f.seq));
+                e.text(4, &f.frame);
+                e.list(5, &f.set, Self::attr);
+                e.locks(6, &f.locks);
+                e.list(7, &f.children, Self::node_plan);
+            }),
+        }
     }
 
     fn node(&mut self, n: &MenuNode) {

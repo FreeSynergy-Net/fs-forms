@@ -126,6 +126,8 @@ fn end_to_end_board_is_ready_and_ordered() {
         panic!()
     };
     let want: Vec<(String, u32)> = r.pages[0].places[0]
+        .block()
+        .unwrap()
         .bindings
         .iter()
         .map(|b| (b.slot.clone(), b.nth))

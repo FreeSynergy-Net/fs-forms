@@ -6,7 +6,7 @@
 
 use fs_forms_layout::{ActionTarget, Item, Layout, MenuDoc, MenuKind, Trigger};
 
-use crate::view::{ActionView, Coded, MenuItem, MenuState, PageView, PlaceView, View};
+use crate::view::{ActionView, Coded, MenuItem, MenuState, PageView, View};
 
 /// The text of an MF2 key in `lang`, else in English, else the key itself (a visible gap, not a blank).
 fn text(layout: &Layout, key: &str, lang: &str) -> String {
@@ -79,19 +79,7 @@ pub fn view_of(layout: &Layout, lang: &str) -> View {
             seq,
             frame: p.v.frame.clone(),
             locks: Vec::new(),
-            places: p
-                .v
-                .leaves()
-                .zip(0u32..)
-                .map(|(b, seq)| PlaceView {
-                    place: b.v.place.clone(),
-                    seq,
-                    block: b.v.block.clone(),
-                    title: b.v.title_key.as_deref().map(|k| text(layout, k, lang)),
-                    locks: Vec::new(),
-                    slot_locks: Vec::new(),
-                })
-                .collect(),
+            places: crate::from_places::place_views(layout, &p.v, lang),
         })
         .collect();
     let mut menu = Vec::new();

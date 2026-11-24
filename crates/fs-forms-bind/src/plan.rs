@@ -83,8 +83,8 @@ pub struct PagePlan {
     pub frame: String,
     /// Locks of the page itself.
     pub locks: Vec<PartLock>,
-    /// Placements in `seq` order (= Tab order).
-    pub places: Vec<PlacePlan>,
+    /// The tree of placements; every level in `seq` order (= Tab order).
+    pub places: Vec<crate::plan_tree::NodePlan>,
 }
 
 /// A placement.
@@ -100,6 +100,8 @@ pub struct PlacePlan {
     pub block: String,
     /// Source used.
     pub source: Option<u32>,
+    /// Attributes (`set`).
+    pub set: Vec<crate::plan_tree::AttrPlan>,
     /// Drawn or replaced by `partial-notice`.
     pub status: PlaceStatus,
 }

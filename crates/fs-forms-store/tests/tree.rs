@@ -158,8 +158,10 @@ fn meta() -> LayoutMeta {
     }
 }
 
+type Case = (&'static str, Vec<Item<PlaceNode>>, Vec<Item<BlockDoc>>);
+
 /// The table of example trees: (name, tree, flat blocks).
-fn cases() -> Vec<(&'static str, Vec<Item<PlaceNode>>, Vec<Item<BlockDoc>>)> {
+fn cases() -> Vec<Case> {
     let deep = vec![frame(
         "main",
         "main",

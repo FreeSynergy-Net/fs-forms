@@ -5,7 +5,7 @@
 
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
-use fs_components_kanban::{Answer, Card, Column, Due, DueState, Label, Operation, Tone};
+use fs_components_kanban::{Answer, Card, Column, Due, DueState, Operation};
 
 use fs_forms_bind::{Basic, FormRef, ModuleForm};
 
@@ -30,21 +30,8 @@ impl Default for SampleBoard {
     }
 }
 
-fn card(
-    key: &str,
-    title: &str,
-    label: Option<(&str, Tone)>,
-    due: Option<(&str, DueState)>,
-    who: Option<&str>,
-) -> Card {
+fn card(key: &str, title: &str, due: Option<(&str, DueState)>, who: Option<&str>) -> Card {
     let mut c = Card::new(key, title);
-    c.labels = label
-        .map(|(t, tone)| Label {
-            text: t.to_owned(),
-            tone,
-        })
-        .into_iter()
-        .collect();
     c.due = due.map(|(t, state)| Due {
         text: t.to_owned(),
         state,
@@ -53,48 +40,44 @@ fn card(
     c
 }
 
+/// The label of a sample card (the board model no longer carries labels; the sample keeps them beside it, by card key).
+fn label_of(key: &str) -> &'static str {
+    match key {
+        "FS-1" => "docs",
+        "FS-3" => "host",
+        "FS-5" => "picture",
+        _ => "",
+    }
+}
+
 fn initial() -> Vec<Column> {
     let mut todo = Column::new("todo", "To do");
     todo.cards = vec![
         card(
             "FS-1",
             "Write the spec",
-            Some(("docs", Tone::Success)),
             Some(("12 Nov", DueState::Overdue)),
             Some("Ada Lovelace"),
         ),
         card(
             "FS-2",
             "Review the plan",
-            None,
             Some(("25 Nov", DueState::Open)),
             None,
         ),
     ];
     let mut doing = Column::new("doing", "Doing");
     doing.cards = vec![
-        card(
-            "FS-3",
-            "Build the board",
-            Some(("host", Tone::Accent)),
-            None,
-            Some("Grace Hopper"),
-        ),
-        card("FS-4", "Read the description", None, None, None),
+        card("FS-3", "Build the board", None, Some("Grace Hopper")),
+        card("FS-4", "Read the description", None, None),
     ];
     let mut done = Column::new("done", "Done");
-    done.cards = vec![card(
-        "FS-5",
-        "Draw the first picture",
-        Some(("picture", Tone::Success)),
-        None,
-        None,
-    )];
+    done.cards = vec![card("FS-5", "Draw the first picture", None, None)];
     vec![todo, doing, done]
 }
 
 fn refused(code: &str) -> Answer {
-    Answer::Refused(code.to_owned())
+    crate::records::refused(code)
 }
 
 /// The key of a column named `title`: lower case, words joined by `-`.
@@ -194,7 +177,7 @@ fn board_form(columns: &[Column]) -> FormData {
     let mut rows = Vec::new();
     for column in columns {
         for (at, card) in column.cards.iter().enumerate() {
-            let label = card.labels.first().map_or("", |l| l.text.as_str());
+            let label = label_of(&card.key);
             let due = card.due.as_ref().map_or("", |d| d.text.as_str());
             let who = card.assignee.as_deref().unwrap_or("");
             let mut row = FormRow::of(

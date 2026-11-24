@@ -169,7 +169,7 @@ impl Records for FormRecords {
         record: Option<&str>,
         values: &[(String, String)],
     ) -> Answer {
-        let refused = |code: &str| Answer::Refused(code.to_owned());
+        use crate::records::refused;
         let Some(writer) = &self.writer else {
             return refused("unsupported");
         };
@@ -189,7 +189,7 @@ impl Records for FormRecords {
         };
         let args = match args {
             Ok(args) => args,
-            Err(c) => return Answer::Refused(c.code),
+            Err(c) => return refused(&c.code),
         };
         let call = Invocation {
             form: form.to_owned(),
@@ -198,7 +198,7 @@ impl Records for FormRecords {
             args,
         };
         if let Err(c) = writer.invoke(&call) {
-            return Answer::Refused(c.code);
+            return refused(&c.code);
         }
         // accepted: the module is read again, the board shows what it now says (nothing is guessed here)
         if let Ok(all) = writer.reload() {

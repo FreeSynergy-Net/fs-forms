@@ -82,10 +82,7 @@ fn a_channel_the_gesture_must_deliver_ends_the_call_before_it_is_sent() {
         None,
         &gesture(&[("column", "todo")]),
     );
-    assert_eq!(
-        answer,
-        fs_components_kanban::Answer::Refused("form-write-missing".into())
-    );
+    assert_eq!(answer, crate::records::refused("form-write-missing"));
     assert!(
         w.calls.lock().unwrap().is_empty(),
         "the module is never asked"
@@ -196,7 +193,7 @@ fn a_refused_call_changes_nothing_and_is_not_read_again() {
     );
     assert_eq!(
         answer,
-        fs_components_kanban::Answer::Refused("host-notice-invoke-refused".into())
+        crate::records::refused("host-notice-invoke-refused")
     );
     assert_eq!(*w.reloads.lock().unwrap(), 0);
     assert_eq!(
@@ -218,10 +215,7 @@ fn a_locked_gesture_never_reaches_the_module_and_records_without_a_writer_cannot
         Some("b"),
         &gesture(&[("column", "todo")]),
     );
-    assert_eq!(
-        answer,
-        fs_components_kanban::Answer::Refused("locked".into())
-    );
+    assert_eq!(answer, crate::records::refused("locked"));
     assert!(w.calls.lock().unwrap().is_empty());
     let none = FormRecords {
         forms: vec![data()],
@@ -230,7 +224,7 @@ fn a_locked_gesture_never_reaches_the_module_and_records_without_a_writer_cannot
     assert!(!none.can_channel("cards-in-columns", "move", Some("a")));
     assert_eq!(
         none.invoke("cards-in-columns", "move", Some("a"), &[]),
-        fs_components_kanban::Answer::Refused("unsupported".into())
+        crate::records::refused("unsupported")
     );
 }
 

@@ -111,7 +111,7 @@ fn ga6_a_second_window_writing_with_an_old_revision_gets_conflict() {
     assert_eq!((a.seen(), b.seen()), (1, 0));
     assert_eq!(
         b.records().move_card("FS-2", "done"),
-        Answer::Refused("conflict".into()),
+        fs_forms_run::refused("conflict"),
         "the same rule as between two people, though both are one person"
     );
     let _ = b.records().forms(); // b has seen the new state now

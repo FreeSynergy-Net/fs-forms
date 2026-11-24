@@ -123,7 +123,7 @@ fn ga6f_two_windows_one_record_the_second_writes_with_an_old_revision() {
     );
     assert_eq!(
         owner.invoke(&b, "values", "value.set"),
-        Some(Answer::Refused("conflict".into())),
+        Some(fs_forms_run::refused("conflict")),
         "two instances of one person are two participants"
     );
     let _ = owner.grip_of(&b).unwrap().records().forms(); // b saw the new state

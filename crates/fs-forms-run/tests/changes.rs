@@ -2,7 +2,6 @@
 //!
 //! Tests: example-based. Mutant: `Records::history` default with a step -> red; `grew` not taking the value -> red.
 
-use fs_components_kanban::Answer;
 use fs_forms_run::{ChangeCounter, ChangeWatch, NoRecords, Records, SideItem};
 
 struct Counting(ChangeCounter);
@@ -22,11 +21,11 @@ fn history_and_step_back_are_locked_by_default() {
     assert_eq!((h.undoable, h.redoable), (0, 0));
     assert_eq!(
         NoRecords.step_back(false),
-        Answer::Refused("unsupported".into())
+        fs_forms_run::refused("unsupported")
     );
     assert_eq!(
         NoRecords.step_back(true),
-        Answer::Refused("unsupported".into())
+        fs_forms_run::refused("unsupported")
     );
     assert_eq!(NoRecords.changed(), 0);
 }

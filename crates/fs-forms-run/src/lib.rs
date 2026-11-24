@@ -58,7 +58,7 @@ pub use fs_objects::UndoState;
 pub use link::{FixtureLink, LayoutLink, SocketLink};
 pub use record_hub::fake::{FakeModule, HoldCounts};
 pub use record_hub::{ChangeSink, Link, Module, RecordGrip, RecordHub, RecordKey};
-pub use records::{NoRecords, Records, SideItem, Unavailable};
+pub use records::{NoRecords, Records, SideItem, Unavailable, refused};
 pub use repaint::{BlincRepaint, Repaint};
 pub use rules_adapter::ContractRules;
 pub use run::{run, run_code, run_code_with, run_with};

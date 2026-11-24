@@ -67,7 +67,7 @@ impl Inner {
     fn write(&self, f: impl FnOnce(&dyn Records) -> Answer) -> Answer {
         let scope = self.shared().key().scope.clone();
         if self.seen.load(Ordering::SeqCst) < self.link.rev(scope.as_deref()) {
-            return Answer::Refused("conflict".into());
+            return crate::records::refused("conflict");
         }
         let answer = f(&*self.link.writer(scope.as_deref()));
         if answer == Answer::Accepted {

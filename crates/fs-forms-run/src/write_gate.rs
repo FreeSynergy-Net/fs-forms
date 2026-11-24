@@ -15,10 +15,10 @@ use std::sync::{Arc, Mutex, PoisonError};
 use fs_components_core::form_write::{FormWrite, WriteArg, WriteDone, WriteRefused, WriteValue};
 use fs_components_kanban::{
     Answer, BoardEvents, COLUMN_CREATE, COLUMN_LIMIT, COLUMN_RENAME, CREATE, Card, Column,
-    FixedBoard, FormEvents, MOVE, Operation,
+    FormEvents, MOVE, MemoryBoard, MoveRequest, NewCard, Operation,
 };
 
-use crate::records::Records;
+use crate::records::{Records, refused};
 use crate::view::ActionView;
 
 /// The gate of one form over the records.
@@ -101,13 +101,15 @@ fn carried() -> Vec<String> {
     // A column with two cards, so a drop between them names both neighbours (`after`, `before`); the probe sees the channels only.
     let mut column = Column::new("", "");
     column.cards = vec![Card::new("a", ""), Card::new("b", "")];
-    let board = FixedBoard {
-        columns: vec![column],
-        ops: Vec::new(),
-    };
-    let events = FormEvents::new(probe.clone(), Arc::new(board));
-    let _ = events.move_card_at("", "", "", Some(1));
-    let _ = events.add_card("", "");
+    let board = MemoryBoard::new(vec![column]);
+    let events = FormEvents::new(
+        probe.clone(),
+        Arc::new(board),
+        Arc::new(|key: &str| key.to_owned()),
+    );
+    // after card `a`: both neighbours (`after` = a, `before` = b)
+    let _ = events.moved(&MoveRequest::new("", "", "", 1, Some("a".to_owned())));
+    let _ = events.new_card(&NewCard::new("", "", false));
     let mut names = probe
         .0
         .lock()
@@ -164,7 +166,9 @@ impl FormWrite for WriteGate {
         };
         match answer {
             Answer::Accepted => Ok(WriteDone::default()),
-            Answer::Refused(code) => Err(WriteRefused::new(&code)),
+            Answer::Refused(reason) => Err(WriteRefused::new(&reason.code)),
+            // the gate asks no question of the reader; any other answer is not carried out
+            _ => Err(WriteRefused::new("unsupported")),
         }
     }
 }
@@ -183,7 +187,7 @@ impl WriteGate {
                 let n: u32 = arg_text(args, "limit").parse().unwrap_or(0);
                 self.records.set_limit(key, (n > 0).then_some(n))
             }
-            _ => Answer::Refused("unsupported".into()),
+            _ => refused("unsupported"),
         }
     }
 }

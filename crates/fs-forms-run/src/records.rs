@@ -11,7 +11,7 @@
 
 use std::sync::Arc;
 
-use fs_components_kanban::{Answer, Operation};
+use fs_components_kanban::{Answer, Operation, Reason};
 use fs_objects::UndoState;
 
 use crate::form_data::FormData;
@@ -26,9 +26,14 @@ pub struct SideItem {
     pub label: String,
 }
 
+/// A refusal by code: the host says no code-only reason (the sentence comes from the words of the reader, `Reason::said` falls back to the code).
+pub fn refused(code: &str) -> Answer {
+    Answer::Refused(Reason::new(code, ""))
+}
+
 /// The answer of records that cannot do an operation.
 fn unsupported() -> Answer {
-    Answer::Refused("unsupported".into())
+    refused("unsupported")
 }
 
 /// What the blocks of the host draw their records from, and which changes they take.

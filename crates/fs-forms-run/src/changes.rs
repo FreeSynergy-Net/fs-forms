@@ -9,6 +9,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::records::Records;
+use crate::view::Coded;
 
 /// A counter that only grows. Clones share it, so a thread that learns of a change (the sink of a watch) and the records that
 /// report it ([`Records::changed`]) hold the same one.
@@ -54,5 +55,19 @@ impl ChangeWatch {
         let moved = now != self.seen;
         self.seen = now;
         moved
+    }
+}
+
+impl ChangeWatch {
+    /// Reads `records` again when the counter grew since the last call (the build after a wake does this); returns whether it
+    /// read. A wake without a change reads nothing.
+    ///
+    /// # Errors
+    /// The code of a failed read ([`Records::reread`]); the change counts as seen, [`Records::stale`] says the old state stays.
+    pub fn read_if_grew(&mut self, records: &dyn Records) -> Result<bool, Coded> {
+        if !self.grew(records) {
+            return Ok(false);
+        }
+        records.reread().map(|()| true)
     }
 }

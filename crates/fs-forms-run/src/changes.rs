@@ -2,7 +2,8 @@
 //! window, another program) and that it should read them again. It only counts and compares; it draws nothing and wakes nothing
 //! (the wake-up is a separate port, S3-6b).
 //!
-//! Pattern: Version stamp (a counter that only grows; the reader keeps the last value it saw) with a watcher as the reader.
+//! Pattern: Observer (pull variant: the observer asks the counter instead of being called; nothing is pushed, a wake-up is a
+//! separate port) with `ChangeWatch` as the observer and `ChangeCounter` as the subject.
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};

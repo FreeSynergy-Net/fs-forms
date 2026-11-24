@@ -50,6 +50,7 @@ pub use file::{FileLink, Loaded};
 pub use form_check::{Finding, action_report, problems as form_problems, report as form_report};
 pub use form_data::{FormData, FormRecords, FormRow};
 pub use from_layout::view_of;
+pub use fs_objects::UndoState;
 pub use link::{FixtureLink, LayoutLink, SocketLink};
 pub use records::{NoRecords, Records, SideItem, Unavailable};
 pub use run::{run, run_code, run_code_with, run_with};

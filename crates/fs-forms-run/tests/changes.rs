@@ -46,3 +46,10 @@ fn watch_sees_each_change_once_and_clones_share_the_counter() {
     assert!(watch.grew(&records));
     assert!(!watch.grew(&records));
 }
+
+/// Compile-time proof that the counter and the watch cross threads (the sink of a watch counts on another thread than the window).
+const _: () = {
+    const fn send_sync<T: Send + Sync>() {}
+    send_sync::<ChangeCounter>();
+    send_sync::<ChangeWatch>();
+};

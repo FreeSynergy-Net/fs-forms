@@ -8,6 +8,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError, Weak};
 
 use fs_components_kanban::Answer;
+use fs_objects::UndoState;
 
 use super::port::{ChangeSink, Link, Module};
 use crate::records::{Records, SideItem};
@@ -74,6 +75,8 @@ pub struct FakeModule {
     stores: Mutex<HashMap<Scope, Weak<dyn Records>>>,
     revs: Mutex<HashMap<Scope, u64>>,
     regs: Mutex<Vec<Reg>>,
+    /// The gate of the writes: checking the seen revision and taking the change are ONE step under it (no gap between check and write).
+    gate: Mutex<()>,
     next: AtomicUsize,
 }
 
@@ -92,19 +95,14 @@ impl FakeModule {
             stores: Mutex::new(HashMap::new()),
             revs: Mutex::new(HashMap::new()),
             regs: Mutex::new(Vec::new()),
+            gate: Mutex::new(()),
             next: AtomicUsize::new(0),
         })
     }
 
     /// The module took a write of connection `from` on `scope`: the revision grows and EVERY connection watching the record is told,
     /// the writer's own and the neighbours' alike (no shortcut for "the same process").
-    fn wrote(&self, scope: &Scope, _from: usize) {
-        let rev = {
-            let mut revs = lock(&self.revs);
-            let r = revs.entry(scope.clone()).or_insert(0);
-            *r += 1;
-            *r
-        };
+    fn wrote(&self, scope: &Scope, rev: u64) {
         let sinks: Vec<Arc<dyn ChangeSink>> = lock(&self.regs)
             .iter()
             .filter(|r| *lock(&r.scope) == *scope)
@@ -113,6 +111,14 @@ impl FakeModule {
         for s in sinks {
             s.changed(rev);
         }
+    }
+
+    /// Counts the revision of `scope` one up (called under the gate, in the same step as the check that let the write in).
+    fn bump(&self, scope: &Scope) -> u64 {
+        let mut revs = lock(&self.revs);
+        let r = revs.entry(scope.clone()).or_insert(0);
+        *r += 1;
+        *r
     }
 
     fn rev_of(&self, scope: &Scope) -> u64 {
@@ -173,10 +179,10 @@ impl Link for FakeLink {
         self.module.rev_of(&scope.map(str::to_owned))
     }
 
-    fn writer(&self, scope: Option<&str>) -> Arc<dyn Records> {
+    fn writer(&self, scope: Option<&str>, seen: u64) -> Arc<dyn Records> {
         Arc::new(LinkWriter {
             module: Arc::clone(&self.module),
-            id: self.id,
+            seen,
             scope: scope.map(str::to_owned),
             store: self.module.records(scope),
         })
@@ -186,15 +192,26 @@ impl Link for FakeLink {
 /// The writing side on one connection: an accepted change makes the module count a revision and tell the watchers.
 struct LinkWriter {
     module: Arc<FakeModule>,
-    id: usize,
+    seen: u64,
     scope: Scope,
     store: Arc<dyn Records>,
 }
 
 impl LinkWriter {
-    fn done(&self, answer: Answer) -> Answer {
-        if answer == Answer::Accepted {
-            self.module.wrote(&self.scope, self.id);
+    /// The module takes the change only when the record is still at the revision this view saw: checked and written under the gate,
+    /// then (outside it) every watching connection is told.
+    fn guarded(&self, change: impl FnOnce(&dyn Records) -> Answer) -> Answer {
+        let (answer, rev) = {
+            let _gate = lock(&self.module.gate);
+            if self.module.rev_of(&self.scope) > self.seen {
+                return crate::records::refused("conflict");
+            }
+            let answer = change(&*self.store);
+            let rev = (answer == Answer::Accepted).then(|| self.module.bump(&self.scope));
+            (answer, rev)
+        };
+        if let Some(rev) = rev {
+            self.module.wrote(&self.scope, rev);
         }
         answer
     }
@@ -211,21 +228,27 @@ impl Records for LinkWriter {
         record: Option<&str>,
         values: &[(String, String)],
     ) -> Answer {
-        self.done(self.store.invoke(form, channel, record, values))
+        self.guarded(|s| s.invoke(form, channel, record, values))
     }
     fn add_card(&self, column: &str, title: &str) -> Answer {
-        self.done(self.store.add_card(column, title))
+        self.guarded(|s| s.add_card(column, title))
     }
     fn move_card(&self, key: &str, to: &str) -> Answer {
-        self.done(self.store.move_card(key, to))
+        self.guarded(|s| s.move_card(key, to))
     }
     fn add_column(&self, title: &str) -> Answer {
-        self.done(self.store.add_column(title))
+        self.guarded(|s| s.add_column(title))
     }
     fn rename_column(&self, column: &str, name: &str) -> Answer {
-        self.done(self.store.rename_column(column, name))
+        self.guarded(|s| s.rename_column(column, name))
     }
     fn set_limit(&self, column: &str, limit: Option<u32>) -> Answer {
-        self.done(self.store.set_limit(column, limit))
+        self.guarded(|s| s.set_limit(column, limit))
+    }
+    fn history(&self) -> UndoState {
+        self.store.history()
+    }
+    fn step_back(&self, redo: bool) -> Answer {
+        self.guarded(|s| s.step_back(redo))
     }
 }

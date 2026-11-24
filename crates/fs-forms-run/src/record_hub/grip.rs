@@ -8,9 +8,11 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, PoisonError, Weak};
 
 use fs_components_kanban::{Answer, Operation};
+use fs_objects::UndoState;
 
 use super::port::{ChangeSink, Link};
 use super::shared::Shared;
+use crate::changes::ChangeCounter;
 use crate::form_data::FormData;
 use crate::records::{Records, SideItem};
 
@@ -18,7 +20,7 @@ use crate::records::{Records, SideItem};
 #[derive(Default)]
 pub(super) struct GripSink {
     cache: Mutex<Weak<Shared>>,
-    generation: AtomicU64,
+    generation: ChangeCounter,
 }
 
 impl GripSink {
@@ -27,11 +29,11 @@ impl GripSink {
     }
 
     pub(super) fn bump(&self) {
-        self.generation.fetch_add(1, Ordering::SeqCst);
+        self.generation.bump();
     }
 
     pub(super) fn generation(&self) -> u64 {
-        self.generation.load(Ordering::SeqCst)
+        self.generation.get()
     }
 }
 
@@ -69,7 +71,8 @@ impl Inner {
         if self.seen.load(Ordering::SeqCst) < self.link.rev(scope.as_deref()) {
             return crate::records::refused("conflict");
         }
-        let answer = f(&*self.link.writer(scope.as_deref()));
+        let seen = self.seen.load(Ordering::SeqCst);
+        let answer = f(&*self.link.writer(scope.as_deref(), seen));
         if answer == Answer::Accepted {
             self.seen
                 .store(self.link.rev(scope.as_deref()), Ordering::SeqCst);
@@ -114,6 +117,19 @@ impl Records for Inner {
     }
     fn can(&self, op: Operation) -> bool {
         self.shared().can(op)
+    }
+    /// The depth of the history of the module (read through the cache, like everything that is read).
+    fn history(&self) -> UndoState {
+        self.shared().history()
+    }
+    /// A step back or forward is a write: it goes through the own connection with the seen revision (a conflict is refused, never
+    /// overwritten).
+    fn step_back(&self, redo: bool) -> Answer {
+        self.write(|w| w.step_back(redo))
+    }
+    /// The ONE counter of this view: what its own `watch` told (the same number as [`RecordGrip::generation`]).
+    fn changed(&self) -> u64 {
+        self.sink.generation()
     }
     fn add_card(&self, column: &str, title: &str) -> Answer {
         self.write(|w| w.add_card(column, title))

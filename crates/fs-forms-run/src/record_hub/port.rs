@@ -34,6 +34,9 @@ pub trait Link: Send + Sync {
     fn watch(&self, scope: Option<&str>);
     /// The revision of the record `scope` in the module now (what a write is checked against: `conflict` 409 when the view saw less).
     fn rev(&self, scope: Option<&str>) -> u64;
-    /// The writing side of the record `scope` on THIS connection: the module takes the change as from this view.
-    fn writer(&self, scope: Option<&str>) -> Arc<dyn Records>;
+    /// The writing side of the record `scope` on THIS connection: the module takes the change as from this view, and only when the
+    /// record is still at `seen` (the revision the view saw). The module decides, in ONE step with taking the change: a record that
+    /// moved on is refused with `conflict` (409), like an `If-Match` that no longer fits (RFC 9110 section 13.1.1, status 412). The
+    /// check of the client is only a pre-check.
+    fn writer(&self, scope: Option<&str>, seen: u64) -> Arc<dyn Records>;
 }

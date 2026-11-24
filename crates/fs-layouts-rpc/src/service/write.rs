@@ -24,7 +24,10 @@ pub(crate) async fn create<S: LayoutStore + ?Sized>(
     mut r: l::CreateResults,
 ) -> H {
     let p = p.get()?;
-    let (doc, who) = (read_doc(p.get_doc()?)?, sh.who(&txt(p.get_author())?)?);
+    let (doc, who) = (
+        read_doc(p.get_doc()?, &sh.svc.limits.tree())?,
+        sh.who(&txt(p.get_author())?)?,
+    );
     let report = sh.svc.store.create(doc, &who).await?;
     write_report(r.get().init_report(), &report)?;
     if report.problems.is_empty() {
@@ -39,7 +42,10 @@ pub(crate) async fn import<S: LayoutStore + ?Sized>(
     mut r: l::ImportResults,
 ) -> H {
     let p = p.get()?;
-    let (doc, who) = (read_doc(p.get_doc()?)?, sh.who(&txt(p.get_author())?)?);
+    let (doc, who) = (
+        read_doc(p.get_doc()?, &sh.svc.limits.tree())?,
+        sh.who(&txt(p.get_author())?)?,
+    );
     let report = sh
         .svc
         .store
@@ -58,7 +64,10 @@ pub(crate) async fn save<S: LayoutStore + ?Sized>(
     mut r: l::SaveResults,
 ) -> H {
     let p = p.get()?;
-    let (doc, who) = (read_doc(p.get_doc()?)?, sh.who(&txt(p.get_author())?)?);
+    let (doc, who) = (
+        read_doc(p.get_doc()?, &sh.svc.limits.tree())?,
+        sh.who(&txt(p.get_author())?)?,
+    );
     let report = sh
         .svc
         .store
@@ -97,7 +106,10 @@ pub(crate) async fn install<S: LayoutStore + ?Sized>(
     mut r: l::InstallResults,
 ) -> H {
     let p = p.get()?;
-    let (doc, who) = (read_doc(p.get_doc()?)?, sh.who(&txt(p.get_author())?)?);
+    let (doc, who) = (
+        read_doc(p.get_doc()?, &sh.svc.limits.tree())?,
+        sh.who(&txt(p.get_author())?)?,
+    );
     let package = PackageRef {
         package: txt(p.get_package())?,
         version: txt(p.get_version())?,

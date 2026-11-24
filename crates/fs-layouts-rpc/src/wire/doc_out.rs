@@ -6,7 +6,8 @@ use fs_forms_layout::{
     ActionDoc, ActionTarget, BindFrom, ElemId, Item, LayoutDoc, MenuDoc, PageDoc, SourceDoc,
 };
 
-use super::text::n;
+use super::text::{R, n};
+use super::tree_out::{write_block, write_places};
 use super::words::{Words, from_word, menu_words};
 use crate::layouts_capnp as w;
 
@@ -34,7 +35,7 @@ pub(crate) fn write_range(mut out: w::range::Builder<'_>, text: &str) {
     }
 }
 
-pub(crate) fn write_doc(mut out: w::layout_doc::Builder<'_>, d: &LayoutDoc) {
+pub(crate) fn write_doc(mut out: w::layout_doc::Builder<'_>, d: &LayoutDoc) -> R<()> {
     out.set_format(d.format);
     out.set_extends(&d.key.extends);
     out.set_frontend(&d.key.frontend);
@@ -57,7 +58,7 @@ pub(crate) fn write_doc(mut out: w::layout_doc::Builder<'_>, d: &LayoutDoc) {
     }
     let mut l = out.reborrow().init_pages(n(&d.pages));
     for (i, p) in (0..).zip(&d.pages) {
-        write_page(l.reborrow().get(i), p);
+        write_page(l.reborrow().get(i), p)?;
     }
     let mut l = out.reborrow().init_actions(n(&d.actions));
     for (i, a) in (0..).zip(&d.actions) {
@@ -75,6 +76,7 @@ pub(crate) fn write_doc(mut out: w::layout_doc::Builder<'_>, d: &LayoutDoc) {
         e.set_lang(&m.v.lang);
         e.set_message(&m.v.message);
     }
+    Ok(())
 }
 
 fn write_source(mut e: w::source::Builder<'_>, nth: u32, s: &Item<SourceDoc>) {
@@ -104,28 +106,19 @@ fn write_menu(mut e: w::menu_node::Builder<'_>, m: &Item<MenuDoc>) {
     }
 }
 
-fn write_page(mut e: w::page::Builder<'_>, p: &Item<PageDoc>) {
+fn write_page(mut e: w::page::Builder<'_>, p: &Item<PageDoc>) -> R<()> {
     e.set_elem(elem_text(p));
     e.set_page(&p.v.page);
     e.set_frame(&p.v.frame);
     e.set_navigation(p.v.navigation.word());
-    let mut l = e.init_blocks(n(&p.v.blocks));
+    let mut l = e.reborrow().init_blocks(n(&p.v.blocks));
     for (i, b) in (0..).zip(&p.v.blocks) {
-        let mut x = l.reborrow().get(i);
-        x.set_elem(elem_text(b));
-        x.set_place(&b.v.place);
-        x.set_block(&b.v.block);
-        x.set_source(b.v.source.unwrap_or(0));
-        x.set_title_key(b.v.title_key.as_deref().unwrap_or(""));
-        x.set_text_key(b.v.text_key.as_deref().unwrap_or(""));
-        let mut bl = x.init_binds(n(&b.v.bindings));
-        for (j, bi) in (0..).zip(&b.v.bindings) {
-            write_binding(bl.reborrow().get(j), bi);
-        }
+        write_block(l.reborrow().get(i), elem_text(b), &b.v);
     }
+    write_places(e.init_places(n(&p.v.places)), &p.v.places)
 }
 
-fn write_binding(mut x: w::binding::Builder<'_>, b: &Item<fs_forms_layout::BindingDoc>) {
+pub(crate) fn write_binding(mut x: w::binding::Builder<'_>, b: &Item<fs_forms_layout::BindingDoc>) {
     x.set_elem(elem_text(b));
     x.set_slot(&b.v.slot);
     x.set_nth(b.v.nth);

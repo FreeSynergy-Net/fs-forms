@@ -12,4 +12,11 @@ pub(crate) mod ids;
 pub(crate) mod overlay;
 pub(crate) mod resolved;
 pub(crate) mod text;
+pub(crate) mod tree_guard;
+#[cfg(test)]
+mod tree_guard_tests;
+pub(crate) mod tree_in;
+pub(crate) mod tree_out;
+#[cfg(test)]
+mod tree_tests;
 pub(crate) mod words;

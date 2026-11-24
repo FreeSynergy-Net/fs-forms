@@ -6,7 +6,9 @@
 //!
 //! Pattern: Value Object (settings snapshot), passed in, never read from a global.
 
-use fs_forms_layout::LimitSource;
+use fs_forms_layout::{LimitSource, Limits};
+
+use crate::wire::tree_guard::TreeLimits;
 
 /// The effective limits of one service.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -17,19 +19,37 @@ pub struct ServiceLimits {
     pub watchers_max: u32,
     /// How many of them one caller (`Caller::id`, from the system) may hold: a bot cannot take the places of the person.
     pub watchers_per_actor_max: u32,
+    /// Deepest tree of places one description may hold (measured on the wire BEFORE unpacking; a node on the page root = 1).
+    pub place_depth_max: u32,
+    /// Nodes and attributes of one description (all pages) the service unpacks.
+    pub place_nodes_max: u32,
     /// Where the values came from: the weakest source of the pair is not guessed, one source for both.
     pub by: LimitSource,
 }
 
 impl ServiceLimits {
-    /// The declared defaults: page 200, 16 watchers in all, 8 per caller, source `default`.
+    /// The declared defaults: page 200, 16 watchers in all, 8 per caller, tree depth and nodes as `Limits::declared()` (8, 4096), source `default`.
     #[must_use]
     pub fn declared() -> Self {
         Self {
             page_max: 200,
             watchers_max: 16,
             watchers_per_actor_max: 8,
+            place_depth_max: Limits::declared().place_depth_max,
+            place_nodes_max: Limits::declared().elements_max,
             by: LimitSource::Default,
+        }
+    }
+}
+
+impl ServiceLimits {
+    /// The limits of the trees of places as the wire guard takes them.
+    #[must_use]
+    pub(crate) fn tree(&self) -> TreeLimits {
+        TreeLimits {
+            depth_max: self.place_depth_max,
+            nodes_max: self.place_nodes_max,
+            by: self.by,
         }
     }
 }

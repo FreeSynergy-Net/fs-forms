@@ -70,6 +70,8 @@ pub const TARGET_KIND: &[&str] = &[
     "filter-value",
     "message",
     "requires",
+    "frame",
+    "attr",
 ];
 pub const POSITION: &[&str] = &["before", "after", "first-child", "last-child"];
 /// F1b: + `locked` (instance lock, question 50) and `result-invalid` (the op would break a rule of the layout, D9).

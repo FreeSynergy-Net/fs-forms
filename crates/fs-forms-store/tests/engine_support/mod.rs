@@ -167,6 +167,7 @@ pub fn full_doc() -> LayoutDoc {
                 frame: "workbench".into(),
                 navigation: Navigation::ListDetail,
                 blocks: vec![it("block:main", block)],
+                places: vec![],
             },
         )],
         actions: vec![it(

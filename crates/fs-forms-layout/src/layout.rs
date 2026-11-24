@@ -71,7 +71,7 @@ impl Layout {
             .pages
             .iter()
             .filter(|p| p.v.page == page)
-            .flat_map(|p| &p.v.blocks)
+            .flat_map(|p| p.v.leaves())
             .find(|b| b.v.place == place);
         found
             .into_iter()

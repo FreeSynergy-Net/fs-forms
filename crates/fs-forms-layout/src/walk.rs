@@ -4,6 +4,7 @@
 
 use crate::doc::{BindingDoc, FilterDoc, Item, LayoutDoc, MenuDoc};
 use crate::ids::{ElemId, ElemKind};
+use crate::place::{PlaceNode, segment};
 
 /// What the visitor gets for one element.
 pub(crate) struct Visit<'a> {
@@ -46,6 +47,7 @@ pub(crate) fn walk(doc: &mut LayoutDoc, f: &mut Visitor<'_>) {
                 binding(bd, &page, &place, f);
             }
         }
+        places(&mut p.v.places, &page, &[], f);
     }
     for (i, a) in doc.actions.iter_mut().enumerate() {
         emit!(f, ElemKind::Action, vec![(i + 1).to_string()], a);
@@ -127,4 +129,34 @@ pub(crate) fn menu_depth(items: &[Item<MenuDoc>]) -> u32 {
         .map(|m| 1 + menu_depth(&m.v.children))
         .max()
         .unwrap_or(0)
+}
+
+/// The tree of places of a page, depth first. The natural id of a node is its path: page plus the segments of the places from
+/// the root (see `segment`), so ids are unique as long as the tree is.
+fn places(items: &mut [Item<PlaceNode>], page: &str, path: &[String], f: &mut Visitor<'_>) {
+    let segs: Vec<String> = (0..items.len()).map(|i| segment(items, i)).collect();
+    for (it, seg) in items.iter_mut().zip(segs) {
+        let mut here = path.to_vec();
+        here.push(seg);
+        let mut parts = vec![page.to_owned()];
+        parts.extend(here.iter().cloned());
+        match &mut it.v {
+            PlaceNode::Block(b) => {
+                emit!(f, ElemKind::Block, parts, it);
+                let joined = here.join("/");
+                for bd in &mut b.bindings {
+                    binding(bd, page, &joined, f);
+                }
+            }
+            PlaceNode::Frame(fr) => {
+                emit!(f, ElemKind::Frame, parts.clone(), it);
+                for a in &mut fr.set {
+                    let mut p = parts.clone();
+                    p.push(a.v.name.clone());
+                    emit!(f, ElemKind::Attr, p, a);
+                }
+                places(&mut fr.children, page, &here, f);
+            }
+        }
+    }
 }

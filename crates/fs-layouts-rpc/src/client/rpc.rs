@@ -40,14 +40,7 @@ fn unlimited() -> Limits {
         l.text_bytes_max,
         l.ops_max,
         l.overlays_max,
-    ) = (
-        u32::MAX,
-        u32::MAX,
-        u32::MAX,
-        u32::MAX,
-        u32::MAX,
-        u32::MAX,
-    );
+    ) = (u32::MAX, u32::MAX, u32::MAX, u32::MAX, u32::MAX, u32::MAX);
     l
 }
 

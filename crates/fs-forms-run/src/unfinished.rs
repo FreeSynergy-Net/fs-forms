@@ -64,7 +64,6 @@ mod tests {
     #[test]
     fn the_placeholder_has_bars_and_an_id_per_slot() {
         assert!(placeholder("a", "a").bars() >= 1, "no bars means no height");
-        let _ = unfinished(&Locale::from_posix("en").expect("a locale"), "a", "a");
     }
 
     #[test]

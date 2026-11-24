@@ -150,9 +150,15 @@ fn the_side_list_stands_beside_the_board_not_above_it_light_and_dark() {
             !uniform(&p, 260..470, 700..712),
             "{scheme}: the board is as tall as the main area"
         );
+        // the column has no frame of its own any more (fs-components K2c: the column is its heading and its cards on the one ground), so
+        // its left edge shows as its text: the column starts 24 px from the main area (its text 16 px further), not 96 px
         assert!(
-            !uniform(&p, 240..250, 130..700),
+            !uniform(&p, 256..300, 98..118),
             "{scheme}: the first column starts 24 px (not 96) from the main area"
+        );
+        assert!(
+            uniform(&p, 221..256, 60..700),
+            "{scheme}: nothing left of the first column"
         );
     }
 }

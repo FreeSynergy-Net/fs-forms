@@ -30,6 +30,13 @@ fn click(id: &str) -> String {
     )
 }
 
+/// A press on `from`, a pull over `to` (slowly, past the 4 px rule of the board) and a release there: the mouse carries a card.
+fn drag(from: &str, to: &str) -> String {
+    format!(
+        r#"{{"type":"pointerMove","origin":{{"{ELEMENT}":"{from}"}},"x":0,"y":0}},{{"type":"pointerDown","button":0}},{{"type":"pointerMove","origin":{{"{ELEMENT}":"{from}"}},"x":0,"y":30,"duration":200}},{{"type":"pointerMove","origin":{{"{ELEMENT}":"{to}"}},"x":0,"y":0,"duration":400}},{{"type":"pointerUp","button":0}},{{"type":"pause","duration":100}}"#
+    )
+}
+
 fn folder() -> tempfile::TempDir {
     // under the target folder of the workspace, never a system temp folder
     let target = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../target");
@@ -117,13 +124,7 @@ fn the_input_of_a_file_moves_a_card_and_then_the_picture_is_written() {
     let out = keep.path().join("moved.png");
     let _ = std::fs::remove_file(&out);
     let writer = Arc::new(FakeWriter::default());
-    let plan = parse(&body(&format!(
-        "{},{},{}",
-        click("kb-card-a"),
-        click("kb-grab-a"),
-        click("kb-col-doing")
-    )))
-    .unwrap();
+    let plan = parse(&body(&drag("fs-board-card-a", "fs-board-col-doing"))).unwrap();
     if let Err((message, code)) = play(
         &widget(&writer, keep.path()),
         &plan,
@@ -152,7 +153,7 @@ fn an_element_that_is_not_there_is_exit_2_nothing_is_sent_and_no_picture_is_writ
     let out = keep.path().join("never.png");
     let _ = std::fs::remove_file(&out);
     let writer = Arc::new(FakeWriter::default());
-    let plan = parse(&body(&click("kb-card-nobody"))).unwrap();
+    let plan = parse(&body(&click("fs-board-card-nobody"))).unwrap();
     let (message, code) = play(
         &widget(&writer, keep.path()),
         &plan,

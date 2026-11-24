@@ -27,6 +27,7 @@ pub struct SideItem {
 }
 
 /// A refusal by code: the host says no code-only reason (the sentence comes from the words of the reader, `Reason::said` falls back to the code).
+#[must_use]
 pub fn refused(code: &str) -> Answer {
     Answer::Refused(Reason::new(code, ""))
 }

@@ -153,7 +153,7 @@ pub fn to_rows(layout: &Layout, meta: &LayoutMeta) -> Result<Rows, Coded<LayoutC
     }
     let mut node = 0_u32;
     menu_rows(&d.menu, None, &id, &mut node, &mut rows);
-    pages(layout, &id, &mut rows);
+    pages(layout, &id, &mut rows)?;
     for (n, a) in d.actions.iter().enumerate() {
         let (target, command, source, workflow) = match &a.v.target {
             ActionTarget::Command { source, command } => {

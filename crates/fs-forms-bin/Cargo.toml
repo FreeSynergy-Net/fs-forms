@@ -21,7 +21,7 @@ path = "src/main.rs"
 fs-forms-server = { path = "../fs-forms-server" }
 fs-forms-client = { path = "../fs-forms-client" }
 # No `fs-starter` pin here (forbidden edge, ADR 0105; fs-rpc has no such crate): the host is the repo fs-starter.
-fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", tag = "v0.1.0" }
+fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", tag = "v0.1.1" }
 # One source per library: the same tags as fs-rpc and the client.
 fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", tag = "v0.0.35" }
 fs-types = { git = "https://github.com/FreeSynergy-Net/fs-types", tag = "v0.0.6" }

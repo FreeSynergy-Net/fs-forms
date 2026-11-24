@@ -108,6 +108,10 @@ fn no_graphics(message: &str) -> bool {
 }
 
 #[test]
+#[cfg_attr(
+    windows,
+    ignore = "wgpu Validation Error on windows-2022 without a GPU adapter"
+)]
 fn the_input_of_a_file_moves_a_card_and_then_the_picture_is_written() {
     let keep = folder();
     let out = keep.path().join("moved.png");
@@ -139,6 +143,10 @@ fn the_input_of_a_file_moves_a_card_and_then_the_picture_is_written() {
 }
 
 #[test]
+#[cfg_attr(
+    windows,
+    ignore = "wgpu Validation Error on windows-2022 without a GPU adapter"
+)]
 fn an_element_that_is_not_there_is_exit_2_nothing_is_sent_and_no_picture_is_written() {
     let keep = folder();
     let out = keep.path().join("never.png");

@@ -14,7 +14,8 @@ use std::sync::{Arc, Mutex, PoisonError};
 
 use fs_components_core::form_write::{FormWrite, WriteArg, WriteDone, WriteRefused, WriteValue};
 use fs_components_kanban::{
-    Answer, BoardEvents, COLUMN_CREATE, COLUMN_LIMIT, COLUMN_RENAME, CREATE, FormEvents, MOVE,
+    Answer, BoardEvents, Card, Column, COLUMN_CREATE, COLUMN_LIMIT, COLUMN_RENAME, CREATE, FixedBoard, FormEvents,
+    MOVE,
     Operation,
 };
 
@@ -94,12 +95,16 @@ impl FormWrite for Probe {
 }
 
 /// The channels the component carries in its gestures (a move with a place, a new card): read from the component, never listed here.
-/// A channel it carries but gives no value (a drop at the end of a column has no `order`) is handed on as "carried, without value"
+/// A channel it carries but gives no value (a drop at the end of a column has no `before`) is handed on as "carried, without value"
 /// (empty text): the rule of [`crate::write::args_of`] then never fills it from the record.
 fn carried() -> Vec<String> {
     let probe = Arc::new(Probe(Mutex::default()));
-    let events = FormEvents::new(probe.clone());
-    let _ = events.move_card_at("", "", "", Some(0));
+    // A column with two cards, so a drop between them names both neighbours (`after`, `before`); the probe sees the channels only.
+    let mut column = Column::new("", "");
+    column.cards = vec![Card::new("a", ""), Card::new("b", "")];
+    let board = FixedBoard { columns: vec![column], ops: Vec::new() };
+    let events = FormEvents::new(probe.clone(), Arc::new(board));
+    let _ = events.move_card_at("", "", "", Some(1));
     let _ = events.add_card("", "");
     let mut names = probe
         .0

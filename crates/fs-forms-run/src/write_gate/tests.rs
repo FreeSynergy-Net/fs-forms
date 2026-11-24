@@ -173,11 +173,11 @@ fn send_refuses_on_its_own_when_the_description_has_no_action() {
 fn a_drop_is_one_call_with_the_column_the_place_and_the_lane_of_the_record() {
     let w = Arc::new(FakeWriter::default());
     let g = module(described(), &w);
-    let place = WriteArg {
-        name: "order".into(),
-        value: WriteValue::Number(1.0),
-    };
-    g.send(MOVE, Some("a"), &[text("column", "doing"), place])
+    g.send(
+        MOVE,
+        Some("a"),
+        &[text("column", "doing"), text("after", "c"), text("before", "d")],
+    )
         .expect("accepted");
     let calls = w.calls.lock().unwrap();
     assert_eq!(calls.len(), 1);
@@ -187,7 +187,12 @@ fn a_drop_is_one_call_with_the_column_the_place_and_the_lane_of_the_record() {
         .iter()
         .map(|(a, b)| (a.as_str(), b.as_str()))
         .collect();
-    assert_eq!(args, [("column", "doing"), ("index", "1"), ("board", "b1")]);
+    assert_eq!(args, [
+            ("column", "doing"),
+            ("after_id", "c"),
+            ("before_id", "d"),
+            ("board", "b1")
+        ]);
 }
 
 #[test]

@@ -33,26 +33,31 @@ fn the_arguments_are_what_the_form_says_the_command_writes_by_the_fields_of_the_
         &d,
         "move",
         a,
-        &gesture(&[("column", "doing"), ("order", "1")]),
+        &gesture(&[("column", "doing"), ("after", "c"), ("before", "d")]),
     )
     .unwrap();
     // `lane` is not in the gesture: the context of the record (`board` of the module) fills it
     assert_eq!(
         pairs(&args),
-        [("column", "doing"), ("index", "1"), ("board", "b1")]
+        [
+            ("column", "doing"),
+            ("after_id", "c"),
+            ("before_id", "d"),
+            ("board", "b1")
+        ]
     );
-    // without a place (named, no value): `order` is left out although the record has one (`order = 3` in the fixture)
+    // without a place (named, no value): no place is written although the record has one (`order = 3` in the fixture)
     let args = args_of(
         &d,
         "move",
         a,
-        &gesture(&[("column", "doing"), ("order", "")]),
+        &gesture(&[("column", "doing"), ("after", ""), ("before", "")]),
     )
     .unwrap();
     assert_eq!(pairs(&args), [("column", "doing"), ("board", "b1")]);
     // a place the gesture does not name at all is not a place of the gesture: only the scope comes from the record
     let args = args_of(&d, "move", a, &gesture(&[("column", "doing")])).unwrap();
-    assert!(args.iter().any(|(f, v)| f == "index" && v == "3"));
+    assert!(!args.iter().any(|(f, _)| f == "index"), "order is never written");
     // what the gesture carries beyond the writes is not passed on
     let args = args_of(&d, "move", a, &gesture(&[("column", "x"), ("title", "no")])).unwrap();
     assert!(!pairs(&args).iter().any(|(f, _)| *f == "title"));
@@ -151,7 +156,7 @@ fn an_accepted_call_reads_the_form_again_and_the_board_shows_the_new_state() {
         "cards-in-columns",
         "move",
         Some("a"),
-        &gesture(&[("column", "doing"), ("order", "0")]),
+        &gesture(&[("column", "doing"), ("before", "c")]),
     );
     assert_eq!(answer, fs_components_kanban::Answer::Accepted);
     let call = w.calls.lock().unwrap()[0].clone();
@@ -159,7 +164,7 @@ fn an_accepted_call_reads_the_form_again_and_the_board_shows_the_new_state() {
     assert_eq!(call.record.as_deref(), Some("a"));
     assert_eq!(
         pairs(&call.args),
-        [("column", "doing"), ("index", "0"), ("board", "b1")]
+        [("column", "doing"), ("before_id", "c"), ("board", "b1")]
     );
     assert_eq!(*w.reloads.lock().unwrap(), 1);
     let cols = columns(&r);

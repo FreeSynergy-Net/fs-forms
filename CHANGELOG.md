@@ -2,6 +2,26 @@
 
 Version = tag; all crates of the workspace carry the same version.
 
+## 0.1.0 (24.11.2026)
+
+### English
+
+- The host draws a block by the WIDGET the catalog (SB-29) names for it, not by a list of block names; one table keyed by the widget plus three compositions of general blocks (`sidebar`, `tree`, `table`). A block whose widget this host has no drawing for is said as `not built`, never silently dropped; `--list-blocks` prints those blocks of the contract with the reason (no widget in the contract, or a widget without an adapter). A test keeps every adapter tied to a widget of the catalog.
+- `draw.rs` is split into `draw/compositions.rs` and `draw/adapters.rs` (no change in behaviour).
+- The block `contact-row` keeps its people widget (selection, search, "more") in the context over a rebuild and makes it anew only when the rows change; each screen has its own place for it (two `contact-row` places on one page share one widget).
+- The block `table` now names the form `rows@^1.0.0` (fs-components, change A2) instead of `members`; `members@1.0.0` is frozen. The host draws the form `rows`: the channel `label` names the row, the values of `columns` are its columns (person, role, level). The sample groups (`--sample-data`), the fixture `groups.toml` and the blocks `contact-row` and `field-card` read the form `rows`.
+- Pins (one source per library in the lock): `fs-interfaces` v0.0.35 (was v0.0.34), `fs-rpc` v0.1.0 (was v0.0.8; it takes `fs-interfaces` v0.0.35, `fs-types` v0.0.6 and `fs-objects` v0.0.10, the same tags as here), `fs-components` by the commit `fb0a9d29` (the head with A2; the tag follows with its release).
+- BREAKING: the version moves from 0.0.12 to 0.1.0. A module that offers only the form `members` is no longer drawn by the block `table` (it must offer `rows@1.0`); the data of `sample_groups()` is a form `rows` now (public function, other form name and channels). Written with the help of Claude (Anthropic).
+
+### Deutsch
+
+- Der Host zeichnet einen Baustein nach dem WIDGET, das der Katalog (SB-29) dafür nennt, nicht nach einer Liste von Baustein-Namen; eine Tabelle nach Widget und drei Zusammensetzungen allgemeiner Bausteine (`sidebar`, `tree`, `table`). Ein Baustein, für dessen Widget der Host keine Zeichnung hat, wird als `nicht gebaut` gesagt, nie stillschweigend weggelassen; `--list-blocks` gibt diese Bausteine des Vertrags mit dem Grund aus (kein Widget im Vertrag oder ein Widget ohne Adapter). Ein Test hält jeden Adapter an ein Widget des Katalogs.
+- `draw.rs` ist in `draw/compositions.rs` und `draw/adapters.rs` aufgeteilt (Verhalten unverändert).
+- Der Baustein `contact-row` hält sein Personen-Widget (Auswahl, Suche, „mehr“) im Kontext über einen Neuaufbau und baut es nur neu, wenn sich die Zeilen ändern; jede Seite hat dafür ihren eigenen Platz (zwei `contact-row`-Plätze auf einer Seite teilen ein Widget).
+- Der Baustein `table` nennt jetzt die Form `rows@^1.0.0` (fs-components, Änderung A2) statt `members`; `members@1.0.0` ist eingefroren. Der Host zeichnet die Form `rows`: der Kanal `label` benennt die Zeile, die Werte von `columns` sind ihre Spalten (Person, Rolle, Stufe). Die Beispiel-Gruppen (`--sample-data`), die Testdatei `groups.toml` und die Bausteine `contact-row` und `field-card` lesen die Form `rows`.
+- Pins (im Lock je Bibliothek eine Quelle): `fs-interfaces` v0.0.35 (war v0.0.34), `fs-rpc` v0.1.0 (war v0.0.8; er nimmt `fs-interfaces` v0.0.35, `fs-types` v0.0.6 und `fs-objects` v0.0.10, dieselben Tags wie hier), `fs-components` über den Commit `fb0a9d29` (der Kopf mit A2; der Tag folgt mit seinem Release).
+- BRUCH: die Version geht von 0.0.12 auf 0.1.0. Ein Modul, das nur die Form `members` anbietet, wird vom Baustein `table` nicht mehr gezeichnet (es muss `rows@1.0` anbieten); die Daten von `sample_groups()` sind jetzt eine Form `rows` (öffentliche Funktion, anderer Formname und andere Kanäle). Mit Hilfe von Claude (Anthropic) geschrieben.
+
 ## 0.0.12
 
 ### English

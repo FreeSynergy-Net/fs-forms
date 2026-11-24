@@ -21,10 +21,10 @@ path = "src/main.rs"
 fs-forms-server = { path = "../fs-forms-server" }
 fs-forms-client = { path = "../fs-forms-client" }
 # No `fs-starter` pin here (forbidden edge, ADR 0105; fs-rpc has no such crate): the host is the repo fs-starter.
-fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "0120f9afadf5b74540e8df3f0dfdd1b2edb4e1d4" }
+fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "9cbce63c73045a2ea32b88038fd35732c4762624" }
 # One source per library: the same tags as fs-rpc and the client.
-fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "e6f69213b68b47e139fc8038c8a095f9ed1fef3c" }
-fs-types = { git = "https://github.com/FreeSynergy-Net/fs-types", tag = "v0.0.6" }
+fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "2bb70d826681403894ec6d65a7fad9d3a3f51ac2" }
+fs-types = { git = "https://github.com/FreeSynergy-Net/fs-types", rev = "722d3ce0156711d40cb278f2e835e865d9448290" }
 
 # The frontend `simple` is a package of its own (one deb/rpm per Cargo package, ADR 0094 draft): the program needs it.
 # Both binaries are never in ONE deb (file conflict with the deb of fs-forms-simple).

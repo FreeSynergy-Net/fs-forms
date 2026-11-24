@@ -11,8 +11,8 @@ rust-version.workspace = true
 [dependencies]
 fs-tally = { git = "https://github.com/FreeSynergy/fs-tally", tag = "v0.0.1", version = "0.0.1" }
 fs-ballot = { git = "https://github.com/FreeSynergy/fs-ballot", tag = "v0.0.1", features = ["serde"], version = "0.0.1" }
-fs-objects = { git = "https://github.com/FreeSynergy-Net/fs-objects", rev = "f6409f2a5378ba1464e69ae216efd4d27d249182", version = "0.0.11" }
-fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "e6f69213b68b47e139fc8038c8a095f9ed1fef3c", version = "0.2.0" }
+fs-objects = { git = "https://github.com/FreeSynergy-Net/fs-objects", rev = "e38093f1ec61b7c9faaa6f6046f65addb11dcf46", version = "0.0.11" }
+fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "2bb70d826681403894ec6d65a7fad9d3a3f51ac2", version = "0.2.0" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
@@ -22,7 +22,7 @@ tokio = { version = "1", features = ["sync"] }
 
 [dev-dependencies]
 # `testing::owner()` / `testing::options()`: a store must have an owner before it takes a write (fs-objects 0.0.11).
-fs-objects = { git = "https://github.com/FreeSynergy-Net/fs-objects", rev = "f6409f2a5378ba1464e69ae216efd4d27d249182", features = ["testing"], version = "0.0.11" }
+fs-objects = { git = "https://github.com/FreeSynergy-Net/fs-objects", rev = "e38093f1ec61b7c9faaa6f6046f65addb11dcf46", features = ["testing"], version = "0.0.11" }
 sha2 = "0.10"
 chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
 tokio = { version = "1", features = ["full"] }

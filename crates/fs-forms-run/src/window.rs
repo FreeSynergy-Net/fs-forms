@@ -6,7 +6,7 @@
 
 use std::sync::Arc;
 
-use fs_components_app::{AppError, AppWidget, Menu, MenuEntry, Screen, Status};
+use fs_components_app::{AppError, AppWidget, Screen, Status};
 use fs_components_mf2::Mf2Texts;
 use fs_components_widgets::states;
 use fs_components_words::{Locale, Localized};
@@ -14,11 +14,12 @@ use fs_components_words::{Locale, Localized};
 use crate::compose::{Composition, HostState, Node, ScreenTree};
 use crate::draw::Ctx;
 use crate::error::HostError;
+use crate::menus::program_menu;
 use crate::page::Page;
 use crate::parts::{Part, line, parts};
 use crate::records::{NoRecords, Records};
 use crate::style::{StyleCell, StyleSource, resolve};
-use crate::view::{Coded, MenuItem, MenuState, View};
+use crate::view::{Coded, View};
 
 /// The composition of a failure that is shown in the window instead of ending the host.
 #[must_use]
@@ -38,20 +39,6 @@ pub fn failure(error: &HostError) -> Composition {
             }],
         }],
         notices: Vec::new(),
-    }
-}
-
-fn menu_entry(texts: &Mf2Texts, item: &MenuItem) -> Option<MenuEntry> {
-    match item.state {
-        MenuState::Hidden => None, // rights come before "coming": a command she may not run is not shown at all
-        MenuState::Enabled => Some(MenuEntry::new(&item.id, &item.label)),
-        MenuState::Coming => Some(
-            MenuEntry::new(
-                &item.id,
-                format!("{} ({})", item.label, texts.plain("host-menu-coming")),
-            )
-            .disabled(),
-        ),
     }
 }
 
@@ -94,6 +81,27 @@ fn kanban_words(texts: &Mf2Texts) -> std::collections::HashMap<String, String> {
         .chain(CHANNEL_KEYS)
         .map(|k| ((*k).to_owned(), texts.plain(&k.replace('.', "-"))))
         .collect()
+}
+
+/// The drawing context of a window: the style (asked again at every drawing), the records, the words of the board, the actions.
+pub(crate) fn ctx_of(
+    texts: &Mf2Texts,
+    locale: &Locale,
+    view: &View,
+    records: Arc<dyn Records>,
+    program_style: Arc<dyn StyleSource>,
+) -> Ctx {
+    // the words of the board are asked by key while drawing; they are read once, here, from the host's own MF2 files
+    let said = kanban_words(texts);
+    let named = view.style.clone();
+    Ctx {
+        style: Arc::new(move || resolve(named.as_deref(), program_style.current())),
+        records,
+        say: Arc::new(move |key: &str| said.get(key).cloned().unwrap_or_else(|| key.to_owned())),
+        actions: Arc::new(view.actions.clone()),
+        locale: locale.clone(),
+        mounts: Arc::default(),
+    }
 }
 
 /// The window for `comp`.
@@ -143,19 +151,8 @@ pub fn app_styled(
     records: Arc<dyn Records>,
     program_style: Arc<dyn StyleSource>,
 ) -> Result<AppWidget, AppError> {
-    // the words of the board are asked by key while drawing; they are read once, here, from the host's own MF2 files
-    let said = kanban_words(texts);
-    let named = view.style.clone();
-    let sample = records.is_sample();
-    let down = records.unavailable();
-    let ctx = Ctx {
-        style: Arc::new(move || resolve(named.as_deref(), program_style.current())),
-        records,
-        say: Arc::new(move |key: &str| said.get(key).cloned().unwrap_or_else(|| key.to_owned())),
-        actions: Arc::new(view.actions.clone()),
-        locale: locale.clone(),
-        mounts: Arc::default(),
-    };
+    let (sample, down) = (records.is_sample(), records.unavailable());
+    let ctx = ctx_of(texts, locale, view, records, program_style);
     let labels = states::Labels::for_locale(locale);
     let title = if view.title.is_empty() {
         texts.plain("host-title")
@@ -198,13 +195,8 @@ pub fn app_styled(
         ));
     }
     let widget = AppWidget::new(title, screens)?;
-    let entries: Vec<MenuEntry> = view
-        .menu
-        .iter()
-        .filter_map(|m| menu_entry(texts, m))
-        .collect();
-    if !entries.is_empty() {
-        widget.set_menus(vec![Menu::new(texts.plain("host-title"), entries)], |_| {})?;
+    if let Some(menu) = program_menu(texts, view) {
+        widget.set_menus(vec![menu], |_| {})?;
     }
     widget.set_status(Some(status(texts, comp.state, sample, down.as_deref())));
     Ok(widget)

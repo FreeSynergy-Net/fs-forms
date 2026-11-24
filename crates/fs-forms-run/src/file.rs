@@ -252,6 +252,25 @@ impl Loaded {
 }
 
 impl FileLink {
+    /// The ids of all frontends the folder describes for `extends`, sorted.
+    ///
+    /// # Errors
+    /// The folder or a description in it could not be read.
+    pub fn available(&self, extends: &str) -> Result<Vec<String>, HostError> {
+        let root = &self.root;
+        if root.is_file() {
+            let layout = read_file(root)?;
+            return Ok(if asked_for(&layout, extends, "") {
+                vec![layout.doc().key.frontend.clone()]
+            } else {
+                Vec::new()
+            });
+        }
+        link_inside(root, Path::new("forms"))?;
+        let forms = root.join("forms");
+        available_in(if forms.is_dir() { &forms } else { root }, extends)
+    }
+
     /// Like `resolve`, but says which file was loaded.
     ///
     /// # Errors

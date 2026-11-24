@@ -5,7 +5,7 @@
 //! Tests: H1 two windows, one record: one cache, two holds, a move in A shows in B (and in A again, through its own `watch`) and both
 //! windows are woken; H2 the answer of the person: `switch` keeps window and hold and shows the other record, `window` opens a second
 //! one, an answer of another question or an unknown one opens nothing; H3 `close` lets grip and hold fall, a window the person closes
-//! does the same (`on_closed`), a failure to show leaves nothing behind; H4 what is not built says so (`InFrame`, `use_frontend`).
+//! does the same (`on_closed`), a failure to show leaves nothing behind; H4 what is not built says so (`InFrame`; `use_frontend` is built since C1: `frontend_cell.rs`).
 //!
 //! Mutants (all four run, each red as named): M-wake the sink does not wake the window -> H1; M-open the answer `window` opens as
 //! `switch` -> H2; M-sig the observer reacts to every answer, not only to its own question -> H2; M-close `close` does not drop the
@@ -192,13 +192,6 @@ fn h4_what_is_not_built_says_so_and_changes_nothing() {
         Opened::New(id) => id,
         o => panic!("{o:?}"),
     };
-    assert_eq!(
-        host.owner
-            .use_frontend(&first, "board-compact")
-            .unwrap_err()
-            .code,
-        "host-notice-use-frontend-not-built"
-    );
     assert_eq!(
         host.owner
             .place(&first, Placement::InFrame)

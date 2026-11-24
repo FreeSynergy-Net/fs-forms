@@ -9,6 +9,7 @@ use fs_components_app::AppWidget;
 use fs_forms_layout::FrontendKey;
 
 use super::{OpenedFrontend, Placement, WindowId};
+use crate::frontend_cell::FrontendCell;
 use crate::record_hub::{Module, RecordGrip};
 use std::sync::Arc;
 
@@ -21,6 +22,8 @@ pub(super) struct Entry {
     pub(super) grip: RecordGrip,
     pub(super) module: Arc<dyn Module>,
     pub(super) app: AppWidget,
+    /// The page of the frontend that is open now (what `use_frontend` exchanges).
+    pub(super) cell: Arc<FrontendCell>,
     pub(super) raised: usize,
     /// Names THIS window for good (a switch changes the id, never the token): the `on_closed` of the surface finds the entry by it, so
     /// a closed window never removes the entry of a later window that got the same id.

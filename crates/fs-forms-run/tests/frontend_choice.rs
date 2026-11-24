@@ -68,3 +68,58 @@ fn an_empty_frontend_is_the_standard_of_the_blueprint() {
     assert_eq!(l.file, PathBuf::from("forms/board.toml"));
     assert_eq!(l.view.frontend, "board");
 }
+
+#[test]
+fn a_single_file_names_itself_in_the_line() {
+    let d = program("single");
+    let l = FileLink::new(d.join("forms/board-wip.toml"), "en")
+        .load("", "")
+        .unwrap();
+    assert_eq!(l.line(), "frontend board-wip from board-wip.toml");
+}
+
+#[test]
+fn two_files_with_the_same_id_are_ambiguous_not_missing() {
+    let d = program("ambiguous");
+    fs::write(d.join("forms/copy.toml"), BOARD).unwrap();
+    let e = FileLink::new(&d, "en").load("", "board-wip");
+    assert!(e.is_ok(), "one carrier is fine");
+    fs::write(
+        d.join("forms/copy2.toml"),
+        fs::read_to_string(d.join("forms/board-wip.toml")).unwrap(),
+    )
+    .unwrap();
+    let e = FileLink::new(&d, "en").load("", "board-wip").unwrap_err();
+    assert_eq!(e.code(), "frontend-ambiguous");
+    assert!(e.fatal());
+}
+
+#[test]
+fn a_wrong_extends_does_not_list_the_id_asked_for() {
+    let d = program("extends");
+    let e = FileLink::new(&d, "en")
+        .load("net.example.Other", "board")
+        .unwrap_err();
+    assert_eq!(e.code(), "frontend-unknown");
+    assert!(e.to_string().ends_with("available=[]"), "{e}");
+}
+
+#[test]
+fn the_blueprint_is_no_description_without_a_forms_folder() {
+    let d = PathBuf::from(env!("CARGO_TARGET_TMPDIR"))
+        .join("fwahl")
+        .join("flat");
+    let _ = fs::remove_dir_all(&d);
+    fs::create_dir_all(&d).unwrap();
+    fs::write(
+        d.join("scaffold.toml"),
+        "[frontend]\nlayout = \"board.toml\"\n",
+    )
+    .unwrap();
+    fs::write(d.join("board.toml"), BOARD).unwrap();
+    let e = FileLink::new(&d, "en").load("", "nope").unwrap_err();
+    assert_eq!(
+        e.to_string(),
+        "host-error-frontend-unknown id=nope available=[board]"
+    );
+}

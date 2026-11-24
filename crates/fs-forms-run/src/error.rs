@@ -37,6 +37,13 @@ pub enum HostError {
         /// The ids that exist.
         available: Vec<String>,
     },
+    /// Two descriptions carry the frontend that was asked for (`frontend-ambiguous`; fatal).
+    FrontendAmbiguous {
+        /// The id that was asked for.
+        id: String,
+        /// The files that carry it.
+        files: Vec<String>,
+    },
     /// The description named by a path is not there (no file, no folder with one).
     DescriptionMissing {
         /// The path that was looked at.
@@ -68,6 +75,7 @@ impl HostError {
             Self::LayoutUnreadable { .. } => "layout-unreadable",
             Self::LayoutStore { .. } => "layout-store",
             Self::FrontendUnknown { .. } => "frontend-unknown",
+            Self::FrontendAmbiguous { .. } => "frontend-ambiguous",
         }
     }
 
@@ -91,6 +99,12 @@ impl HostError {
                 vec![
                     ("id", id.clone()),
                     ("available", format!("[{}]", available.join(", "))),
+                ]
+            }
+            Self::FrontendAmbiguous { id, files } => {
+                vec![
+                    ("id", id.clone()),
+                    ("files", format!("[{}]", files.join(", "))),
                 ]
             }
         }

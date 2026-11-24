@@ -125,6 +125,10 @@ fn descriptions_in(dir: &Path) -> Result<Vec<PathBuf>, HostError> {
     let mut files: Vec<PathBuf> = Vec::new();
     for entry in fs::read_dir(dir).into_iter().flatten().flatten() {
         let path = entry.path();
+        // the blueprint is not a description
+        if path.file_name().is_some_and(|n| n == "scaffold.toml") {
+            continue;
+        }
         if path.extension().is_none_or(|x| x != "toml") {
             continue;
         }
@@ -197,17 +201,24 @@ fn locate(root: &Path, extends: &str, frontend: &str) -> Result<(PathBuf, Layout
         1 => Ok(found.remove(0)),
         0 if !frontend.is_empty() => Err(HostError::FrontendUnknown {
             id: frontend.to_owned(),
-            available: available_in(&dir)?,
+            available: available_in(&dir, extends)?,
+        }),
+        _ if !frontend.is_empty() => Err(HostError::FrontendAmbiguous {
+            id: frontend.to_owned(),
+            files: found.iter().map(|(f, _)| f.display().to_string()).collect(),
         }),
         _ => Err(missing(&dir)),
     }
 }
 
 /// The ids of all frontends the folder describes, sorted (what `frontend-unknown` offers).
-fn available_in(dir: &Path) -> Result<Vec<String>, HostError> {
+fn available_in(dir: &Path, extends: &str) -> Result<Vec<String>, HostError> {
     let mut ids: Vec<String> = Vec::new();
     for file in descriptions_in(dir)? {
-        ids.push(read_file(&file)?.doc().key.frontend.clone());
+        let layout = read_file(&file)?;
+        if asked_for(&layout, extends, "") {
+            ids.push(layout.doc().key.frontend.clone());
+        }
     }
     ids.sort();
     ids.dedup();
@@ -241,10 +252,11 @@ impl FileLink {
     /// The same as `resolve`; a `frontend` that no description carries is `frontend-unknown` with the ids that exist.
     pub fn load(&self, extends: &str, frontend: &str) -> Result<Loaded, HostError> {
         let (file, layout) = locate(&self.root, extends, frontend)?;
-        let file = file
-            .strip_prefix(&self.root)
-            .map(Path::to_path_buf)
-            .unwrap_or(file);
+        // a single file is its own root: strip_prefix then leaves nothing, so the name of the file is taken
+        let file = match file.strip_prefix(&self.root) {
+            Ok(rel) if !rel.as_os_str().is_empty() => rel.to_path_buf(),
+            _ => file.file_name().map_or_else(|| file.clone(), PathBuf::from),
+        };
         Ok(Loaded {
             view: view_of(&layout, &self.lang),
             file,

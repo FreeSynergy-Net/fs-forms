@@ -236,3 +236,4 @@ pub const MENU: Table = Table {
 };
 
 pub use crate::tables_body::*;
+pub use crate::tables_tree::*;

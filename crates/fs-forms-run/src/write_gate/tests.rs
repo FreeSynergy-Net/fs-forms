@@ -4,7 +4,8 @@
 //!
 //! Tests: description without action, records that cannot, one action per operation, the key of the contract against the channel
 //! name, a card the module does not allow, one call per drop with column/place/lane, no old place at the end of a column, a refusal
-//! given back as its code, `send` refuses on its own, the old way (records without commands).
+//! given back as its code, `send` refuses on its own, the old way (records without commands), an action that calls another command
+//! than the module bound to its gesture is warned.
 //!
 //! Pattern: none (tests).
 
@@ -242,7 +243,7 @@ fn the_old_way_asks_the_records_for_each_operation_and_needs_the_action_too() {
     assert!(g.can(MOVE, Some("k")) && g.can(COLUMN_CREATE, None));
     // rename and limit: records cannot, and there is no action
     assert!(!g.can(COLUMN_RENAME, Some("todo")) && !g.can(COLUMN_LIMIT, Some("todo")));
-    // the records can add a card, but the description has no quick-add: locked
+    // the records cannot add a card (and the description has no quick-add either): locked
     assert!(!g.can(CREATE, None));
     g.send(MOVE, Some("k"), &[text("column", "done")])
         .expect("accepted");
@@ -252,4 +253,20 @@ fn the_old_way_asks_the_records_for_each_operation_and_needs_the_action_too() {
         *old.calls.lock().unwrap(),
         ["move k done".to_owned(), "column Review".to_owned()]
     );
+}
+
+#[test]
+fn an_action_that_calls_another_command_than_the_module_bound_to_the_gesture_is_warned() {
+    let w = Arc::new(FakeWriter::default());
+    let r = records(&w, data());
+    assert_eq!(crate::action_report(&described(), &r), Vec::new());
+    let wrong = [
+        action("drop", "move"),
+        action("quick-add", "task.create"),
+        action("button", "anything"),
+    ];
+    let said = crate::action_report(&wrong, &r);
+    assert_eq!(said.len(), 1);
+    assert_eq!(said[0].code.code, "action-channel-mismatch");
+    assert!(!said[0].red);
 }

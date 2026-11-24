@@ -1,4 +1,4 @@
-//! SQ-3: the blocks `tree` and `table` draw the forms `tree@1.0` and `members@1.0` BY CHANNEL, from the port `Sources` (no module
+//! SQ-3: the blocks `tree` and `table` draw the forms `tree@1.0` and `rows@1.0` BY CHANNEL, from the port `Sources` (no module
 //! client in the host). Tests: (1) `--sample-data` with the groups description draws a window that differs from the empty one and
 //! says "Sample data"; (2) a module that leaves a required channel out is locked with `form-channel-unmapped` and a picture run
 //! ends with 3 (the PNG is written); (3) a contract the host cannot connect is said, not ignored.
@@ -110,7 +110,7 @@ fn a_connected_module_fits_and_a_required_channel_left_out_locks_the_block_and_e
     let bad = run(
         &[],
         &Groups {
-            without: &["person"],
+            without: &["items"],
         },
         &dir.join("groups-unmapped2.png"),
     );

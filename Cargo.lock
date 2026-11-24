@@ -1715,7 +1715,7 @@ dependencies = [
  "chrono",
  "fs-ballot",
  "fs-interfaces",
- "fs-objects",
+ "fs-objects 0.0.10",
  "fs-tally",
  "serde",
  "serde_json",
@@ -1761,6 +1761,7 @@ dependencies = [
  "fs-forms-exchange",
  "fs-forms-layout",
  "fs-interfaces",
+ "fs-objects 0.0.11",
  "fs-rpc",
  "fs-types",
  "png 0.18.1",
@@ -1799,7 +1800,7 @@ name = "fs-forms-store"
 version = "0.1.0"
 dependencies = [
  "fs-forms-layout",
- "fs-objects",
+ "fs-objects 0.0.10",
  "tokio",
  "turso",
 ]
@@ -1851,6 +1852,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "fs-objects"
+version = "0.0.11"
+source = "git+https://github.com/FreeSynergy-Net/fs-objects?rev=f6409f2a5378ba1464e69ae216efd4d27d249182#f6409f2a5378ba1464e69ae216efd4d27d249182"
+dependencies = [
+ "async-trait",
+ "base64",
+ "chrono",
+ "fs-types",
+ "rustix 1.1.6",
+ "serde",
+ "serde_json",
+ "sha2 0.11.1",
+ "thiserror 2.0.21",
+ "tokio",
+ "turso",
+ "unicode-normalization",
+ "uuid",
+]
+
+[[package]]
 name = "fs-records"
 version = "0.0.5"
 source = "git+https://github.com/FreeSynergy-Net/fs-types?tag=v0.0.6#2f45110417cf42311d5dee72287b7644312d4bc4"
@@ -1867,7 +1888,7 @@ dependencies = [
  "capnp-rpc",
  "chrono",
  "fs-interfaces",
- "fs-objects",
+ "fs-objects 0.0.10",
  "fs-trusted-path",
  "fs-types",
  "futures",

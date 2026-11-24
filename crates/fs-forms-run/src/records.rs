@@ -6,10 +6,13 @@
 //! `add_column`, `rename_column`, `set_limit`); every one defaults to "cannot", so a provider that does not name an operation leaves its control locked.
 //!
 //! Pattern: Port (`Records`) with a null object and a fixture.
+//!
+//! History: `history`, `step_back` and `changed` default to "none" (locked), like `can`; `changed` is a counter ([`crate::ChangeCounter`]) a window compares ([`crate::ChangeWatch`]) to read again.
 
 use std::sync::Arc;
 
 use fs_components_kanban::{Answer, Operation};
+use fs_objects::UndoState;
 
 use crate::form_data::FormData;
 
@@ -57,6 +60,21 @@ pub trait Records: Send + Sync {
         _values: &[(String, String)],
     ) -> Answer {
         unsupported()
+    }
+    /// How many undo and redo steps the person has on these records. Default: none (what is not said is locked, like
+    /// [`Records::can`]); the window then keeps its undo and redo controls locked.
+    fn history(&self) -> UndoState {
+        UndoState::default()
+    }
+    /// One step back (`redo = false`) or forward again (`redo = true`) in that history (only called when [`Records::history`]
+    /// shows a step). A conflict (someone else changed the record meanwhile) is a refusal with its code, never an overwrite.
+    fn step_back(&self, _redo: bool) -> Answer {
+        unsupported()
+    }
+    /// The change counter: grows whenever the records changed behind the window's back. A window that sees it grow reads the
+    /// records again ([`crate::ChangeWatch`]). Default `0` = never changes by itself.
+    fn changed(&self) -> u64 {
+        0
     }
     /// Whether these records are made-up sample data: the window then says so (it never shows invented records as real ones).
     fn is_sample(&self) -> bool {

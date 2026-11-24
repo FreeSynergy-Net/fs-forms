@@ -15,6 +15,7 @@
 mod args;
 mod blocks;
 mod catalog;
+mod changes;
 mod compose;
 mod draw;
 mod error;
@@ -42,6 +43,7 @@ mod write_gate;
 pub use args::{Command, Config, HELP, parse};
 pub use blocks::Blocks;
 pub use catalog::{Catalog, TestCatalog};
+pub use changes::{ChangeCounter, ChangeWatch};
 pub use compose::{Composition, HostState, Node, ScreenTree, compose};
 pub use error::{EXIT_CONTRACT, HostError};
 pub use file::{FileLink, Loaded};

@@ -17,7 +17,10 @@ impl Plan {
         out.extend(&self.menu.locks);
         for page in &self.pages {
             out.extend(&page.locks);
-            for pl in &page.places {
+            for f in page.frame_locks() {
+                out.push(f);
+            }
+            for pl in page.leaves() {
                 match &pl.status {
                     PlaceStatus::Locked(l) => out.extend(l),
                     PlaceStatus::Ready(r) => {
@@ -41,8 +44,8 @@ impl Plan {
         self.pages
             .iter()
             .find(|p| p.page == page)?
-            .places
-            .iter()
+            .leaves()
+            .into_iter()
             .find(|p| p.place == place)
     }
 }

@@ -1,0 +1,72 @@
+//! The places of one page as the host draws them today: ONE level (A5 F6, "the picture stays the same").
+//!
+//! A block at depth 1 is a [`PlaceView`] like before. A frame at depth 1 is not built yet: it becomes a place that carries the
+//! lock `host-notice-frame-not-built{frame}` (the window draws a `partial-notice`, state `partial`); the blocks inside it are
+//! not drawn, and the notice names the frame. Nothing is dropped without a word.
+//!
+//! Pattern: Adapter over the Composite (`PlaceNode` in, the flat `PlaceView` out) with an explicit "not built" arm.
+
+use fs_forms_layout::{Layout, PageDoc, PlaceNode};
+
+use crate::view::{Coded, PlaceView};
+
+fn text(layout: &Layout, key: &str, lang: &str) -> String {
+    let find = |l: &str| {
+        layout
+            .doc()
+            .messages
+            .iter()
+            .find(|m| m.v.key == key && m.v.lang == l)
+            .map(|m| m.v.message.clone())
+    };
+    find(lang)
+        .or_else(|| find("en"))
+        .unwrap_or_else(|| key.to_owned())
+}
+
+/// The depth-1 places of `page`: first the flat list of format 2 (stores and wire still fill it), then the tree.
+pub(crate) fn place_views(layout: &Layout, page: &PageDoc, lang: &str) -> Vec<PlaceView> {
+    let mut out = Vec::new();
+    let mut seq = 0u32;
+    let mut next = || {
+        seq += 1;
+        seq - 1
+    };
+    for b in &page.blocks {
+        out.push(block_view(layout, &b.v, next(), lang));
+    }
+    for n in &page.places {
+        out.push(match &n.v {
+            PlaceNode::Block(b) => block_view(layout, b, next(), lang),
+            PlaceNode::Frame(f) => PlaceView {
+                place: f.place.clone(),
+                seq: next(),
+                block: f.frame.clone(),
+                title: None,
+                locks: vec![Coded::new("host-notice-frame-not-built").with("frame", &f.frame)],
+                slot_locks: Vec::new(),
+            },
+            // a kind of node this host does not know: said, never skipped
+            _ => PlaceView {
+                place: String::new(),
+                seq: next(),
+                block: String::new(),
+                title: None,
+                locks: vec![Coded::new("host-notice-frame-not-built").with("frame", "?")],
+                slot_locks: Vec::new(),
+            },
+        });
+    }
+    out
+}
+
+fn block_view(layout: &Layout, b: &fs_forms_layout::BlockDoc, seq: u32, lang: &str) -> PlaceView {
+    PlaceView {
+        place: b.place.clone(),
+        seq,
+        block: b.block.clone(),
+        title: b.title_key.as_deref().map(|k| text(layout, k, lang)),
+        locks: Vec::new(),
+        slot_locks: Vec::new(),
+    }
+}

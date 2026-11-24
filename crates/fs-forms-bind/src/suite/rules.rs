@@ -12,7 +12,7 @@ pub(super) type R = Result<(), String>;
 
 fn ready_slots(plan: &crate::plan::Plan) -> Vec<&crate::plan::SlotFill> {
     let mut v = Vec::new();
-    for pl in plan.pages.iter().flat_map(|p| &p.places) {
+    for pl in plan.pages.iter().flat_map(|p| p.leaves()) {
         if let PlaceStatus::Ready(r) = &pl.status {
             v.extend(r.slots.iter());
         }
@@ -23,12 +23,12 @@ fn ready_slots(plan: &crate::plan::Plan) -> Vec<&crate::plan::SlotFill> {
 pub(super) fn every_place(f: &dyn PlanFixture) -> R {
     let plan = f.build();
     for page in &f.resolved().pages {
-        for pl in &page.places {
+        for pl in page.leaves() {
             let n = plan
                 .pages
                 .iter()
                 .filter(|p| p.page == page.page)
-                .flat_map(|p| &p.places)
+                .flat_map(|p| p.leaves())
                 .filter(|q| q.place == pl.place)
                 .count();
             if n != 1 {
@@ -60,7 +60,7 @@ pub(super) fn lock_coded(f: &dyn PlanFixture) -> R {
             ));
         }
     }
-    for pl in plan.pages.iter().flat_map(|p| &p.places) {
+    for pl in plan.pages.iter().flat_map(|p| p.leaves()) {
         if matches!(&pl.status, PlaceStatus::Locked(v) if v.is_empty()) {
             return Err(format!("locked place {} without lock", pl.place));
         }
@@ -73,7 +73,11 @@ pub(super) fn source_lock_spreads(f: &dyn PlanFixture) -> R {
     for s in &plan.sources {
         let Err(lock) = &s.status else { continue };
         for page in &f.resolved().pages {
-            for pl in page.places.iter().filter(|p| p.source == Some(s.idx)) {
+            for pl in page
+                .leaves()
+                .into_iter()
+                .filter(|p| p.source == Some(s.idx))
+            {
                 let got = plan.place(&page.page, &pl.place);
                 let ok = matches!(got.map(|g| &g.status), Some(PlaceStatus::Locked(v)) if v.iter().any(|l| l.cause == lock.cause));
                 if !ok {
@@ -103,7 +107,7 @@ pub(super) fn chosen(f: &dyn PlanFixture) -> R {
 pub(super) fn schemes(f: &dyn PlanFixture) -> R {
     let plan = f.build();
     for page in &f.resolved().pages {
-        for pl in &page.places {
+        for pl in page.leaves() {
             for b in &pl.bindings {
                 let BindKind::Field { field, schemes, .. } = &b.kind else {
                     continue;
@@ -146,7 +150,7 @@ pub(super) fn plan_commands(plan: &crate::plan::Plan) -> Vec<&CommandPlan> {
 pub(super) fn bindings_ordered(f: &dyn PlanFixture) -> R {
     let plan = f.build();
     for page in &f.resolved().pages {
-        for pl in &page.places {
+        for pl in page.leaves() {
             let Some(PlaceStatus::Ready(r)) = plan.place(&page.page, &pl.place).map(|p| &p.status)
             else {
                 continue;
@@ -192,7 +196,7 @@ pub(super) fn state(f: &dyn PlanFixture) -> R {
     let drawable = plan
         .pages
         .iter()
-        .flat_map(|p| &p.places)
+        .flat_map(|p| p.leaves())
         .any(|p| matches!(p.status, PlaceStatus::Ready(_)));
     let clean = plan.locks().is_empty() && plan.notices.is_empty();
     let want = if !drawable {

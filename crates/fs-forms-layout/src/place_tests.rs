@@ -21,6 +21,7 @@ fn blk(e: &str) -> Item<PlaceNode> {
         source: None,
         title_key: None,
         text_key: None,
+        set: vec![],
         bindings: vec![],
     };
     it(e, PlaceNode::Block(b))

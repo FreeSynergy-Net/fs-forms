@@ -95,3 +95,15 @@ impl Layout {
         Sha256::digest(format!("{:?}", self.doc).as_bytes()).into()
     }
 }
+
+impl Layout {
+    /// Notices that never block (K20): `set` keys the catalog does not list for their block or frame. The host shows the page
+    /// and says which key was ignored (`set-unknown`).
+    #[must_use]
+    pub fn warnings(
+        &self,
+        catalog: &dyn crate::check::CatalogRules,
+    ) -> Vec<crate::shim::Coded<crate::codes::LayoutCode>> {
+        crate::check_places::set_warnings(&self.doc, catalog)
+    }
+}

@@ -132,6 +132,7 @@ fn block(f: &mut Fields<'_>, cx: &mut Ctx<'_>) -> BlockDoc {
         source: f.uint(cx, "source"),
         title_key: f.str(cx, "title"),
         text_key: f.str(cx, "text"),
+        set: Vec::new(),
         bindings: items(f.list(cx, "bind"), "bind", cx, binding),
     }
 }

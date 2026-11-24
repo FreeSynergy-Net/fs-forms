@@ -109,6 +109,8 @@ pub struct BlockDoc {
     pub text_key: Option<String>,
     /// Bindings of the block's slots.
     pub bindings: Vec<Item<BindingDoc>>,
+    /// Attributes (`set`), unique by name; the keys must be in the `sets` of the block in the catalog (check K20, a warning).
+    pub set: Vec<Item<crate::place::AttrDoc>>,
 }
 /// A binding of one slot.
 #[derive(Clone, Debug, PartialEq, Eq)]

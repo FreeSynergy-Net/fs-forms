@@ -14,6 +14,7 @@
 
 mod apply;
 mod check;
+mod check_places;
 mod check_text;
 mod codes;
 mod doc;
@@ -44,7 +45,7 @@ mod walk;
 mod words;
 
 pub use apply::apply;
-pub use check::{CatalogRules, OpenCatalog};
+pub use check::{CatalogRules, OpenCatalog, PlaceRule};
 pub use check_text::{RangeBounds, range_bounds, split_range};
 pub use codes::{LayoutCode, TEXTS_DE, TEXTS_EN};
 pub use doc::*;

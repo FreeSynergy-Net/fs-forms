@@ -36,10 +36,18 @@ fn unlimited() -> Limits {
     (
         l.elements_max,
         l.menu_depth_max,
+        l.place_depth_max,
         l.text_bytes_max,
         l.ops_max,
         l.overlays_max,
-    ) = (u32::MAX, u32::MAX, u32::MAX, u32::MAX, u32::MAX);
+    ) = (
+        u32::MAX,
+        u32::MAX,
+        u32::MAX,
+        u32::MAX,
+        u32::MAX,
+        u32::MAX,
+    );
     l
 }
 

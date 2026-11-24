@@ -9,7 +9,7 @@ use window_owner_common::{child, elem, fake, id, root, settings};
 fn w2b_opening_an_open_id_brings_it_forward_and_keeps_the_mode() {
     let owner = fake();
     let r = root(&owner);
-    let c = child(&owner, &r, "settings-embed", Placement::Panel);
+    let c = child(&owner, &r, "settings-embed", Placement::InFrame);
     assert_eq!(owner.raised(&c), 0);
     child(&owner, &r, "settings-embed", Placement::Window);
     assert_eq!(owner.raised(&c), 1);
@@ -19,7 +19,7 @@ fn w2b_opening_an_open_id_brings_it_forward_and_keeps_the_mode() {
 fn w7_place_switches_only_the_place_the_form_state_stays() {
     let owner = fake();
     let r = root(&owner);
-    let c = child(&owner, &r, "settings-embed", Placement::Panel);
+    let c = child(&owner, &r, "settings-embed", Placement::InFrame);
     let records = owner.records_of(&c).unwrap();
     owner.invoke(&c, "values", "value.set").unwrap();
     let before = owner.composition_of(&c).unwrap();
@@ -33,8 +33,8 @@ fn w7_place_switches_only_the_place_the_form_state_stays() {
     assert_eq!(records.upgrade().unwrap().calls(), 1);
     assert_eq!(owner.holds(), holds);
     // And back; placing where it is already is no error.
-    owner.place(&c, Placement::Panel).unwrap();
-    owner.place(&c, Placement::Panel).unwrap();
+    owner.place(&c, Placement::InFrame).unwrap();
+    owner.place(&c, Placement::InFrame).unwrap();
     assert_eq!(owner.holds(), holds);
     assert_eq!(
         owner
@@ -50,11 +50,11 @@ fn w7b_a_locked_switch_is_refused_with_a_code_and_nothing_changes() {
     let owner = fake();
     let r = root(&owner);
     let c = id(owner
-        .open(OpenFrontend::new(settings(), Placement::Panel).with_parent(r, elem("fixed")))
+        .open(OpenFrontend::new(settings(), Placement::InFrame).with_parent(r, elem("fixed")))
         .unwrap());
     let e = owner.place(&c, Placement::Window).unwrap_err();
     assert_eq!(e.code, "host-notice-placement-locked");
     assert!(e.params.contains(&("id".into(), c.as_str().into())));
     let now = owner.open_now().into_iter().find(|o| o.id == c).unwrap();
-    assert_eq!(now.mode, Placement::Panel);
+    assert_eq!(now.mode, Placement::InFrame);
 }

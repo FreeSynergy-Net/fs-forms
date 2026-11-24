@@ -20,19 +20,19 @@ fn the_id_is_program_slash_elem_and_stable() {
     let owner = fake();
     let r = root(&owner);
     assert_eq!(r, WindowId("net.freesynergy.Tasks/board".into()));
-    let c = child(&owner, &r, "settings-embed", Placement::Panel);
+    let c = child(&owner, &r, "settings-embed", Placement::InFrame);
     assert_eq!(c, WindowId("net.freesynergy.Tasks/settings-embed".into()));
     // Another owner, the same request: the same id (never a counter).
     let other = fake();
     let r2 = root(&other);
-    assert_eq!(child(&other, &r2, "settings-embed", Placement::Panel), c);
+    assert_eq!(child(&other, &r2, "settings-embed", Placement::InFrame), c);
 }
 
 #[test]
 fn w1_only_the_mode_differs_the_child_composition_is_the_same() {
     let owner = fake();
     let r = root(&owner);
-    let panel = child(&owner, &r, "settings-embed", Placement::Panel);
+    let panel = child(&owner, &r, "settings-embed", Placement::InFrame);
     let window = child(&owner, &r, "settings-window", Placement::Window);
     assert_ne!(panel, window);
     let a = owner.composition_of(&panel).unwrap();
@@ -43,7 +43,7 @@ fn w1_only_the_mode_differs_the_child_composition_is_the_same() {
         .into_iter()
         .map(|o| (o.id, o.mode))
         .collect();
-    assert!(modes.contains(&(panel, Placement::Panel)));
+    assert!(modes.contains(&(panel, Placement::InFrame)));
     assert!(modes.contains(&(window, Placement::Window)));
 }
 
@@ -51,7 +51,7 @@ fn w1_only_the_mode_differs_the_child_composition_is_the_same() {
 fn w2_open_of_an_open_id_returns_it_and_makes_no_second() {
     let owner = fake();
     let r = root(&owner);
-    let first = child(&owner, &r, "settings-embed", Placement::Panel);
+    let first = child(&owner, &r, "settings-embed", Placement::InFrame);
     let before = owner.open_now().len();
     let (attached, _) = owner.holds();
     // The circle: the same node asked again, even with another mode.
@@ -65,7 +65,7 @@ fn w2_open_of_an_open_id_returns_it_and_makes_no_second() {
         .into_iter()
         .find(|o| o.id == first)
         .unwrap();
-    assert_eq!(kept.mode, Placement::Panel);
+    assert_eq!(kept.mode, Placement::InFrame);
 }
 
 #[test]
@@ -98,7 +98,7 @@ fn w4_an_unknown_or_refused_frontend_is_an_error_with_a_code_never_empty() {
     let r = root(&owner);
     let missing = owner
         .open(
-            OpenFrontend::new(key("net.freesynergy.Nothing", "none"), Placement::Panel)
+            OpenFrontend::new(key("net.freesynergy.Nothing", "none"), Placement::InFrame)
                 .with_parent(r.clone(), elem("nothing"))
                 .with_switchable(true),
         )
@@ -112,7 +112,7 @@ fn w4_an_unknown_or_refused_frontend_is_an_error_with_a_code_never_empty() {
     assert!(missing.params.contains(&("frontend".into(), "none".into())));
     let unknown_parent = owner
         .open(
-            OpenFrontend::new(settings(), Placement::Panel)
+            OpenFrontend::new(settings(), Placement::InFrame)
                 .with_parent(WindowId("net.freesynergy.Tasks/gone".into()), elem("x"))
                 .with_switchable(true),
         )
@@ -132,7 +132,7 @@ fn w4b_a_refusing_module_is_said_as_refused() {
     let r = root(&owner);
     let e = owner
         .open(
-            OpenFrontend::new(calendar, Placement::Panel)
+            OpenFrontend::new(calendar, Placement::InFrame)
                 .with_parent(r, elem("cal"))
                 .with_switchable(true),
         )
@@ -145,7 +145,7 @@ fn w4b_a_refusing_module_is_said_as_refused() {
 fn w5_a_call_in_the_child_reaches_the_child_records_only() {
     let owner = fake();
     let r = root(&owner);
-    let c = child(&owner, &r, "settings-embed", Placement::Panel);
+    let c = child(&owner, &r, "settings-embed", Placement::InFrame);
     let parent_records = owner.records_of(&r).unwrap().upgrade().unwrap();
     let child_records = owner.records_of(&c).unwrap().upgrade().unwrap();
     assert!(owner.invoke(&c, "values", "value.set").is_some());
@@ -158,12 +158,12 @@ fn w5_a_call_in_the_child_reaches_the_child_records_only() {
 fn w6_the_parent_closed_closes_its_children() {
     let owner = fake();
     let r = root(&owner);
-    let a = child(&owner, &r, "settings-embed", Placement::Panel);
+    let a = child(&owner, &r, "settings-embed", Placement::InFrame);
     let b = child(&owner, &r, "settings-window", Placement::Window);
     // A grandchild: a frontend inside the child.
     let g = id(owner
         .open(
-            OpenFrontend::new(tasks(), Placement::Panel)
+            OpenFrontend::new(tasks(), Placement::InFrame)
                 .with_parent(a.clone(), elem("tasks-again"))
                 .with_switchable(true)
                 .with_scope("urn:uuid:1"),

@@ -18,17 +18,19 @@ use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, percent_decode_str, utf8_perc
 
 use crate::view::Coded;
 
-/// Pattern: Strategy – how a child frontend appears (panel or window) is decided at the parent node; the child is the same either way.
+/// Pattern: Strategy – how a child frontend appears (in the frame of the parent, or in a window of its own) is decided at the parent node; the child is the same either way.
 ///
 /// Abweichung: it is a closed pair for now (`non_exhaustive`: floating, N6 stage 3, may follow); this is the mirror of the
 /// `Placement` the layout node will carry (`fs-forms-layout` `doc.rs`, S6-3), joined to it when that node exists.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum Placement {
-    /// A place in the tree of the parent window ("tab" is a panel inside a frame `tabs`, no mode of its own).
+    /// Embedded in a frame of the parent window ("tab" is a panel inside a frame `tabs`, no mode of its own). A panel is any node of the
+    /// tree, any arrangeable unit that can be resolved; `InFrame` is the one way of appearing inside a frame, which frame (`flow`,
+    /// `split`, `tabs`, `dock`) the tree says. Was `Panel` until stage 6 P1 (N.1: when everything is a panel, "Panel" names nothing).
     #[default]
-    Panel,
-    /// A window of the operating system.
+    InFrame,
+    /// A window of its own (of the operating system).
     Window,
 }
 

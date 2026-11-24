@@ -43,7 +43,7 @@ fn ga1f_two_views_of_one_record_share_the_cache_and_have_two_holds() {
 fn second_view(owner: &impl WindowOwner, parent: &WindowId, scope: &str) -> WindowId {
     id(owner
         .open(
-            OpenFrontend::new(tasks(), Placement::Panel)
+            OpenFrontend::new(tasks(), Placement::InFrame)
                 .with_scope(scope)
                 .with_parent(parent.clone(), elem("second-view")),
         )

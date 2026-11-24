@@ -14,6 +14,6 @@ default = []
 json = ["dep:serde_json"]
 
 [dependencies]
-fs-forms-layout = { path = "../fs-forms-layout" }
+fs-forms-layout = { path = "../fs-forms-layout", version = "0.1.0" }
 toml_edit = "0.22"
 serde_json = { version = "1", optional = true }

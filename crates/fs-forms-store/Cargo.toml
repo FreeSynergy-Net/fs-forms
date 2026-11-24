@@ -9,9 +9,9 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-fs-forms-layout = { path = "../fs-forms-layout" }
+fs-forms-layout = { path = "../fs-forms-layout", version = "0.1.0" }
 # Edge to fs-objects v5 (spec::{Col, Logical, Table}, migrate::Step): one source per library, the tag of fs-forms-core.
-fs-objects = { git = "https://github.com/FreeSynergy-Net/fs-objects", tag = "v0.0.10", features = ["v5"] }
+fs-objects = { git = "https://github.com/FreeSynergy-Net/fs-objects", tag = "v0.0.10", features = ["v5"], version = "0.0.10" }
 
 [dev-dependencies]
 # The real engine of fs-objects (same version, same features, already in Cargo.lock): the tables are run against it, not only against a model.

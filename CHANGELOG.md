@@ -14,6 +14,7 @@ Version = tag; all crates of the workspace carry the same version.
 - `fs-rpc` re-pinned from v0.1.0 to v0.1.1 in all crates (fs-types v0.0.6, fs-interfaces v0.0.35 and fs-objects v0.0.10 are already what fs-rpc v0.1.1 pins). Written with the help of Claude (Anthropic).
 
 - M5 re-pin in all crates: `fs-interfaces` v0.0.35 to v0.1.0, `fs-rpc` v0.1.1 to v0.1.3 (one `fs-interfaces` in the graph), `fs-components` rev to b7368126 (M4: the board writes `after` and `before`). `FormEvents::new` takes the `BoardSource` as second argument (the probe of `write_gate` uses a `FixedBoard` with two cards, so `after` and `before` are carried channels); fixtures and tests declare `cards-in-columns@1.2.0`: `move` writes the neighbours, never `order`. Written with the help of Claude (Anthropic).
+- cargo-deny gate `licence` (branch `unreviewed/deny-wildcards-r1`): every `path` and `git` dependency in the nine crates now also names a `version` (the version of the target crate: our crates 0.1.0, `fs-rpc` 0.1.3, `fs-interfaces` 0.1.0, `fs-objects` 0.0.10, `fs-types` 0.0.5, `fs-tally`/`fs-ballot` 0.0.1), as in fs-components; `cargo deny check bans licenses` with `fs-release/configs/deny.toml` (`wildcards = "deny"`) was red and is now rc 0. Only `Cargo.toml` files change, `Cargo.lock` stays the same. The `uses:` lines of the workflows move to fs-release 72fc21ce. Written with the help of Claude (Anthropic).
 
 ### Deutsch
 
@@ -25,6 +26,7 @@ Version = tag; all crates of the workspace carry the same version.
 - `fs-rpc` von v0.1.0 auf v0.1.1 neu gepinnt (alle Crates; fs-types v0.0.6, fs-interfaces v0.0.35 und fs-objects v0.0.10 sind schon das, was fs-rpc v0.1.1 pinnt). Mit Hilfe von Claude (Anthropic) geschrieben.
 
 - M5 Re-Pin in allen Crates: `fs-interfaces` v0.0.35 auf v0.1.0, `fs-rpc` v0.1.1 auf v0.1.3 (ein `fs-interfaces` im Graphen), `fs-components` rev auf b7368126 (M4: das Brett schreibt `after` und `before`). `FormEvents::new` nimmt die `BoardSource` als zweites Argument (die Sonde von `write_gate` nutzt ein `FixedBoard` mit zwei Karten, damit `after` und `before` getragene Kanaele sind); Fixtures und Tests deklarieren `cards-in-columns@1.2.0`: `move` schreibt die Nachbarn, nie `order`. Geschrieben mit Hilfe von Claude (Anthropic).
+- cargo-deny Gate `licence` (Zweig `unreviewed/deny-wildcards-r1`): jede `path`- und `git`-Abhaengigkeit der neun Crates nennt jetzt auch eine `version` (die des Ziel-Crates), wie in fs-components; das Gate (`wildcards = "deny"`) war rot und ist jetzt rc 0. Nur `Cargo.toml`-Dateien aendern sich, `Cargo.lock` bleibt gleich. Die `uses:`-Zeilen der Workflows zeigen auf fs-release 72fc21ce. Mit Hilfe von Claude (Anthropic) geschrieben.
 
 ## 0.1.0
 

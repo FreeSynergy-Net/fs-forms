@@ -18,13 +18,13 @@ path = "src/main.rs"
 
 [dependencies]
 # ONLY the client and fs-components (ADR 0094 draft, item 6): never -core and never -server (a test checks `cargo tree`).
-fs-forms-client = { path = "../fs-forms-client" }
+fs-forms-client = { path = "../fs-forms-client", version = "0.1.0" }
 # One revision of fs-components (pinned by rev until the bundled release returns it to a tag) for everything; Blinc comes only through it (`fs_components::blinc`), never as a dependency here.
-fs-components = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "393e7af62bd4cc815906a88e04b3c98a08b46084" }
-fs-components-app = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "393e7af62bd4cc815906a88e04b3c98a08b46084" }
-fs-components-widgets = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "393e7af62bd4cc815906a88e04b3c98a08b46084" }
-fs-components-mf2 = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "393e7af62bd4cc815906a88e04b3c98a08b46084" }
-fs-components-words = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "393e7af62bd4cc815906a88e04b3c98a08b46084" }
+fs-components = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "393e7af62bd4cc815906a88e04b3c98a08b46084", version = "0.1.0" }
+fs-components-app = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "393e7af62bd4cc815906a88e04b3c98a08b46084", version = "0.1.0" }
+fs-components-widgets = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "393e7af62bd4cc815906a88e04b3c98a08b46084", version = "0.1.0" }
+fs-components-mf2 = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "393e7af62bd4cc815906a88e04b3c98a08b46084", version = "0.1.0" }
+fs-components-words = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "393e7af62bd4cc815906a88e04b3c98a08b46084", version = "0.1.0" }
 
 
 # The manifest of the frontend goes where the starter looks (`<XDG_DATA_DIRS>/freesynergy/frontends/<program>/<id>.metainfo.xml`):
@@ -44,6 +44,6 @@ assets = [
 
 [dev-dependencies]
 # The real server, started inside the tests only (a dev-dependency: `cargo tree -e normal` shows no way to -server).
-fs-forms-server = { path = "../fs-forms-server" }
+fs-forms-server = { path = "../fs-forms-server", version = "0.1.0" }
 tempfile = "3"
 png = "0.18"

@@ -37,8 +37,8 @@ impl TokenDelivery for Outbox {
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let (main, ballots) = (
-        Arc::new(TursoStore::open_in_memory().await?),
-        Arc::new(TursoStore::open_in_memory().await?),
+        Arc::new(TursoStore::open_with(":memory:", fs_objects::testing::options()).await?),
+        Arc::new(TursoStore::open_with(":memory:", fs_objects::testing::options()).await?),
     );
     let outbox = Arc::new(Outbox::default());
     let repo = SurveyRepo::new(main, ballots, "https://example.org/users/owner")

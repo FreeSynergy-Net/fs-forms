@@ -131,5 +131,9 @@ fn the_lock_names_the_code_of_the_rule() {
         "{codes:?}"
     );
     // `rows` names its rows by `label` too, so the same channel left out locks the table as well
-    assert!(!fs_forms_run::form_problems("table", r.as_ref()).is_empty());
+    let table = fs_forms_run::form_problems("table", r.as_ref());
+    assert!(
+        table.iter().any(|c| c.code == "form-channel-unmapped"),
+        "{table:?}"
+    );
 }

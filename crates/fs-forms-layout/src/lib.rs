@@ -54,11 +54,11 @@ pub use ids::{
 pub use layout::{BindingView, El, FORMAT_KNOWN, Layout};
 pub use limits::{CeilingSet, LimitSource, LimitSources, Limits, Technical};
 pub use memory::MemoryLayoutStore;
-pub use place::{AttrDoc, FrameDoc, Leaf, LeafMut, PlaceNode};
 pub use overlay::{
     Cause, Conflict, ElemLock, Field, Op, OpKind, Overlay, OverlayScope, OverlayState, Position,
     Resolution, Value,
 };
+pub use place::{AttrDoc, FrameDoc, Leaf, LeafMut, PlaceNode};
 pub use port::{
     LayoutAdmin, LayoutRead, LayoutStore, LayoutWrite, OverlayWrite, PackageLayouts, Pending,
 };

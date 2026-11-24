@@ -55,15 +55,7 @@ fn limits_off() -> Limits {
 pub fn from_rows(rows: &Rows, id: &LayoutId) -> Result<Layout, Vec<Coded<LayoutCode>>> {
     // every cell must fit its column (type, NULL rule, closed word list) BEFORE anything is read: a word the code does not know is a
     // code, never a substitute value
-    let broken: Vec<Coded<LayoutCode>> = validate(rows)
-        .into_iter()
-        .map(|d| {
-            Coded::new(LayoutCode::StoreBroken)
-                .with("file", "forms.db")
-                .with("cause", "rows")
-                .with("detail", d)
-        })
-        .collect();
+    let broken = broken_cells(rows);
     if !broken.is_empty() {
         return Err(broken);
     }
@@ -85,44 +77,14 @@ pub fn from_rows(rows: &Rows, id: &LayoutId) -> Result<Layout, Vec<Coded<LayoutC
         exec: head.text("exec").unwrap_or_default(),
         title_key: head.text("title_key").unwrap_or_default(),
         style: head.text("style"),
-        requires: Vec::new(),
-        sources: Vec::new(),
-        menu: Vec::new(),
+        requires: requires(rows, key),
+        sources: sources(rows, key),
+        menu: menu(rows, key, None),
         pages: Vec::new(),
         actions: Vec::new(),
         views: Vec::new(),
         messages: Vec::new(),
     };
-    let mut req: Vec<_> = each(rows, &t::REQUIRES).filter(|r| same(r, key)).collect();
-    req.sort_by_key(|r| r.int("seq"));
-    doc.requires = req
-        .iter()
-        .map(|r| {
-            item(
-                r,
-                RequiresDoc {
-                    range: range_text(r),
-                },
-            )
-        })
-        .collect();
-    let mut src: Vec<_> = each(rows, &t::SOURCE).filter(|r| same(r, key)).collect();
-    src.sort_by_key(|r| r.int("source"));
-    doc.sources = src
-        .iter()
-        .map(|r| {
-            let scope = r.text("scope").and_then(|w| Words::from_word(&w));
-            item(
-                r,
-                SourceDoc {
-                    range: range_text(r),
-                    data_type: r.text("data_type").unwrap_or_default(),
-                    scope,
-                },
-            )
-        })
-        .collect();
-    doc.menu = menu(rows, key, None);
     let mut walk = Walk::default();
     doc.pages = pages(rows, key, &mut walk);
     let nodes = each(rows, &t::NODE).filter(|r| same(r, key)).count();
@@ -143,10 +105,62 @@ pub fn from_rows(rows: &Rows, id: &LayoutId) -> Result<Layout, Vec<Coded<LayoutC
     }
     doc.actions = actions(rows, key);
     doc.views = views(rows, key);
+    doc.messages = messages(rows, key);
+    if !problems.is_empty() {
+        return Err(problems);
+    }
+    doc.check(&OpenCatalog, &limits_off())
+}
+
+fn broken_cells(rows: &Rows) -> Vec<Coded<LayoutCode>> {
+    validate(rows)
+        .into_iter()
+        .map(|d| {
+            Coded::new(LayoutCode::StoreBroken)
+                .with("file", "forms.db")
+                .with("cause", "rows")
+                .with("detail", d)
+        })
+        .collect()
+}
+
+fn requires(rows: &Rows, key: &str) -> Vec<Item<RequiresDoc>> {
+    let mut req: Vec<_> = each(rows, &t::REQUIRES).filter(|r| same(r, key)).collect();
+    req.sort_by_key(|r| r.int("seq"));
+    req.iter()
+        .map(|r| {
+            item(
+                r,
+                RequiresDoc {
+                    range: range_text(r),
+                },
+            )
+        })
+        .collect()
+}
+
+fn sources(rows: &Rows, key: &str) -> Vec<Item<SourceDoc>> {
+    let mut src: Vec<_> = each(rows, &t::SOURCE).filter(|r| same(r, key)).collect();
+    src.sort_by_key(|r| r.int("source"));
+    src.iter()
+        .map(|r| {
+            let scope = r.text("scope").and_then(|w| Words::from_word(&w));
+            item(
+                r,
+                SourceDoc {
+                    range: range_text(r),
+                    data_type: r.text("data_type").unwrap_or_default(),
+                    scope,
+                },
+            )
+        })
+        .collect()
+}
+
+fn messages(rows: &Rows, key: &str) -> Vec<Item<MessageDoc>> {
     let mut msgs: Vec<_> = each(rows, &t::MESSAGE).filter(|r| same(r, key)).collect();
     msgs.sort_by_key(|r| (r.text("key"), r.text("lang")));
-    doc.messages = msgs
-        .iter()
+    msgs.iter()
         .map(|r| {
             let m = MessageDoc {
                 key: r.text("key").unwrap_or_default(),
@@ -155,11 +169,7 @@ pub fn from_rows(rows: &Rows, id: &LayoutId) -> Result<Layout, Vec<Coded<LayoutC
             };
             item(r, m)
         })
-        .collect();
-    if !problems.is_empty() {
-        return Err(problems);
-    }
-    doc.check(&OpenCatalog, &limits_off())
+        .collect()
 }
 
 fn menu(rows: &Rows, id: &str, parent: Option<i64>) -> Vec<Item<MenuDoc>> {

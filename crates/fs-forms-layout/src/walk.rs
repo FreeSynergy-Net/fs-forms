@@ -43,6 +43,10 @@ pub(crate) fn walk(doc: &mut LayoutDoc, f: &mut Visitor<'_>) {
         for b in &mut p.v.blocks {
             let place = b.v.place.clone();
             emit!(f, ElemKind::Block, vec![page.clone(), place.clone()], b);
+            for a in &mut b.v.set {
+                let p = vec![page.clone(), place.clone(), a.v.name.clone()];
+                emit!(f, ElemKind::Attr, p, a);
+            }
             for bd in &mut b.v.bindings {
                 binding(bd, &page, &place, f);
             }
@@ -142,8 +146,13 @@ fn places(items: &mut [Item<PlaceNode>], page: &str, path: &[String], f: &mut Vi
         parts.extend(here.iter().cloned());
         match &mut it.v {
             PlaceNode::Block(b) => {
-                emit!(f, ElemKind::Block, parts, it);
+                emit!(f, ElemKind::Block, parts.clone(), it);
                 let joined = here.join("/");
+                for a in &mut b.set {
+                    let mut p = parts.clone();
+                    p.push(a.v.name.clone());
+                    emit!(f, ElemKind::Attr, p, a);
+                }
                 for bd in &mut b.bindings {
                     binding(bd, page, &joined, f);
                 }

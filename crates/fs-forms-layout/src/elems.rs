@@ -94,7 +94,7 @@ fn in_tree(pages: &[Item<PageDoc>], kind: ElemKind, id: &ElemId) -> bool {
                     || (kind == ElemKind::Attr && has(&f.set, id))
                     || go(&f.children, kind, id)
             }
-            _ => false,
+            PlaceNode::Block(b) => kind == ElemKind::Attr && has(&b.set, id),
         })
     }
     pages.iter().any(|p| go(&p.v.places, kind, id))
@@ -115,6 +115,8 @@ fn drop_place(items: &mut Vec<Item<PlaceNode>>, kind: ElemKind, id: &ElemId) {
                 f.set.retain(|a| !is(a.elem.as_ref(), id));
             }
             drop_place(&mut f.children, kind, id);
+        } else if let (PlaceNode::Block(b), ElemKind::Attr) = (&mut i.v, kind) {
+            b.set.retain(|a| !is(a.elem.as_ref(), id));
         }
     }
 }

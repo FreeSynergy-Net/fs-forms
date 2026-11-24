@@ -44,3 +44,4 @@ layout-error-export-failed = The export to {$file} failed ({$kind}).
 layout-error-content-too-large = {$name} has {$bytes} bytes, {$max} are allowed (set by {$by}).
 layout-error-menu-invalid = {$elem}: the menu entry is invalid ({$cause}).
 layout-error-source-unknown = {$elem}: there is no source {$source} in this description.
+layout-error-format-old = The file format {$found} is too old; the known format is {$known}. Write the pages again as places ([[page.place]], see the format 3 description); old files are not converted.

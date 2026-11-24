@@ -1,14 +1,15 @@
-//! The tree to the raw description (layer 1), format 1 and 2. Format 1 has no `elem`; format 2 needs it (the check reports
-//! `elem-missing`). Keys, types, words: every problem is collected, with its line where the file can tell.
+//! The tree to the raw description (layer 1), format 3 (older formats are refused with `format-old`). The `elem` of a node is needed (the check reports
+//! `elem-missing`); attributes get theirs from their path. Keys, types, words: every problem is collected, with its line where the file can tell.
 //!
 //! Pattern: Adapter (tree to model) with a collecting error list.
 
 use fs_forms_layout::{
-    ActionDoc, ActionTarget, BindFrom, BindingDoc, BlockDoc, FrontendKey, Item, LayoutDoc, MenuDoc,
-    MenuKind, MessageDoc, OrderDoc, PageDoc, Reference, RequiresDoc, SourceDoc, ViewDoc,
+    ActionDoc, ActionTarget, BindFrom, BindingDoc, Coded, FrontendKey, Item, LayoutCode, LayoutDoc,
+    MenuDoc, MenuKind, MessageDoc, OrderDoc, PageDoc, Reference, RequiresDoc, SourceDoc, ViewDoc,
 };
 
 use crate::fields::{Ctx, Fields};
+use crate::read_place::places;
 use crate::tree::Tree;
 use fs_forms_layout::Words;
 
@@ -22,7 +23,7 @@ fn word<W: Words>(f: &mut Fields<'_>, cx: &mut Ctx<'_>, key: &str) -> Option<W> 
 }
 
 /// Reads every element of a list with `one`, which gets the table fields and returns the value.
-fn items<'a, T>(
+pub(crate) fn items<'a, T>(
     list: &'a [Tree],
     what: &'a str,
     cx: &mut Ctx<'_>,
@@ -53,6 +54,14 @@ pub(crate) fn layout_doc(root: &Tree, cx: &mut Ctx<'_>) -> Option<LayoutDoc> {
     {
         cx.bad("type", "kind");
     }
+    if (1..fs_forms_layout::FORMAT_KNOWN).contains(&format) {
+        cx.errs.push(
+            Coded::new(LayoutCode::FormatOld)
+                .with("found", format)
+                .with("known", fs_forms_layout::FORMAT_KNOWN),
+        );
+        return None; // no second reading path: old files are written again, not converted
+    }
     let frontend = f.req_str(cx, "id");
     let extends = f.req_str(cx, "extends");
     let (exec, title_key, style) = (
@@ -78,8 +87,8 @@ pub(crate) fn layout_doc(root: &Tree, cx: &mut Ctx<'_>) -> Option<LayoutDoc> {
         page: f.req_str(cx, "page"),
         frame: f.req_str(cx, "frame"),
         navigation: word(f, cx, "navigation").unwrap_or(fs_forms_layout::Navigation::Single),
-        blocks: items(f.list(cx, "block"), "block", cx, block),
-        places: Vec::new(),
+        blocks: Vec::new(),
+        places: places(f.list(cx, "place"), cx),
     });
     let actions = items(f.list(cx, "action"), "action", cx, action);
     let views = items(f.list(cx, "view"), "view", cx, view);
@@ -125,18 +134,7 @@ fn menus(list: &[Tree], cx: &mut Ctx<'_>) -> Vec<Item<MenuDoc>> {
     items(list, "menu", cx, one)
 }
 
-fn block(f: &mut Fields<'_>, cx: &mut Ctx<'_>) -> BlockDoc {
-    BlockDoc {
-        place: f.req_str(cx, "place"),
-        block: f.req_str(cx, "block"),
-        source: f.uint(cx, "source"),
-        title_key: f.str(cx, "title"),
-        text_key: f.str(cx, "text"),
-        bindings: items(f.list(cx, "bind"), "bind", cx, binding),
-    }
-}
-
-fn binding(f: &mut Fields<'_>, cx: &mut Ctx<'_>) -> BindingDoc {
+pub(crate) fn binding(f: &mut Fields<'_>, cx: &mut Ctx<'_>) -> BindingDoc {
     let (slot, nth) = (f.req_str(cx, "slot"), f.uint(cx, "nth").unwrap_or(0));
     let (field, role) = (f.str(cx, "field"), f.str(cx, "role"));
     let (grouping, order, command) = (

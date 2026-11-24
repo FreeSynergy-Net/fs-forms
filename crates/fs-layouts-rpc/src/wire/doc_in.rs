@@ -195,6 +195,7 @@ fn read_page(p: w::page::Reader<'_>) -> R<Item<PageDoc>> {
                     source: (b.get_source() != 0).then(|| b.get_source()),
                     title_key: opt(b.get_title_key())?,
                     text_key: opt(b.get_text_key())?,
+                    set: Vec::new(),
                     bindings,
                 },
             ))

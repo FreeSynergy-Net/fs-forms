@@ -212,6 +212,7 @@ fn block(rows: &Rows, id: &str, page: &str, b: &RowReader<'_>) -> Item<BlockDoc>
             source: b.uint("source"),
             title_key: b.text("title_key"),
             text_key: b.text("text_key"),
+            set: Vec::new(),
             bindings,
         },
     )

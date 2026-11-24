@@ -114,6 +114,23 @@ impl<'a> Fields<'a> {
             None
         }
     }
+    /// Line of the table (0 = unknown).
+    pub(crate) fn line(&self) -> u32 {
+        self.line
+    }
+    /// A table value (key = value pairs) and its line; a wrong type is reported.
+    pub(crate) fn table(
+        &mut self,
+        cx: &mut Ctx<'_>,
+        key: &str,
+    ) -> Option<(&'a [(String, Tree)], u32)> {
+        if let Tree::Obj(o, line) = self.take(key)? {
+            Some((o, *line))
+        } else {
+            cx.bad_at(self.line, "type", key);
+            None
+        }
+    }
     pub(crate) fn list(&mut self, cx: &mut Ctx<'_>, key: &str) -> &'a [Tree] {
         match self.take(key) {
             None => &[],

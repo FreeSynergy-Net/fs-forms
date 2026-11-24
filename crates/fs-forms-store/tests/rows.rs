@@ -51,6 +51,7 @@ fn layout() -> Layout {
         source: Some(1),
         title_key: Some("t".into()),
         text_key: Some("tx".into()),
+        set: vec![],
         bindings: vec![
             it(
                 "binding:a",

@@ -43,6 +43,7 @@ pub fn doc(frontend: &str) -> LayoutDoc {
         source: None,
         title_key: None,
         text_key: None,
+        set: vec![],
         bindings: vec![item("binding:board/main/title/0", binding)],
     };
     let page = PageDoc {
@@ -53,7 +54,7 @@ pub fn doc(frontend: &str) -> LayoutDoc {
         places: vec![],
     };
     LayoutDoc {
-        format: 2,
+        format: 3,
         key: key(frontend),
         exec: "fs-forms-run".into(),
         title_key: "board-title".into(),

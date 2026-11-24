@@ -49,7 +49,7 @@ pub fn pkg(version: &str) -> PackageRef {
     }
 }
 
-/// One page `board`, one block `main`, one binding `title`, one message; format 2 with every elem.
+/// One page `board`, one block `main`, one binding `title`, one message; format 3 with every elem.
 pub fn doc(frontend: &str) -> LayoutDoc {
     let binding = BindingDoc {
         slot: "title".into(),
@@ -66,6 +66,7 @@ pub fn doc(frontend: &str) -> LayoutDoc {
         source: None,
         title_key: None,
         text_key: None,
+        set: vec![],
         bindings: vec![item("binding:board/main/title/0", binding)],
     };
     let page = PageDoc {
@@ -76,7 +77,7 @@ pub fn doc(frontend: &str) -> LayoutDoc {
         places: vec![],
     };
     LayoutDoc {
-        format: 2,
+        format: 3,
         key: FrontendKey {
             extends: "net.example.Tasks".into(),
             frontend: frontend.into(),

@@ -26,11 +26,13 @@ pub enum WhenOpen {
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum Opened {
-    /// Opened new, with a hold of its own.
+    /// Opened new. Its records (and the hold of its module) are the shared ones of its record: a second view of the same record
+    /// attaches to them, only the first makes them ([`crate::RecordHub`]).
     New(WindowId),
     /// The very same id (same record) was open: brought forward.
     Raised(WindowId),
-    /// The place stays and shows another record: records and hold stay (same module), only `page(scope)` is asked again. `id` is the
+    /// The place stays and shows another record: the grip of the hub moves from the records of the old
+    /// record to those of the new one (the old ones fall when no other view shows them), and `page(scope)` is asked again. `id` is the
     /// id of the record now shown, `from` the record shown before.
     Switched {
         /// The id of the record now shown.

@@ -174,7 +174,7 @@ pub struct OpenedFrontend {
 pub trait WindowOwner: Send + Sync {
     /// Opens `req.key` in `req.mode` and says what it did ([`Opened`]). The same [`WindowId`] already open: [`Opened::Raised`], no
     /// second frontend (the circle people, calendar, people ends here). The same place open with another record: `req.when_open`
-    /// decides ([`decide`]): `Switch` keeps records and hold and only changes the record ([`Opened::Switched`]), `Window` opens a
+    /// decides ([`decide`]): `Switch` keeps the place and the module and moves the grip of the hub from the old record to the new one ([`Opened::Switched`]), `Window` opens a
     /// second one. The owner never asks: `Ask` (and `Tab`, phase 2) is answered by the host before it calls.
     ///
     /// # Errors

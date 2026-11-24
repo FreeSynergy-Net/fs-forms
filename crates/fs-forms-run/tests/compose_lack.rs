@@ -76,3 +76,18 @@ fn only_empty_parts_make_no_lack_strip() {
     );
     assert_eq!(c.state, HostState::Ready, "nothing lacks, so no strip");
 }
+
+#[test]
+fn a_notice_alone_is_no_lack_and_no_locked_status() {
+    let mut v = view(vec![page(
+        "board",
+        1,
+        Vec::new(),
+        vec![place("main", 0, Vec::new())],
+    )]);
+    v.notices.push(Coded::new("host-notice-style-unknown"));
+    let c = compose(&v, &catalog());
+    assert!(c.lacking.is_empty(), "{:?}", c.lacking);
+    assert_eq!(c.state, HostState::Ready, "a notice is no lock");
+    assert_eq!(c.notices.len(), 1, "the notice stays its own line");
+}

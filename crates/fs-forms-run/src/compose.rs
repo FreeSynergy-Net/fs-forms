@@ -14,7 +14,7 @@ use crate::view::{Coded, PageView, View};
 pub enum HostState {
     /// Everything is drawn.
     Ready,
-    /// At least one part is locked or noted; the rest runs.
+    /// At least one part is locked, refused or unavailable (never a mere notice); the rest runs.
     Partial,
     /// Nothing can be drawn; the window shows the notices only.
     Refused,
@@ -139,9 +139,10 @@ fn only_empty(c: &Coded) -> bool {
 
 /// The names of the parts that really lack something: a placement with a lock of a slot, a part that is locked for another reason
 /// than being empty (not reachable, not allowed, no module, block not built). An empty page or an empty part never counts.
+/// A notice of the window is no lack: it stays a line of its own.
 ///
 /// Pattern: Specification (one predicate "really lacks", asked of every node).
-fn lacking_of(screens: &[ScreenTree], notice: bool) -> Vec<String> {
+fn lacking_of(screens: &[ScreenTree]) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
     for s in screens {
         for n in &s.nodes {
@@ -158,9 +159,6 @@ fn lacking_of(screens: &[ScreenTree], notice: bool) -> Vec<String> {
                 out.push(name);
             }
         }
-    }
-    if notice {
-        out.push(String::new());
     }
     out
 }
@@ -179,7 +177,7 @@ pub fn compose(view: &View, catalog: &dyn Catalog) -> Composition {
         .iter()
         .flat_map(|s| &s.nodes)
         .any(|n| matches!(n, Node::Block { .. }));
-    let lacking = lacking_of(&screens, !notices.is_empty());
+    let lacking = lacking_of(&screens);
     let state = match (drawn, lacking.is_empty()) {
         (true, true) => HostState::Ready,
         (true, false) => HostState::Partial,

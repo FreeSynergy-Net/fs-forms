@@ -30,11 +30,22 @@ pub(crate) fn slot(data: bool) -> Slot {
     if data { Slot::Unfinished } else { Slot::Empty }
 }
 
-/// The placeholder of the slot `name` with the reason "not finished yet" as tooltip (hover, focus, press); same size as a part.
+/// Rows of bars a placeholder shows (a height, so the tooltip has a surface to be reached).
+const BARS: usize = 3;
+
+/// The grey bars of the slot `name`, with an id of their own per slot `id`.
+fn placeholder(id: &str, name: &str) -> Skeleton {
+    Skeleton::new(name)
+        .id(&format!("unfinished-{id}-skel"))
+        .lines(BARS)
+}
+
+/// The placeholder of the slot `name` with the reason "not finished yet" as tooltip (hover, focus, press); it has bars, so it is
+/// a surface of a height, not an empty box.
 pub(crate) fn unfinished(locale: &Locale, id: &str, name: &str) -> Div {
     let labels = Labels::for_locale(locale);
     Disabled::new(&format!("unfinished-{id}"), Why::Unsupported, &labels)
-        .wrap(div().child(Skeleton::new(name).build()))
+        .wrap(div().child(placeholder(id, name).build()))
 }
 
 #[cfg(test)]
@@ -48,6 +59,12 @@ mod tests {
         assert_eq!(slot(false), Slot::Empty);
         assert_eq!(slot(true), Slot::Unfinished);
         assert!(!has_data(&NoRecords), "nothing connected: nothing is there");
+    }
+
+    #[test]
+    fn the_placeholder_has_bars_and_an_id_per_slot() {
+        assert!(placeholder("a", "a").bars() >= 1, "no bars means no height");
+        let _ = unfinished(&Locale::from_posix("en").expect("a locale"), "a", "a");
     }
 
     #[test]

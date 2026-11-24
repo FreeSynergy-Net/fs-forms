@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use fs_components_app::{AppError, AppWidget, Menu, MenuEntry, Screen, Status};
 use fs_components_mf2::Mf2Texts;
-use fs_components_widgets::{dialogs, states};
+use fs_components_widgets::states;
 use fs_components_words::{Locale, Localized};
 
 use crate::compose::{Composition, HostState, Node, ScreenTree};
@@ -85,7 +85,7 @@ const KANBAN_KEYS: &[&str] = &[
 ];
 
 /// The head of a column of the member list, by channel (the words come from the MF2 files, `host-channel-*`).
-const CHANNEL_KEYS: &[&str] = &["channel.person", "channel.role", "channel.badge"];
+const CHANNEL_KEYS: &[&str] = &["channel.label", "channel.role", "channel.badge"];
 
 /// The sentence of each key of the board (MF2 ids carry a hyphen where the key has a dot).
 fn kanban_words(texts: &Mf2Texts) -> std::collections::HashMap<String, String> {
@@ -153,9 +153,8 @@ pub fn app_styled(
         records,
         say: Arc::new(move |key: &str| said.get(key).cloned().unwrap_or_else(|| key.to_owned())),
         actions: Arc::new(view.actions.clone()),
-        ask: Arc::default(),
-        labels: dialogs::Labels::for_locale(locale),
-        people: Arc::default(),
+        locale: locale.clone(),
+        mounts: Arc::default(),
     };
     let labels = states::Labels::for_locale(locale);
     let title = if view.title.is_empty() {
@@ -169,7 +168,7 @@ pub fn app_styled(
         .map(|s| {
             let page = Page {
                 ctx: Ctx {
-                    people: Arc::default(),
+                    mounts: Arc::default(),
                     ..ctx.clone()
                 },
                 empty: texts.plain("host-page-empty"),

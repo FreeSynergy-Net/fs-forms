@@ -138,7 +138,7 @@ fn an_accepted_call_reads_the_form_again_and_the_board_shows_the_new_state() {
     let w = Arc::new(FakeWriter::default());
     let r = records(&w, data());
     assert_eq!(
-        r.columns()
+        columns(&r)
             .iter()
             .find(|c| c.key == "todo")
             .map(|c| c.cards.len()),
@@ -162,7 +162,7 @@ fn an_accepted_call_reads_the_form_again_and_the_board_shows_the_new_state() {
         [("column", "doing"), ("index", "0"), ("board", "b1")]
     );
     assert_eq!(*w.reloads.lock().unwrap(), 1);
-    let cols = r.columns();
+    let cols = columns(&r);
     assert!(
         cols.iter().all(|c| c.key != "todo"),
         "a is no longer in todo"
@@ -192,7 +192,7 @@ fn a_refused_call_changes_nothing_and_is_not_read_again() {
     );
     assert_eq!(*w.reloads.lock().unwrap(), 0);
     assert_eq!(
-        r.columns()
+        columns(&r)
             .iter()
             .find(|c| c.key == "todo")
             .map(|c| c.cards.len()),
@@ -264,4 +264,16 @@ fn create_comes_only_from_the_page_never_from_the_may_of_a_row() {
     let mut d = data();
     d.rows.iter_mut().for_each(|r| r.may.clear());
     assert!(allowed(&d, "create", None), "the page says create");
+}
+
+/// The columns of the board of the form `cards-in-columns` as the component reads them from the records.
+fn columns(r: &FormRecords) -> Vec<fs_components_kanban::Column> {
+    use crate::records::Records as _;
+    let forms = r.forms();
+    let data = forms
+        .iter()
+        .find(|d| d.declared.form.name == "cards-in-columns");
+    data.map_or_else(Vec::new, |d| {
+        fs_components_kanban::columns_of(&crate::form_data::input_of(d))
+    })
 }

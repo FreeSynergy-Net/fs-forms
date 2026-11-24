@@ -11,63 +11,15 @@
 
 use std::sync::{Arc, PoisonError, RwLock};
 
-use fs_components_fields::FieldSlot;
-use fs_components_kanban::{Answer, Card, Column};
+use fs_components_core::form_read::{ChannelInfo, FieldInfo, FormInput};
+use fs_components_core::states::Load;
+use fs_components_kanban::Answer;
 use fs_forms_bind::{Basic, ModuleForm};
 
 use crate::records::{Records, SideItem};
 use crate::write::{Invocation, Writer, allowed, args_of, command_key};
 
-/// One record: a key and its values by channel (a channel may have several values; a record may leave a channel out).
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FormRow {
-    /// The key of the record.
-    pub key: String,
-    /// The values by channel name.
-    pub values: Vec<(String, Vec<String>)>,
-    /// What the module lets the asking person do with this record: the keys of its commands (`card.move`). No statement = nothing.
-    pub may: Vec<String>,
-}
-
-impl FormRow {
-    /// A row with these `(channel, value)` pairs (one value each).
-    #[must_use]
-    pub fn of(key: &str, pairs: &[(&str, &str)]) -> Self {
-        Self {
-            key: key.to_owned(),
-            values: pairs
-                .iter()
-                .map(|(c, v)| ((*c).to_owned(), vec![(*v).to_owned()]))
-                .collect(),
-            may: Vec::new(),
-        }
-    }
-
-    /// The same row with the commands the person may use on it.
-    #[must_use]
-    pub fn allowing(mut self, keys: &[&str]) -> Self {
-        self.may = keys.iter().map(|k| (*k).to_owned()).collect();
-        self
-    }
-
-    /// The values of `channel` (none when the record leaves it out).
-    #[must_use]
-    pub fn all(&self, channel: &str) -> &[String] {
-        self.values
-            .iter()
-            .find(|(c, _)| c == channel)
-            .map_or(&[], |(_, v)| v.as_slice())
-    }
-
-    /// The first value of `channel`; empty values count as none.
-    #[must_use]
-    pub fn get(&self, channel: &str) -> Option<&str> {
-        self.all(channel)
-            .first()
-            .map(String::as_str)
-            .filter(|v| !v.is_empty())
-    }
-}
+pub use fs_components_core::form_read::FormRow;
 
 /// One form a module offers: its declaration and its rows.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -131,77 +83,60 @@ fn block_of(basic: Basic) -> &'static str {
     }
 }
 
-/// The bar of a card from the text of the channel `progress`: a number, cut to 0 to 100 (a text that is no number: no bar).
-#[allow(
-    clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
-    reason = "the value is cut to 0..=100 first"
-)]
-fn percent(text: &str) -> Option<u8> {
-    let p: f64 = text.trim().parse().ok()?;
-    p.is_finite().then(|| p.clamp(0.0, 100.0).round() as u8)
-}
-
-/// The card of a row: title, bar and the facts in the order of the map of the channel `facts`.
-fn card_of(data: &FormData, row: &FormRow, title: &str) -> Card {
-    let mut card = Card::new(&row.key, title);
-    card.progress = row.get("progress").and_then(percent);
-    let names: &[String] = data
+/// The form as a component is given it: the channels with the fields the module maps to them (and the block that draws a value of the
+/// field's type), the named columns as the choices of the channel `column`.
+#[must_use]
+pub fn input_of(data: &FormData) -> FormInput {
+    let channels = data
         .declared
         .map
         .iter()
-        .find(|(c, _)| c == "facts")
-        .map_or(&[], |(_, f)| f.as_slice());
-    for (i, field) in names.iter().enumerate() {
-        let basic = data
-            .declared
-            .fields
-            .iter()
-            .find(|(n, _)| n == field)
-            .map_or(Basic::Text, |(_, b)| *b);
-        let (block, label) = (block_of(basic), format!("fact.{field}"));
-        let value = row.all("facts").get(i).map_or("", String::as_str);
-        card = card.fact_or_more(if value.is_empty() {
-            FieldSlot::unset(block, &label)
-        } else {
-            FieldSlot::new(block, &label, value)
-        });
+        .map(|(channel, fields)| ChannelInfo {
+            name: channel.clone(),
+            fields: fields
+                .iter()
+                .map(|name| FieldInfo {
+                    name: name.clone(),
+                    block: block_of(
+                        data.declared
+                            .fields
+                            .iter()
+                            .find(|(n, _)| n == name)
+                            .map_or(Basic::Text, |(_, b)| *b),
+                    )
+                    .to_owned(),
+                })
+                .collect(),
+            choices: if channel == "column" {
+                data.columns.clone()
+            } else {
+                Vec::new()
+            },
+        })
+        .collect();
+    let f = &data.declared.form;
+    FormInput {
+        form: format!("{}@{}.{}.0", f.name, f.major, f.minor),
+        rows: data.rows.clone(),
+        channels,
+        may: data.may.clone(),
+        load: Load::Ready,
     }
-    card
+}
+
+/// Nothing to draw: the module does not offer the form (or the block names none).
+#[must_use]
+pub fn empty_input(form: &str) -> FormInput {
+    FormInput {
+        form: form.to_owned(),
+        rows: Vec::new(),
+        channels: Vec::new(),
+        may: Vec::new(),
+        load: Load::Ready,
+    }
 }
 
 impl Records for FormRecords {
-    /// The cards of the form `cards-in-columns`: the columns the module names (also empty ones), then the others in order of
-    /// appearance. The key of a column is the value of the channel `column` unchanged; its name is `column-label` or the key.
-    fn columns(&self) -> Vec<Column> {
-        let forms = self.forms();
-        let Some(data) = forms
-            .iter()
-            .find(|f| f.declared.form.name == "cards-in-columns")
-        else {
-            return Vec::new();
-        };
-        let mut out: Vec<Column> = data
-            .columns
-            .iter()
-            .map(|(key, label)| Column::new(key, label))
-            .collect();
-        for row in &data.rows {
-            let (Some(title), Some(column)) = (row.get("title"), row.get("column")) else {
-                continue; // required channels: a row without them cannot be placed
-            };
-            let at = out.iter().position(|c| c.key == column).unwrap_or_else(|| {
-                out.push(Column::new(
-                    column,
-                    row.get("column-label").unwrap_or(column),
-                ));
-                out.len() - 1
-            });
-            out[at].cards.push(card_of(data, row, title));
-        }
-        order::sort_by_order(&mut out, &data.rows);
-        out
-    }
     fn side(&self) -> Vec<SideItem> {
         Vec::new()
     }
@@ -284,10 +219,5 @@ impl Records for FormRecords {
     }
 }
 
-#[cfg(test)]
-mod card_tests;
-mod order;
-#[cfg(test)]
-mod order_tests;
 #[cfg(test)]
 mod tests;

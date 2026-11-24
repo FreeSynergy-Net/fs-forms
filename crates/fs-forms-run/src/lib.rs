@@ -18,7 +18,6 @@ mod catalog;
 mod compose;
 mod draw;
 mod error;
-mod events;
 mod file;
 mod form_check;
 mod form_data;
@@ -36,6 +35,7 @@ mod view;
 mod window;
 mod words;
 pub mod write;
+mod write_gate;
 
 pub use args::{Command, Config, HELP, parse};
 pub use blocks::Blocks;

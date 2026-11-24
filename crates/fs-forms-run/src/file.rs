@@ -205,7 +205,13 @@ fn locate(root: &Path, extends: &str, frontend: &str) -> Result<(PathBuf, Layout
         }),
         _ if !frontend.is_empty() => Err(HostError::FrontendAmbiguous {
             id: frontend.to_owned(),
-            files: found.iter().map(|(f, _)| f.display().to_string()).collect(),
+            files: found
+                .iter()
+                .map(|(f, _)| {
+                    let rel = f.strip_prefix(root).unwrap_or(f);
+                    rel.to_string_lossy().replace('\\', "/")
+                })
+                .collect(),
         }),
         _ => Err(missing(&dir)),
     }
@@ -232,7 +238,7 @@ fn available_in(dir: &Path, extends: &str) -> Result<Vec<String>, HostError> {
 pub struct Loaded {
     /// The resolved description.
     pub view: View,
-    /// The file that was read, relative to the folder the link was made with (the path itself for a single file).
+    /// The file that was read, relative to the folder the link was made with (for a single file: its file name).
     pub file: PathBuf,
 }
 

@@ -11,6 +11,7 @@ use fs_forms_layout::{
 };
 
 use crate::from_rows_parts::{actions, views};
+use crate::from_rows_tree::{Walk, attrs, places};
 use crate::rows::{Row, RowReader, Rows, validate};
 use crate::spec::Table;
 use crate::tables as t;
@@ -38,8 +39,12 @@ pub(crate) fn same(r: &RowReader<'_>, id: &str) -> bool {
 
 fn limits_off() -> Limits {
     let mut l = Limits::declared();
-    (l.elements_max, l.menu_depth_max, l.place_depth_max, l.text_bytes_max) =
-        (u32::MAX, u32::MAX, u32::MAX, u32::MAX);
+    (
+        l.elements_max,
+        l.menu_depth_max,
+        l.place_depth_max,
+        l.text_bytes_max,
+    ) = (u32::MAX, u32::MAX, u32::MAX, u32::MAX);
     l
 }
 
@@ -72,7 +77,7 @@ pub fn from_rows(rows: &Rows, id: &LayoutId) -> Result<Layout, Vec<Coded<LayoutC
         ]);
     };
     let mut doc = LayoutDoc {
-        format: 2, // rows always carry their ids; a broken one is `elem-missing`, never replaced by a natural id
+        format: head.uint("format").unwrap_or(0), // as written; rows always carry their ids: a broken one is `elem-missing`, never replaced by a natural id
         key: FrontendKey {
             extends: head.text("extends").unwrap_or_default(),
             frontend: head.text("frontend").unwrap_or_default(),
@@ -118,7 +123,24 @@ pub fn from_rows(rows: &Rows, id: &LayoutId) -> Result<Layout, Vec<Coded<LayoutC
         })
         .collect();
     doc.menu = menu(rows, key, None);
-    doc.pages = pages(rows, key);
+    let mut walk = Walk::default();
+    doc.pages = pages(rows, key, &mut walk);
+    let nodes = each(rows, &t::NODE).filter(|r| same(r, key)).count();
+    let mut problems = walk.problems;
+    if nodes != walk.seen {
+        problems.push(
+            Coded::new(LayoutCode::StoreBroken)
+                .with("file", "forms.db")
+                .with("cause", "rows")
+                .with(
+                    "detail",
+                    format!(
+                        "forms_node: {} of {nodes} rows are not reachable from a page",
+                        nodes - walk.seen.min(nodes)
+                    ),
+                ),
+        );
+    }
     doc.actions = actions(rows, key);
     doc.views = views(rows, key);
     let mut msgs: Vec<_> = each(rows, &t::MESSAGE).filter(|r| same(r, key)).collect();
@@ -134,6 +156,9 @@ pub fn from_rows(rows: &Rows, id: &LayoutId) -> Result<Layout, Vec<Coded<LayoutC
             item(r, m)
         })
         .collect();
+    if !problems.is_empty() {
+        return Err(problems);
+    }
     doc.check(&OpenCatalog, &limits_off())
 }
 
@@ -166,7 +191,7 @@ fn menu(rows: &Rows, id: &str, parent: Option<i64>) -> Vec<Item<MenuDoc>> {
         .collect()
 }
 
-fn pages(rows: &Rows, id: &str) -> Vec<Item<PageDoc>> {
+fn pages(rows: &Rows, id: &str, walk: &mut Walk) -> Vec<Item<PageDoc>> {
     let mut list: Vec<_> = each(rows, &t::PAGE).filter(|r| same(r, id)).collect();
     list.sort_by_key(|r| r.int("seq"));
     list.iter()
@@ -177,6 +202,7 @@ fn pages(rows: &Rows, id: &str) -> Vec<Item<PageDoc>> {
                 .collect();
             blocks.sort_by_key(|r| r.int("seq"));
             let blocks = blocks.iter().map(|b| block(rows, id, &name, b)).collect();
+            let places = places(rows, id, &name, None, 1, walk);
             let nav = p
                 .text("navigation")
                 .and_then(|w| Words::from_word(&w))
@@ -188,7 +214,7 @@ fn pages(rows: &Rows, id: &str) -> Vec<Item<PageDoc>> {
                     frame: p.text("frame").unwrap_or_default(),
                     navigation: nav,
                     blocks,
-                    places: Vec::new(),
+                    places,
                 },
             )
         })
@@ -204,7 +230,10 @@ fn block(rows: &Rows, id: &str, page: &str, b: &RowReader<'_>) -> Item<BlockDoc>
     };
     let mut list: Vec<_> = each(rows, &t::BINDING).filter(|r| at(r)).collect();
     list.sort_by_key(|r| (r.text("slot"), r.int("nth")));
-    let bindings = list.iter().map(|r| binding(rows, r, &at)).collect();
+    let bindings = list
+        .iter()
+        .map(|r| binding_from(rows, r, &t::BINDING_SCHEME, &at))
+        .collect();
     item(
         b,
         BlockDoc {
@@ -214,14 +243,15 @@ fn block(rows: &Rows, id: &str, page: &str, b: &RowReader<'_>) -> Item<BlockDoc>
             title_key: b.text("title_key"),
             text_key: b.text("text_key"),
             bindings,
-            set: Vec::new(),
+            set: attrs(rows, id, "block", &b.text("elem").unwrap_or_default()),
         },
     )
 }
 
-fn binding(
+pub(crate) fn binding_from(
     rows: &Rows,
     r: &RowReader<'_>,
+    scheme_table: &Table,
     at: &dyn Fn(&RowReader<'_>) -> bool,
 ) -> Item<BindingDoc> {
     let name = || r.text("name").unwrap_or_default();
@@ -237,7 +267,7 @@ fn binding(
         Some("condition") => BindFrom::Condition,
         _ => BindFrom::Records,
     };
-    let mut sch: Vec<_> = each(rows, &t::BINDING_SCHEME)
+    let mut sch: Vec<_> = each(rows, scheme_table)
         .filter(|s| at(s) && s.text("slot") == r.text("slot") && s.int("nth") == r.int("nth"))
         .collect();
     sch.sort_by_key(|s| s.int("seq"));

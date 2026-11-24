@@ -12,6 +12,7 @@
 
 mod from_rows;
 mod from_rows_parts;
+mod from_rows_tree;
 mod rows;
 pub mod spec;
 /// The table specs are self-describing data: name, columns and constraints are the documentation.
@@ -21,8 +22,11 @@ pub mod tables;
 pub mod tables_body;
 #[allow(missing_docs)]
 pub mod tables_overlay;
+#[allow(missing_docs)]
+pub mod tables_tree;
 mod to_rows;
 mod to_rows_parts;
+mod to_rows_tree;
 
 pub use from_rows::from_rows;
 pub use rows::{Cell, Row, Rows, validate};

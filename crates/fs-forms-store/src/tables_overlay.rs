@@ -8,9 +8,9 @@ use crate::spec::{
     Step, Table,
 };
 use crate::tables::{
-    ACTION, BINDING, BINDING_SCHEME, BLOCK, CAUSE, FILTER_NODE, FILTER_VALUE, LAYOUT, LOG_ACTION,
-    MENU, MESSAGE, OP, OVERLAY_SCOPE, OVERLAY_STATE, PAGE, POSITION, REQUIRES, RESOLUTION, REV,
-    SOURCE, TARGET_KIND, VIEW, VIEW_ORDER,
+    ACTION, ATTR, BINDING, BINDING_SCHEME, BLOCK, CAUSE, FILTER_NODE, FILTER_VALUE, LAYOUT,
+    LOG_ACTION, MENU, MESSAGE, NODE, NODE_BINDING, NODE_SCHEME, OP, OVERLAY_SCOPE, OVERLAY_STATE,
+    PAGE, POSITION, REQUIRES, RESOLUTION, REV, SOURCE, TARGET_KIND, VIEW, VIEW_ORDER,
 };
 
 /// §16.8; F1b: `base_extends`/`base_frontend` (re-attach after uninstall + reinstall, D6), `deleted` (tombstone, never reused id).
@@ -154,7 +154,7 @@ pub const LOG: Table = Table {
     indexes: &["CREATE INDEX IF NOT EXISTS forms_log_at ON forms_log (at)"],
 };
 
-pub const ALL: [Table; 20] = [
+pub const ALL: [Table; 24] = [
     REV,
     LAYOUT,
     REQUIRES,
@@ -164,6 +164,10 @@ pub const ALL: [Table; 20] = [
     BLOCK,
     BINDING,
     BINDING_SCHEME,
+    NODE,
+    ATTR,
+    NODE_BINDING,
+    NODE_SCHEME,
     ACTION,
     VIEW,
     VIEW_ORDER,

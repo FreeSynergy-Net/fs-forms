@@ -207,6 +207,7 @@ fn read_page(p: w::page::Reader<'_>) -> R<Item<PageDoc>> {
             frame: txt(p.get_frame())?,
             navigation: word(p.get_navigation())?,
             blocks,
+            places: Vec::new(),
         },
     ))
 }

@@ -122,6 +122,7 @@ fn layout() -> Layout {
                 frame: "workbench".into(),
                 navigation: Navigation::ListDetail,
                 blocks: vec![it("block:main", block)],
+                places: vec![],
             },
         )],
         actions: vec![it(

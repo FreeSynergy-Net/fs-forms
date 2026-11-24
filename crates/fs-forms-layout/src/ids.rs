@@ -82,6 +82,7 @@ kinds! {
     Layout => "layout", Menu => "menu", Source => "source", Page => "page", Block => "block", Binding => "binding",
     BindingScheme => "binding-scheme", Action => "action", View => "view", ViewOrder => "view-order",
     FilterNode => "filter-node", FilterValue => "filter-value", Message => "message", Requires => "requires",
+    Frame => "frame", Attr => "attr",
 }
 
 /// An element: kind plus id.

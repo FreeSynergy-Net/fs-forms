@@ -125,7 +125,7 @@ impl LayoutDoc {
     /// views by (view, owner). The table has no sequence column for them and the exchange file writes them this way.
     fn canonical_order(&mut self) {
         for p in &mut self.pages {
-            for b in &mut p.v.blocks {
+            for b in p.v.leaves_mut() {
                 b.v.bindings.sort_by(|x, y| {
                     (x.v.slot.as_bytes(), x.v.nth).cmp(&(y.v.slot.as_bytes(), y.v.nth))
                 });
@@ -158,8 +158,8 @@ impl LayoutDoc {
                 );
             }
             let mut places = HashSet::new();
+            // Only the flat list must have one block per place; in the tree several children may share a place (check K8: F2).
             for b in &p.v.blocks {
-                let elem = b.elem.as_ref().map_or("", ElemId::as_str);
                 if !places.insert(b.v.place.as_str()) {
                     out.push(
                         Coded::new(LayoutCode::KeyTwice)
@@ -167,6 +167,9 @@ impl LayoutDoc {
                             .with("key", format!("{}/{}", p.v.page, b.v.place)),
                     );
                 }
+            }
+            for b in p.v.leaves() {
+                let elem = b.elem.as_ref().map_or("", ElemId::as_str);
                 if catalog.block_known(&b.v.block) {
                     check_bindings(&b.v.block, &b.v.bindings, catalog, out);
                 } else {

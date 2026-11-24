@@ -62,6 +62,7 @@ const KANBAN_KEYS: &[&str] = &[
     "kanban.soon",
     "kanban.refused.locked",
     "kanban.refused.unsupported",
+    "kanban.refused.ask-unsupported",
     "kanban.refused.unreachable",
     "kanban.refused.conflict",
     "kanban.refused.rejected",

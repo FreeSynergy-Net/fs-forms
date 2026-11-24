@@ -28,6 +28,7 @@ host-notice-data-reload = The module took the change, but reading it again faile
 host-notice-source-unknown = No data source of this host speaks the contract the description names; the board shows no records
 kanban-refused-locked = Locked: the description does not allow this
 kanban-refused-unsupported = The data source cannot do this
+kanban-refused-ask-unsupported = The data source wants a confirmation first, this window cannot ask it yet
 kanban-refused-unreachable = The data source does not answer
 kanban-refused-conflict = The board changed meanwhile; please try again
 kanban-refused-rejected = The data source refused this

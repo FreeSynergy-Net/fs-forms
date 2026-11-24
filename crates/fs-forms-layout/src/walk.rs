@@ -4,7 +4,7 @@
 
 use crate::doc::{BindingDoc, FilterDoc, Item, LayoutDoc, MenuDoc};
 use crate::ids::{ElemId, ElemKind};
-use crate::place::{PlaceNode, segment};
+use crate::place::{AttrDoc, PlaceNode, segment};
 
 /// What the visitor gets for one element.
 pub(crate) struct Visit<'a> {
@@ -43,6 +43,7 @@ pub(crate) fn walk(doc: &mut LayoutDoc, f: &mut Visitor<'_>) {
         for b in &mut p.v.blocks {
             let place = b.v.place.clone();
             emit!(f, ElemKind::Block, vec![page.clone(), place.clone()], b);
+            attrs(&mut b.v.set, &[page.clone(), place.clone()], f);
             for bd in &mut b.v.bindings {
                 binding(bd, &page, &place, f);
             }
@@ -70,6 +71,15 @@ pub(crate) fn walk(doc: &mut LayoutDoc, f: &mut Visitor<'_>) {
     for m in &mut doc.messages {
         let parts = vec![m.v.key.clone(), m.v.lang.clone()];
         emit!(f, ElemKind::Message, parts, m);
+    }
+}
+
+/// Attributes of a block or frame: natural key = the node path plus the attribute name.
+fn attrs(set: &mut [Item<AttrDoc>], base: &[String], f: &mut Visitor<'_>) {
+    for a in set {
+        let mut p = base.to_vec();
+        p.push(a.v.name.clone());
+        emit!(f, ElemKind::Attr, p, a);
     }
 }
 
@@ -142,7 +152,8 @@ fn places(items: &mut [Item<PlaceNode>], page: &str, path: &[String], f: &mut Vi
         parts.extend(here.iter().cloned());
         match &mut it.v {
             PlaceNode::Block(b) => {
-                emit!(f, ElemKind::Block, parts, it);
+                emit!(f, ElemKind::Block, parts.clone(), it);
+                attrs(&mut b.set, &parts, f);
                 let joined = here.join("/");
                 for bd in &mut b.bindings {
                     binding(bd, page, &joined, f);
@@ -150,11 +161,7 @@ fn places(items: &mut [Item<PlaceNode>], page: &str, path: &[String], f: &mut Vi
             }
             PlaceNode::Frame(fr) => {
                 emit!(f, ElemKind::Frame, parts.clone(), it);
-                for a in &mut fr.set {
-                    let mut p = parts.clone();
-                    p.push(a.v.name.clone());
-                    emit!(f, ElemKind::Attr, p, a);
-                }
+                attrs(&mut fr.set, &parts, f);
                 places(&mut fr.children, page, &here, f);
             }
         }

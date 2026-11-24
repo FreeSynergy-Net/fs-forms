@@ -118,6 +118,14 @@ codes! {
     MenuInvalid => "menu-invalid",
     /// `{elem, source}` a source number that the description does not have.
     SourceUnknown => "source-unknown",
+    /// `{elem, frame, place}` K4: the frame declares no such place.
+    PlaceUnknown => "place-unknown",
+    /// `{elem, place, name}` K6: the place does not take this block or frame.
+    PlaceTakes => "place-takes",
+    /// `{elem, place, count, min, max}` K6: too few or too many children on the place; `elem` is the frame or page.
+    PlaceCount => "place-count",
+    /// `{elem, name, owner}` K20, warning only: the key is not in the `sets` of the block or frame `owner`.
+    SetUnknown => "set-unknown",
 }
 
 /// The error texts of the layouts interface, German (ADR 0057, `MessageFormat` 2); one line per code: `layout-error-<code> = text`.

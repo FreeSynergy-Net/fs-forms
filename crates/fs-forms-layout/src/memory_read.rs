@@ -172,6 +172,7 @@ impl LayoutRead for MemoryLayoutStore {
                 None => unchecked_capabilities(&r.layout),
             };
             (r.problems, r.warnings) = split_provider_codes(codes);
+            r.warnings.extend(r.layout.warnings(&*self.catalog)); // K20: yellow, never blocking
             Ok(Some(r))
         })
     }

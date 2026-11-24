@@ -38,7 +38,8 @@ pub(crate) fn same(r: &RowReader<'_>, id: &str) -> bool {
 
 fn limits_off() -> Limits {
     let mut l = Limits::declared();
-    (l.elements_max, l.menu_depth_max, l.text_bytes_max) = (u32::MAX, u32::MAX, u32::MAX);
+    (l.elements_max, l.menu_depth_max, l.place_depth_max, l.text_bytes_max) =
+        (u32::MAX, u32::MAX, u32::MAX, u32::MAX);
     l
 }
 
@@ -213,6 +214,7 @@ fn block(rows: &Rows, id: &str, page: &str, b: &RowReader<'_>) -> Item<BlockDoc>
             title_key: b.text("title_key"),
             text_key: b.text("text_key"),
             bindings,
+            set: Vec::new(),
         },
     )
 }

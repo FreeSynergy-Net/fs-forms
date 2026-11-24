@@ -4,6 +4,7 @@
 
 use std::collections::HashSet;
 
+use crate::check_places::check_tree;
 use crate::codes::LayoutCode;
 use crate::doc::{BindingDoc, Item, LayoutDoc};
 use crate::ids::{ElemId, ElemKind};
@@ -23,6 +24,27 @@ pub trait CatalogRules {
     fn slot_known(&self, block: &str, slot: &str) -> bool;
     /// How many bindings the slot takes (`repeat`, 1..=16); `nth` must be below it.
     fn slot_repeat(&self, block: &str, slot: &str) -> u32;
+    /// The places a frame declares (K4, K6); `None` = the catalog says nothing, so no place is checked. The default is `None`.
+    fn places_of(&self, _frame: &str) -> Option<Vec<PlaceRule>> {
+        None
+    }
+    /// The `set` keys a block or frame accepts (K20); `None` = the catalog says nothing, so no key is checked. The default is `None`.
+    fn sets_of(&self, _name: &str) -> Option<Vec<String>> {
+        None
+    }
+}
+
+/// One place of a frame as the catalog declares it. Pattern: Value Object.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PlaceRule {
+    /// Name of the place.
+    pub place: String,
+    /// Names of the blocks and frames the place takes; empty = anything.
+    pub takes: Vec<String>,
+    /// Fewest children.
+    pub min: u32,
+    /// Most children.
+    pub max: u32,
 }
 
 /// A catalog that knows everything; for tests and for checks that must not depend on a catalog.
@@ -82,6 +104,9 @@ impl LayoutDoc {
             );
         }
         self.check_names(catalog, &mut out);
+        for p in &self.pages {
+            check_tree(p, catalog, limits, &mut out);
+        }
         doc_rules(&self, limits, &mut out);
         if out.is_empty() {
             Ok(Layout::from_checked(self))

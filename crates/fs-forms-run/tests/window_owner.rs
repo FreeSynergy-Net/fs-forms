@@ -1,6 +1,6 @@
 //! Conformance of the `WindowOwner` contract (S6-2), run against the double `FakeWindows` (counters instead of windows).
 //!
-//! Tests (W7 = S6-9 `place`): W1 the same description, only `mode` differs, gives the same child composition; W2 `open` of an id that is open returns
+//! (W2b, W7, W7b are in `window_owner_place.rs`.) Tests: W1 the same description, only `mode` differs, gives the same child composition; W2 `open` of an id that is open returns
 //! that id and makes no second frontend; W3 `close` lets records and held connection fall; W4 an unknown or refused frontend is an
 //! error with its code (locked, never empty); W5 a call in the child reaches the records of the child only; W6 the parent closed
 //! closes its children. What hangs on `fs_rpc::hold` (a real attach and detach on a module socket) is NOT built here: the double
@@ -10,90 +10,10 @@
 //! W2; M3 `close` keeps the entry or its hold -> W3; M4 an unknown key opens an empty frontend -> W4; M5 calls go to the parent
 //! records -> W5; M6 `close` leaves the children -> W6.
 
-use fs_forms_layout::{ElemId, FrontendKey};
-use fs_forms_run::{
-    FakeWindows, MenuItem, MenuState, OpenFrontend, PageView, PlaceView, Placement, TestCatalog,
-    View, WindowId, WindowOwner,
-};
+mod window_owner_common;
 
-fn key(extends: &str, frontend: &str) -> FrontendKey {
-    FrontendKey {
-        extends: extends.into(),
-        frontend: frontend.into(),
-    }
-}
-
-fn tasks() -> FrontendKey {
-    key("net.freesynergy.Tasks", "board")
-}
-
-fn settings() -> FrontendKey {
-    key("net.freesynergy.Settings", "settings")
-}
-
-fn view(title: &str, block: &str) -> View {
-    View {
-        frontend: title.into(),
-        title: title.into(),
-        style: None,
-        pages: vec![PageView {
-            page: "main".into(),
-            seq: 1,
-            frame: "workbench".into(),
-            locks: Vec::new(),
-            places: vec![PlaceView {
-                title: None,
-                place: "form".into(),
-                seq: 1,
-                block: block.into(),
-                locks: Vec::new(),
-                slot_locks: Vec::new(),
-            }],
-        }],
-        menu: vec![MenuItem {
-            id: "close".into(),
-            label: "Close".into(),
-            state: MenuState::Coming,
-        }],
-        notices: Vec::new(),
-        actions: Vec::new(),
-        sources: Vec::new(),
-    }
-}
-
-fn fake() -> FakeWindows {
-    FakeWindows::new(TestCatalog::building(&["workbench", "field-card", "board"]))
-        .knowing(tasks(), view("Tasks", "board"))
-        .knowing(settings(), view("Settings", "field-card"))
-}
-
-fn elem(text: &str) -> ElemId {
-    ElemId::parse(text).unwrap()
-}
-
-fn root(owner: &FakeWindows) -> WindowId {
-    owner
-        .open(OpenFrontend {
-            key: tasks(),
-            mode: Placement::Window,
-            parent: None,
-            switchable: true,
-            scope: None,
-        })
-        .unwrap()
-}
-
-fn child(owner: &FakeWindows, parent: &WindowId, at: &str, mode: Placement) -> WindowId {
-    owner
-        .open(OpenFrontend {
-            key: settings(),
-            mode,
-            parent: Some((parent.clone(), elem(at))),
-            switchable: true,
-            scope: None,
-        })
-        .unwrap()
-}
+use fs_forms_run::{OpenFrontend, Placement, WindowId, WindowOwner};
+use window_owner_common::{child, elem, fake, key, root, settings, tasks, view};
 
 #[test]
 fn the_id_is_program_slash_elem_and_stable() {
@@ -262,67 +182,7 @@ fn w6_the_parent_closed_closes_its_children() {
         .collect();
     assert_eq!(owner.holds(), (4, 0));
     owner.close(&r).unwrap();
-    assert!(owner.open_now().is_empty());
+    assert_eq!(owner.open_now(), Vec::new());
     assert!(weak.iter().all(|w| w.upgrade().is_none()));
     assert_eq!(owner.holds(), (4, 4), "every connection fell");
-}
-
-#[test]
-fn w2b_opening_an_open_id_brings_it_forward_and_keeps_the_mode() {
-    let owner = fake();
-    let r = root(&owner);
-    let c = child(&owner, &r, "settings-embed", Placement::Panel);
-    assert_eq!(owner.raised(&c), 0);
-    child(&owner, &r, "settings-embed", Placement::Window);
-    assert_eq!(owner.raised(&c), 1);
-}
-
-#[test]
-fn w7_place_switches_only_the_place_the_form_state_stays() {
-    let owner = fake();
-    let r = root(&owner);
-    let c = child(&owner, &r, "settings-embed", Placement::Panel);
-    let records = owner.records_of(&c).unwrap();
-    owner.invoke(&c, "values", "value.set").unwrap();
-    let before = owner.composition_of(&c).unwrap();
-    let holds = owner.holds();
-    owner.place(&c, Placement::Window).unwrap();
-    // The same description, the same content; only the placement differs.
-    assert_eq!(owner.composition_of(&c).unwrap(), before);
-    let now = owner.open_now().into_iter().find(|o| o.id == c).unwrap();
-    assert_eq!(now.mode, Placement::Window);
-    // The state stays: the same records (with their call), no new connection, none dropped.
-    assert_eq!(records.upgrade().unwrap().calls(), 1);
-    assert_eq!(owner.holds(), holds);
-    // And back; placing where it is already is no error.
-    owner.place(&c, Placement::Panel).unwrap();
-    owner.place(&c, Placement::Panel).unwrap();
-    assert_eq!(owner.holds(), holds);
-    assert_eq!(
-        owner
-            .place(&WindowId("a/b".into()), Placement::Window)
-            .unwrap_err()
-            .code,
-        "host-notice-window-unknown"
-    );
-}
-
-#[test]
-fn w7b_a_locked_switch_is_refused_with_a_code_and_nothing_changes() {
-    let owner = fake();
-    let r = root(&owner);
-    let c = owner
-        .open(OpenFrontend {
-            key: settings(),
-            mode: Placement::Panel,
-            parent: Some((r, elem("fixed"))),
-            switchable: false,
-            scope: None,
-        })
-        .unwrap();
-    let e = owner.place(&c, Placement::Window).unwrap_err();
-    assert_eq!(e.code, "host-notice-placement-locked");
-    assert!(e.params.contains(&("id".into(), c.as_str().into())));
-    let now = owner.open_now().into_iter().find(|o| o.id == c).unwrap();
-    assert_eq!(now.mode, Placement::Panel);
 }

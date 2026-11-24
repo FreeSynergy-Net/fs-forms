@@ -66,6 +66,7 @@ pub fn doc(frontend: &str) -> LayoutDoc {
         source: None,
         title_key: None,
         text_key: None,
+        set: Vec::new(),
         bindings: vec![item("binding:board/main/title/0", binding)],
     };
     let page = PageDoc {

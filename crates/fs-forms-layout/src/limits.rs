@@ -36,6 +36,8 @@ pub struct LimitSources {
     pub elements: LimitSource,
     /// Source of `menu_depth_max`.
     pub menu_depth: LimitSource,
+    /// Source of `place_depth_max`.
+    pub place_depth: LimitSource,
     /// Source of `text_bytes_max`.
     pub text_bytes: LimitSource,
     /// Source of `ops_max`.
@@ -51,6 +53,8 @@ pub struct Limits {
     pub elements_max: u32,
     /// Depth of the menu tree.
     pub menu_depth_max: u32,
+    /// Depth of the tree of places (frames inside frames; a block on the page root = 1).
+    pub place_depth_max: u32,
     /// Bytes of one key, name or message.
     pub text_bytes_max: u32,
     /// Ops of one overlay.
@@ -68,6 +72,8 @@ pub struct CeilingSet {
     pub elements_max: Option<u32>,
     /// Ceiling of `menu_depth_max`.
     pub menu_depth_max: Option<u32>,
+    /// Ceiling of `place_depth_max`.
+    pub place_depth_max: Option<u32>,
     /// Ceiling of `text_bytes_max`.
     pub text_bytes_max: Option<u32>,
     /// Ceiling of `ops_max`.
@@ -104,12 +110,14 @@ impl Limits {
         Self {
             elements_max: 4096,
             menu_depth_max: 4,
+            place_depth_max: 8,
             text_bytes_max: 16 * 1024,
             ops_max: 1024,
             overlays_max: 64,
             by: LimitSources {
                 elements: d,
                 menu_depth: d,
+                place_depth: d,
                 text_bytes: d,
                 ops: d,
                 overlays: d,
@@ -130,6 +138,11 @@ impl Limits {
             ceiling.menu_depth_max,
             person.by.menu_depth,
         );
+        let (place_depth_max, place_depth) = clamp(
+            person.place_depth_max,
+            ceiling.place_depth_max,
+            person.by.place_depth,
+        );
         let (text_bytes_max, text_bytes) = clamp(
             person.text_bytes_max,
             ceiling.text_bytes_max,
@@ -144,12 +157,14 @@ impl Limits {
         Self {
             elements_max,
             menu_depth_max,
+            place_depth_max,
             text_bytes_max,
             ops_max,
             overlays_max,
             by: LimitSources {
                 elements,
                 menu_depth,
+                place_depth,
                 text_bytes,
                 ops,
                 overlays,

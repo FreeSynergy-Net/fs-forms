@@ -105,7 +105,7 @@ pub(super) fn table(ctx: &Ctx, width: f32, _height: f32) -> Div {
             cells
         })
         .collect();
-    let column_w = (width / cols.len().max(1) as f32).max(80.0);
+    let column_w = (width / f32::from(u8::try_from(cols.len().max(1)).unwrap_or(1))).max(80.0);
     div().w(width).child(
         Table::new(cols, cells)
             .id("rows")

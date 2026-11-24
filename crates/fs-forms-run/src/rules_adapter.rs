@@ -21,13 +21,13 @@ fn is_of_class(b: &BlockSpec, class: Takes) -> bool {
         Takes::Value => b.renders.is_some(),
         Takes::Command => kind(SlotKind::Command) && !kind(SlotKind::Records),
         Takes::Form => !b.forms.is_empty() || kind(SlotKind::Records),
-        _ => true,
+        Takes::Any => true,
     }
 }
 
 impl ContractRules<'_> {
     /// The names a place takes: empty = anything (`any`, or a class this reader does not know).
-    fn names(&self, takes: &[Takes]) -> Vec<String> {
+    fn names(self, takes: &[Takes]) -> Vec<String> {
         if takes.iter().any(|t| matches!(t, Takes::Any)) {
             return Vec::new();
         }
@@ -74,7 +74,7 @@ impl CatalogRules for ContractRules<'_> {
                     min: p.min,
                     max: match p.max {
                         Max::Count(n) => n,
-                        _ => u32::MAX,
+                        Max::Many => u32::MAX,
                     },
                 })
                 .collect(),

@@ -77,7 +77,7 @@ fn level(
         return Err(b.lim.refuse("place-depth", b.lim.depth_max));
     }
     b.take(nodes.len())?;
-    for n in nodes.iter() {
+    for n in nodes {
         match n.which() {
             Ok(w::place_node::Which::Block(Ok(x))) => attrs(x.get_set(), b)?,
             Ok(w::place_node::Which::Frame(Ok(f))) => {
@@ -102,10 +102,10 @@ pub(crate) fn guard(
         lim,
     };
     b.take(pages.len())?;
-    for p in pages.iter() {
+    for p in pages {
         if let Ok(flat) = p.get_blocks() {
             b.take(flat.len())?;
-            for x in flat.iter() {
+            for x in flat {
                 attrs(x.get_set(), &mut b)?;
             }
         }

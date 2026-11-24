@@ -84,7 +84,7 @@ fn a_problem_on_a_frame_locks_the_frame_not_the_page() {
     let p = plan_of(&r);
     let page = &p.pages[0];
     assert_eq!(page.frame_locks().len(), 1);
-    assert!(page.locks.is_empty());
+    assert_eq!(page.locks.len(), 0);
     assert!(p.locks().iter().any(|l| l.part.text().contains("panel")));
     assert_eq!(p.state, PlanState::Partial);
 }

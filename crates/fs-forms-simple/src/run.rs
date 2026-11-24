@@ -23,6 +23,7 @@ fn socket_of(named: Option<PathBuf>) -> Result<PathBuf, String> {
 }
 
 /// Run the command line (the words after the program name) and return the exit code.
+#[must_use]
 pub fn run(args: &[String]) -> ExitCode {
     let command = match parse(args) {
         Ok(command) => command,

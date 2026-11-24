@@ -38,6 +38,9 @@ fs-components-core = { git = "https://github.com/FreeSynergy-Net/fs-components",
 # The people workbench (widget of the block `contact-row`; `fs-components-widgets` does not hold it): one dependency, nothing copied.
 fs-components-workbenches = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "d49e01d923931732ab1e090bc38f45268db85002", version = "0.1.0" }
 
+# The question the host asks when a place is open with another record (`Notification::ask`, ADR 0106): the one existing facade, no own dialog.
+fs-notification = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "d49e01d923931732ab1e090bc38f45268db85002", version = "0.1.0" }
+
 # The form catalog (`fs_interfaces::forms`, forms.txt) and the one form match (`fs-forms-bind`): the host holds no table of forms.
 fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "e6f69213b68b47e139fc8038c8a095f9ed1fef3c", version = "0.2.0" }
 # `InterfaceVersion` (V-1, fs-types v0.0.6, the same tag as fs-components): the one reader of "name@x.y.z"; the block catalog answers `draws(&InterfaceVersion)`.

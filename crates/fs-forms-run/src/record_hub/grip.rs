@@ -15,15 +15,25 @@ use super::shared::Shared;
 use crate::changes::ChangeCounter;
 use crate::form_data::FormData;
 use crate::records::{Records, SideItem};
+use crate::repaint::Repaint;
 
 /// What the own `watch` of a view does: read the cache again (once per revision) and count the generation of THIS view.
-#[derive(Default)]
 pub(super) struct GripSink {
     cache: Mutex<Weak<Shared>>,
     generation: ChangeCounter,
+    /// Wakes the window of this view after the count (order: first count, then wake, see [`Repaint`]).
+    repaint: Option<Arc<dyn Repaint>>,
 }
 
 impl GripSink {
+    pub(super) fn with_repaint(repaint: Option<Arc<dyn Repaint>>) -> Self {
+        Self {
+            cache: Mutex::default(),
+            generation: ChangeCounter::default(),
+            repaint,
+        }
+    }
+
     pub(super) fn point_at(&self, shared: &Arc<Shared>) {
         *self.cache.lock().unwrap_or_else(PoisonError::into_inner) = Arc::downgrade(shared);
     }
@@ -48,6 +58,9 @@ impl ChangeSink for GripSink {
             s.observe(rev);
         }
         self.bump();
+        if let Some(r) = &self.repaint {
+            r.wake();
+        }
     }
 }
 

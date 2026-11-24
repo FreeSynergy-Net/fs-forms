@@ -69,6 +69,9 @@ pub use style::{DEFAULT_STYLE, StyleCell, StyleSource, resolve, unknown};
 pub use view::{ActionView, Coded, MenuItem, MenuState, PageView, PlaceView, View};
 pub use window::{app, app_styled, app_with};
 pub use window_owner::fake::{CountingRecords, FakeHold, FakeWindows};
+pub use window_owner::host::{
+    Asked, BlincSurfaces, Descriptions, HostWindows, Modules, OpenAsk, Surfaces,
+};
 pub use window_owner::{
     Decision, OpenFrontend, Opened as WindowOpened, OpenedFrontend, Placement, WhenOpen, WindowId,
     WindowOwner, decide, notice_of,

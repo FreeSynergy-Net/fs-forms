@@ -9,6 +9,7 @@
 //! Pattern: Facade: this file holds the contract; the double lives in the submodule.
 
 pub mod fake;
+pub mod host;
 mod open;
 
 pub use open::{Decision, Opened, WhenOpen, decide, notice_of};

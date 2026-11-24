@@ -25,6 +25,7 @@ use self::grip::{GripSink, Inner};
 pub use self::port::{ChangeSink, Link, Module};
 use self::shared::Shared;
 use crate::records::Records;
+use crate::repaint::Repaint;
 use crate::view::Coded;
 
 /// What identifies the cached records: the range of the module (the program whose records they are) and the record (`scope`, an AS2
@@ -42,6 +43,8 @@ pub struct RecordKey {
 #[derive(Default)]
 pub struct RecordHub {
     open: Mutex<HashMap<RecordKey, Weak<Shared>>>,
+    /// Told after every change a view's own `watch` reports (the window of that view draws again); none = nobody to wake.
+    repaint: Option<Arc<dyn Repaint>>,
 }
 
 impl RecordHub {
@@ -51,13 +54,22 @@ impl RecordHub {
         Self::default()
     }
 
+    /// A hub whose views wake their window through `repaint` after their own `watch` told them of a change.
+    #[must_use]
+    pub fn with_repaint(repaint: Arc<dyn Repaint>) -> Self {
+        Self {
+            open: Mutex::default(),
+            repaint: Some(repaint),
+        }
+    }
+
     /// A grip with its OWN new connection to `module`, watching `key`; the cache of the key is made only when it is not open yet
     /// (under the lock of the hub; `module.records` must not call the hub).
     ///
     /// # Errors
     /// What the connection says; then nothing is registered.
     pub fn attach(&self, key: &RecordKey, module: &Arc<dyn Module>) -> Result<RecordGrip, Coded> {
-        let sink = Arc::new(GripSink::default());
+        let sink = Arc::new(GripSink::with_repaint(self.repaint.clone()));
         let link = module.connect(Arc::clone(&sink) as Arc<dyn ChangeSink>)?;
         let shared = self.cache_of(key, module, &link);
         sink.point_at(&shared);

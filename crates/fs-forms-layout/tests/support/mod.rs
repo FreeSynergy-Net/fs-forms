@@ -73,6 +73,7 @@ pub fn doc(frontend: &str) -> LayoutDoc {
         frame: "workbench".into(),
         navigation: Navigation::Single,
         blocks: vec![item("block:board/main", block)],
+        places: vec![],
     };
     LayoutDoc {
         format: 2,

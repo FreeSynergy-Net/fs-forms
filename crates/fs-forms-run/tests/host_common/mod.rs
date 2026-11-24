@@ -149,11 +149,11 @@ pub fn world_with(surfaces: Arc<dyn Surfaces>) -> (Arc<HostWindows>, Arc<HoldCou
     (Arc::new(owner), counts, wakes)
 }
 
+/// Records of a scope, made on demand.
+pub type RecordsOf = Box<dyn Fn(Option<&str>) -> Arc<dyn Records> + Send + Sync>;
+
 /// A world over the given description port and records (the rest as `world`).
-pub fn world_over(
-    descriptions: Arc<dyn Descriptions>,
-    records: Box<dyn Fn(Option<&str>) -> Arc<dyn Records> + Send + Sync>,
-) -> World {
+pub fn world_over(descriptions: Arc<dyn Descriptions>, records: RecordsOf) -> World {
     let shown = Arc::new(Shown::default());
     let counts = Arc::new(HoldCounts::default());
     let module = FakeModule::new(Arc::clone(&counts), records);

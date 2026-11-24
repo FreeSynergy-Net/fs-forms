@@ -210,12 +210,9 @@ pub(crate) fn set_status_line(
     state: HostState,
     records: &dyn Records,
 ) {
-    app.set_status(Some(status(
-        texts,
-        state,
-        records.is_sample(),
-        records.unavailable().as_deref(),
-    )));
+    let down = records.unavailable();
+    let line = status(texts, state, records.is_sample(), down.as_deref());
+    app.set_status(Some(line));
 }
 
 /// How the host stands; sample data is said in the same line (a made-up record is never shown as a real one), and so is a data

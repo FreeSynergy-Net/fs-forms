@@ -64,3 +64,7 @@ form-basic-mismatch = Ein Feld des Moduls passt nicht zur Art des Kanals
 form-no-component = Kein Block zeichnet diese Form; der Rückfall wird gezeigt
 host-notice-raised = Dieser Datensatz ist schon offen; sein Fenster wurde nach vorn geholt
 host-notice-open-unanswered = An diesem Platz ist schon ein anderer Datensatz offen und niemand hat gesagt, was geschehen soll; es wurde nichts geöffnet
+host-notice-frontend-unknown = Kein Frontend dieses Namens ist bekannt; die Fläche bleibt, wie sie ist (id, available)
+host-notice-frontend-other-program = Dieses Frontend gehört zu einem anderen Programm; die Fläche bleibt, wie sie ist (id, frontend)
+host-notice-frontend-open-elsewhere = Dieses Frontend zeigt diesen Datensatz schon an einem anderen Platz; die Fläche bleibt, wie sie ist (id, other)
+host-notice-window-id-taken = Ein Platz dieses Namens ist offen und zeigt etwas anderes; es wurde nichts geöffnet (id)

@@ -64,3 +64,7 @@ form-basic-mismatch = A field of the module does not fit the kind of the channel
 form-no-component = No block draws this form; the fallback is shown
 host-notice-raised = This record is already open; its window was brought to the front
 host-notice-open-unanswered = This place already shows another record and nobody has said what to do; nothing was opened
+host-notice-frontend-unknown = No frontend of this name is known; the surface stays as it is (id, available)
+host-notice-frontend-other-program = This frontend belongs to another program; the surface stays as it is (id, frontend)
+host-notice-frontend-open-elsewhere = This frontend already shows this record in another place; the surface stays as it is (id, other)
+host-notice-window-id-taken = A place of this name is open and shows something else; nothing was opened (id)

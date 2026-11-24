@@ -9,7 +9,7 @@ use fs_components_styles::StyleId;
 
 /// The help text.
 pub const HELP: &str = "fs-forms-run (--description PATH | PATH | --frontend ID --extends APPSTREAM-ID [--forms-socket PATH]) [--socket PATH] [--fresh | --resumed]\n\
-    [--check] [--list-blocks] [--picture FILE.png [--size WIDTHxHEIGHT] [--screen PAGE]]\n\
+    [--check] [--list-blocks] [--picture FILE.png [--size WIDTHxHEIGHT] [--screen PAGE] [--steps FILE.json]]\n\
 The forms host: opens the window that the layout of a program describes. The starter runs it; start the program, not this.\n\
   --description P    a blueprint folder (scaffold.toml, `[frontend] layout`), a folder with forms/*.toml, or one description file;\n\
                      the host reads it and draws the window; the same as a bare PATH. Nothing of the program is built into the host\n\
@@ -24,6 +24,9 @@ The forms host: opens the window that the layout of a program describes. The sta
   --list-blocks      print the blocks of the contract this build does not draw, each with its reason (no widget in the contract, or a widget\n\
                      without a view), then exit 0; the same list the window says one by one as `host-error-block-not-built`\n\
   --picture FILE     draw the window to a picture, without opening it (exit 3 if the picture shows a host error; the PNG is written anyway)\n\
+  --steps FILE       with --picture: first play this input on the window, then draw it (FILE is the body of W3C WebDriver \"Perform Actions\",\n\
+                     JSON; a card is found by its id). A file that cannot be read, an action that is not played or an element that is not\n\
+                     there ends with exit 2 and no picture\n\
   --version, -V      print the version and exit\n\
   --help, -h         print this help and exit\n\
 Exit codes: 0 done, 1 failed, 2 wrong words, 3 the layouts or their contract are not there (the starter shows the standard frontend)";
@@ -45,6 +48,8 @@ pub struct Config {
     pub resumed: bool,
     /// Draw to this picture instead of opening a window.
     pub picture: Option<(PathBuf, (u32, u32))>,
+    /// Play this input (the body of `WebDriver` Perform Actions) before the picture is drawn (`--steps`, needs `--picture`).
+    pub steps: Option<PathBuf>,
     /// Fill the records blocks with the built-in sample data (pictures, development).
     pub sample_data: bool,
     /// The page to show first.
@@ -95,6 +100,7 @@ pub fn parse(words: &[String]) -> Result<Command, String> {
             "--forms-socket" => c.forms_socket = Some(PathBuf::from(value("--forms-socket")?)),
             "--socket" => c.socket = Some(PathBuf::from(value("--socket")?)),
             "--picture" => picture = Some(PathBuf::from(value("--picture")?)),
+            "--steps" => c.steps = Some(PathBuf::from(value("--steps")?)),
             "--size" => size = parse_size(&value("--size")?)?,
             "--screen" => c.page = Some(value("--screen")?),
             "--style" => {
@@ -115,6 +121,9 @@ pub fn parse(words: &[String]) -> Result<Command, String> {
             "--description PATH, or --frontend and --extends (the starter hands them over), is needed"
                 .to_owned(),
         );
+    }
+    if c.steps.is_some() && picture.is_none() {
+        return Err("--steps needs --picture (the input is played to draw the result)".to_owned());
     }
     c.picture = picture.map(|p| (p, size));
     Ok(if check {

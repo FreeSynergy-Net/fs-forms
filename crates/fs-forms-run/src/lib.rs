@@ -30,6 +30,7 @@ mod run;
 mod sample;
 mod sample_groups;
 mod sources;
+mod steps;
 mod style;
 mod view;
 mod window;

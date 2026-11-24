@@ -102,6 +102,14 @@ fn end(e: &HostError) -> i32 {
 }
 
 fn window(c: &Config, sources: &dyn Sources) -> i32 {
+    // the input is read first: a file that cannot be played ends the run before anything is built or drawn
+    let plan = match c.steps.as_deref().map(crate::steps::read).transpose() {
+        Ok(plan) => plan,
+        Err(message) => {
+            eprintln!("fs-forms-run: {message}");
+            return CODE_USAGE;
+        }
+    };
     let locale = session_locale();
     let texts = words(&locale);
     // a layout problem shown in the window: a picture run still ends with the code of that error (ADR 0094 4)
@@ -146,9 +154,18 @@ fn window(c: &Config, sources: &dyn Sources) -> i32 {
     if let Some(page) = &c.page {
         widget.select(page);
     }
-    let done = match &c.picture {
-        Some((path, (w, h))) => widget.picture(*w, *h, path),
-        None => launch(WindowOptions::default(), widget),
+    let done = match (&c.picture, &plan) {
+        (Some((path, size)), Some(plan)) => {
+            if let Err((message, code)) =
+                crate::steps::play(&widget, plan, *size, path, CODE_USAGE, CODE_FAILURE)
+            {
+                eprintln!("fs-forms-run: {message}");
+                return code;
+            }
+            Ok(())
+        }
+        (Some((path, (w, h))), None) => widget.picture(*w, *h, path),
+        (None, _) => launch(WindowOptions::default(), widget),
     };
     match done {
         // the picture is written either way; the code says that the window showed an error

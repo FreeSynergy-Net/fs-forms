@@ -25,3 +25,8 @@ repository = "https://github.com/FreeSynergy/fs-forms"
 # fs-rpc and fs-components need 1.89.
 rust-version = "1.89"
 
+
+# DEV-ONLY patch, drop before landing: C0 (`layout.frontend`) is on the branch `unreviewed/frontend-c0-r2` of fs-components (8bbde55b) and
+# not on main yet; once it is, the pins of all `fs-components*` crates move to that main SHA and this block goes.
+[patch."https://github.com/FreeSynergy-Net/fs-components"]
+fs-components-commands = { path = "../comp/crates/fs-components-commands" }

@@ -9,7 +9,7 @@ repository.workspace = true
 rust-version.workspace = true
 publish = false
 
-# Same pins as the rest of the workspace (fs-interfaces 76df5407, fs-types 722d3ce0, fs-objects e38093f1, fs-components 508a25f3);
+# Same pins as the rest of the workspace (fs-interfaces 76df5407, fs-types 722d3ce0, fs-objects e38093f1, fs-components 33550c61);
 # fs-jscalendar 0a3add97 is the rev fs-tasks-testdata pins together with fs-types 722d3ce0 (one fs-types in the graph).
 [dependencies]
 fs-forms-bind = { path = "../fs-forms-bind", version = "0.1.0" }

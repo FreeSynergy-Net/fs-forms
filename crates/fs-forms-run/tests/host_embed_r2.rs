@@ -188,8 +188,72 @@ fn the_new_codes_have_a_sentence_in_both_languages() {
         "host-notice-scope-from-not-built",
         "host-notice-frontend-on-open-not-built",
         "host-notice-frontend-loop",
+        "host-notice-window-not-opened-by-menu",
     ] {
         let sentence = words(&session_locale()).plain(code);
         assert_ne!(sentence, code, "{code} has a sentence");
     }
+}
+
+fn switch_to(w: &embed_common::World, scope: &str) -> WindowId {
+    let key = fs_forms_layout::FrontendKey {
+        extends: TASKS.into(),
+        frontend: "board-embed".into(),
+    };
+    let req = fs_forms_run::OpenFrontend::new(key, Placement::Window)
+        .with_when_open(fs_forms_run::WhenOpen::Switch)
+        .with_scope(scope);
+    match w.owner.open(req) {
+        Ok(WindowOpened::Switched { id, .. }) => id,
+        other => panic!("a switch: {other:?}"),
+    }
+}
+
+#[test]
+fn a_board_without_a_record_switched_to_record_x_stays_whole_under_its_new_id() {
+    let w = world("panel");
+    let a = new_id(open_frontend(&w, "board-embed", None));
+    let id = switch_to(&w, "urn:x");
+    assert_eq!(id, WindowId::of_record(TASKS, "board-embed", Some("urn:x")));
+    let now = w.owner.open_now();
+    assert_eq!(now.len(), 2, "{now:?}");
+    assert!(now.iter().all(|o| o.id != a));
+    assert!(
+        now.iter()
+            .any(|o| o.id == child_of(&id) && o.parent.as_ref() == Some(&id))
+    );
+    assert_eq!(w.owner.panels_of(&id).unwrap().len(), 1, "the id answers");
+    w.owner.close(&id).unwrap();
+    assert_eq!(w.owner.open_now(), []);
+    assert_eq!(w.settings.get(), (1, 1));
+}
+
+#[test]
+fn a_switch_never_moves_a_sibling_board_of_another_record() {
+    let w = world("panel");
+    let a = new_id(open_frontend(&w, "board-embed", None));
+    let y = new_id(open_frontend(&w, "board-embed", Some("urn:y")));
+    let id = switch_to(&w, "urn:x");
+    assert_ne!(id, a);
+    let ids: Vec<WindowId> = w.owner.open_now().into_iter().map(|o| o.id).collect();
+    for want in [&id, &child_of(&id), &y, &child_of(&y)] {
+        assert!(ids.contains(want), "{want:?} stays: {ids:?}");
+    }
+    assert_eq!(ids.len(), 4, "{ids:?}");
+}
+
+#[test]
+fn the_menu_cannot_open_a_window_node_and_says_so() {
+    let w = world("window");
+    let id = new_id(open_frontend(&w, "board-plain", None));
+    let app = w.shown.0.lock().unwrap()[0].1.clone();
+    assert!(app.choose("layout.frontend.board-embed"));
+    assert_eq!(
+        w.owner.missing_of(&id).unwrap(),
+        [(
+            "settings-embed".to_owned(),
+            "host-notice-window-not-opened-by-menu".to_owned()
+        )]
+    );
+    assert_eq!(w.owner.open_now().len(), 1, "no window was opened");
 }

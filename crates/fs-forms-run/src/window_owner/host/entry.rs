@@ -79,28 +79,20 @@ pub(super) fn family(open: &Open, id: &WindowId) -> Vec<WindowId> {
 }
 
 /// The id of a child follows the id of its parent (`<parent id>/<elem>`): when the parent is renamed from `from` to `to` (a record
-/// switch), every entry below it is renamed the same way, with its `parent` and the place it names.
-pub(super) fn rename_below(open: &mut Open, from: &WindowId, to: &WindowId) {
+/// switch), exactly its descendants `below` (found through the field `parent`, never through the text of the ids: a record id uses the
+/// same separator) are renamed the same way, with their `parent` and the place they name.
+pub(super) fn rename_below(open: &mut Open, from: &WindowId, to: &WindowId, below: &[WindowId]) {
     let prefix = format!("{}/", from.as_str());
-    let map = |id: &WindowId| {
-        if id == from {
-            to.clone()
-        } else if let Some(rest) = id.as_str().strip_prefix(&prefix) {
-            WindowId(format!("{}/{rest}", to.as_str()))
-        } else {
-            id.clone()
-        }
+    let map = |id: &WindowId| match id.as_str().strip_prefix(&prefix) {
+        Some(rest) if below.contains(id) => WindowId(format!("{}/{rest}", to.as_str())),
+        _ if id == from => to.clone(),
+        _ => id.clone(),
     };
-    let below: Vec<WindowId> = open
-        .keys()
-        .filter(|k| k.as_str().starts_with(&prefix))
-        .cloned()
-        .collect();
     for old in below {
-        if let Some(mut e) = open.remove(&old) {
+        if let Some(mut e) = open.remove(old) {
             e.parent = e.parent.as_ref().map(map);
             e.place.0 = map(&WindowId(e.place.0.clone())).0;
-            open.insert(map(&old), e);
+            open.insert(map(old), e);
         }
     }
 }

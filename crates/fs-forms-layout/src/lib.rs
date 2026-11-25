@@ -70,7 +70,9 @@ pub use providers::{
     ProviderCatalogs, check_providers, split_provider_codes, unchecked_capabilities,
 };
 pub use resolved::{Applied, Effect, Layer, LayerInfo, Resolved};
-pub use schemes::{scheme_names_rule, schemes_rule};
+pub use schemes::{
+    DEFAULT_ALLOWED, SchemePolicy, scheme_names_rule, scheme_names_rule_with, schemes_rule,
+};
 pub use scope_token::{SCOPE_TOKEN_MAX, ScopeToken};
 pub use shim::{Coded, ErrorCode, ObjectId, Reference, Utc};
 pub use types::{

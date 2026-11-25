@@ -211,12 +211,22 @@ fn p4_the_instance_may_widen_but_never_to_a_forbidden_scheme() {
     let s = store().as_instance();
     let id = install(&s, schemes_doc(), "1.0");
     let o = block_on(s.create_instance_overlay(&id, None, None, &who())).unwrap();
-    let ok = block_on(s.replace_ops(&o, Rev(1), vec![set_scheme("ftp")], &who())).unwrap();
+    let ok = block_on(s.replace_ops(&o, Rev(1), vec![set_scheme("http")], &who())).unwrap();
     assert!(ok.conflicts.is_empty());
     assert_eq!(
         resolved(&s).layout.bindings("board", "main")[0].schemes,
-        Some(vec!["ftp".to_owned()])
+        Some(vec!["http".to_owned()])
     );
     let bad = block_on(s.replace_ops(&o, Rev(2), vec![set_scheme("javascript")], &who())).unwrap();
+    assert_eq!(bad.conflicts[0].cause, Cause::ResultInvalid);
+}
+
+/// A valid scheme name that is not on the positive list (default policy) is refused for the instance too.
+#[test]
+fn p4_the_instance_cannot_widen_beyond_the_positive_list() {
+    let s = store().as_instance();
+    let id = install(&s, schemes_doc(), "1.0");
+    let o = block_on(s.create_instance_overlay(&id, None, None, &who())).unwrap();
+    let bad = block_on(s.replace_ops(&o, Rev(1), vec![set_scheme("ftp")], &who())).unwrap();
     assert_eq!(bad.conflicts[0].cause, Cause::ResultInvalid);
 }

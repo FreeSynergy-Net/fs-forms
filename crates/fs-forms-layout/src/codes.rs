@@ -94,8 +94,8 @@ codes! {
     SchemesMissing => "schemes-missing",
     /// `{elem}`.
     SchemesEmpty => "schemes-empty",
-    /// `{elem, scheme}` javascript, vbscript.
-    SchemeNever => "scheme-never",
+    /// `{elem, scheme}` a valid scheme name that is not on the allowed (positive) list.
+    SchemeNotAllowed => "scheme-not-allowed",
     /// `{elem, scheme}` not an RFC 3986 scheme name.
     SchemeBad => "scheme-bad",
     /// `{elem, scheme}`.

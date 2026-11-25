@@ -139,7 +139,10 @@ fn k66_scheme_lists() {
         check(d)
     };
     assert_eq!(codes(case(&[])), vec![LayoutCode::SchemesEmpty]);
-    assert_eq!(codes(case(&["javascript"])), vec![LayoutCode::SchemeNever]);
+    assert_eq!(
+        codes(case(&["javascript"])),
+        vec![LayoutCode::SchemeNotAllowed]
+    );
     assert_eq!(codes(case(&["ht tp"])), vec![LayoutCode::SchemeBad]);
     assert_eq!(
         codes(case(&["https", "HTTPS"])),

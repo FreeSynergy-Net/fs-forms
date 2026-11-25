@@ -11,7 +11,7 @@ rust-version.workspace = true
 [dependencies]
 semver = "1.0.28"
 fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "9aff426a37cfbaec657b9164c1b11389c6d1712b", version = "0.1.4" }
-fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "a395979b5df2fbff91347bf10b3324a2e1bfa33d", version = "0.2.0" }
+fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "7b238133f6a70efaee9f8efa7abf8ec7ef451741", version = "0.2.0" }
 capnp = "0.27"
 capnp-rpc = "0.27"
 tokio = { version = "1", features = ["rt"] }

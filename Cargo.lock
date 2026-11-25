@@ -1925,12 +1925,13 @@ dependencies = [
 [[package]]
 name = "fs-events"
 version = "0.3.0"
-source = "git+https://github.com/FreeSynergy-Net/fs-interfaces?rev=76df54074910e827ad556ff613335ada49c86de3#76df54074910e827ad556ff613335ada49c86de3"
+source = "git+https://github.com/FreeSynergy-Net/fs-interfaces?rev=71809eaa1e974841762315c7b3187276469ec0bb#71809eaa1e974841762315c7b3187276469ec0bb"
 dependencies = [
  "async-trait",
  "chrono",
  "chrono-tz",
  "fs-jscalendar",
+ "fs-person-directory",
  "fs-types",
  "tokio",
 ]
@@ -2092,7 +2093,7 @@ dependencies = [
 [[package]]
 name = "fs-interfaces"
 version = "0.3.0"
-source = "git+https://github.com/FreeSynergy-Net/fs-interfaces?rev=76df54074910e827ad556ff613335ada49c86de3#76df54074910e827ad556ff613335ada49c86de3"
+source = "git+https://github.com/FreeSynergy-Net/fs-interfaces?rev=71809eaa1e974841762315c7b3187276469ec0bb#71809eaa1e974841762315c7b3187276469ec0bb"
 dependencies = [
  "capnp",
  "fs-types",
@@ -2133,7 +2134,7 @@ dependencies = [
 [[package]]
 name = "fs-module"
 version = "0.3.0"
-source = "git+https://github.com/FreeSynergy-Net/fs-interfaces?rev=76df54074910e827ad556ff613335ada49c86de3#76df54074910e827ad556ff613335ada49c86de3"
+source = "git+https://github.com/FreeSynergy-Net/fs-interfaces?rev=71809eaa1e974841762315c7b3187276469ec0bb#71809eaa1e974841762315c7b3187276469ec0bb"
 dependencies = [
  "capnp",
  "capnp-rpc",
@@ -2176,6 +2177,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "fs-person-directory"
+version = "0.3.0"
+source = "git+https://github.com/FreeSynergy-Net/fs-interfaces?rev=71809eaa1e974841762315c7b3187276469ec0bb#71809eaa1e974841762315c7b3187276469ec0bb"
+dependencies = [
+ "async-trait",
+ "fs-types",
+]
+
+[[package]]
 name = "fs-records"
 version = "0.0.7"
 source = "git+https://github.com/FreeSynergy-Net/fs-types?rev=722d3ce0156711d40cb278f2e835e865d9448290#722d3ce0156711d40cb278f2e835e865d9448290"
@@ -2186,7 +2196,7 @@ dependencies = [
 [[package]]
 name = "fs-rpc"
 version = "0.1.4"
-source = "git+https://github.com/FreeSynergy-Net/fs-rpc?rev=aa59c6bd6b9d2efa7f49e349ad44ef51bcb687d3#aa59c6bd6b9d2efa7f49e349ad44ef51bcb687d3"
+source = "git+https://github.com/FreeSynergy-Net/fs-rpc?rev=cde5b025b3980f7dcc1d5d678ad5aea981015f8a#cde5b025b3980f7dcc1d5d678ad5aea981015f8a"
 dependencies = [
  "capnp",
  "capnp-rpc",
@@ -2224,7 +2234,7 @@ dependencies = [
 [[package]]
 name = "fs-trusted-path"
 version = "0.1.4"
-source = "git+https://github.com/FreeSynergy-Net/fs-rpc?rev=aa59c6bd6b9d2efa7f49e349ad44ef51bcb687d3#aa59c6bd6b9d2efa7f49e349ad44ef51bcb687d3"
+source = "git+https://github.com/FreeSynergy-Net/fs-rpc?rev=cde5b025b3980f7dcc1d5d678ad5aea981015f8a#cde5b025b3980f7dcc1d5d678ad5aea981015f8a"
 dependencies = [
  "windows-sys 0.61.2",
 ]

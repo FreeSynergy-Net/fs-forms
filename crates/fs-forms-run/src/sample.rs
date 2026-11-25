@@ -218,11 +218,10 @@ fn board_form(columns: &[Column]) -> FormData {
                     ("order", &at.to_string()),
                 ],
             );
-            row.values.push((
-                "facts".to_owned(),
-                vec![label.to_owned(), due.to_owned()],
-            ));
-            row.values.push(("assignee".to_owned(), vec![who.to_owned()]));
+            row.values
+                .push(("facts".to_owned(), vec![label.to_owned(), due.to_owned()]));
+            row.values
+                .push(("assignee".to_owned(), vec![who.to_owned()]));
             rows.push(row);
         }
     }

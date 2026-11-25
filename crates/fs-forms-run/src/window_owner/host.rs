@@ -138,11 +138,13 @@ impl HostWindows {
         }
         let id = WindowId::of_record(&e.place.0, &e.place.1, req.scope.as_deref());
         let from = std::mem::replace(&mut e.scope, req.scope.clone());
+        // the descendants are found BEFORE the entry gets its new id (by `parent`, not by the text of the ids)
+        let below: Vec<WindowId> = family(open, at).into_iter().filter(|d| d != at).collect();
         for c in open.values_mut().filter(|c| c.parent.as_ref() == Some(at)) {
             c.parent = Some(id.clone());
         }
         open.insert(id.clone(), e);
-        rename_below(open, at, &id);
+        rename_below(open, at, &id, &below);
         Ok(Opened::Switched { id, from })
     }
 }

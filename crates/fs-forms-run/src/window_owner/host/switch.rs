@@ -164,12 +164,21 @@ impl Core {
             let Some((id, app)) = found else { return };
             match Self::switch(&core, &id, frontend) {
                 Ok(windows) => {
-                    // the menu has only the shared state; the windows of the new frontend are opened by the owner (`use_frontend`)
+                    // the menu has only the shared state and cannot open a window (the owner does, `use_frontend`): until S6-7b
+                    // that is said, in the data (`missing_of`) and in the status line, never dropped
+                    let texts = words(&core.locale);
                     for w in windows {
-                        eprintln!(
-                            "fs-forms-run: window of {} not opened by the menu",
-                            w.key.frontend
-                        );
+                        let why = Coded::new("host-notice-window-not-opened-by-menu")
+                            .with("frontend", w.key.frontend.clone());
+                        let at = w
+                            .parent
+                            .as_ref()
+                            .map_or_else(String::new, |(_, e)| e.as_str().to_owned());
+                        if let Some(e) = lock(&core.open).get_mut(&id) {
+                            e.missing.push((at, why.code.clone()));
+                            e.missing.sort();
+                        }
+                        app.set_status(Some(Status::Problem(line(&texts, &why))));
                     }
                 }
                 Err(refused) => {

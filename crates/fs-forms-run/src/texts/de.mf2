@@ -65,3 +65,4 @@ host-menu-view = Ansicht
 host-notice-scope-from-not-built = Der Datensatz dieses Panels kommt aus der Auswahl eines anderen Teils; das ist noch nicht gebaut, darum wird das Panel nicht gezeigt (frontend)
 host-notice-frontend-on-open-not-built = Dieses Frontend öffnet sich über die Aktion open – noch nicht gebaut, darum wird es nicht gezeigt (frontend)
 host-notice-frontend-loop = Dieses Frontend würde sich selbst enthalten, direkt oder über andere Frontends; es wird nicht gezeigt (frontend)
+host-notice-window-not-opened-by-menu = Ein Fenster, das dieses Frontend verlangt, wurde nicht geöffnet: das Menü kann noch keine Fenster öffnen (frontend)

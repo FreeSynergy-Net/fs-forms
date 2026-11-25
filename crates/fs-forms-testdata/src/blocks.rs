@@ -8,7 +8,7 @@ use fs_forms_layout::{BindFrom, Layout};
 
 use crate::error::{Failure, SampleCode, fail};
 
-/// What the block catalog says; the host implements it over `blocks::forms_of` and `bind_spec::block_spec`.
+/// Pattern: Port (consumer side) – what the block catalog says; the host implements it over `blocks::forms_of` and `bind_spec::block_spec`.
 pub trait BlockForms {
     /// The forms the component of `block` draws (`forms=` of the block contract); none for a block that draws no whole form.
     fn forms(&self, block: &str) -> Vec<FormRef>;
@@ -32,7 +32,8 @@ pub struct Need {
 /// source (as the host does); the heads of a grouping binding with a `source` ask the forms of the slot from THAT source.
 ///
 /// # Errors
-/// `source-unknown` when a block or a binding names a source the layout does not have (the checked layout never does).
+/// `source-unknown` when a block or a binding names a source the layout does not have (the checked layout never does);
+/// `block-unknown` when the catalog gives no block or no slot for a grouping binding (never a head wish left out in silence).
 pub fn needs(layout: &Layout, blocks: &dyn BlockForms) -> Result<Vec<Need>, Failure> {
     let doc = layout.doc();
     let first = u32::from(!doc.sources.is_empty());
@@ -71,12 +72,11 @@ pub fn needs(layout: &Layout, blocks: &dyn BlockForms) -> Result<Vec<Need>, Fail
                 else {
                     continue;
                 };
-                let spec = blocks.spec(&block.block);
-                let slot = spec
-                    .iter()
-                    .flat_map(|s| &s.slots)
-                    .filter(|s| s.name == binding.v.slot);
-                for form in slot.flat_map(|s| s.heads.iter().cloned()) {
+                let slot = blocks
+                    .spec(&block.block)
+                    .and_then(|s| s.slots.into_iter().find(|s| s.name == binding.v.slot))
+                    .ok_or_else(|| fail(SampleCode::BlockUnknown, "block", block.block.clone()))?;
+                for form in slot.heads {
                     add(heads, form)?;
                 }
             }

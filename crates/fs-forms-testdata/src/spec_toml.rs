@@ -98,6 +98,7 @@ struct RawSet {
 
 #[derive(Deserialize)]
 #[serde(
+    deny_unknown_fields,
     tag = "case",
     rename_all = "kebab-case",
     rename_all_fields = "kebab-case"
@@ -158,14 +159,24 @@ fn number<T: std::str::FromStr>(part: Option<&str>, what: &str) -> Result<T, Fai
         .ok_or_else(|| bad(format!("anchor: {what}")))
 }
 
+/// All parts of the anchor are used: a rest (`2026-05-17` as a month) is an error, never dropped.
+fn whole(parts: &mut std::str::Split<'_, char>, what: &str) -> Result<(), Failure> {
+    match parts.next() {
+        None => Ok(()),
+        Some(_) => Err(bad(format!("anchor: {what}"))),
+    }
+}
+
 fn anchor(raw: &RawAnchor) -> Result<Anchor, Failure> {
     let period = match (&raw.month, &raw.week, &raw.day) {
         (Some(m), None, None) => {
             let mut p = m.split('-');
-            Period::Month(
+            let period = Period::Month(
                 number(p.next(), "month `YYYY-MM`")?,
                 number(p.next(), "month `YYYY-MM`")?,
-            )
+            );
+            whole(&mut p, "month `YYYY-MM`")?;
+            period
         }
         (None, Some(w), None) => {
             let (year, week) = w.split_once("-W").unzip();
@@ -176,11 +187,13 @@ fn anchor(raw: &RawAnchor) -> Result<Anchor, Failure> {
         }
         (None, None, Some(d)) => {
             let mut p = d.split('-');
-            Period::Day(
+            let period = Period::Day(
                 number(p.next(), "day `YYYY-MM-DD`")?,
                 number(p.next(), "day `YYYY-MM-DD`")?,
                 number(p.next(), "day `YYYY-MM-DD`")?,
-            )
+            );
+            whole(&mut p, "day `YYYY-MM-DD`")?;
+            period
         }
         _ => return Err(bad("anchor: exactly one of month, week, day")),
     };

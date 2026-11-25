@@ -48,6 +48,8 @@ pub enum SampleCode {
     TypeMismatch,
     /// `{what}`: two wishes of `[sample]` for the same form of the same source.
     WishTwice,
+    /// `{block}`: the block catalog gives no block, or no slot, that the description's grouping binding names.
+    BlockUnknown,
 }
 
 impl ErrorCode for SampleCode {
@@ -73,6 +75,7 @@ impl ErrorCode for SampleCode {
         Self::SourceUnknown,
         Self::TypeMismatch,
         Self::WishTwice,
+        Self::BlockUnknown,
     ];
 
     fn as_str(self) -> &'static str {
@@ -97,6 +100,7 @@ impl ErrorCode for SampleCode {
             Self::SourceUnknown => "source-unknown",
             Self::TypeMismatch => "type-mismatch",
             Self::WishTwice => "wish-twice",
+            Self::BlockUnknown => "block-unknown",
         }
     }
 }

@@ -3,7 +3,7 @@
 mod described_support;
 
 use described_support::*;
-use fs_forms_testdata::{SampleCode, SampleModule, SampleSpec};
+use fs_forms_testdata::{BlockForms, SampleCode, SampleModule, SampleSpec, needs};
 
 #[test]
 fn a_broken_section_sample_is_a_code_never_ignored() {
@@ -23,6 +23,18 @@ fn a_broken_section_sample_is_a_code_never_ignored() {
         (
             "anchor text",
             "[sample]\nanchor = { month = \"May\", zone = \"Europe/Berlin\" }\n",
+        ),
+        (
+            "unknown key of a case",
+            "[[sample.set]]\nsource = 1\nform = \"rows@^1.0.0\"\ncases = [ { case = \"all-day\", times = 2, tims = 3 } ]\n",
+        ),
+        (
+            "month with a day",
+            "[sample]\nanchor = { month = \"2026-05-17\", zone = \"Europe/Berlin\" }\n",
+        ),
+        (
+            "day with a rest",
+            "[sample]\nanchor = { day = \"2026-05-12-99\", zone = \"Europe/Berlin\" }\n",
         ),
         (
             "unknown case",
@@ -103,4 +115,23 @@ fn a_description_without_sample_and_the_same_with_an_empty_section_agree() {
         specs(&l, None),
         specs(&l, Some("title = \"nothing about samples\"\n"))
     );
+}
+
+/// A catalog that knows no block.
+struct Empty;
+impl BlockForms for Empty {
+    fn forms(&self, _: &str) -> Vec<fs_forms_bind::FormRef> {
+        Vec::new()
+    }
+    fn spec(&self, _: &str) -> Option<fs_forms_bind::BlockSpec> {
+        None
+    }
+}
+
+#[test]
+fn a_catalog_that_lacks_the_block_or_the_slot_of_a_grouping_binding_is_a_code_not_silence() {
+    // the description of the host with a grouping binding; the catalog below knows no block of that name
+    let (l, _) = file(&format!("{FORMS}/board-swimlanes.toml"));
+    let err = needs(&l, &Empty).expect_err("a grouping binding with no block spec");
+    assert_eq!(err.code(), SampleCode::BlockUnknown);
 }

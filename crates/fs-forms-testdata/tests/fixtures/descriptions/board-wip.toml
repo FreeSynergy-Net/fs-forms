@@ -1,0 +1,283 @@
+# Kopie aus fs-tasks forms/, Stand 9f92c694, nur für Tests
+# forms description of the fs-tasks frontend "board-wip" (second board frontend, WIP-oriented).
+# Round 3, lifted to 1.4.0 (workflow frontend-round, step layout-schreiben, P8): source 1 = planning (as forms/board.toml), binding
+# of the channels of cards-in-columns@1.4.0 that this layout shows; commands card.move, task.create, task.delete.
+# priority is an own channel since 1.3.0 (no longer a fact); the field name stays; shown as a number until the P0-P3 mapping (Bündel 1b).
+# Channels NOT bound (no slot in the board block, or the layout does not show them): lane, progress, column-label
+# (the module map delivers them; no description key); column-limit (1.3.0): no slot (block board has none, board-column accepts = []),
+# so it stays open; description, color, estimated: no slot on board-card (card-facts is full: due, priority, participants, keywords).
+# 1.4.0 channels state, assignee (repeats), time-zone: `offen`, same reason (card-facts full, no other card slot); the card shows NOT the people in charge.
+# See FRONTENDS-tasks-attribute-board-wip.md.
+# Views and menus stay host functions (no [[view]], no view switch). Theme: `style = "board-wip"` (tokens in styles/).
+# Shape (named after the form, not after any model program): columns with count and limit, cards with due chip,
+# priority tag, description mark; view tabs List | Gantt | Table | Kanban; filter button.
+schema = 3
+kind = "frontend"
+id = "board-wip"
+extends = "net.freesynergy.Tasks"
+exec = "fs-forms-run"
+title = "board-wip-title"
+style = "board-wip"
+
+[[requires]]
+elem = "requires:1"
+contract = "planning@>=0.0.1, <0.1.0"
+
+# Source 1 = the tasks provider; "selected-list" = the list chosen in the sidebar (as in board.toml).
+[[source]]
+elem = "source:1"
+n = 1
+contract = "planning@>=0.0.1, <0.1.0"
+type = "Task"
+scope = "selected-list"
+
+# ---- menu tree: standard entries only (no command, no view switch here)
+[[menu]]
+elem = "menu:0"
+kind = "standard-program"
+
+[[menu]]
+elem = "menu:1"
+kind = "standard-help"
+
+# ---- page "board-wip": window shell, side strip, view tabs, board, states
+[[page]]
+elem = "page:board-wip"
+page = "board-wip"
+frame = "app-window"
+navigation = "single"
+
+# No side strip here: its slots are not declared in the catalog; an unbound strip was an empty column beside the board (Runde 3c).
+
+# view tabs (List, Gantt, Table, Kanban) and the filter button sit above the board
+# (the texts view-list, view-gantt, view-table, view-kanban and filter-button below are kept for them: the block tablist has no declared
+# binding yet, so no place uses these texts today – offen, not faked)
+[[page.place]]
+elem = "block:board-wip/bar"
+at = "bar"
+block = "tablist"
+
+# columns with head (name, count, limit), cards below; the card parts are the board block's own.
+# Binding as in board.toml; facts = the four module facts (due chip, priority tag, participants, keywords).
+[[page.place]]
+elem = "block:board-wip/main"
+at = "main"
+block = "board"
+source = 1
+
+[[page.place.bind]]
+elem = "binding:board-wip/main/card-facts/0"
+slot = "card-facts"
+nth = 0
+field = "due"
+role = "compact"
+
+[[page.place.bind]]
+elem = "binding:board-wip/main/card-facts/1"
+slot = "card-facts"
+nth = 1
+field = "priority"
+role = "compact"
+
+[[page.place.bind]]
+elem = "binding:board-wip/main/card-facts/2"
+slot = "card-facts"
+nth = 2
+field = "participants"
+role = "compact"
+
+[[page.place.bind]]
+elem = "binding:board-wip/main/card-facts/3"
+slot = "card-facts"
+nth = 3
+field = "keywords"
+role = "compact"
+
+[[page.place.bind]]
+elem = "binding:board-wip/main/card-lock/0"
+slot = "card-lock"
+nth = 0
+lock = true
+
+[[page.place.bind]]
+elem = "binding:board-wip/main/card-menu/0"
+slot = "card-menu"
+nth = 0
+command = "task.delete"
+
+[[page.place.bind]]
+elem = "binding:board-wip/main/card-title/0"
+slot = "card-title"
+nth = 0
+field = "title"
+role = "display"
+
+[[page.place.bind]]
+elem = "binding:board-wip/main/cards/0"
+slot = "cards"
+nth = 0
+
+[[page.place.bind]]
+elem = "binding:board-wip/main/columns/0"
+slot = "columns"
+nth = 0
+grouping = "board"
+
+[[page.place.bind]]
+elem = "binding:board-wip/main/move/0"
+slot = "move"
+nth = 0
+command = "card.move"
+
+[[page.place.bind]]
+elem = "binding:board-wip/main/order/0"
+slot = "order"
+nth = 0
+order = "rank"
+
+[[page.place.bind]]
+elem = "binding:board-wip/main/quick-add/0"
+slot = "quick-add"
+nth = 0
+command = "task.create"
+
+# states the host shows without code
+[[page.place]]
+elem = "block:board-wip/partial"
+at = "partial"
+block = "partial-notice"
+
+[[page.place]]
+elem = "block:board-wip/empty"
+at = "empty"
+block = "empty-state"
+title = "tasks-board-empty-title"
+text = "tasks-board-empty-text"
+
+# ---- actions: drop = card.move, quick-add = task.create, menu = task.delete (confirm: data is lost)
+[[action]]
+elem = "action:1"
+trigger = "quick-add"
+source = 1
+command = "task.create"
+
+[[action]]
+elem = "action:2"
+trigger = "drop"
+source = 1
+command = "card.move"
+
+[[action]]
+elem = "action:3"
+trigger = "menu"
+source = 1
+command = "task.delete"
+confirm = "confirm"
+
+[[message]]
+elem = "message:board-wip-title/de"
+key = "board-wip-title"
+lang = "de"
+text = "Aufgaben (in Arbeit)"
+
+[[message]]
+elem = "message:board-wip-title/en"
+key = "board-wip-title"
+lang = "en"
+text = "Tasks (work in progress)"
+
+[[message]]
+elem = "message:filter-button/de"
+key = "filter-button"
+lang = "de"
+text = "Filter"
+
+[[message]]
+elem = "message:filter-button/en"
+key = "filter-button"
+lang = "en"
+text = "Filters"
+
+[[message]]
+elem = "message:tasks-board-empty-text/de"
+key = "tasks-board-empty-text"
+lang = "de"
+text = "Was ist zu tun?"
+
+[[message]]
+elem = "message:tasks-board-empty-text/en"
+key = "tasks-board-empty-text"
+lang = "en"
+text = "What needs to be done?"
+
+[[message]]
+elem = "message:tasks-board-empty-title/de"
+key = "tasks-board-empty-title"
+lang = "de"
+text = "Hier ist noch keine Aufgabe"
+
+[[message]]
+elem = "message:tasks-board-empty-title/en"
+key = "tasks-board-empty-title"
+lang = "en"
+text = "No tasks here yet"
+
+[[message]]
+elem = "message:tasks-side-title/de"
+key = "tasks-side-title"
+lang = "de"
+text = "Projekte und Labels"
+
+[[message]]
+elem = "message:tasks-side-title/en"
+key = "tasks-side-title"
+lang = "en"
+text = "Projects and labels"
+
+[[message]]
+elem = "message:view-gantt/de"
+key = "view-gantt"
+lang = "de"
+text = "Gantt"
+
+[[message]]
+elem = "message:view-gantt/en"
+key = "view-gantt"
+lang = "en"
+text = "Gantt"
+
+[[message]]
+elem = "message:view-kanban/de"
+key = "view-kanban"
+lang = "de"
+text = "Kanban"
+
+[[message]]
+elem = "message:view-kanban/en"
+key = "view-kanban"
+lang = "en"
+text = "Kanban"
+
+[[message]]
+elem = "message:view-list/de"
+key = "view-list"
+lang = "de"
+text = "Liste"
+
+[[message]]
+elem = "message:view-list/en"
+key = "view-list"
+lang = "en"
+text = "List"
+
+[[message]]
+elem = "message:view-table/de"
+key = "view-table"
+lang = "de"
+text = "Tabelle"
+
+[[message]]
+elem = "message:view-table/en"
+key = "view-table"
+lang = "en"
+text = "Table"

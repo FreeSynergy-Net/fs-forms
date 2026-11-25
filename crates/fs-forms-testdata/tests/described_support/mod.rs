@@ -58,7 +58,8 @@ pub fn file(path: &str) -> (Layout, String) {
     (read(&text), text)
 }
 
-pub const FORMS: &str = "/srv/FreeSynergy/.scratch/c2/wave2/fs-tasks/forms";
+/// Copies of six descriptions (see the head of each file); the tests never read outside this crate.
+pub const FORMS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/descriptions");
 
 pub fn here(name: &str) -> String {
     format!(

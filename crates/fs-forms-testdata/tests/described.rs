@@ -32,7 +32,7 @@ fn a_board_needs_its_form_and_the_heads_of_its_lane_slot_come_from_the_other_sou
 }
 
 #[test]
-fn every_board_description_of_the_tasks_repo_reads_the_same_way() {
+fn every_board_description_of_the_copied_descriptions_reads_the_same_way() {
     for name in ["board", "board-plain", "board-wip"] {
         let (l, text) = file(&format!("{FORMS}/{name}.toml"));
         let got = specs(&l, Some(&text));

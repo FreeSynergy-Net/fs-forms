@@ -1,0 +1,237 @@
+# Kopie aus fs-tasks forms/, Stand 9f92c694, nur für Tests
+# Pattern: Composite – a tree of blocks (page, frame, block, place) as plain data; deviation: no trait, only data (the host reads it).
+# forms description of the fs-tasks frontend "board-swimlanes" (workflow frontend-beschreiben, step layout-schreiben, Runde 2: BINDEN).
+# Form: cards-in-columns@1.4.0 (fs-interfaces main 83b96e30 schema/forms.txt; module planning main 908f1c1f). Source: module planning (contract planning@>=0.0.1, <0.1.0).
+# Pattern of the bindings: forms/board.toml (slot = block input, field = provider field, command = contract key, no module prefix).
+# Nach Gestalt benannt: Bahnen (Swimlanes) mit Klappkopf und Zähler, Spalten mit Zahl, Karten mit Faktenzeile.
+# Bewusst andere Daten als `board` (Status-Spalten) und `board-wip` (Schwester-Frontend): Bahnen sind eine Gruppierung je Karte.
+#
+# Bindings in this file: [[source]], bind arrays on the page blocks, and the three command actions (trigger and key only).
+# The channels of the form are bound here where a slot exists. Channels WITHOUT a slot are NOT faked; each is marked "offen" below.
+# Channel `after`/`before` of `move` is written by the MODULE (catalog/forms.json, key `map`), never by this file.
+#
+# Channel -> binding (form cards-in-columns@1.4.0):
+#   cards         -> slot `cards` (block board, records)                      BOUND
+#   column        -> slot `columns` grouping `board`                           BOUND (the column id is the grouping, not a field)
+#   title         -> slot `card-title` field `title`                           BOUND
+#   facts (0..4)  -> slot `card-facts` nth 0: due (the only fact this frontend takes)                  BOUND
+#   priority      -> slot `card-facts` nth 1 (own channel since 1.3.0, shown as a number until Bündel 1b)  BOUND
+#   estimated     -> slot `card-facts` nth 2, provider field `estimatedDuration` (ISO 8601 text; planning renamed the field from `estimated`)  BOUND
+#   state         -> slot `card-facts` nth 3, provider field `progress` (the status word of JSCalendar progress; no value for an invalid stored word).
+#                    Shown as the raw word until the label mapping (Bündel 1b).                          BOUND
+#   assignee      -> slot `lanes` grouping `assignee`: the lanes are the people in charge (role chair; one card with two people stands in both lanes).
+#                    BOUND, BUT NOT FULLY SERVED YET (offen): the host (fs-forms-run) keeps only the LAST of the repeated `assignee` values
+#                    (fs-starter P9, C1); a lane head shows the IRI, not the name (the name belongs to the people module, no slot to ask for it);
+#                    a card without a person has no value, so a lane "nobody" is not drawn (the frontend would have to name it; no slot).
+#                    The card itself does NOT show the people in charge: card-facts is full, no other card slot (offen).
+#   lane          -> NOT bound. In 1.4.0 `lane` is the BOARD of the card (unchanged), no longer the lane of the swimlane view.
+#   order         -> slot `order` order `rank` (read only, the sequence as shown)  BOUND
+#   move          -> slot `move` command `card.move`; writes column, after, before, lane (after/before by the module)  BOUND
+#   create        -> slot `quick-add` command `task.create`; needs title, column, lane  BOUND
+#   remove        -> slot `card-menu` command `task.delete`, confirm            BOUND
+#   column-label  -> bound by the MODULE (catalog/forms.json, key `map`), no key in this file; NO slot to show it (block board has no label slot for the column name; board-column has part `name` only)   offen
+#   progress      -> (number, percentComplete) NO slot on block board/board-card (card-facts takes facts only; progress is a bar, not a fact)     offen
+#   time-zone     -> NO slot on the card (card-facts full); `due` stays an instant with Z, showing it in the zone is the host's job            offen
+#
+# LANE LIST (empty lanes, name, order): declared as source 2 (form `rows@1.0.0` type `Lane`, scope `lanes:assignee`, format 4) and bound to slot `lanes`
+# with `source = 2`. Honest state: the heads (also empty lanes) are drawn only when the host (paket S, fs-starter) reads the second source and
+# fs-components brings lane_plan/heads; until then the lanes come from the cards (grouping `assignee`) as before. Known gaps of the module
+# (planning 908f1c1f, not hidden): column `recurrenceRule` of rows@1.0.0 stays empty, `relatedTo` carries one value only, and the seed has no empty assignee lane.
+#
+# NOT bound here, and why (offen, not faked): colour of a card (`color`, 1.3.0 channel; board-card has no colour slot),
+# description (1.3.0 channel; no slot on the card, card-facts is full), column limit (`column-limit`, 1.3.0 channel; no slot on
+# block board), priority as P0-P3 label (the module gives the number; the label mapping is not in the contract),
+# search field and status filter (bar of the board has no slot). Details: ../FEHLENDE-COMPONENTS.md and the report
+# .scratch/woche-11-23/form/BERICHT-p8.md.
+#
+# Theme: style = "office" (the layer of ADR 0074, tokens in styles/office.tokens.json). No colour, size or font in this file.
+schema = 4
+kind = "frontend"
+id = "board-swimlanes"
+extends = "net.freesynergy.Tasks"
+exec = "fs-forms-run"
+title = "board-swimlanes-title"
+style = "office"
+
+[[requires]]
+elem = "requires:1"
+contract = "planning@>=0.0.1, <0.1.0"
+
+# Source 1 = the planning module (fs-modules-planning), the type Task (JSCalendar Task, RFC 8984).
+[[source]]
+elem = "source:1"
+n = 1
+contract = "planning@>=0.0.1, <0.1.0"
+type = "Task"
+scope = "selected-list"
+
+# Source 2 = the lane list of the module (rows@1.0.0 type Lane, axis assignee); only slot `lanes` takes its heads from it.
+[[source]]
+elem = "source:2"
+n = 2
+contract = "planning@>=0.0.1, <0.1.0"
+type = "Lane"
+scope = "lanes:assignee"
+
+# ---- page "board-swimlanes": a workbench with the side list and the main area.
+[[page]]
+elem = "page:board-swimlanes"
+page = "board-swimlanes"
+frame = "workbench"
+navigation = "single"
+
+# No side list in this frontend: its slots are not declared in the catalog, and an empty strip beside the lanes was shown as a second, empty column (Runde 3c). It returns with the slots.
+
+# Main area: ONE board. Lanes are the first level (slot `lanes`), columns inside each lane (slot `columns`).
+[[page.place]]
+elem = "block:board-swimlanes/main"
+at = "main"
+block = "board"
+source = 1
+
+[[page.place.bind]]
+elem = "binding:board-swimlanes/main/card-facts/0"
+slot = "card-facts"
+nth = 0
+field = "due"
+role = "compact"
+
+[[page.place.bind]]
+elem = "binding:board-swimlanes/main/card-facts/1"
+slot = "card-facts"
+nth = 1
+field = "priority"
+role = "compact"
+
+[[page.place.bind]]
+elem = "binding:board-swimlanes/main/card-facts/2"
+slot = "card-facts"
+nth = 2
+field = "estimatedDuration"
+role = "compact"
+
+[[page.place.bind]]
+elem = "binding:board-swimlanes/main/card-facts/3"
+slot = "card-facts"
+nth = 3
+field = "progress"
+role = "compact"
+
+[[page.place.bind]]
+elem = "binding:board-swimlanes/main/card-menu/0"
+slot = "card-menu"
+nth = 0
+command = "task.delete"
+
+[[page.place.bind]]
+elem = "binding:board-swimlanes/main/card-title/0"
+slot = "card-title"
+nth = 0
+field = "title"
+role = "display"
+
+[[page.place.bind]]
+elem = "binding:board-swimlanes/main/cards/0"
+slot = "cards"
+nth = 0
+
+[[page.place.bind]]
+elem = "binding:board-swimlanes/main/columns/0"
+slot = "columns"
+nth = 0
+grouping = "board"
+
+[[page.place.bind]]
+elem = "binding:board-swimlanes/main/lanes/0"
+slot = "lanes"
+nth = 0
+grouping = "assignee"
+source = 2
+
+[[page.place.bind]]
+elem = "binding:board-swimlanes/main/move/0"
+slot = "move"
+nth = 0
+command = "card.move"
+
+[[page.place.bind]]
+elem = "binding:board-swimlanes/main/order/0"
+slot = "order"
+nth = 0
+order = "rank"
+
+[[page.place.bind]]
+elem = "binding:board-swimlanes/main/quick-add/0"
+slot = "quick-add"
+nth = 0
+command = "task.create"
+
+# Empty state (texts are keys of this file).
+[[page.place]]
+elem = "block:board-swimlanes/empty"
+at = "empty"
+block = "empty-state"
+title = "board-swimlanes-empty-title"
+text = "board-swimlanes-empty-text"
+
+# Partial state (a locked or missing binding is shown as a notice, never as an empty area).
+[[page.place]]
+elem = "block:board-swimlanes/partial"
+at = "partial"
+block = "partial-notice"
+
+# ---- actions: drop a card (move), entry row (create), delete (confirm: data is lost)
+[[action]]
+elem = "action:1"
+trigger = "quick-add"
+source = 1
+command = "task.create"
+
+[[action]]
+elem = "action:2"
+trigger = "drop"
+source = 1
+command = "card.move"
+
+[[action]]
+elem = "action:3"
+trigger = "menu"
+source = 1
+command = "task.delete"
+confirm = "confirm"
+
+[[message]]
+elem = "message:board-swimlanes-empty-text/de"
+key = "board-swimlanes-empty-text"
+lang = "de"
+text = "Lege eine Aufgabe an, dann entsteht eine Bahn."
+
+[[message]]
+elem = "message:board-swimlanes-empty-text/en"
+key = "board-swimlanes-empty-text"
+lang = "en"
+text = "Create a task to start a lane."
+
+[[message]]
+elem = "message:board-swimlanes-empty-title/de"
+key = "board-swimlanes-empty-title"
+lang = "de"
+text = "Keine Aufgaben in diesen Bahnen"
+
+[[message]]
+elem = "message:board-swimlanes-empty-title/en"
+key = "board-swimlanes-empty-title"
+lang = "en"
+text = "No tasks in these lanes"
+
+[[message]]
+elem = "message:board-swimlanes-title/de"
+key = "board-swimlanes-title"
+lang = "de"
+text = "Aufgaben nach Bahnen"
+
+[[message]]
+elem = "message:board-swimlanes-title/en"
+key = "board-swimlanes-title"
+lang = "en"
+text = "Tasks by lane"

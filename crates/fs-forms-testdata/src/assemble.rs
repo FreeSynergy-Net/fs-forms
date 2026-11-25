@@ -153,3 +153,20 @@ pub fn label_of(form: &Form) -> Option<&fs_interfaces::forms::Channel> {
         .iter()
         .find(|c| c.required && c.arts.first() == Some(&Art::Text))
 }
+
+/// The channel of art `records` says which kind of record the rows are (a module maps it to its type: `cards` -> `Task`).
+/// A wish without a data type maps nothing, so `form-channel-unmapped` still shows the gap.
+pub fn map_records_channels(map: &mut Vec<(String, Vec<String>)>, form: &Form, data_type: &str) {
+    if data_type.is_empty() {
+        return;
+    }
+    for channel in form
+        .channels
+        .iter()
+        .filter(|c| c.arts.contains(&Art::Records))
+    {
+        if !map.iter().any(|(c, _)| *c == channel.name) {
+            map.insert(0, (channel.name.clone(), vec![data_type.to_owned()]));
+        }
+    }
+}

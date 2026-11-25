@@ -7,7 +7,9 @@ use fs_interfaces::forms::{self, Art, Form};
 use rand::SeedableRng;
 use rand::rngs::ChaCha8Rng;
 
-use crate::assemble::{Pool, empty_channels, first_time, fnv, has, label_of, pools, stored};
+use crate::assemble::{
+    Pool, empty_channels, first_time, fnv, has, label_of, map_records_channels, pools, stored,
+};
 use crate::content::{self, ContentCtx, Order};
 use crate::error::{Failure, SampleCode, fail};
 use crate::interval::{self, Pair};
@@ -155,16 +157,7 @@ impl SampleBuilder {
             set.objects.push(object);
         }
         let (mut map, fields) = content.map(&ctx, form);
-        // the channel of art `records` says which kind of record the rows are (a module maps it to its type: `cards` -> `Task`)
-        for channel in form
-            .channels
-            .iter()
-            .filter(|c| c.arts.contains(&Art::Records))
-        {
-            if !map.iter().any(|(c, _)| *c == channel.name) {
-                map.insert(0, (channel.name.clone(), vec![wish.data_type.clone()]));
-            }
-        }
+        map_records_channels(&mut map, form, &wish.data_type);
         set.declared.push(ModuleForm {
             form: FormRef {
                 name: form.name.clone(),

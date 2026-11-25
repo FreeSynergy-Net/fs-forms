@@ -62,3 +62,6 @@ host-notice-window-unknown = Dieses Fenster ist nicht offen
 host-notice-open-ask-failed = Die Frage konnte nicht gezeigt werden; es wurde nichts geöffnet
 host-notice-window-failed = Das Fenster konnte nicht geöffnet werden
 host-menu-view = Ansicht
+host-notice-scope-from-not-built = Der Datensatz dieses Panels kommt aus der Auswahl eines anderen Teils; das ist noch nicht gebaut, darum wird das Panel nicht gezeigt (frontend)
+host-notice-frontend-on-open-not-built = Dieses Frontend öffnet sich über die Aktion open – noch nicht gebaut, darum wird es nicht gezeigt (frontend)
+host-notice-frontend-loop = Dieses Frontend würde sich selbst enthalten, direkt oder über andere Frontends; es wird nicht gezeigt (frontend)

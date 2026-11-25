@@ -12,6 +12,7 @@
 
 mod ask;
 mod build;
+mod embed;
 mod entry;
 mod ports;
 mod switch;
@@ -23,7 +24,7 @@ use fs_components_app::AppWidget;
 use fs_components_words::Locale;
 
 pub use self::ask::{Asked, OpenAsk};
-use self::entry::{Entry, Open, family, lock, snapshot};
+use self::entry::{Entry, Open, family, lock, rename_below, snapshot};
 pub use self::ports::{BlincSurfaces, Descriptions, Modules, Surfaces};
 use self::switch::Core;
 use super::open::{at_place, exact};
@@ -38,15 +39,10 @@ use crate::view::Coded;
 
 /// Pattern: Strategy (the real [`WindowOwner`], `Window` only) – see the module.
 pub struct HostWindows {
-    catalog: Arc<dyn Catalog + Send + Sync>,
-    locale: Locale,
     descriptions: Arc<dyn Descriptions>,
-    modules: Arc<dyn Modules>,
     surfaces: Arc<dyn Surfaces>,
-    hub: RecordHub,
     open: Arc<Mutex<Open>>,
     core: Arc<Core>,
-    serial: AtomicU64,
 }
 
 impl HostWindows {
@@ -62,22 +58,20 @@ impl HostWindows {
         let (descriptions, modules, surfaces) = ports;
         let open: Arc<Mutex<Open>> = Arc::default();
         let core = Arc::new(Core {
-            catalog: Arc::clone(&catalog),
-            locale: locale.clone(),
-            descriptions: Arc::clone(&descriptions),
-            open: Arc::clone(&open),
-            repaint: Arc::clone(&repaint),
-        });
-        Self {
             catalog,
             locale,
-            descriptions,
+            descriptions: Arc::clone(&descriptions),
             modules,
+            hub: RecordHub::with_repaint(Arc::clone(&repaint)),
+            serial: AtomicU64::new(0),
+            open: Arc::clone(&open),
+            repaint,
+        });
+        Self {
+            descriptions,
             surfaces,
-            hub: RecordHub::with_repaint(repaint),
             open,
             core,
-            serial: AtomicU64::new(0),
         }
     }
 
@@ -94,10 +88,17 @@ impl HostWindows {
         lock(&self.open).get(id).map(|e| e.panels.clone())
     }
 
+    /// The frontend nodes of the open frontend `id` that are not drawn, as (place, code of the reason), in place order. `None` when
+    /// `id` is not open.
+    #[must_use]
+    pub fn missing_of(&self, id: &WindowId) -> Option<Vec<(String, String)>> {
+        lock(&self.open).get(id).map(|e| e.missing.clone())
+    }
+
     /// How many read caches are alive (one per record, however many windows show it).
     #[must_use]
     pub fn records_alive(&self) -> usize {
-        self.hub.live()
+        self.core.hub.live()
     }
 
     /// The window of the entry with `token` is shown; when it is gone, that entry (and its children) fall.
@@ -131,7 +132,7 @@ impl HostWindows {
             range: e.key.extends.clone(),
             scope: req.scope.clone(),
         };
-        if let Err(err) = self.hub.rebind(&e.grip, key, &e.module) {
+        if let Err(err) = self.core.hub.rebind(&e.grip, key, &e.module) {
             open.insert(at.clone(), e);
             return Err(err);
         }
@@ -141,6 +142,7 @@ impl HostWindows {
             c.parent = Some(id.clone());
         }
         open.insert(id.clone(), e);
+        rename_below(open, at, &id);
         Ok(Opened::Switched { id, from })
     }
 }
@@ -155,11 +157,12 @@ impl WindowOwner for HostWindows {
         let mut open = lock(&self.open);
         let (program, elem, parent) = match &req.parent {
             Some((pid, elem)) => {
-                let p = open.get(pid).ok_or_else(|| {
+                open.get(pid).ok_or_else(|| {
                     Coded::new("host-notice-window-unknown").with("id", pid.as_str())
                 })?;
+                // a child is named by the id of its parent and its node (the parent id carries the record of the parent)
                 (
-                    p.key.extends.clone(),
+                    pid.as_str().to_owned(),
                     elem.as_str().to_owned(),
                     Some(pid.clone()),
                 )
@@ -184,7 +187,7 @@ impl WindowOwner for HostWindows {
                 if open.contains_key(&id) {
                     return Err(Coded::new("host-notice-window-id-taken").with("id", id.as_str()));
                 }
-                let built = self.build(&req, &id, parent, place, &[])?;
+                let built = Core::build(&self.core, &req, &id, parent, place, &[])?;
                 let clash = built.children.iter().any(|(c, _)| open.contains_key(c));
                 if clash {
                     return Err(Coded::new("host-notice-window-id-taken").with("id", id.as_str()));
@@ -240,7 +243,13 @@ impl WindowOwner for HostWindows {
     }
 
     fn use_frontend(&self, id: &WindowId, frontend: &str) -> Result<(), Coded> {
-        Core::switch(&self.core, id, frontend)
+        for window in Core::switch(&self.core, id, frontend)? {
+            // a window of the new frontend that fails is said, never silent; the change stays
+            if let Err(c) = self.open(window) {
+                eprintln!("fs-forms-run: {} {:?}", c.code, c.params);
+            }
+        }
+        Ok(())
     }
 
     fn open_now(&self) -> Vec<OpenedFrontend> {

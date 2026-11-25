@@ -27,6 +27,8 @@ pub(super) struct Entry {
     pub(super) cell: Arc<FrontendCell>,
     /// The panels drawn inside it: (place, head with the program the panel comes from), in tree order.
     pub(super) panels: Vec<(String, String)>,
+    /// The frontend nodes that are NOT drawn: (place, code of the reason), in place order.
+    pub(super) missing: Vec<(String, String)>,
     pub(super) raised: usize,
     /// Names THIS window for good (a switch changes the id, never the token): the `on_closed` of the surface finds the entry by it, so
     /// a closed window never removes the entry of a later window that got the same id.
@@ -73,5 +75,32 @@ pub(super) fn family(open: &Open, id: &WindowId) -> Vec<WindowId> {
             return doomed;
         }
         doomed.extend(more);
+    }
+}
+
+/// The id of a child follows the id of its parent (`<parent id>/<elem>`): when the parent is renamed from `from` to `to` (a record
+/// switch), every entry below it is renamed the same way, with its `parent` and the place it names.
+pub(super) fn rename_below(open: &mut Open, from: &WindowId, to: &WindowId) {
+    let prefix = format!("{}/", from.as_str());
+    let map = |id: &WindowId| {
+        if id == from {
+            to.clone()
+        } else if let Some(rest) = id.as_str().strip_prefix(&prefix) {
+            WindowId(format!("{}/{rest}", to.as_str()))
+        } else {
+            id.clone()
+        }
+    };
+    let below: Vec<WindowId> = open
+        .keys()
+        .filter(|k| k.as_str().starts_with(&prefix))
+        .cloned()
+        .collect();
+    for old in below {
+        if let Some(mut e) = open.remove(&old) {
+            e.parent = e.parent.as_ref().map(&map);
+            e.place.0 = map(&WindowId(e.place.0.clone())).0;
+            open.insert(map(&old), e);
+        }
     }
 }

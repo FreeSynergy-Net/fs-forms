@@ -89,7 +89,12 @@ pub fn world(mode: &str) -> World {
     for f in ["board-embed.toml", "settings.toml"] {
         let text = std::fs::read_to_string(src.join(f)).unwrap();
         let text = text.replace("mode = \"panel\"", &format!("mode = \"{mode}\""));
-        std::fs::write(dir.path().join(f), text).unwrap();
+        std::fs::write(dir.path().join(f), &text).unwrap();
+        if f == "board-embed.toml" {
+            for (id, text) in variants(&text) {
+                std::fs::write(dir.path().join(format!("{id}.toml")), text).unwrap();
+            }
+        }
     }
     let (tasks, settings) = (
         Arc::new(HoldCounts::default()),
@@ -140,6 +145,89 @@ pub fn world(mode: &str) -> World {
     }
 }
 
+const NODE: &str = "frontend = { extends = \"net.freesynergy.Settings\", frontend = \"settings\" }";
+
+/// A board like `board-embed` (mode already set) with another id and another target of its node `settings-embed`.
+fn board(base: &str, id: &str, target: Option<&str>) -> String {
+    let text = base.replace("id = \"board-embed\"", &format!("id = \"{id}\""));
+    #[allow(clippy::single_match_else)]
+    // the two arms are two different texts, not a pattern and its rest
+    match target {
+        Some(t) => text.replace(
+            NODE,
+            &format!("frontend = {{ extends = \"{TASKS}\", frontend = \"{t}\" }}"),
+        ),
+        None => {
+            // the node removed: a board with nothing inside it
+            let from = text
+                .find("[[page.place]]\nelem = \"settings-embed\"")
+                .unwrap();
+            let to = from
+                + text[from..].find("shown = \"start\"\n").unwrap()
+                + "shown = \"start\"\n".len();
+            format!("{}{}", &text[..from], &text[to..])
+        }
+    }
+}
+
+/// The variants of the board the tests of the second round need: `board-plain` (no node), `board-loop` (A to A), `board-a` and
+/// `board-b` (A to B to A), `chain-1` .. `chain-5` (five levels), `board-scope-from`, `board-on-open`.
+fn variants(base: &str) -> Vec<(String, String)> {
+    let mut all = vec![
+        ("board-plain".to_owned(), board(base, "board-plain", None)),
+        (
+            "board-loop".to_owned(),
+            board(base, "board-loop", Some("board-loop")),
+        ),
+        (
+            "board-a".to_owned(),
+            board(base, "board-a", Some("board-b")),
+        ),
+        (
+            "board-b".to_owned(),
+            board(base, "board-b", Some("board-a")),
+        ),
+        (
+            "board-scope-from".to_owned(),
+            board(base, "board-scope-from", Some("board-plain")).replace(
+                "shown = \"start\"\n",
+                "shown = \"start\"\nscope-from = \"block:board/main\"\n",
+            ),
+        ),
+        (
+            "board-on-open".to_owned(),
+            board(base, "board-on-open", Some("board-plain"))
+                .replace("shown = \"start\"", "shown = \"on-open\""),
+        ),
+    ];
+    for n in 1..=5 {
+        let next = format!("chain-{}", n + 1);
+        let target = (n < 5).then_some(next.as_str());
+        all.push((
+            format!("chain-{n}"),
+            board(base, &format!("chain-{n}"), target),
+        ));
+    }
+    all
+}
+
+pub fn open_frontend(
+    w: &World,
+    frontend: &str,
+    scope: Option<&str>,
+) -> Result<WindowOpened, Coded> {
+    let key = FrontendKey {
+        extends: TASKS.into(),
+        frontend: frontend.into(),
+    };
+    let mut req =
+        OpenFrontend::new(key, Placement::Window).with_when_open(fs_forms_run::WhenOpen::Window);
+    if let Some(s) = scope {
+        req = req.with_scope(s);
+    }
+    w.owner.open(req)
+}
+
 pub fn open_board(w: &World) -> WindowId {
     let key = FrontendKey {
         extends: TASKS.into(),
@@ -154,6 +242,6 @@ pub fn open_board(w: &World) -> WindowId {
     }
 }
 
-pub fn child_id() -> WindowId {
-    WindowId::of(TASKS, "settings-embed")
+pub fn child_id(parent: &WindowId) -> WindowId {
+    WindowId::of(parent.as_str(), "settings-embed")
 }

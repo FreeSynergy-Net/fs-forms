@@ -7,7 +7,7 @@
 //! (not `frontend-other-program`, which only the double can tell); the state of the person (selection of a board) is in the mounts of the
 //! old page and does not move to the new one (a rule for open input does not exist in the host yet).
 
-use std::collections::HashMap;
+use std::sync::atomic::AtomicU64;
 use std::sync::{Arc, Mutex};
 
 use fs_components_app::Status;
@@ -15,13 +15,15 @@ use fs_components_commands::FrontendRow;
 use fs_components_words::Locale;
 use fs_forms_layout::FrontendKey;
 
-use super::entry::{Open, lock};
-use super::{Descriptions, WindowId};
+use super::build::connected;
+use super::entry::{Entry, Open, family, lock};
+use super::{Descriptions, Modules, OpenFrontend, WindowId};
 use crate::catalog::Catalog;
 use crate::compose::compose;
 use crate::frontend_cell::root_page;
 use crate::menus::{line_prefix, menus_of};
 use crate::parts::line;
+use crate::record_hub::RecordHub;
 use crate::repaint::Repaint;
 use crate::status::set_status_line;
 use crate::style::StyleCell;
@@ -33,6 +35,9 @@ pub(super) struct Core {
     pub(super) catalog: Arc<dyn Catalog + Send + Sync>,
     pub(super) locale: Locale,
     pub(super) descriptions: Arc<dyn Descriptions>,
+    pub(super) modules: Arc<dyn Modules>,
+    pub(super) hub: RecordHub,
+    pub(super) serial: AtomicU64,
     pub(super) open: Arc<Mutex<Open>>,
     pub(super) repaint: Arc<dyn Repaint>,
 }
@@ -49,8 +54,14 @@ pub(super) fn rows(descriptions: &dyn Descriptions, key: &FrontendKey) -> Vec<Fr
 }
 
 impl Core {
-    /// Changes the frontend of the window `id`; any refusal leaves it as it was.
-    pub(super) fn switch(self_arc: &Arc<Self>, id: &WindowId, frontend: &str) -> Result<(), Coded> {
+    /// Changes the frontend of the window `id`; any refusal leaves it as it was. The panels of the old frontend fall (their grips sign
+    /// off at their modules), the frontend nodes of the new one are built the same way as when it is opened (`inside_of`); the windows
+    /// its nodes ask for are returned for the owner to open.
+    pub(super) fn switch(
+        self_arc: &Arc<Self>,
+        id: &WindowId,
+        frontend: &str,
+    ) -> Result<Vec<OpenFrontend>, Coded> {
         let mut open = lock(&self_arc.open);
         let at = |c: &str| Coded::new(c).with("id", id.as_str());
         let e = open
@@ -73,7 +84,7 @@ impl Core {
                 .with("available", format!("[{}]", names.join(", "))));
         }
         if key == e.key {
-            return Ok(());
+            return Ok(Vec::new());
         }
         let elsewhere = open
             .iter()
@@ -87,9 +98,12 @@ impl Core {
                 .with("frontend", frontend)
                 .with("cause", cause.code.clone())
         };
-        let view = self_arc.descriptions.view(&key).map_err(|c| refused(&c))?;
+        let view = connected(self_arc.descriptions.view(&key).map_err(|c| refused(&c))?);
         let texts = words(&self_arc.locale);
         let comp = compose(&view, &*self_arc.catalog);
+        let mut above = ancestors(&open, id);
+        above.push(key.clone());
+        let inside = self_arc.inside_of(id, &comp, &above);
         let page = root_page(
             &texts,
             &self_arc.locale,
@@ -97,7 +111,7 @@ impl Core {
             &comp,
             e.grip.records(),
             Arc::new(StyleCell::default()),
-            &HashMap::new(),
+            &inside.panels,
         );
         let menus = menus_of(&texts, &view, &rows, frontend);
         if let Some(app) = &e.app {
@@ -107,12 +121,25 @@ impl Core {
             set_status_line(app, &texts, &comp, &*records);
         }
         e.cell.set(page);
+        let gone: Vec<Entry> = family(&open, id)
+            .iter()
+            .filter(|d| *d != id)
+            .filter_map(|d| open.remove(d))
+            .collect();
+        let (heads, missing) = (inside.heads(), inside.missing());
+        open.extend(inside.children);
         if let Some(e) = open.get_mut(id) {
             e.key = key;
+            e.panels = heads;
+            e.missing = missing;
         }
         drop(open);
+        for app in gone.iter().filter_map(|c| c.app.as_ref()) {
+            app.quit(); // a window of the old frontend goes with it
+        }
+        drop(gone); // outside the lock: the grips sign off at their modules
         self_arc.repaint.wake();
-        Ok(())
+        Ok(inside.windows)
     }
 
     /// The handler of the menus of the window with `token`: a line `layout.frontend.<name>` changes the frontend; a refusal is said in
@@ -134,14 +161,36 @@ impl Core {
                     .find(|(_, e)| e.token == token)
                     .and_then(|(id, e)| Some((id.clone(), e.app.clone()?)))
             };
-            if let Some((id, app)) = found
-                && let Err(refused) = Self::switch(&core, &id, frontend)
-            {
-                let sentence = line(&words(&core.locale), &refused);
-                app.set_status(Some(Status::Problem(sentence)));
+            let Some((id, app)) = found else { return };
+            match Self::switch(&core, &id, frontend) {
+                Ok(windows) => {
+                    // the menu has only the shared state; the windows of the new frontend are opened by the owner (`use_frontend`)
+                    for w in windows {
+                        eprintln!(
+                            "fs-forms-run: window of {} not opened by the menu",
+                            w.key.frontend
+                        );
+                    }
+                }
+                Err(refused) => {
+                    let sentence = line(&words(&core.locale), &refused);
+                    app.set_status(Some(Status::Problem(sentence)));
+                }
             }
         }
     }
+}
+
+/// The keys of the frontends above `id` (the chain of parents), root first.
+fn ancestors(open: &Open, id: &WindowId) -> Vec<FrontendKey> {
+    let mut keys = Vec::new();
+    let mut at = open.get(id).and_then(|e| e.parent.as_ref());
+    while let Some(e) = at.and_then(|p| open.get(p)) {
+        keys.push(e.key.clone());
+        at = e.parent.as_ref();
+    }
+    keys.reverse();
+    keys
 }
 
 impl super::HostWindows {

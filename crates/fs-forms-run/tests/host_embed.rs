@@ -24,7 +24,7 @@ fn a_panel_is_a_frontend_of_its_own_module_inside_the_page_of_its_parent() {
         modes,
         [
             (parent.clone(), Placement::Window, TASKS.to_owned()),
-            (child_id(), Placement::InFrame, SETTINGS.to_owned()),
+            (child_id(&parent), Placement::InFrame, SETTINGS.to_owned()),
         ]
     );
     assert_eq!(
@@ -48,7 +48,7 @@ fn a_panel_is_a_frontend_of_its_own_module_inside_the_page_of_its_parent() {
         .iter()
         .map(|f| f.declared.form.name.clone())
         .collect();
-    let (child, board) = (names(&child_id()), names(&parent));
+    let (child, board) = (names(&child_id(&parent)), names(&parent));
     assert_eq!(
         child, groups,
         "the panel shows the forms of the foreign module"

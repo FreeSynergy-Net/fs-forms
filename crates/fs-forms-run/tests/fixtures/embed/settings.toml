@@ -7,7 +7,7 @@ kind = "frontend"
 id = "settings"
 extends = "net.freesynergy.Settings"
 exec = "fs-forms-run"
-title = "groups-title"
+title = "settings-title"
 style = "default"
 
 [[requires]]
@@ -84,3 +84,15 @@ elem = "message:groups-tree-title/en"
 key = "groups-tree-title"
 lang = "en"
 text = "Groups"
+
+[[message]]
+elem = "message:settings-title/de"
+key = "settings-title"
+lang = "de"
+text = "Beispiel: Gruppen (Platzhalter für Settings)"
+
+[[message]]
+elem = "message:settings-title/en"
+key = "settings-title"
+lang = "en"
+text = "Example: groups (placeholder for settings)"

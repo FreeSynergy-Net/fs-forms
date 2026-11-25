@@ -54,7 +54,7 @@ pub enum Decision {
     },
 }
 
-/// The place a request lands in: `(program, elem)`. A root is `(program, frontend)`, a child the node of its parent; `None` when the
+/// The place a request lands in: `(program, elem)`. A root is `(program, frontend)`, a child `(id of its parent, node)`; `None` when the
 /// parent is not open.
 pub(super) fn place_of(
     open_now: &[OpenedFrontend],
@@ -62,8 +62,8 @@ pub(super) fn place_of(
 ) -> Option<(String, String)> {
     match &req.parent {
         Some((pid, e)) => {
-            let p = open_now.iter().find(|o| &o.id == pid)?;
-            Some((p.key.extends.clone(), e.as_str().to_owned()))
+            open_now.iter().find(|o| &o.id == pid)?;
+            Some((pid.as_str().to_owned(), e.as_str().to_owned()))
         }
         None => Some((req.key.extends.clone(), req.key.frontend.clone())),
     }

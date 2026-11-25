@@ -236,3 +236,16 @@ fn the_order_of_the_children_is_kept() {
         .collect();
     assert_eq!(order, ["0", "1", "2", "3", "4", "5"]);
 }
+
+#[test]
+fn a_sample_section_is_refused_on_the_wire_never_dropped_and_none_goes_through() {
+    let mut d = doc(chain(1));
+    let mut m = capnp::message::Builder::new_default();
+    assert!(write_doc(m.init_root::<w::layout_doc::Builder<'_>>(), &d).is_ok());
+    d.sample = Some("[sample]\nseed = 1\n".into());
+    let e = write_doc(m.init_root::<w::layout_doc::Builder<'_>>(), &d).unwrap_err();
+    assert_eq!(
+        (e.code, e.param("what")),
+        (LayoutCode::ExportFailed, Some("sample-not-supported-yet"))
+    );
+}

@@ -85,35 +85,41 @@ fn holds_tables(t: &Tree) -> bool {
     }
 }
 
-fn table(path: &str, items: &[(String, Tree)], out: &mut String) {
+/// A dotted header path, every part written as a key (a part with a dot is quoted, never split).
+fn header(path: &[String], out: &mut String) {
+    for (i, part) in path.iter().enumerate() {
+        if i > 0 {
+            out.push('.');
+        }
+        key(part, out);
+    }
+}
+
+fn table(path: &[String], items: &[(String, Tree)], out: &mut String) {
     for (k, v) in items {
         if is_tables(v) || holds_tables(v) || matches!(v, Tree::Arr(a) if a.is_empty()) {
             continue;
         }
-        let _ = write!(out, "{k} = ");
+        key(k, out);
+        out.push_str(" = ");
         scalar(v, out);
         out.push('\n');
     }
     for (k, v) in items {
+        let here = || [path, std::slice::from_ref(k)].concat();
         if let (true, Tree::Obj(inner, _)) = (holds_tables(v), v) {
-            let here = if path.is_empty() {
-                k.clone()
-            } else {
-                format!("{path}.{k}")
-            };
-            let _ = write!(out, "\n[{here}]\n");
-            table(&here, inner, out);
+            out.push_str("\n[");
+            header(&here(), out);
+            out.push_str("]\n");
+            table(&here(), inner, out);
         }
         if let (true, Tree::Arr(list)) = (is_tables(v), v) {
             for o in list {
                 if let Tree::Obj(inner, _) = o {
-                    let here = if path.is_empty() {
-                        k.clone()
-                    } else {
-                        format!("{path}.{k}")
-                    };
-                    let _ = write!(out, "\n[[{here}]]\n");
-                    table(&here, inner, out);
+                    out.push_str("\n[[");
+                    header(&here(), out);
+                    out.push_str("]]\n");
+                    table(&here(), inner, out);
                 }
             }
         }
@@ -124,7 +130,7 @@ fn table(path: &str, items: &[(String, Tree)], out: &mut String) {
 pub(crate) fn to_toml(root: &Tree) -> String {
     let mut out = String::new();
     if let Tree::Obj(items, _) = root {
-        table("", items, &mut out);
+        table(&[], items, &mut out);
     }
     format!("{}\n", out.trim_end())
 }

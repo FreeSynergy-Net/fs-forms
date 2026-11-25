@@ -131,3 +131,13 @@ fn a_section_that_is_no_table_is_a_type_problem_and_the_other_top_level_keys_sta
         [Some("key-unknown".to_owned())]
     );
 }
+
+#[test]
+fn a_key_with_a_dot_in_the_section_is_quoted_never_split() {
+    let l = layout(&format!(
+        "{HEAD}\n[sample]\nseed = 1\n\n[[sample.set]]\nsource = 1\n\n[sample.set.distinct]\n\"a.b\" = 2\n"
+    ));
+    let got = l.doc().sample.clone().expect("section");
+    assert!(got.contains("\"a.b\""), "{got}");
+    assert!(value(&got)["sample"]["set"].as_array_of_tables().is_some());
+}

@@ -37,6 +37,10 @@ pub(crate) fn write_range(mut out: w::range::Builder<'_>, text: &str) {
 }
 
 pub(crate) fn write_doc(mut out: w::layout_doc::Builder<'_>, d: &LayoutDoc) -> R<()> {
+    // the wire has no member for `[sample]` yet: refused, never dropped
+    if d.sample.is_some() {
+        return Err(Coded::new(LayoutCode::ExportFailed).with("what", "sample-not-supported-yet"));
+    }
     out.set_format(d.format);
     out.set_extends(&d.key.extends);
     out.set_frontend(&d.key.frontend);

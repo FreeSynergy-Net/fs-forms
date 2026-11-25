@@ -98,12 +98,23 @@ fn action_cells(t: &ActionTarget) -> Result<(&'static str, Cell, Cell, Cell), Co
     })
 }
 
+/// No column holds `[sample]` yet: refused, never dropped.
+fn refuse_sample(d: &fs_forms_layout::LayoutDoc) -> Result<(), Coded<LayoutCode>> {
+    match d.sample {
+        None => Ok(()),
+        Some(_) => Err(Coded::new(LayoutCode::ExportFailed)
+            .with("file", "")
+            .with("kind", "sample-not-supported-yet")),
+    }
+}
+
 /// Rows of one layout, all tables of the description (not the overlay tables).
 ///
 /// # Errors
-/// `export-failed` for a part this cut cannot map yet (filters of views).
+/// `export-failed` for a part this cut cannot map yet (filters of views, `[sample]`).
 pub fn to_rows(layout: &Layout, meta: &LayoutMeta) -> Result<Rows, Coded<LayoutCode>> {
     let d = layout.doc();
+    refuse_sample(d)?;
     let mut rows = Rows::default();
     let id = text(&meta.id.0.0);
     let pkg = meta.package.as_ref();

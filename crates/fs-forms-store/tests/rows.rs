@@ -261,3 +261,14 @@ fn unknown_id_and_broken_rows_are_reported() {
         LayoutCode::ElemMissing
     );
 }
+
+#[test]
+fn a_sample_section_is_refused_by_the_rows_never_dropped_and_without_it_they_are_made() {
+    assert!(to_rows(&layout(), &meta()).is_ok());
+    let mut doc = layout().to_doc();
+    doc.sample = Some("[sample]\nseed = 1\n".into());
+    let l = doc.check(&OpenCatalog, &Limits::declared()).unwrap();
+    let e = to_rows(&l, &meta()).unwrap_err();
+    assert_eq!(e.code, LayoutCode::ExportFailed);
+    assert_eq!(e.param("kind"), Some("sample-not-supported-yet"));
+}

@@ -2,7 +2,7 @@
 //!
 //! Pattern: Port. The adapter over the real block catalog follows when G7 (`renders` + `choose`) exists.
 
-use crate::coded::Coded;
+use crate::coded::{Coded, Family};
 use crate::model::BindingIn;
 use crate::types::{FieldDesc, Role};
 
@@ -49,6 +49,7 @@ pub fn check_bindings(spec: &BlockSpec, bindings: &[BindingIn]) -> Vec<Coded> {
         if !spec.slots.iter().any(|s| s.name == b.slot) {
             out.push(
                 Coded::new("accepts-error-slot-unknown")
+                    .of(Family::Accepts)
                     .with("block", spec.name.clone())
                     .with("slot", b.slot.clone()),
             );
@@ -60,6 +61,7 @@ pub fn check_bindings(spec: &BlockSpec, bindings: &[BindingIn]) -> Vec<Coded> {
         if n < s.min {
             out.push(
                 Coded::new("accepts-error-slot-missing")
+                    .of(Family::Accepts)
                     .with("slot", s.name.clone())
                     .with("min", s.min.to_string()),
             );
@@ -67,6 +69,7 @@ pub fn check_bindings(spec: &BlockSpec, bindings: &[BindingIn]) -> Vec<Coded> {
         if s.max.is_some_and(|m| n > m) {
             out.push(
                 Coded::new("accepts-error-slot-too-many")
+                    .of(Family::Accepts)
                     .with("slot", s.name.clone())
                     .with("got", n.to_string()),
             );

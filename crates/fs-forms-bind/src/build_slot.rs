@@ -5,6 +5,7 @@
 use crate::build::Pool;
 use crate::build_heads::heads_of_slot;
 use crate::build_place::Env;
+use crate::coded::Reason;
 use crate::codes::{BindCode, Part, PartLock};
 use crate::commands::command_plan;
 use crate::model::{BindKind, BindingIn, PageIn, PlaceIn};
@@ -43,8 +44,8 @@ pub(crate) fn slot(
     let mut slot_lock = None;
     let mut layout_schemes = false;
     for c in pool.take(&b.elem) {
-        if c.code.ends_with("-schemes-missing") || c.code.ends_with("-schemes-unexpected") {
-            layout_schemes |= c.code.ends_with("-schemes-missing");
+        if c.reason().is_some() {
+            layout_schemes |= c.reason() == Some(Reason::SchemesMissing);
             locks.push(PartLock::locked(place.clone(), c));
         } else if slot_lock.is_none() {
             slot_lock = Some(PartLock::locked(spart.clone(), c));

@@ -16,6 +16,7 @@ use std::collections::HashSet;
 
 use fs_components_core::form_read::FormInput;
 use fs_components_kanban::{LaneHead, LanePlan};
+use fs_forms_bind::SlotRole;
 
 use crate::feed::{Feed, HeadsRef};
 use crate::form_data::{FormData, empty_input, input_of};
@@ -52,26 +53,20 @@ pub fn pick<'a>(
         .min_by_key(|d| u8::from(d.source != source) + u8::from(d.data_type != data_type))
 }
 
-/// The codes of a lock of the plan that are about the heads (a lock of another slot says nothing about lanes).
+/// The codes of a lock of the plan that are about the heads (a lock of another slot says nothing about lanes): the producer set the
+/// slot role, the code text is never read.
 fn about_heads(c: &Coded) -> bool {
-    [
-        "bind-error-heads",
-        "layout-error-source",
-        "accepts-error-contract",
-        "form-source-",
-        "bind-error-provider",
-    ]
-    .iter()
-    .any(|p| c.code.starts_with(p))
+    c.slot_role == Some(SlotRole::Heads)
 }
 
-/// The form the heads of the block come as: the first the slot of the catalog names (`heads=` of the contract); `rows` when the catalog
-/// names none (the binding then asks for something the block cannot take, and says so by the heads rule of bind).
-fn heads_form(block: &str) -> String {
+/// The form the heads of the block come as: the first the slot of the catalog names (`heads=` of the contract). A block whose catalog
+/// names none is an error (`host-notice-lanes-form-undeclared`), never a default form: the binding asks for something the block cannot take.
+fn heads_form(block: &str) -> Result<String, Coded> {
     crate::bind_spec::block_spec(block)
         .and_then(|b| b.slots.into_iter().find(|s| !s.heads.is_empty()))
         .and_then(|s| s.heads.into_iter().next())
-        .map_or_else(|| "rows".to_owned(), |f| f.name)
+        .map(|f| f.name)
+        .ok_or_else(|| Coded::new("host-notice-lanes-form-undeclared").with("block", block))
 }
 
 /// The heads in the order the module gave them; the key of a head is its IRI unless the cards carry names (then all keys are names).
@@ -115,7 +110,7 @@ fn heads_data<'a>(
         .source_problems()
         .into_iter()
         .filter(|(n, _)| *n == h.source)
-        .map(|(_, c)| c)
+        .map(|(_, c)| c.for_slot(SlotRole::Heads))
         .collect();
     if !shut.is_empty() || !read.is_empty() {
         return Err(shut.into_iter().chain(read).collect());
@@ -130,6 +125,7 @@ fn heads_data<'a>(
     }) else {
         return Err(vec![
             Coded::new("bind-error-heads-form-missing")
+                .for_slot(SlotRole::Heads)
                 .with("form", form)
                 .with("type", h.data_type.clone()),
         ]);
@@ -161,7 +157,10 @@ pub fn placed(records: &dyn Records, block: &str, feeds: &[Feed]) -> Placed {
             notices: Vec::new(),
         };
     };
-    match heads_data(records, &forms, feed, h, &heads_form(block)) {
+    let heads = heads_form(block)
+        .map_err(|c| vec![c])
+        .and_then(|form| heads_data(records, &forms, feed, h, &form));
+    match heads {
         Ok(data) => {
             let heads = input_of(data);
             let plan = LanePlan::On {

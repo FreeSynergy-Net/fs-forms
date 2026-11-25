@@ -237,7 +237,7 @@ fn unknown_prefix_is_its_own_cause_with_the_raw_code() {
     assert!(matches!(&c, Cause::Unknown(x) if x.code == "oops-no-prefix"));
     assert_eq!(c.coded().code, "oops-no-prefix");
     assert!(matches!(
-        Cause::from_coded(Coded::new("bind-error-locked")),
+        Cause::from_coded(Coded::new("bind-error-locked").of(Family::Bind)),
         Cause::Bind(_)
     ));
     let l = PartLock::locked(Part::Window, Coded::new("oops-no-prefix"));

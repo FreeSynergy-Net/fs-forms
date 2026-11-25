@@ -19,8 +19,11 @@ fn rich() -> Plan {
         .push(problem("pl-board-main", "layout-error-warn"));
     r.problems.push(problem("m-note", "layout-error-menu"));
     // A code without a known prefix (K8): its digest name `unknown` is part of the golden value.
-    r.problems
-        .push(problem("pl-detail-props", "oops-no-prefix"));
+    r.problems.push(problem_in(
+        "pl-detail-props",
+        "oops-no-prefix",
+        Family::Unknown,
+    ));
     // `type_may = false` (no type right) and an unsupported, writing, record command: every flag of a command takes part.
     let mut c = cmd("dup", false, true, true);
     c.desc.type_may = false;

@@ -13,15 +13,25 @@ pub struct Coded {
     pub code: String,
     /// Named parameters.
     pub params: Vec<(String, String)>,
+    /// The role of the slot the code is about, as the producer (bind) set it; the host filters by this, never by the code text.
+    pub slot_role: Option<fs_forms_bind::SlotRole>,
 }
 
 impl Coded {
-    /// A code without parameters.
+    /// A code without parameters (about no slot role).
     pub fn new(code: impl Into<String>) -> Self {
         Self {
             code: code.into(),
             params: Vec::new(),
+            slot_role: None,
         }
+    }
+
+    /// The code is about the slot of this role.
+    #[must_use]
+    pub fn for_slot(mut self, role: fs_forms_bind::SlotRole) -> Self {
+        self.slot_role = Some(role);
+        self
     }
 
     /// With one more parameter.

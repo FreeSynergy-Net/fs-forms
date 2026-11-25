@@ -6,7 +6,7 @@ use crate::build_menu::{MenuCtx, build_menu};
 use crate::build_place::Env;
 use crate::build_tree::build_nodes;
 use crate::catalog::Catalog;
-use crate::coded::Coded;
+use crate::coded::{Coded, Family};
 use crate::codes::{BindCode, Notice, Part, PartLock};
 use crate::keys::KeyPlan;
 use crate::model::{Problem, Resolved};
@@ -47,10 +47,12 @@ impl<'a> Pool<'a> {
 }
 
 fn coded(p: &Problem) -> Coded {
-    Coded {
-        code: p.code.clone(),
-        params: p.params.clone(),
-    }
+    let c = Coded::new(&p.code).of(p.family);
+    let c = match p.reason {
+        Some(r) => c.because(r),
+        None => c,
+    };
+    p.params.iter().fold(c, |c, (k, v)| c.with(k, v.clone()))
 }
 
 impl Bind {
@@ -169,6 +171,7 @@ fn build_sources(layout: &Resolved, providers: &Providers<'_>) -> Vec<SourcePlan
         let missing = |have: &str| {
             let range = format!("{}@{}", s.capability, s.range.text());
             Coded::new("accepts-error-contract-missing")
+                .of(Family::Accepts)
                 .with("capability", s.capability.clone())
                 .with("range", range)
                 .with("have", have)

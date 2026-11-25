@@ -51,7 +51,7 @@ pub mod testing;
 
 pub use build::Bind;
 pub use catalog::{BlockSpec, Catalog, SlotSpec, check_bindings};
-pub use coded::{Coded, Family};
+pub use coded::{Coded, Family, Reason, SlotRole};
 pub use codes::{BindCode, Cause, Notice, Part, PartLock, Severity};
 pub use commands::{Shown, command_id, command_plan, command_state};
 #[cfg(feature = "testing")]

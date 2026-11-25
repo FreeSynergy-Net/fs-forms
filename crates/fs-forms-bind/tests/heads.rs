@@ -118,6 +118,8 @@ fn without_an_entry_of_that_type_the_slot_is_locked_and_the_block_lives() {
     assert!(c.params.contains(&("form".into(), "rows@1.0".into())));
     assert!(c.params.contains(&("type".into(), "Lane".into())));
     assert!(matches!(l.part, Part::Slot { .. }));
+    // The producer (bind) says what the lock is about; the host filters by this field, not by the code text.
+    assert_eq!(c.slot_role(), Some(SlotRole::Heads));
     assert!(
         locks_of(&p, "board", "main").is_empty(),
         "the placement lives"

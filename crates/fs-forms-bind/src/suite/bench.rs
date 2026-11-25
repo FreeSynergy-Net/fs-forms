@@ -138,6 +138,8 @@ impl BindBench {
             elem: None,
             code: "layout-error-overlay-conflict".into(),
             params: vec![],
+            family: crate::coded::Family::Layout,
+            reason: None,
         });
         let mut facts = tasks_facts();
         facts.0.push(("notes".into(), Offer::NotInstalled));

@@ -4,7 +4,7 @@
 
 use crate::build::Pool;
 use crate::catalog::{Catalog, check_bindings};
-use crate::coded::Coded;
+use crate::coded::{Coded, Family};
 use crate::codes::{BindCode, Part, PartLock, Severity};
 use crate::model::{PageIn, PlaceIn};
 use crate::plan::{Fill, PlacePlan, PlaceStatus, ReadyPlace, SlotFill, SourcePlan};
@@ -51,7 +51,9 @@ pub(crate) fn build_place(
             Some(Ok(_)) => {}
             None => locks.push(PartLock::locked(
                 part.clone(),
-                Coded::new("layout-error-source-unknown").with("index", i.to_string()),
+                Coded::new("layout-error-source-unknown")
+                    .of(Family::Layout)
+                    .with("index", i.to_string()),
             )),
         }
     }

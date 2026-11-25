@@ -3,7 +3,7 @@
 //! Pattern: Specification (one predicate per rule, case tables in tests); field reading is a Projection of the record's
 //! `(path, value)` entries (a repeated path is a list, never reduced to its first entry).
 
-use crate::coded::Coded;
+use crate::coded::{Coded, Family};
 use crate::codes::{BindCode, Part, PartLock};
 use crate::plan::FieldFill;
 use crate::types::{HiddenReason, Limits, RecordPage, RecordView};
@@ -87,22 +87,26 @@ pub fn admit_page(limits: &Limits, size: usize, page: RecordPage, part: &Part) -
     };
     if page.records.len() > size {
         let c = Coded::new("records-error-page-too-long")
+            .of(Family::Records)
             .with("size", size.to_string())
             .with("got", page.records.len().to_string());
         return refuse(c);
     }
     if page.total.is_some() && page.total_estimated.is_some() {
-        return refuse(Coded::new("records-error-estimate-mixed"));
+        return refuse(Coded::new("records-error-estimate-mixed").of(Family::Records));
     }
     for r in &page.records {
         for (p, v) in &r.values {
             if r.hidden.iter().any(|(h, _)| h == p) {
                 return refuse(
-                    Coded::new("records-error-hidden-has-value").with("path", p.clone()),
+                    Coded::new("records-error-hidden-has-value")
+                        .of(Family::Records)
+                        .with("path", p.clone()),
                 );
             }
             if v.len() > limits.value_max {
                 let c = Coded::new("records-error-value-too-large")
+                    .of(Family::Records)
                     .with("path", p.clone())
                     .with("max", limits.value_max.to_string());
                 return refuse(c);

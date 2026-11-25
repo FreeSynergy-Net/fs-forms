@@ -4,7 +4,7 @@
 //! the real catalog would not be copied. Pattern: Test Double + Object Mother.
 
 use crate::catalog::{BlockSpec, Catalog, SlotSpec};
-use crate::coded::Coded;
+use crate::coded::{Coded, Family};
 use crate::model::{CommandIn, Target};
 use crate::providers::{Offer, Provider, ProviderFacts, SettingsFacts, SettingsHealth};
 use crate::types::{Basic, CommandDesc, FieldDesc, Limits, Role};
@@ -69,10 +69,11 @@ impl Default for TestCatalog {
 
 impl Catalog for TestCatalog {
     fn need(&self, block: &str) -> Result<&BlockSpec, Coded> {
-        self.blocks
-            .iter()
-            .find(|b| b.name == block)
-            .ok_or_else(|| Coded::new("accepts-error-block-unknown").with("block", block))
+        self.blocks.iter().find(|b| b.name == block).ok_or_else(|| {
+            Coded::new("accepts-error-block-unknown")
+                .of(Family::Accepts)
+                .with("block", block)
+        })
     }
 
     fn choose(&self, f: &FieldDesc, role: Role) -> String {

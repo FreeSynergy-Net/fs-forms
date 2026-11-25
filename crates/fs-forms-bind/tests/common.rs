@@ -81,11 +81,19 @@ pub fn build_custom(r: &Resolved, s: &SettingsFacts, std_menus: &StandardMenus) 
     )
 }
 
+/// A layout problem (the producer says: family `layout`).
 pub fn problem(elem: &str, code: &str) -> Problem {
+    problem_in(elem, code, Family::Layout)
+}
+
+/// A problem whose producer names the given family (`Family::Unknown` = a producer that names none).
+pub fn problem_in(elem: &str, code: &str, family: Family) -> Problem {
     Problem {
         elem: Some(elem.into()),
         code: code.into(),
         params: vec![],
+        family,
+        reason: None,
     }
 }
 

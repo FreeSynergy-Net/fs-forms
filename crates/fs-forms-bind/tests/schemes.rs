@@ -38,11 +38,22 @@ fn with_field(basic: Basic, schemes: Option<Vec<&str>>, problems: Vec<Problem>) 
     build_with(&r, &TestCatalog::new(), &tasks_facts(), host())
 }
 
+/// What the producer of the layout says about these two codes (the code text is never read for it).
+fn code_reason(code: &str) -> Option<Reason> {
+    match code {
+        "layout-error-schemes-missing" => Some(Reason::SchemesMissing),
+        "layout-error-schemes-unexpected" => Some(Reason::SchemesUnexpected),
+        _ => None,
+    }
+}
+
 fn problem(code: &str) -> Problem {
     Problem {
         elem: Some("b1".into()),
         code: code.into(),
         params: vec![("path".into(), "homepage".into())],
+        family: Family::Layout,
+        reason: code_reason(code),
     }
 }
 
@@ -174,4 +185,28 @@ fn person_sets_the_path_to_a_link_field_without_a_list() {
         panic!("a field")
     };
     assert!(f.allows_scheme("https") && !f.allows_scheme("http"));
+}
+
+fn count_of(p: &Plan, code: &str) -> usize {
+    locks_of(p, "p", "f")
+        .iter()
+        .filter(|l| l.cause.coded().code == code)
+        .count()
+}
+
+/// Card 4: the schemes problem found by F1b is recognised by its REASON (typed), not by the end of its code text: the rule is then not
+/// said twice. The same text WITHOUT the reason is not guessed: the one rule says it again.
+#[test]
+fn schemes_problem_is_known_by_its_reason_not_by_its_text() {
+    let code = "layout-error-schemes-missing";
+    let typed = with_field(Basic::Link, None, vec![problem(code)]);
+    assert_eq!(count_of(&typed, code), 1, "reason set: not repeated");
+    let mut plain = problem(code);
+    plain.reason = None;
+    let guessed_never = with_field(Basic::Link, None, vec![plain]);
+    assert_eq!(
+        count_of(&guessed_never, code),
+        2,
+        "same text without reason: not recognised, the rule says it again"
+    );
 }

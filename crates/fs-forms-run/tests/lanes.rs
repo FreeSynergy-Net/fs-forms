@@ -4,6 +4,7 @@
 mod lanes_support;
 
 use fs_components_kanban::{LaneCard, LaneHead, LanePlan, lanes_of};
+use fs_forms_bind::SlotRole;
 use fs_forms_run::placed;
 use lanes_support::{
     all_forms, card, cards_entry, codes, feeds, lane, lanes_rows, records, rows_entry,
@@ -72,7 +73,9 @@ fn failure_1_the_head_source_is_not_there_says_so_and_the_columns_stay() {
 fn failure_1b_a_shut_slot_of_the_plan_is_said_with_its_cause() {
     let mut f = feeds();
     f[0].slot_locks = vec![
-        fs_forms_run::Coded::new("accepts-error-contract-missing").with("contract", "planning"),
+        fs_forms_run::Coded::new("accepts-error-contract-missing")
+            .for_slot(SlotRole::Heads)
+            .with("contract", "planning"),
         // the lock of another slot says nothing about lanes
         fs_forms_run::Coded::new("bind-error-locked").with("part", "order"),
     ];
@@ -172,4 +175,49 @@ fn failure_5_a_card_value_without_a_head_gets_its_lane_at_the_end() {
         "empty lanes stay, Zoe is appended and never hidden"
     );
     assert_eq!(lanes[3].cards, ["t9"]);
+}
+
+#[test]
+fn the_host_filters_slot_locks_by_the_slot_role_not_by_the_code_text() {
+    // Gegenprobe (card 2): the same code text WITHOUT the role the producer sets is not taken for a lock of the heads slot.
+    let mut f = feeds();
+    f[0].slot_locks = vec![
+        fs_forms_run::Coded::new("accepts-error-contract-missing"),
+        fs_forms_run::Coded::new("bind-error-heads-form-missing"),
+        fs_forms_run::Coded::new("form-source-unknown-scope"),
+    ];
+    let p = placed(&records(all_forms()), "board", &f);
+    assert!(matches!(p.plan, LanePlan::On { .. }), "{:?}", codes(&p));
+}
+
+#[test]
+fn a_problem_of_the_head_source_carries_the_role_so_it_is_known_again_next_time() {
+    let mut r = records(all_forms());
+    r.problems = vec![(2, fs_forms_run::Coded::new("form-source-unknown-scope"))];
+    let p = placed(&r, "board", &feeds());
+    assert!(
+        p.notices[1..]
+            .iter()
+            .all(|c| c.slot_role == Some(SlotRole::Heads))
+    );
+}
+
+#[test]
+fn a_block_that_names_no_heads_form_is_an_error_not_the_form_rows() {
+    // Card 16: a block of the catalog without a heads form got the default form `rows` before; now it says so.
+    let mut f = feeds();
+    f[0].block = "no-such-block".into();
+    let p = placed(&records(all_forms()), "no-such-block", &f);
+    assert_eq!(p.plan, LanePlan::Missing);
+    assert_eq!(
+        codes(&p),
+        [
+            "host-notice-lanes-missing",
+            "host-notice-lanes-form-undeclared"
+        ]
+    );
+    assert_eq!(
+        p.notices[1].params,
+        [("block".into(), "no-such-block".into())]
+    );
 }

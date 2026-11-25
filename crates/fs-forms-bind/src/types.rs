@@ -181,6 +181,8 @@ pub fn schemes_rule(
     if basic.has_schemes() && list.is_none_or(<[String]>::is_empty) {
         Some(
             crate::coded::Coded::new("layout-error-schemes-missing")
+                .of(crate::coded::Family::Layout)
+                .because(crate::coded::Reason::SchemesMissing)
                 .with("elem", elem)
                 .with("path", path),
         )

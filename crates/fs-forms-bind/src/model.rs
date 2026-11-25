@@ -8,6 +8,7 @@
 //! (`layout-error-source-unknown`). The numbers go into the plan unchanged. The ONE conversion to a position in
 //! `Resolved.sources` / `Plan.sources` (0-based, `SourcePlan.idx`, `Part::Source`, the digest) is `plan_query::source_by_number`.
 
+use crate::coded::{Family, Reason};
 use crate::types::{Basic, CommandDesc, FieldDesc, Role};
 
 /// Element id of the layout (`forms_*` row).
@@ -22,6 +23,10 @@ pub struct Problem {
     pub code: String,
     /// Parameters.
     pub params: Vec<(String, String)>,
+    /// The producer family of the code (the producer says it; the code text is never read for it).
+    pub family: Family,
+    /// The problem, when the decision depends on which one it is (the producer says it).
+    pub reason: Option<Reason>,
 }
 
 /// Half-open version range `>=min <max` (`major.minor.patch`).

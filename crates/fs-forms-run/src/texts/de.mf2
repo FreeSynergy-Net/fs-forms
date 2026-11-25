@@ -74,6 +74,7 @@ host-notice-redo-done = Wiederholt
 host-notice-undo-refused = Rückgängig abgelehnt
 host-notice-redo-refused = Wiederholen abgelehnt
 host-notice-lanes-missing = Die Bahnliste fehlt; die Tafel zeigt ihre Spalten ohne Bahnen
+host-notice-lanes-form-undeclared = Der Baustein {$block} nennt keine Form für seine Bahnliste; die Tafel zeigt ihre Spalten ohne Bahnen
 host-notice-lanes-source-absent = Die Quelle der Bahnliste ist nicht da (Quelle {$source}); die Tafel zeigt ihre Spalten ohne Bahnen
 form-source-unknown-scope = Das Modul kennt den Bereich der Bahnliste nicht; die Tafel zeigt ihre Spalten ohne Bahnen
 bind-error-heads-form-missing = Das Modul erklärt keinen Eintrag mit der richtigen Form und dem Typ für die Bahnliste; die Tafel zeigt ihre Spalten ohne Bahnen

@@ -6,8 +6,8 @@
 //! never on the placement: the block lives, only the lanes slot is locked.
 
 use crate::build_place::Env;
-use crate::coded::Coded;
-use crate::codes::{BindCode, Part, PartLock};
+use crate::coded::{Coded, Family, SlotRole};
+use crate::codes::{BindCode, Cause, Part, PartLock};
 use crate::forms::FormRef;
 use crate::model::{BindingIn, PlaceIn};
 
@@ -19,7 +19,10 @@ pub(crate) fn heads_lock(
     slot: &Part,
 ) -> Option<PartLock> {
     let Some(src) = crate::plan_query::source_by_number(env.sources, heads) else {
-        let c = Coded::new("layout-error-source-unknown").with("index", heads.to_string());
+        let c = Coded::new("layout-error-source-unknown")
+            .of(Family::Layout)
+            .for_slot(SlotRole::Heads)
+            .with("index", heads.to_string());
         return Some(PartLock::locked(slot.clone(), c));
     };
     let ready = match &src.status {
@@ -28,7 +31,7 @@ pub(crate) fn heads_lock(
             return Some(PartLock {
                 part: slot.clone(),
                 severity: l.severity,
-                cause: l.cause.clone(),
+                cause: Cause::from_coded(l.cause.coded().clone().for_slot(SlotRole::Heads)),
             });
         }
     };
@@ -51,6 +54,7 @@ pub(crate) fn heads_lock(
         .coded()
         .with("form", form)
         .with("type", src.data_type.clone());
+    let c = c.for_slot(SlotRole::Heads);
     Some(PartLock::locked(slot.clone(), c))
 }
 

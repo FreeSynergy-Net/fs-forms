@@ -127,9 +127,11 @@ fn components() -> Vec<ComponentForms> {
 }
 
 fn coded(c: &fs_forms_bind::Coded) -> Coded {
-    c.params
+    let out = c
+        .params
         .iter()
-        .fold(Coded::new(c.code.clone()), |out, (k, v)| out.with(k, v))
+        .fold(Coded::new(c.code.clone()), |out, (k, v)| out.with(k, v));
+    c.slot_role().map_or(out.clone(), |r| out.for_slot(r))
 }
 
 /// The codes the match says for the form `block` draws, when the connected module offers it; empty = fits (or nothing is offered:

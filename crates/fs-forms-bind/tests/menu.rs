@@ -149,16 +149,22 @@ fn problems_are_never_swallowed() {
         elem: Some("gone".into()),
         code: "layout-error-x".into(),
         params: vec![],
+        family: Family::Layout,
+        reason: None,
     });
     r.problems.push(Problem {
         elem: None,
         code: "layout-error-y".into(),
         params: vec![],
+        family: Family::Layout,
+        reason: None,
     });
     r.problems.push(Problem {
         elem: Some("pl-board-main".into()),
         code: "layout-error-z".into(),
         params: vec![],
+        family: Family::Layout,
+        reason: None,
     });
     let p = build_with(&r, &TestCatalog::new(), &tasks_facts(), host());
     let n: Vec<String> = p

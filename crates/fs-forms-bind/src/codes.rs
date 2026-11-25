@@ -46,7 +46,7 @@ impl BindCode {
     /// A coded value of this code (parameters added with `Coded::with`).
     #[must_use]
     pub fn coded(self) -> Coded {
-        Coded::new(&self.key())
+        Coded::new(&self.key()).of(Family::Bind)
     }
 }
 

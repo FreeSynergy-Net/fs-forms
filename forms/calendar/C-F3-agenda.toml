@@ -1,0 +1,187 @@
+# forms description of the calendar frontend "calendar-agenda" (C5 draft 25.11.2026, checked and corrected by C2 25.11.2026, workflow frontend-round step check). IMPORT FORM ONLY (ADR 0096 point 6), Format 4.
+# Source: module planning, type Task (way A: tasks with due date / duration = JSCalendar Task); planning serves NO form for time views yet (cards-in-columns@1.4.0 and rows@1.0.0 only), so every block of
+# this file is placed WITHOUT bindings and the host shows "not built yet" for it. The blocks `calendar-grid`, `calendar-view` have accepts = [] and no forms=; `timeline` has forms=["bars-in-time@^1.0.0"].
+# Commands are contract keys (fs-interfaces schema/capabilities.txt): task.create, task.edit, task.delete, card.move. A key that no module serves keeps its control locked ("coming").
+# Menus follow the model (GNOME Calendar 47, dossier kalender/vorbilder/DOSSIER-A): what has no contract command yet is NOT written here (cards in BERICHT-kalender-frontends-check.md).
+# The switch between month, week, agenda and timeline is the frontend switch of the host (as in fs-tasks/forms/README.md, M-004..M-006); the menu "View" lists the view of this description.
+schema = 4
+kind = "frontend"
+id = "calendar-agenda"
+extends = "net.freesynergy.Calendar"
+exec = "fs-forms-run"
+title = "calendar-agenda-title"
+style = "default"
+
+[[requires]]
+elem = "requires:1"
+contract = "planning@>=0.0.1, <0.1.0"
+
+# Source 1 = the planning provider. "all" = every task; the time window is a scope parameter of the source (forms.txt "Range ... NOT a channel"), planning reads time scopes not yet.
+[[source]]
+elem = "source:1"
+n = 1
+contract = "planning@>=0.0.1, <0.1.0"
+type = "Task"
+scope = "all"
+
+[[menu]]
+elem = "menu:0"
+kind = "standard-program"
+
+[[menu]]
+elem = "menu:1"
+kind = "menu"
+label = "menu-event"
+
+[[menu.entries]]
+elem = "menu:1.0"
+kind = "command"
+label = "menu-new"
+source = 1
+command = "task.create"
+key = "ctrl+n"
+# task.create takes no due/start/duration yet (planning commands.json): a new entry would not appear in the calendar. Card C3.
+
+[[menu]]
+elem = "menu:2"
+kind = "menu"
+label = "menu-view"
+
+[[menu.entries]]
+elem = "menu:2.0"
+kind = "view"
+label = "view-agenda"
+view = "agenda"
+key = "alt+3"
+
+[[menu]]
+elem = "menu:9"
+kind = "standard-help"
+
+# C-F3 Agenda: tasks by due date, grouped by day (calendar-view part `agenda`). The component `calendar-view` is planned to be removed (ENTSCHEID-schnitt section d, card 1038: agenda mode into calendar-grid): decision C4.
+# A plain list by due date over rows@1.0.0 would be a frontend of its own (card), not a second place here.
+[[page]]
+elem = "page:agenda"
+page = "agenda"
+frame = "workbench"
+navigation = "single"
+
+[[page.place]]
+elem = "block:agenda/main"
+at = "main"
+block = "calendar-view"
+source = 1
+
+[[page.place]]
+elem = "block:agenda/empty"
+at = "empty"
+block = "empty-state"
+title = "calendar-empty-title"
+text = "calendar-empty-text"
+
+[[page.place]]
+elem = "block:agenda/partial"
+at = "partial"
+block = "partial-notice"
+
+[[action]]
+elem = "action:1"
+trigger = "menu"
+source = 1
+command = "task.create"
+
+[[view]]
+elem = "view:agenda"
+view = "agenda"
+
+# "due" is a field of the Task source (by = "field", as in fs-tasks day.toml), no module order.
+[[view.order]]
+elem = "view-order:agenda/1"
+by = "field"
+name = "due"
+descending = false
+
+[[message]]
+elem = "message:calendar-agenda-title/de"
+key = "calendar-agenda-title"
+lang = "de"
+text = "FreeSynergy Kalender: Agenda"
+
+[[message]]
+elem = "message:calendar-agenda-title/en"
+key = "calendar-agenda-title"
+lang = "en"
+text = "FreeSynergy Calendar: agenda"
+
+[[message]]
+elem = "message:menu-event/de"
+key = "menu-event"
+lang = "de"
+text = "Termin"
+
+[[message]]
+elem = "message:menu-event/en"
+key = "menu-event"
+lang = "en"
+text = "Event"
+
+[[message]]
+elem = "message:menu-new/de"
+key = "menu-new"
+lang = "de"
+text = "Neu"
+
+[[message]]
+elem = "message:menu-new/en"
+key = "menu-new"
+lang = "en"
+text = "New"
+
+[[message]]
+elem = "message:menu-view/de"
+key = "menu-view"
+lang = "de"
+text = "Ansicht"
+
+[[message]]
+elem = "message:menu-view/en"
+key = "menu-view"
+lang = "en"
+text = "View"
+
+[[message]]
+elem = "message:view-agenda/de"
+key = "view-agenda"
+lang = "de"
+text = "Agenda"
+
+[[message]]
+elem = "message:view-agenda/en"
+key = "view-agenda"
+lang = "en"
+text = "Agenda"
+
+[[message]]
+elem = "message:calendar-empty-title/de"
+key = "calendar-empty-title"
+lang = "de"
+text = "Keine Termine"
+
+[[message]]
+elem = "message:calendar-empty-title/en"
+key = "calendar-empty-title"
+lang = "en"
+text = "No events"
+
+[[message]]
+elem = "message:calendar-empty-text/de"
+key = "calendar-empty-text"
+lang = "de"
+text = "Lege einen an mit Termin, Neu."
+
+[[message]]
+elem = "message:calendar-empty-text/en"
+key = "calendar-empty-text"
+lang = "en"
+text = "Create one with Event, New."
+

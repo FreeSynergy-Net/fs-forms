@@ -1,0 +1,155 @@
+# forms description of the calendar frontend "calendar-week" (C5 draft 25.11.2026, checked and corrected by C2 25.11.2026, workflow frontend-round step check). IMPORT FORM ONLY (ADR 0096 point 6), Format 4.
+# Source: module planning, type Task (way A: tasks with due date / duration = JSCalendar Task); planning serves NO form for time views yet (cards-in-columns@1.4.0 and rows@1.0.0 only), so every block of
+# this file is placed WITHOUT bindings and the host shows "not built yet" for it. The blocks `calendar-grid`, `calendar-view` have accepts = [] and no forms=; `timeline` has forms=["bars-in-time@^1.0.0"].
+# Commands are contract keys (fs-interfaces schema/capabilities.txt): task.create, task.edit, task.delete, card.move. A key that no module serves keeps its control locked ("coming").
+# Menus follow the model (GNOME Calendar 47, dossier kalender/vorbilder/DOSSIER-A): what has no contract command yet is NOT written here (cards in BERICHT-kalender-frontends-check.md).
+# The switch between month, week, agenda and timeline is the frontend switch of the host (as in fs-tasks/forms/README.md, M-004..M-006); the menu "View" lists the view of this description.
+schema = 4
+kind = "frontend"
+id = "calendar-week"
+extends = "net.freesynergy.Calendar"
+exec = "fs-forms-run"
+title = "calendar-week-title"
+style = "default"
+
+[[requires]]
+elem = "requires:1"
+contract = "planning@>=0.0.1, <0.1.0"
+
+# Source 1 = the planning provider. "all" = every task; the time window is a scope parameter of the source (forms.txt "Range ... NOT a channel"), planning reads time scopes not yet.
+[[source]]
+elem = "source:1"
+n = 1
+contract = "planning@>=0.0.1, <0.1.0"
+type = "Task"
+scope = "all"
+
+[[menu]]
+elem = "menu:0"
+kind = "standard-program"
+
+[[menu]]
+elem = "menu:1"
+kind = "menu"
+label = "menu-event"
+
+[[menu.entries]]
+elem = "menu:1.0"
+kind = "command"
+label = "menu-new"
+source = 1
+command = "task.create"
+key = "ctrl+n"
+# task.create takes no due/start/duration yet (planning commands.json): a new entry would not appear in the calendar. Card C3.
+
+[[menu]]
+elem = "menu:2"
+kind = "menu"
+label = "menu-view"
+
+[[menu.entries]]
+elem = "menu:2.0"
+kind = "view"
+label = "view-week"
+view = "week"
+key = "alt+2"
+
+[[menu]]
+elem = "menu:9"
+kind = "standard-help"
+
+# C-F2 Week: time axis (hours, parts `gutter`/`hour`), columns per day, all-day row, now line (calendar-grid mode week); dragging an entry moves it.
+# drop = task.edit (contract key "Changing a task", stable). planning serves task.edit NOT yet and the channel map of a move in bars-in-time is the module's, not this file's: the control stays locked ("coming"). Card C3.
+[[page]]
+elem = "page:week"
+page = "week"
+frame = "workbench"
+navigation = "single"
+
+[[page.place]]
+elem = "block:week/main"
+at = "main"
+block = "calendar-grid"
+source = 1
+
+[[page.place]]
+elem = "block:week/partial"
+at = "partial"
+block = "partial-notice"
+
+[[action]]
+elem = "action:1"
+trigger = "drop"
+source = 1
+command = "task.edit"
+
+[[action]]
+elem = "action:2"
+trigger = "menu"
+source = 1
+command = "task.create"
+
+[[view]]
+elem = "view:week"
+view = "week"
+
+[[message]]
+elem = "message:calendar-week-title/de"
+key = "calendar-week-title"
+lang = "de"
+text = "FreeSynergy Kalender: Woche"
+
+[[message]]
+elem = "message:calendar-week-title/en"
+key = "calendar-week-title"
+lang = "en"
+text = "FreeSynergy Calendar: week"
+
+[[message]]
+elem = "message:menu-event/de"
+key = "menu-event"
+lang = "de"
+text = "Termin"
+
+[[message]]
+elem = "message:menu-event/en"
+key = "menu-event"
+lang = "en"
+text = "Event"
+
+[[message]]
+elem = "message:menu-new/de"
+key = "menu-new"
+lang = "de"
+text = "Neu"
+
+[[message]]
+elem = "message:menu-new/en"
+key = "menu-new"
+lang = "en"
+text = "New"
+
+[[message]]
+elem = "message:menu-view/de"
+key = "menu-view"
+lang = "de"
+text = "Ansicht"
+
+[[message]]
+elem = "message:menu-view/en"
+key = "menu-view"
+lang = "en"
+text = "View"
+
+[[message]]
+elem = "message:view-week/de"
+key = "view-week"
+lang = "de"
+text = "Woche"
+
+[[message]]
+elem = "message:view-week/en"
+key = "view-week"
+lang = "en"
+text = "Week"
+

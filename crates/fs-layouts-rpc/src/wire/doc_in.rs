@@ -234,7 +234,7 @@ pub(crate) fn read_binding(b: w::binding::Reader<'_>) -> R<Item<BindingDoc>> {
             nth: b.get_nth(),
             from,
             schemes,
-            source: None,
+            source: b.get_has_source().then(|| b.get_source()),
         },
     ))
 }

@@ -11,6 +11,7 @@
 #![warn(clippy::pedantic)]
 
 mod from_rows;
+mod from_rows_head;
 mod from_rows_parts;
 mod from_rows_tree;
 mod rows;

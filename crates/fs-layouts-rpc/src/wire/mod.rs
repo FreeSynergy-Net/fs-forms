@@ -11,6 +11,8 @@ pub(crate) mod filter;
 pub(crate) mod ids;
 pub(crate) mod overlay;
 pub(crate) mod resolved;
+#[cfg(test)]
+mod source_tests;
 pub(crate) mod text;
 pub(crate) mod tree_guard;
 #[cfg(test)]

@@ -109,6 +109,7 @@ pub(crate) fn binding_rows(
         .set("path", path)
         .set("role", role)
         .set("name", name)
+        .set("source", opt_int(bd.v.source))
         .push_into(rows);
     for (n, s) in bd.v.schemes.iter().flatten().enumerate() {
         key(RowBuilder::new(tables.1))

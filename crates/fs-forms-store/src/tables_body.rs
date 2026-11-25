@@ -68,12 +68,14 @@ pub const BINDING: Table = Table {
         Col::opt("path", Text),
         Col::opt("role", Enum(ROLE)),
         Col::opt("name", Text),
+        Col::opt("source", Int), // L2b (format 4): the heads of a `grouping` come from this source; NULL = from the block source (0 is valid)
     ],
     constraints: &[
         "PRIMARY KEY (layout, page, place, slot, nth)",
         ELEM_UNIQUE,
         "FOREIGN KEY (layout, page, place) REFERENCES forms_block(layout, page, place)",
         "CHECK (nth >= 0 AND nth < 16)", // technical, with evidence: accepts `repeat` 1..16 (F1 ENTWURF §3.1 Z. 63)
+        "CHECK (source IS NULL OR (bind_from = 'grouping' AND source >= 0))", // L2b: a source reference only on `grouping` (the layout check says the same)
         // `from` is an SQL keyword: quoted (found by running the DDL on SQLite 3.53; the sketch had it bare)
         // `bind_from`, not `from`: `from` is an SQL keyword and the fs-objects v5 renderer does not quote column names
         "CHECK ((bind_from = 'field') AND (path IS NOT NULL AND role IS NOT NULL) OR NOT (bind_from = 'field') AND NOT (path IS NOT NULL AND role IS NOT NULL))",

@@ -6,16 +6,15 @@
 
 use fs_forms_layout::{
     BindFrom, BindingDoc, BlockDoc, Coded, ElemId, FrontendKey, Item, Layout, LayoutCode,
-    LayoutDoc, LayoutId, Limits, MenuDoc, MenuKind, MenuStandard, MessageDoc, OpenCatalog, PageDoc,
-    RequiresDoc, SourceDoc, Words,
+    LayoutDoc, LayoutId, Limits, OpenCatalog, PageDoc, Words,
 };
 
+use crate::from_rows_head::{menu, messages, requires, sources};
 use crate::from_rows_parts::{actions, views};
 use crate::from_rows_tree::{Walk, attrs, places};
 use crate::rows::{Row, RowReader, Rows, validate};
 use crate::spec::Table;
 use crate::tables as t;
-use crate::to_rows::range_text;
 
 pub(crate) fn each<'a>(rows: &'a Rows, table: &'a Table) -> impl Iterator<Item = RowReader<'a>> {
     rows.tables
@@ -68,6 +67,7 @@ pub fn from_rows(rows: &Rows, id: &LayoutId) -> Result<Layout, Vec<Coded<LayoutC
                 .with("id", key),
         ]);
     };
+    let mut src_problems = Vec::new();
     let mut doc = LayoutDoc {
         format: head.uint("format").unwrap_or(0), // as written; rows always carry their ids: a broken one is `elem-missing`, never replaced by a natural id
         key: FrontendKey {
@@ -78,7 +78,7 @@ pub fn from_rows(rows: &Rows, id: &LayoutId) -> Result<Layout, Vec<Coded<LayoutC
         title_key: head.text("title_key").unwrap_or_default(),
         style: head.text("style"),
         requires: requires(rows, key),
-        sources: sources(rows, key),
+        sources: sources(rows, key, &mut src_problems),
         menu: menu(rows, key, None),
         pages: Vec::new(),
         actions: Vec::new(),
@@ -89,6 +89,7 @@ pub fn from_rows(rows: &Rows, id: &LayoutId) -> Result<Layout, Vec<Coded<LayoutC
     doc.pages = pages(rows, key, &mut walk);
     let nodes = each(rows, &t::NODE).filter(|r| same(r, key)).count();
     let mut problems = walk.problems;
+    problems.append(&mut src_problems);
     if nodes != walk.seen {
         problems.push(
             Coded::new(LayoutCode::StoreBroken)
@@ -120,85 +121,6 @@ fn broken_cells(rows: &Rows) -> Vec<Coded<LayoutCode>> {
                 .with("file", "forms.db")
                 .with("cause", "rows")
                 .with("detail", d)
-        })
-        .collect()
-}
-
-fn requires(rows: &Rows, key: &str) -> Vec<Item<RequiresDoc>> {
-    let mut req: Vec<_> = each(rows, &t::REQUIRES).filter(|r| same(r, key)).collect();
-    req.sort_by_key(|r| r.int("seq"));
-    req.iter()
-        .map(|r| {
-            item(
-                r,
-                RequiresDoc {
-                    range: range_text(r),
-                },
-            )
-        })
-        .collect()
-}
-
-fn sources(rows: &Rows, key: &str) -> Vec<Item<SourceDoc>> {
-    let mut src: Vec<_> = each(rows, &t::SOURCE).filter(|r| same(r, key)).collect();
-    src.sort_by_key(|r| r.int("source"));
-    src.iter()
-        .map(|r| {
-            let scope = r
-                .text("scope")
-                .and_then(|w| fs_forms_layout::SourceScope::from_text(&w));
-            item(
-                r,
-                SourceDoc {
-                    range: range_text(r),
-                    data_type: r.text("data_type").unwrap_or_default(),
-                    scope,
-                },
-            )
-        })
-        .collect()
-}
-
-fn messages(rows: &Rows, key: &str) -> Vec<Item<MessageDoc>> {
-    let mut msgs: Vec<_> = each(rows, &t::MESSAGE).filter(|r| same(r, key)).collect();
-    msgs.sort_by_key(|r| (r.text("key"), r.text("lang")));
-    msgs.iter()
-        .map(|r| {
-            let m = MessageDoc {
-                key: r.text("key").unwrap_or_default(),
-                lang: r.text("lang").unwrap_or_default(),
-                message: r.text("message").unwrap_or_default(),
-            };
-            item(r, m)
-        })
-        .collect()
-}
-
-fn menu(rows: &Rows, id: &str, parent: Option<i64>) -> Vec<Item<MenuDoc>> {
-    let mut list: Vec<_> = each(rows, &t::MENU)
-        .filter(|r| same(r, id) && r.int("parent") == parent)
-        .collect();
-    list.sort_by_key(|r| r.int("seq"));
-    list.iter()
-        .map(|r| {
-            let kind = match (r.text("kind").as_deref(), r.text("standard").as_deref()) {
-                (Some("standard"), Some("help")) => MenuKind::Standard(MenuStandard::Help),
-                (Some("standard"), _) => MenuKind::Standard(MenuStandard::Program),
-                (Some(w), _) => MenuKind::from_word(w).unwrap_or(MenuKind::Menu),
-                _ => MenuKind::Menu,
-            };
-            let command = r.text("command").zip(r.uint("source")).map(|(c, s)| (s, c));
-            let node = r.int("node");
-            let m = MenuDoc {
-                kind,
-                label_key: r.text("label_key"),
-                command,
-                on: r.text("on_what").and_then(|w| Words::from_word(&w)),
-                shortcut: r.text("shortcut"),
-                view: r.text("view"),
-                children: node.map_or_else(Vec::new, |n| menu(rows, id, Some(n))),
-            };
-            item(r, m)
         })
         .collect()
 }
@@ -295,7 +217,7 @@ pub(crate) fn binding_from(
             nth: r.uint("nth").unwrap_or(0),
             from,
             schemes,
-            source: None,
+            source: r.uint("source"),
         },
     )
 }

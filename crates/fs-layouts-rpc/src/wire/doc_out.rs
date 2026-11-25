@@ -135,6 +135,8 @@ pub(crate) fn write_binding(mut x: w::binding::Builder<'_>, b: &Item<fs_forms_la
         _ => {}
     }
     x.set_has_schemes(b.v.schemes.is_some());
+    x.set_has_source(b.v.source.is_some());
+    x.set_source(b.v.source.unwrap_or(0));
     let list = b.v.schemes.as_deref().unwrap_or(&[]);
     let mut l = x.init_schemes(n(list));
     for (i, s) in (0..).zip(list) {

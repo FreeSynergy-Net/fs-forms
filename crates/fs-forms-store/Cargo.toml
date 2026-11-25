@@ -14,6 +14,7 @@ fs-forms-layout = { path = "../fs-forms-layout", version = "0.1.0" }
 fs-objects = { git = "https://github.com/FreeSynergy-Net/fs-objects", rev = "e38093f1ec61b7c9faaa6f6046f65addb11dcf46", features = ["v5"], version = "0.0.11" }
 
 [dev-dependencies]
+fs-forms-exchange = { path = "../fs-forms-exchange", version = "0.1.0" }
 # The real engine of fs-objects (same version, same features, already in Cargo.lock): the tables are run against it, not only against a model.
 turso = { version = "=0.8.3", default-features = false }
 tokio = { version = "1", features = ["rt", "time"] }

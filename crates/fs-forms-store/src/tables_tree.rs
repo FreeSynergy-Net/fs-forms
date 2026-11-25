@@ -79,12 +79,14 @@ pub const NODE_BINDING: Table = Table {
         Col::opt("path", Text),
         Col::opt("role", Enum(ROLE)),
         Col::opt("name", Text),
+        Col::opt("source", Int), // L2b (format 4): the heads of a `grouping` come from this source; NULL = from the block source (0 is valid)
     ],
     constraints: &[
         "PRIMARY KEY (layout, node, slot, nth)",
         "UNIQUE (layout, elem)",
         "FOREIGN KEY (layout, node) REFERENCES forms_node(layout, elem)",
         "CHECK (nth >= 0 AND nth < 16)",
+        "CHECK (source IS NULL OR (bind_from = 'grouping' AND source >= 0))", // L2b: a source reference only on `grouping` (the layout check says the same)
         "CHECK ((bind_from = 'field') AND (path IS NOT NULL AND role IS NOT NULL) OR NOT (bind_from = 'field') AND NOT (path IS NOT NULL AND role IS NOT NULL))",
         "CHECK ((bind_from IN ('grouping','order','command')) AND (name IS NOT NULL) OR NOT (bind_from IN ('grouping','order','command')) AND NOT (name IS NOT NULL))",
     ],

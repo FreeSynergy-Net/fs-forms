@@ -22,7 +22,6 @@ pub const ORIGIN: &[&str] = &["package", "person", "import"];
 pub const MENU_KIND: &[&str] = &["menu", "standard", "command", "view", "separator"];
 pub const MENU_STANDARD: &[&str] = &["program", "help"];
 pub const ON_WHAT: &[&str] = &["always", "selected"];
-pub const SCOPE_SRC: &[&str] = &["all", "selected-list"];
 pub const NAVIGATION: &[&str] = &["single", "list-detail"];
 /// + `condition` (filter bar -> filter tree; host plan question 73, c0 open): added BEFORE step 1 is frozen, so no rebuild later.
 pub const FROM: &[&str] = &[
@@ -108,6 +107,10 @@ pub const LOG_ACTION: &[&str] = &[
 pub(crate) const ELEM: Col = Col::req("elem", Text);
 /// One rule for "the element id is unique in its layout" (per table: an overlay op names `target_kind` + `target_elem`).
 pub(crate) const ELEM_UNIQUE: &str = "UNIQUE (layout, elem)";
+/// The free scope text of a source (L2b): one token of RFC 6749 section 3.3, `1*( %x21 / %x23-5B / %x5D-7E )`, at most 256 bytes (the
+/// class `[^#-~!]` finds every byte outside `!` and `#`-`~` (space, `"`, controls, DEL, non-ASCII), `[\]` the backslash (inside `#`-`~`); written
+/// without a `]` in a class, because engines differ there (turso vs SQLite); non-ASCII is excluded, so `length` counts bytes). NULL = no scope given.
+pub(crate) const SCOPE_TOKEN: &str = r"CHECK (scope IS NULL OR (length(scope) BETWEEN 1 AND 256 AND scope NOT GLOB '*[^#-~!]*' AND scope NOT GLOB '*[\]*'))";
 
 /// One counter; every write transaction does `rev = rev + 1` -> `Stamp` (feed, live update of the host).
 pub const REV: Table = Table {
@@ -194,10 +197,11 @@ pub const SOURCE: Table = Table {
         Col::req("below_minor", Int),
         Col::req("below_patch", Int),
         Col::req("data_type", Text),
-        Col::opt("scope", Enum(SCOPE_SRC)),
+        Col::opt("scope", Text),
     ],
     constraints: &[
         "PRIMARY KEY (layout, source)",
+        SCOPE_TOKEN,
         ELEM_UNIQUE,
         "FOREIGN KEY (layout) REFERENCES forms_layout(id)",
     ],

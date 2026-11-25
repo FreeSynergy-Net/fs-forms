@@ -40,6 +40,14 @@ pub enum SampleCode {
     BlobUnsupported,
     /// `{record}`: the record changed since the caller saw it (`expect`), or the change to take back is not the latest of its record.
     Stale,
+    /// `{what}`: the section `[sample]` of the description cannot be read (not TOML, an unknown key, a value of the wrong kind or a bad anchor).
+    SectionBad,
+    /// `{source}`: a wish or a block names a source the description does not have.
+    SourceUnknown,
+    /// `{what}`: the `type` of a wish is not the type of its source.
+    TypeMismatch,
+    /// `{what}`: two wishes of `[sample]` for the same form of the same source.
+    WishTwice,
 }
 
 impl ErrorCode for SampleCode {
@@ -61,6 +69,10 @@ impl ErrorCode for SampleCode {
         Self::CursorBad,
         Self::BlobUnsupported,
         Self::Stale,
+        Self::SectionBad,
+        Self::SourceUnknown,
+        Self::TypeMismatch,
+        Self::WishTwice,
     ];
 
     fn as_str(self) -> &'static str {
@@ -81,6 +93,10 @@ impl ErrorCode for SampleCode {
             Self::CursorBad => "cursor-bad",
             Self::BlobUnsupported => "blob-unsupported",
             Self::Stale => "stale",
+            Self::SectionBad => "section-bad",
+            Self::SourceUnknown => "source-unknown",
+            Self::TypeMismatch => "type-mismatch",
+            Self::WishTwice => "wish-twice",
         }
     }
 }

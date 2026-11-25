@@ -7,7 +7,7 @@ use fs_interfaces::forms::{self, Art, Form};
 use rand::SeedableRng;
 use rand::rngs::ChaCha8Rng;
 
-use crate::assemble::{Pool, empty_channels, first_time, fnv, has, pools, stored};
+use crate::assemble::{Pool, empty_channels, first_time, fnv, has, label_of, pools, stored};
 use crate::content::{self, ContentCtx, Order};
 use crate::error::{Failure, SampleCode, fail};
 use crate::interval::{self, Pair};
@@ -33,7 +33,7 @@ struct Draft<'a> {
 }
 
 /// The highest version of the form that the requirement (`name@^1.0.0`, or just `name`) allows, found with `forms::find`.
-fn resolve(wish: &str) -> Result<&'static Form, Failure> {
+pub(crate) fn resolve(wish: &str) -> Result<&'static Form, Failure> {
     let unknown = || fail(SampleCode::FormUnknown, "form", wish);
     let (name, req) = wish.split_once('@').map_or((wish, "*"), |(n, r)| (n, r));
     let req = semver::VersionReq::parse(req).map_err(|_| unknown())?;
@@ -106,11 +106,7 @@ impl SampleBuilder {
         let (order, parent) = self.relations_of(form, used);
         let ctx = ContentCtx {
             zone: self.spec.anchor.zone.id().to_owned(),
-            label: form
-                .channels
-                .iter()
-                .find(|c| c.required && c.arts.first() == Some(&Art::Text))
-                .map(|c| c.name.clone()),
+            label: label_of(form).map(|c| c.name.clone()),
             order: order.clone(),
         };
         let plans = plan(

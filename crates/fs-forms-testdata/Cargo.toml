@@ -13,6 +13,8 @@ publish = false
 # fs-jscalendar 0a3add97 is the rev fs-tasks-testdata pins together with fs-types 722d3ce0 (one fs-types in the graph).
 [dependencies]
 fs-forms-bind = { path = "../fs-forms-bind", version = "0.1.0" }
+# The description (Layout) and its blocks: the port `BlockForms` is ours, the block catalog (fs-components) stays on the host side (Entscheid C1/C2 Q1).
+fs-forms-layout = { path = "../fs-forms-layout", version = "0.1.0" }
 fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "6b02b138b3e55c290d6cbd957976013cc49dca5d", version = "0.3.0" }
 fs-types = { git = "https://github.com/FreeSynergy-Net/fs-types", rev = "722d3ce0156711d40cb278f2e835e865d9448290", version = "0.0.7" }
 fs-objects = { git = "https://github.com/FreeSynergy-Net/fs-objects", rev = "e38093f1ec61b7c9faaa6f6046f65addb11dcf46", version = "0.0.11" }
@@ -25,11 +27,15 @@ chrono = { version = "0.4", default-features = false, features = ["std"] }
 semver = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+# `[sample]` of a description: strict (deny_unknown_fields). Already in the graph (toml 0.8, via other crates); parse only.
+toml = { version = "0.8", default-features = false, features = ["parse"] }
 uuid = "1"
 
 # The conformance suite of module_v1 runs against `SampleModule` behind the wrapper `fs_rpc::Guarded` (in-process, no socket). fs-module lives in the
 # repo fs-interfaces: the same rev as the `fs-interfaces` above, so there is ONE fs-interfaces in the graph (checked with `cargo tree -d`).
 [dev-dependencies]
+# Tests read the real descriptions with the exchange reader.
+fs-forms-exchange = { path = "../fs-forms-exchange", version = "0.1.0" }
 fs-module = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "6b02b138b3e55c290d6cbd957976013cc49dca5d", version = "0.3.0" }
 fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "e3871c3b2438fae23fdc1eb6c72dd7c125f21abd", version = "0.1.4" }
 capnp = "0.27"

@@ -12,4 +12,5 @@ mod types;
 pub(crate) use choose::basic_of;
 pub use choose::for_type;
 pub use text::moment_text;
+pub(crate) use text::zone_of;
 pub use types::{Content, ContentCtx, FieldMap, Order, Parts};

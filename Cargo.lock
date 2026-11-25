@@ -2025,6 +2025,8 @@ dependencies = [
  "chrono",
  "fake",
  "fs-forms-bind",
+ "fs-forms-exchange",
+ "fs-forms-layout",
  "fs-interfaces",
  "fs-jscalendar",
  "fs-module",
@@ -2036,6 +2038,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "toml",
  "uuid",
 ]
 

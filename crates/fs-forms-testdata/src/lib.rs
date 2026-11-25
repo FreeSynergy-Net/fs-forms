@@ -7,6 +7,9 @@
 //! (ChaCha8; the words come from the crate `fake`, pinned exactly, no word lists of our own). Failures are [`SampleCode`]s, never
 //! a silently dropped wish.
 //!
+//! A description gives its wishes too: [`SampleSpec::from_description`] asks the blocks which forms they draw (the port [`BlockForms`]),
+//! reads `[sample]` ([`read_sample`]) and else takes the defaults of the declaration; [`SampleModule::from_description`] serves them.
+//!
 //! [`SampleModule`] serves a set as a `ModuleCore` (in memory; commands run from the `writes` column of the declaration).
 //!
 //! Written with the help of Claude (Anthropic). Interface status: draft (ADR 0043: pattern first, interface first).
@@ -18,9 +21,12 @@
 #![warn(clippy::pedantic)]
 
 mod assemble;
+mod blocks;
 mod builder;
 mod case;
 pub mod content;
+mod defaults;
+mod described;
 mod error;
 mod interval;
 mod makers;
@@ -29,10 +35,14 @@ mod plan;
 mod project;
 mod set;
 mod spec;
+mod spec_toml;
 mod value;
 
+pub use blocks::{BlockForms, Need, needs};
 pub use builder::SampleBuilder;
 pub use case::{Case, IntervalCase};
+pub use defaults::{DEFAULT_COUNT, DEFAULT_DISTINCT};
+pub use described::{DEFAULT_SEED, SourceSpec};
 pub use error::{Failure, SampleCode};
 pub use fs_interfaces::module::{ProviderKind, SAMPLE_PROVIDER};
 pub use makers::standard as standard_makers;
@@ -40,4 +50,5 @@ pub use module::{SampleModule, SampleRules};
 pub use project::{Rec, Table, Values};
 pub use set::{SampleRow, SampleSet, Slice};
 pub use spec::{Anchor, Forbid, Period, Relation, SampleSpec, SetWish, Span};
+pub use spec_toml::{SampleToml, SourceWish, read_sample};
 pub use value::{Flavor, MakeCx, Moment, Record, Value, ValueMaker};

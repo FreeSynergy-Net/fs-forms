@@ -146,3 +146,10 @@ pub fn stored(
         parts.json,
     ))
 }
+
+/// The channel that names a record (the AS2 `name`): the first required channel of art `text`.
+pub fn label_of(form: &Form) -> Option<&fs_interfaces::forms::Channel> {
+    form.channels
+        .iter()
+        .find(|c| c.required && c.arts.first() == Some(&Art::Text))
+}

@@ -20,6 +20,7 @@ fn a_board_gets_distinct_columns_and_empty_lanes() {
         .empty("facts", 2);
     let set = SampleBuilder::new(SampleSpec {
         seed: 7,
+        forbid: Vec::new(),
         anchor: anchor(),
         sets: vec![wish],
     })
@@ -45,6 +46,7 @@ fn a_tree_has_chains_and_parents() {
     let wish = SetWish::new("tree@=1.0.0", "Group", 9).case(Case::Tree { depth: 3, roots: 2 });
     let spec = SampleSpec {
         seed: 3,
+        forbid: Vec::new(),
         anchor: anchor(),
         sets: vec![wish],
     };
@@ -77,6 +79,7 @@ fn long_and_non_latin_text() {
         .case(Case::NonLatin(1));
     let set = SampleBuilder::new(SampleSpec {
         seed: 5,
+        forbid: Vec::new(),
         anchor: anchor(),
         sets: vec![wish],
     })
@@ -98,6 +101,7 @@ fn a_form_set_may_hold_two_forms_without_shifting_each_other() {
     let board = SetWish::new("cards-in-columns@=1.0.0", "Task", 5).distinct("column", 2);
     let alone = SampleBuilder::new(SampleSpec {
         seed: 9,
+        forbid: Vec::new(),
         anchor: anchor(),
         sets: vec![board.clone()],
     })
@@ -106,6 +110,7 @@ fn a_form_set_may_hold_two_forms_without_shifting_each_other() {
     let wish = SetWish::new("tree@=1.0.0", "Group", 4);
     let both = SampleBuilder::new(SampleSpec {
         seed: 9,
+        forbid: Vec::new(),
         anchor: anchor(),
         sets: vec![wish, board],
     })

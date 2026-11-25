@@ -11,7 +11,8 @@ Generic, deterministic test data made from the declaration of a form. A `SampleS
 - Deterministic: ChaCha8, one stream per form; the words come from the crate `fake` (pinned exactly, no word lists of our own).
   `SampleSet::render` is the text the golden tests freeze (renew on purpose with `FS_UPDATE_GOLDEN=1`).
 - Never silent: a wish that cannot be met is a `SampleCode` (`sample-error-*`).
-- Not here yet: `SampleModule` (`ModuleCore` double), the host switch `--sample-data`, the migration of the old fixtures.
+- `SampleModule` (package 3): the set served as a `ModuleCore` (level 2, provider text `fake`, in memory). `page` projects the objects to rows (RFC 3339 with the offset of the zone, whole days as `full-date`); `apply` and `revert` run every command from the `writes` column of the declaration (no name is matched) and keep a log (compare-and-set, one effect per step, undo, `changes`, `feed`); rights = everything except the `Forbid` wishes of the spec. It passes the 22+ rules of `module_v1` (fs-module suite behind `fs_rpc::Guarded`). A command whose declaration has no `writes`, or an empty one (`open` and `remove` look the same), is refused with a code, never guessed.
+- Not here yet: the host switch `--sample-data` (package 4), the migration of the old fixtures (package 5).
 
 Written with the help of Claude (Anthropic); see the commit trailers. Licence: MIT OR Apache-2.0.
 
@@ -27,6 +28,7 @@ sonst reines AS2.
 - Deterministisch: ChaCha8, ein Strom je Form; die Wörter kommen aus dem Crate `fake` (exakt gepinnt, keine eigenen Wortlisten).
   `SampleSet::render` ist der Text, den die Goldtests einfrieren (bewusst erneuern mit `FS_UPDATE_GOLDEN=1`).
 - Nie still: ein Wunsch, der sich nicht erfüllen lässt, ist ein `SampleCode` (`sample-error-*`).
-- Noch nicht hier: `SampleModule` (Double von `ModuleCore`), der Host-Schalter `--sample-data`, der Umzug der alten Fixtures.
+- `SampleModule` (Paket 3): die Menge als `ModuleCore` (Stufe 2, Provider-Text `fake`, im Speicher). `page` projiziert die Objekte auf Zeilen (RFC 3339 mit Offset der Zone, ganztägig als `full-date`); `apply` und `revert` führen jeden Befehl aus der Spalte `writes` der Deklaration aus (kein Name wird verglichen) und führen ein Protokoll (Compare-and-Set, eine Wirkung je Schritt, Rückgängig, `changes`, `feed`); Rechte = alles erlaubt außer den `Forbid`-Wünschen der Spec. Besteht die 22+ Regeln von `module_v1` (Suite von fs-module hinter `fs_rpc::Guarded`). Ein Befehl, dessen Deklaration kein `writes` hat oder ein leeres (`open` und `remove` sehen gleich aus), wird mit einem Code abgelehnt, nie geraten.
+- Noch nicht hier: der Host-Schalter `--sample-data` (Paket 4), der Umzug der alten Fixtures (Paket 5).
 
 Mit Hilfe von Claude (Anthropic) geschrieben; siehe die Commit-Trailer. Lizenz: MIT OR Apache-2.0.

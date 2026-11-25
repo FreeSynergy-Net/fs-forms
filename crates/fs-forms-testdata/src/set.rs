@@ -9,6 +9,7 @@ use fs_objects::StoredObject;
 
 use crate::content::{self, ContentCtx};
 use crate::error::{Failure, SampleCode, fail};
+use crate::spec::Forbid;
 
 /// The records of one form in `SampleSet::objects`: a slice, in the order of the set.
 #[derive(Clone, Debug)]
@@ -51,9 +52,21 @@ pub struct SampleSet {
     pub declared: Vec<ModuleForm>,
     /// Which objects belong to which form.
     pub slices: Vec<Slice>,
+    /// What `SampleModule` must refuse (from the spec).
+    pub forbid: Vec<Forbid>,
 }
 
 impl SampleSet {
+    /// An empty set that carries the wishes of the rights.
+    pub(crate) fn empty(forbid: Vec<Forbid>) -> Self {
+        Self {
+            objects: Vec::new(),
+            declared: Vec::new(),
+            slices: Vec::new(),
+            forbid,
+        }
+    }
+
     /// The rows of one form (`name@x.y.z`), read from the stored objects the way a module would send them.
     ///
     /// # Errors

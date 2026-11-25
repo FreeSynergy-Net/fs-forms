@@ -79,11 +79,7 @@ impl SampleBuilder {
     pub fn build(self) -> Result<SampleSet, Failure> {
         let span = self.spec.anchor.period.span()?;
         let mut used = vec![false; self.relations.len()];
-        let mut set = SampleSet {
-            objects: Vec::new(),
-            declared: Vec::new(),
-            slices: Vec::new(),
-        };
+        let mut set = SampleSet::empty(self.spec.forbid.clone());
         for wish in &self.spec.sets {
             self.build_set(wish, span, &mut used, &mut set)?;
         }

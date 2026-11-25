@@ -17,6 +17,39 @@ pub struct SampleSpec {
     pub anchor: Anchor,
     /// One wish per form.
     pub sets: Vec<SetWish>,
+    /// What the module of the set must refuse (the "rights" of the test data); nothing is forbidden by default.
+    pub forbid: Vec<Forbid>,
+}
+
+/// A command the rules of `SampleModule` deny: for one record (by its key) or for all records of every form.
+///
+/// Pattern: Specification (value) – read by `SampleRules`, never by the builder.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Forbid {
+    /// The command (the name of a command channel).
+    pub command: String,
+    /// The record key (`urn:fs-sample:<form>:<n>`); `None` = every record, and the set.
+    pub record: Option<String>,
+}
+
+impl Forbid {
+    /// `command` is denied on `record`.
+    #[must_use]
+    pub fn on(command: &str, record: &str) -> Self {
+        Self {
+            command: command.to_owned(),
+            record: Some(record.to_owned()),
+        }
+    }
+
+    /// `command` is denied everywhere.
+    #[must_use]
+    pub fn everywhere(command: &str) -> Self {
+        Self {
+            command: command.to_owned(),
+            record: None,
+        }
+    }
 }
 
 /// The period and the zone of a set (never "now").

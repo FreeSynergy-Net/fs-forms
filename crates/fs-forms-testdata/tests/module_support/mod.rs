@@ -1,0 +1,117 @@
+//! Helpers of the `SampleModule` tests: the sets, the contexts, the runtime and the wrapper (`Guarded`, in process, no socket).
+//!
+//! Pattern: Test double helpers.
+
+#![allow(dead_code)]
+
+use std::future::Future;
+
+use capnp::capability::FromClientHook;
+use fs_forms_testdata::{
+    Anchor, Case, Forbid, IntervalCase, Period, Relation, SampleBuilder, SampleModule, SampleSet,
+    SampleSpec, SetWish,
+};
+use fs_interfaces::forms::{self, Form};
+use fs_interfaces::formsource_capnp::form_source;
+use fs_interfaces::module::{Actor, Caller, Claimed, Context};
+use fs_interfaces::owner::fake::person;
+use fs_rpc::{Guarded, PerConnection, Ports};
+use fs_types::Zone;
+
+pub const BARS: &str = "bars-in-time@1.0.0";
+pub const PERSON: &str = "urn:uuid:018f3a52-7c1e-7b3a-9d4e-5a6b7c8d9e01";
+
+/// `bars-in-time@1.0.0` as a minor with `writes` on `move` would declare it (C3 F1+, not in the pinned catalog yet): the same channels as
+/// the pinned 1.0.0, `move` writes `start! end! lane`. Read with the parser of the catalog, so it is a real declaration.
+pub fn bars_with_writes() -> Form {
+    let text = "bars-in-time@1.0.0 | Bars in time | planned | stand-in with writes\n\
+        > items | records | ! | 1\n> start | time | ! | 1\n> end | time | ! | 1\n> label | text | ! | 1\n> lane | text | - | 0..1\n\
+        > state | text | - | 0..1\n> depends | reference | - | 0..n\n> progress | number | - | 0..1\n> all-day | flag | - | 0..1\n\
+        > move | command | - | 0..1 | start! end! lane\n> create | command | - | 0..1 | start! end! label! lane\n";
+    forms::parse(text).expect("parses").remove(0)
+}
+
+pub fn anchor() -> Anchor {
+    Anchor {
+        period: Period::Month(2026, 5),
+        zone: Zone::iana("Europe/Berlin").unwrap(),
+    }
+}
+
+/// The calendar set of the first use (package 2): 8 events, two lanes; `all_day` adds the two whole-day events.
+pub fn calendar(all_day: bool, invalid: u32, forbid: Vec<Forbid>) -> SampleSet {
+    let mut wish = SetWish::new("bars-in-time@^1.0.0", "Event", 8)
+        .distinct("lane", 2)
+        .case(Case::Interval(IntervalCase::MultiDay(3), 1))
+        .case(Case::Interval(IntervalCase::SameDay(4), 1))
+        .case(Case::Interval(IntervalCase::CrossPeriod, 1))
+        .invalid(invalid);
+    if all_day {
+        wish = wish.case(Case::Interval(IntervalCase::AllDay, 2));
+    }
+    SampleBuilder::new(SampleSpec {
+        seed: 1,
+        anchor: anchor(),
+        sets: vec![wish],
+        forbid,
+    })
+    .relation(Relation::order("start", "end", Some("all-day")))
+    .build()
+    .expect("builds")
+}
+
+pub fn board(forbid: Vec<Forbid>) -> SampleSet {
+    SampleBuilder::new(SampleSpec {
+        seed: 4,
+        anchor: anchor(),
+        sets: vec![
+            SetWish::new("cards-in-columns@=1.1.0", "Task", 6)
+                .distinct("column", 3)
+                .distinct("lane", 2),
+        ],
+        forbid,
+    })
+    .build()
+    .expect("builds")
+}
+
+pub fn module(set: &SampleSet) -> SampleModule {
+    SampleModule::new(set).expect("module")
+}
+
+pub fn cx(program: &str) -> Context {
+    let caller = Caller::Connection {
+        system_id: "1000".into(),
+        system_name: None,
+    };
+    Context::from_connection(caller, Actor::Person, person(PERSON))
+        .with_claimed(Claimed::new(program, "i1", "d1"))
+}
+
+pub fn run<F: Future>(f: F) -> F::Output {
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    tokio::task::LocalSet::new().block_on(&rt, f)
+}
+
+/// Two connections to ONE module behind the wrapper: they stand for two programs.
+pub fn connect(module: SampleModule) -> (form_source::Client, form_source::Client) {
+    connect_core(module)
+}
+
+/// The same for any `ModuleCore` (the fake of fs-module as control).
+pub fn connect_core<M: fs_interfaces::module::ModuleCore>(
+    module: M,
+) -> (form_source::Client, form_source::Client) {
+    let ports = Ports::new(
+        |_: &fs_rpc::Caller| Actor::Person,
+        |_: &fs_rpc::Caller| Some(person(PERSON)),
+    );
+    let mut g = Guarded::new(module, ports);
+    let mut one = |who: &str| -> form_source::Client {
+        FromClientHook::new(g.bootstrap(&fs_rpc::Caller::new(who, None)).hook)
+    };
+    (one("a"), one("b"))
+}

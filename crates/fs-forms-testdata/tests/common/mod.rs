@@ -31,6 +31,7 @@ pub fn month_wish() -> SetWish {
 pub fn builder(seed: u64, wish: SetWish) -> SampleBuilder {
     SampleBuilder::new(SampleSpec {
         seed,
+        forbid: Vec::new(),
         anchor: anchor(),
         sets: vec![wish],
     })

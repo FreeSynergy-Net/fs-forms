@@ -28,6 +28,7 @@ fn an_unknown_form_or_version_is_form_unknown() {
 fn all_day_without_a_flag_channel_is_impossible() {
     let spec = SampleSpec {
         seed: 1,
+        forbid: Vec::new(),
         anchor: common::anchor(),
         sets: vec![month_wish()],
     };
@@ -37,6 +38,7 @@ fn all_day_without_a_flag_channel_is_impossible() {
     assert_eq!(code(result), SampleCode::CaseImpossible);
     let none = SampleBuilder::new(SampleSpec {
         seed: 1,
+        forbid: Vec::new(),
         anchor: common::anchor(),
         sets: vec![month_wish()],
     })
@@ -59,6 +61,7 @@ fn too_many_cases_for_the_count() {
 fn a_relation_that_fits_no_form_is_reported() {
     let spec = SampleSpec {
         seed: 1,
+        forbid: Vec::new(),
         anchor: common::anchor(),
         sets: vec![SetWish::new(common::FORM, "Event", 2)],
     };
@@ -78,6 +81,7 @@ fn bad_anchor_and_unknown_zone() {
     };
     let result = SampleBuilder::new(SampleSpec {
         seed: 1,
+        forbid: Vec::new(),
         anchor: bad,
         sets: vec![wish.clone()],
     })
@@ -90,6 +94,7 @@ fn bad_anchor_and_unknown_zone() {
     };
     let result = SampleBuilder::new(SampleSpec {
         seed: 1,
+        forbid: Vec::new(),
         anchor: zone,
         sets: vec![wish],
     })

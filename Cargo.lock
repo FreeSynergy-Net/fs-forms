@@ -2004,17 +2004,21 @@ dependencies = [
 name = "fs-forms-testdata"
 version = "0.1.0"
 dependencies = [
+ "capnp",
  "chrono",
  "fake",
  "fs-forms-bind",
  "fs-interfaces",
  "fs-jscalendar",
+ "fs-module",
  "fs-objects",
+ "fs-rpc",
  "fs-types",
  "rand 0.10.4",
  "semver",
  "serde",
  "serde_json",
+ "tokio",
  "uuid",
 ]
 
@@ -2056,6 +2060,19 @@ dependencies = [
  "futures",
  "rustix 1.1.6",
  "tempfile",
+ "tokio",
+]
+
+[[package]]
+name = "fs-module"
+version = "0.2.0"
+source = "git+https://github.com/FreeSynergy-Net/fs-interfaces?rev=ad56e2f4b953ebf51d41bb7aec8202dfafebdfac#ad56e2f4b953ebf51d41bb7aec8202dfafebdfac"
+dependencies = [
+ "capnp",
+ "capnp-rpc",
+ "fs-interfaces",
+ "fs-jscalendar",
+ "fs-types",
  "tokio",
 ]
 
@@ -5487,7 +5504,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.4.3",
+ "getrandom 0.3.4",
  "once_cell",
  "rustix 1.1.6",
  "windows-sys 0.61.2",

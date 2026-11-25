@@ -22,6 +22,24 @@ pub enum SampleCode {
     AnchorBad,
     /// `{what}`: no strategy or no content mapping exists for this kind of channel or type.
     Unsupported,
+    /// `{command}`: the declaration has no `writes` column for this command, so it cannot be run from the declaration.
+    WritesUnknown,
+    /// `{command}`: the command writes no channel (`open`, `remove` look the same in the declaration), so `SampleModule` has no effect to run.
+    EffectUnknown,
+    /// `{what}`: an argument is not written by the command, is doubled, is missing or its value does not fit the kind of its channel.
+    ArgumentBad,
+    /// `{command}`: no form of the module has a command channel of this name.
+    CommandUnknown,
+    /// `{record}`: the module has no such record.
+    RecordUnknown,
+    /// `{change}`: the module has no such change.
+    ChangeUnknown,
+    /// `{cursor}`: the cursor of a page is not one this module gave.
+    CursorBad,
+    /// `{field}`: the module has no binary field.
+    BlobUnsupported,
+    /// `{record}`: the record changed since the caller saw it (`expect`), or the change to take back is not the latest of its record.
+    Stale,
 }
 
 impl ErrorCode for SampleCode {
@@ -34,6 +52,15 @@ impl ErrorCode for SampleCode {
         Self::ZoneUnknown,
         Self::AnchorBad,
         Self::Unsupported,
+        Self::WritesUnknown,
+        Self::EffectUnknown,
+        Self::ArgumentBad,
+        Self::CommandUnknown,
+        Self::RecordUnknown,
+        Self::ChangeUnknown,
+        Self::CursorBad,
+        Self::BlobUnsupported,
+        Self::Stale,
     ];
 
     fn as_str(self) -> &'static str {
@@ -45,6 +72,15 @@ impl ErrorCode for SampleCode {
             Self::ZoneUnknown => "zone-unknown",
             Self::AnchorBad => "anchor-bad",
             Self::Unsupported => "unsupported",
+            Self::WritesUnknown => "writes-unknown",
+            Self::EffectUnknown => "effect-unknown",
+            Self::ArgumentBad => "argument-bad",
+            Self::CommandUnknown => "command-unknown",
+            Self::RecordUnknown => "record-unknown",
+            Self::ChangeUnknown => "change-unknown",
+            Self::CursorBad => "cursor-bad",
+            Self::BlobUnsupported => "blob-unsupported",
+            Self::Stale => "stale",
         }
     }
 }

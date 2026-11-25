@@ -132,6 +132,7 @@ pub fn input_of(data: &FormData) -> FormInput {
         channels,
         may: data.may.clone(),
         load: Load::Ready,
+        heads: None,
     }
 }
 
@@ -144,6 +145,7 @@ pub fn empty_input(form: &str) -> FormInput {
         channels: Vec::new(),
         may: Vec::new(),
         load: Load::Ready,
+        heads: None,
     }
 }
 

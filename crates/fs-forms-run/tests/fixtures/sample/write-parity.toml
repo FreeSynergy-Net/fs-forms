@@ -1,0 +1,13 @@
+# The wish that stands in for the hand-built fake module of the tests of the written way (`src/write/fixture.rs`): two cards in two
+# columns of one lane, one of them with a place (`order`; the generator fills optional channels without a pool on every second record).
+# The rights (which card may be moved) are the test's own input, not data.
+[sample]
+seed = 7
+anchor = { month = "2026-11", zone = "Europe/Berlin" }
+
+[[sample.set]]
+source = 1
+form = "cards-in-columns@~1.2.0"
+type = "Task"
+count = 2
+distinct = { column = 2, lane = 1, column-label = 2 }

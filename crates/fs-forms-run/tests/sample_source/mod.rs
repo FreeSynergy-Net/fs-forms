@@ -9,12 +9,16 @@
 
 #![allow(dead_code)] // each test file uses a part
 
+mod groups;
+#[allow(unused_imports)] // each test file uses a part
+pub use groups::{groups, rows_of};
+
 use std::sync::mpsc::{Receiver, Sender, channel};
 use std::sync::{Arc, Mutex, PoisonError};
 
 use fs_components_kanban::Answer;
 use fs_forms_run::{Coded, FormData, FormRecords, FormRow, Invocation, Records, Writer};
-use fs_forms_testdata::{SampleBuilder, SampleModule, SampleSpec, read_sample};
+use fs_forms_testdata::{SampleBuilder, SampleModule, SampleSpec, SourceSpec};
 use fs_interfaces::module::{
     Actor, Caller, Claimed, Context, Invocation as Call, ModuleCore, Page, PageQuery, Value,
 };
@@ -25,27 +29,11 @@ pub const FORM: &str = "cards-in-columns";
 const WISH: &str = include_str!("../fixtures/sample/board-parity.toml");
 const PERSON: &str = "urn:uuid:018f3a52-7c1e-7b3a-9d4e-5a6b7c8d9e01";
 
-/// The spec of the wish file: what `SampleSpec::from_description` makes of one `[[sample.set]]` of a description whose source is a `Task`.
+/// The spec of the wish file (`SourceSpec::from_wish_text`: the same defaults a description gets).
 fn spec() -> SampleSpec {
-    let read = read_sample(WISH)
+    SourceSpec::from_wish_text(WISH)
         .expect("the wish reads")
-        .expect("it has the section");
-    SampleSpec {
-        seed: read.seed.expect("seed"),
-        anchor: read.anchor.expect("anchor"),
-        forbid: read.forbid,
-        sets: read
-            .sets
-            .into_iter()
-            .map(|s| {
-                let mut wish = s.wish;
-                s.data_type
-                    .unwrap_or_default()
-                    .clone_into(&mut wish.data_type);
-                wish
-            })
-            .collect(),
-    }
+        .spec
 }
 
 enum Ask {

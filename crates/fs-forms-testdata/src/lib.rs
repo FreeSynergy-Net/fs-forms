@@ -37,6 +37,7 @@ mod set;
 mod spec;
 mod spec_toml;
 mod value;
+mod wish_text;
 
 pub use blocks::{BlockForms, Need, needs};
 pub use builder::SampleBuilder;

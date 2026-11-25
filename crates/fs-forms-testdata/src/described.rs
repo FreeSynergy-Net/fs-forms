@@ -61,7 +61,7 @@ fn name_of(form: &str) -> &str {
     form.split_once('@').map_or(form, |(n, _)| n)
 }
 
-fn default_anchor() -> Result<Anchor, Failure> {
+pub(crate) fn default_anchor() -> Result<Anchor, Failure> {
     Ok(Anchor {
         period: Period::Month(2026, 5),
         zone: Zone::iana("Europe/Berlin")
@@ -114,7 +114,7 @@ fn wishes(
     Ok(out)
 }
 
-fn relations(wishes: &[SetWish]) -> Result<Vec<Relation>, Failure> {
+pub(crate) fn relations(wishes: &[SetWish]) -> Result<Vec<Relation>, Failure> {
     let mut out: Vec<Relation> = Vec::new();
     for wish in wishes {
         for relation in defaults::relations(resolve(&wish.form)?)? {

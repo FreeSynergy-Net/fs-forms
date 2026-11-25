@@ -8,7 +8,7 @@ use fs_forms_testdata::{
 use fs_types::Zone;
 
 pub const FORM: &str = "bars-in-time@^1.0.0";
-pub const KEY: &str = "bars-in-time@1.0.0";
+pub const KEY: &str = "bars-in-time@1.1.0";
 
 pub fn anchor() -> Anchor {
     Anchor {

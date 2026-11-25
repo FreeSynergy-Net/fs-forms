@@ -20,11 +20,11 @@ path = "src/main.rs"
 # ONLY the client and fs-components (ADR 0094 draft, item 6): never -core and never -server (a test checks `cargo tree`).
 fs-forms-client = { path = "../fs-forms-client", version = "0.1.0" }
 # One revision of fs-components (pinned by rev until the bundled release returns it to a tag) for everything; Blinc comes only through it (`fs_components::blinc`), never as a dependency here.
-fs-components = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "77b23ea3a3b2d788f5f60c62e975db9501a137ef", version = "0.1.0" }
-fs-components-app = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "77b23ea3a3b2d788f5f60c62e975db9501a137ef", version = "0.1.0" }
-fs-components-widgets = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "77b23ea3a3b2d788f5f60c62e975db9501a137ef", version = "0.1.0" }
-fs-components-mf2 = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "77b23ea3a3b2d788f5f60c62e975db9501a137ef", version = "0.1.0" }
-fs-components-words = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "77b23ea3a3b2d788f5f60c62e975db9501a137ef", version = "0.1.0" }
+fs-components = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "81367489094efee62ec16194be67df4a588045a0", version = "0.1.0" }
+fs-components-app = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "81367489094efee62ec16194be67df4a588045a0", version = "0.1.0" }
+fs-components-widgets = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "81367489094efee62ec16194be67df4a588045a0", version = "0.1.0" }
+fs-components-mf2 = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "81367489094efee62ec16194be67df4a588045a0", version = "0.1.0" }
+fs-components-words = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "81367489094efee62ec16194be67df4a588045a0", version = "0.1.0" }
 
 
 # The manifest of the frontend goes where the starter looks (`<XDG_DATA_DIRS>/freesynergy/frontends/<program>/<id>.metainfo.xml`):

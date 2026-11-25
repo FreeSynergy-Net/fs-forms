@@ -213,95 +213,9 @@ nth = 0
 command = "create"
 
 [[page.place]]
-elem = "block:board/detail"
+elem = "block:board/banner"
 at = "detail"
-block = "board-detail"
-source = 1
-
-[[page.place.bind]]
-elem = "binding:board/detail/actions/0"
-slot = "actions"
-nth = 0
-command = "claim"
-
-[[page.place.bind]]
-elem = "binding:board/detail/actions/1"
-slot = "actions"
-nth = 1
-command = "release"
-
-[[page.place.bind]]
-elem = "binding:board/detail/actions/2"
-slot = "actions"
-nth = 2
-command = "note"
-
-[[page.place.bind]]
-elem = "binding:board/detail/lock/0"
-slot = "lock"
-nth = 0
-lock = true
-
-[[page.place.bind]]
-elem = "binding:board/detail/properties/0"
-slot = "properties"
-nth = 0
-field = "progress"
-role = "display"
-
-[[page.place.bind]]
-elem = "binding:board/detail/properties/1"
-slot = "properties"
-nth = 1
-field = "priority"
-role = "display"
-
-[[page.place.bind]]
-elem = "binding:board/detail/properties/2"
-slot = "properties"
-nth = 2
-field = "due"
-role = "display"
-
-[[page.place.bind]]
-elem = "binding:board/detail/properties/3"
-slot = "properties"
-nth = 3
-field = "participants"
-role = "display"
-
-[[page.place.bind]]
-elem = "binding:board/detail/properties/4"
-slot = "properties"
-nth = 4
-field = "keywords"
-role = "display"
-
-[[page.place.bind]]
-elem = "binding:board/detail/properties/5"
-slot = "properties"
-nth = 5
-field = "note"
-role = "display"
-
-[[page.place.bind]]
-elem = "binding:board/detail/properties/6"
-slot = "properties"
-nth = 6
-field = "description"
-role = "display"
-
-[[page.place.bind]]
-elem = "binding:board/detail/record/0"
-slot = "record"
-nth = 0
-
-[[page.place.bind]]
-elem = "binding:board/detail/title/0"
-slot = "title"
-nth = 0
-field = "title"
-role = "display"
+block = "banner"
 
 [[page.place]]
 elem = "block:board/partial"

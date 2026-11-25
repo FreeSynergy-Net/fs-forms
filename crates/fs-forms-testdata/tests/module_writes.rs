@@ -14,7 +14,7 @@ const WHEN: [(&str, &str); 2] = [
 
 /// `bars-in-time` with strange command names: `shift` changes, `add-one` makes a record, and `create` only changes the lane.
 fn strange() -> Form {
-    let text = "bars-in-time@1.0.0 | Bars in time | planned | stand-in with writes\n\
+    let text = "bars-in-time@1.1.0 | Bars in time | planned | stand-in with writes\n\
         > items | records | ! | 1\n> start | time | ! | 1\n> end | time | ! | 1\n> label | text | ! | 1\n> lane | text | - | 0..1\n\
         > shift | command | - | 0..1 | start! end!\n> add-one | command | - | 0..1 | start! end! label!\n\
         > create | command | - | 0..1 | lane!\n";

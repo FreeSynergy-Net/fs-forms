@@ -20,17 +20,15 @@ use fs_interfaces::owner::fake::person;
 use fs_rpc::{Guarded, PerConnection, Ports};
 use fs_types::Zone;
 
-pub const BARS: &str = "bars-in-time@1.0.0";
+pub const BARS: &str = "bars-in-time@1.1.0";
 pub const PERSON: &str = "urn:uuid:018f3a52-7c1e-7b3a-9d4e-5a6b7c8d9e01";
 
-/// `bars-in-time@1.0.0` as a minor with `writes` on `move` would declare it (C3 F1+, not in the pinned catalog yet): the same channels as
-/// the pinned 1.0.0, `move` writes `start! end! lane`. Read with the parser of the catalog, so it is a real declaration.
+/// The real declaration `bars-in-time@1.1.0` of the pinned catalog: `move` writes `start! end! lane`, `create` writes `start! end! label! lane`.
 pub fn bars_with_writes() -> Form {
-    let text = "bars-in-time@1.0.0 | Bars in time | planned | stand-in with writes\n\
-        > items | records | ! | 1\n> start | time | ! | 1\n> end | time | ! | 1\n> label | text | ! | 1\n> lane | text | - | 0..1\n\
-        > state | text | - | 0..1\n> depends | reference | - | 0..n\n> progress | number | - | 0..1\n> all-day | flag | - | 0..1\n\
-        > move | command | - | 0..1 | start! end! lane\n> create | command | - | 0..1 | start! end! label! lane\n";
-    forms::parse(text).expect("parses").remove(0)
+    let version = forms::parse_version("1.1.0").expect("version");
+    forms::find("bars-in-time", &version)
+        .expect("bars-in-time@1.1.0 is in the pinned fs-interfaces")
+        .clone()
 }
 
 pub fn anchor() -> Anchor {

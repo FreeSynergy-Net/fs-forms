@@ -34,7 +34,7 @@ impl FormSourceFixture for Fx {
     }
     fn forms(&self) -> Vec<DeclaredForm> {
         let fields = [
-            "start", "end", "label", "lane", "state", "depends", "progress", "all-day",
+            "start", "end", "label", "lane", "state", "depends", "progress", "all-day", "color",
         ];
         vec![DeclaredForm {
             key: BARS.into(),
@@ -143,7 +143,7 @@ fn the_calendar_set_passes_the_rules_of_module_v1() {
     }
 }
 
-/// Failures that belong to the wrapper `fs_rpc::Guarded` (0f639470) and not to the module behind it: (1) its problem has the kind as title,
+/// Failures that belong to the wrapper `fs_rpc::Guarded` (e3871c3b) and not to the module behind it: (1) its problem has the kind as title,
 /// rule 14 asks for text for people; (2) a cursor that is no UTF-8 text is `invalid-request` 422 there, rule 15 asks for `bad-arguments`.
 /// The control test below shows that the fake of fs-module has exactly these failures behind the same wrapper. Finding for C3 (fs-rpc), not
 /// worked around here.

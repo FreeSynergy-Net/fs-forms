@@ -154,7 +154,8 @@ impl Records for FormRecords {
         Vec::new()
     }
     fn is_sample(&self) -> bool {
-        self.provider == "fake"
+        fs_interfaces::module::ProviderKind::of(&self.provider)
+            == fs_interfaces::module::ProviderKind::Sample
     }
     fn forms(&self) -> Arc<Vec<FormData>> {
         let fresh = self.fresh.read().unwrap_or_else(PoisonError::into_inner);

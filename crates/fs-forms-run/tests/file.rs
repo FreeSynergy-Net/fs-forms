@@ -49,7 +49,7 @@ fn a_blueprint_folder_names_its_description() {
         [
             ("side", "sidebar"),
             ("main", "board"),
-            ("detail", "board-detail"),
+            ("detail", "banner"),
             ("partial", "partial-notice"),
             ("empty", "empty-state")
         ]
@@ -203,7 +203,7 @@ fn what_the_host_cannot_draw_is_locked_visibly() {
         .iter()
         .filter(|n| matches!(n, Node::Locked { .. }))
         .collect();
-    // `board` and `sidebar` are drawn (components of fs-components); only `board-detail` has no component mapped yet
+    // `board` and `sidebar` are drawn (components of fs-components); only `banner` has no component mapped yet
     assert_eq!(locked.len(), 1, "{nodes:?}");
     assert!(matches!(locked[0], Node::Locked { place: Some(p), .. } if p == "detail"));
     for n in &locked {

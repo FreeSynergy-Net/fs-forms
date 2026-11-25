@@ -248,8 +248,8 @@ fn the_real_registry_draws_the_board_and_the_state_blocks_and_locks_the_rest() {
             .iter()
             .filter(|n| matches!(n, Node::Locked { .. }))
             .count()
-            >= 2,
-        "board-detail and tablist stay locked, said"
+            >= 1,
+        "board-detail stays locked, said: {nodes:?}"
     );
 }
 

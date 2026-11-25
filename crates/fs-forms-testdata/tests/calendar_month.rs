@@ -1,4 +1,4 @@
-//! First use (ENTWURF section 7): the calendar month against the declaration of `bars-in-time@1.0.0`, as the catalog of the pinned
+//! First use (ENTWURF section 7): the calendar month against the declaration of `bars-in-time@1.1.0`, as the catalog of the pinned
 //! `fs-interfaces` has it. The checks read the declaration; no channel name of the form is written here except the ones of the
 //! wish itself (start, end, lane, all-day).
 
@@ -29,9 +29,9 @@ fn day(text: &str) -> Option<NaiveDate> {
 
 #[test]
 fn the_pinned_catalog_knows_the_form() {
-    let version = forms::parse_version("1.0.0").unwrap();
+    let version = forms::parse_version("1.1.0").unwrap();
     let form = forms::find("bars-in-time", &version)
-        .expect("bars-in-time@1.0.0 is in the pinned fs-interfaces");
+        .expect("bars-in-time@1.1.0 is in the pinned fs-interfaces");
     assert_eq!(form.key(), KEY);
     assert!(FORM.starts_with("bars-in-time@"));
 }
@@ -60,7 +60,7 @@ fn eight_events_and_one_broken_row_in_the_period() {
 
 #[test]
 fn every_row_keeps_the_declaration() {
-    let version = forms::parse_version("1.0.0").unwrap();
+    let version = forms::parse_version("1.1.0").unwrap();
     let form = forms::find("bars-in-time", &version).unwrap();
     for row in rows() {
         for (channel, values) in &row.values {
@@ -154,7 +154,7 @@ fn objects_are_as2_with_jscalendar_content() {
                 .envelope
                 .iri
                 .as_deref()
-                .is_some_and(|i| i.starts_with("urn:fs-sample:bars-in-time@1.0.0:"))
+                .is_some_and(|i| i.starts_with("urn:fs-sample:bars-in-time@1.1.0:"))
         );
     }
     assert_eq!(

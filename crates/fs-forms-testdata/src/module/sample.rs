@@ -19,8 +19,8 @@ use super::rules::SampleRules;
 use super::store::{Entry, Store};
 use crate::error::{Failure, SampleCode};
 use crate::project::{self, Table};
-use crate::provider::SAMPLE_PROVIDER;
 use crate::set::SampleSet;
+use fs_interfaces::module::SAMPLE_PROVIDER;
 
 /// The level the module speaks (`FormSource` level 2: change, take back, watch).
 const LEVEL: u32 = 2;

@@ -3,7 +3,8 @@
 
 mod module_support;
 
-use fs_forms_testdata::{Forbid, SAMPLE_PROVIDER, SampleModule, is_sample_provider};
+use fs_forms_testdata::{Forbid, SAMPLE_PROVIDER, SampleModule};
+use fs_interfaces::module::ProviderKind;
 use fs_interfaces::module::{Ask, ChangeKind, Invocation, ModuleCore, Refusal, StepRef};
 use fs_types::Utc;
 use module_support::{
@@ -133,8 +134,12 @@ fn a_command_runs_from_writes_whatever_its_name_is() {
 
 #[test]
 fn what_the_declaration_does_not_say_is_refused_with_a_code_never_guessed() {
-    // The pinned `bars-in-time@1.0.0` has no `writes` on `move`: it cannot be run from the declaration.
-    let plain = module(&calendar(false, 0, Vec::new()));
+    // A declaration of the form without `writes` on `move` (the real 1.1.0 has them): it cannot be run from the declaration.
+    let text = "bars-in-time@1.1.0 | Bars in time | planned | without writes\n\
+        > items | records | ! | 1\n> start | time | ! | 1\n> end | time | ! | 1\n> label | text | ! | 1\n> lane | text | - | 0..1\n\
+        > move | command | - | 0..1\n";
+    let plain = module(&calendar(false, 0, Vec::new()))
+        .declare(&fs_interfaces::forms::parse(text).expect("parses").remove(0));
     let key = page(&plain, BARS).records[0].id.clone();
     let r = refused(run(plain.apply(&cx("p"), call("move", Some(&key), &MOVE))));
     assert_eq!(
@@ -256,11 +261,15 @@ fn rights_are_everything_except_what_the_spec_forbids() {
 fn the_provider_says_test_data() {
     let m = calendar_module(Vec::new());
     assert_eq!(m.provider(), SAMPLE_PROVIDER);
-    assert!(
-        is_sample_provider(m.provider()),
+    assert_eq!(
+        ProviderKind::of(m.provider()),
+        ProviderKind::Sample,
         "a host recognises example data by the provider text"
     );
-    assert!(!is_sample_provider("net.freesynergy.Planning"));
+    assert_eq!(
+        ProviderKind::of("net.freesynergy.Planning"),
+        ProviderKind::Module
+    );
     assert_eq!(m.level(), 2);
     let r = refused(run(m.blob(&cx("p"), "x", "image")));
     assert_eq!(r.kind, "unsupported");

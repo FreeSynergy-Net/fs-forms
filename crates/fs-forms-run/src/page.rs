@@ -98,9 +98,12 @@ impl Page {
                 } if block == "empty-state" => {
                     column.child(self.empty_slot(place, title.as_deref().unwrap_or(&self.empty)))
                 }
-                Part::Block { place, block, .. } => {
+                Part::Block {
+                    place, block, info, ..
+                } => {
                     match draw::block(
                         block,
+                        info,
                         &self.ctx,
                         inner,
                         (height - 2.0 * PAD).max(draw::MIN_H),
@@ -171,6 +174,7 @@ mod tests {
             place: place.to_owned(),
             block: "board".to_owned(),
             title: None,
+            info: crate::place_info::PlaceInfo::default(),
         }
     }
 

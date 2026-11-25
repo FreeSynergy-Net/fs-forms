@@ -8,6 +8,7 @@
 
 use fs_forms_layout::{EmbedDoc, Layout, PageDoc, PlaceNode, Placement, Shown};
 
+use crate::place_info::PlaceInfo;
 use crate::view::{Coded, EmbedView, PlaceView};
 
 fn text(layout: &Layout, key: &str, lang: &str) -> String {
@@ -45,6 +46,7 @@ pub(crate) fn place_views(layout: &Layout, page: &PageDoc, lang: &str) -> Vec<Pl
                 title: None,
                 locks: vec![Coded::new("host-notice-frame-not-built").with("frame", &f.frame)],
                 slot_locks: Vec::new(),
+                info: PlaceInfo::default(),
                 embed: None,
             },
             PlaceNode::Frontend(e) => embed_view(
@@ -60,6 +62,7 @@ pub(crate) fn place_views(layout: &Layout, page: &PageDoc, lang: &str) -> Vec<Pl
                 title: None,
                 locks: vec![Coded::new("host-notice-frame-not-built").with("frame", "?")],
                 slot_locks: Vec::new(),
+                info: PlaceInfo::default(),
                 embed: None,
             },
         });
@@ -75,6 +78,7 @@ fn block_view(layout: &Layout, b: &fs_forms_layout::BlockDoc, seq: u32, lang: &s
         title: b.title_key.as_deref().map(|k| text(layout, k, lang)),
         locks: Vec::new(),
         slot_locks: Vec::new(),
+        info: PlaceInfo::from_doc(&b.set),
         embed: None,
     }
 }
@@ -88,6 +92,7 @@ fn embed_view(e: &EmbedDoc, elem: Option<&str>, seq: u32) -> PlaceView {
         title: None,
         locks: Vec::new(),
         slot_locks: Vec::new(),
+        info: PlaceInfo::default(),
         embed: Some(EmbedView {
             elem: elem.unwrap_or(&e.place).to_owned(),
             key: e.key.clone(),

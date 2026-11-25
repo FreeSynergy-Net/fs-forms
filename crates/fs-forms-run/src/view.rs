@@ -73,6 +73,8 @@ pub struct PlaceView {
     pub locks: Vec<Coded>,
     /// Locks of single slots (the block is still drawn).
     pub slot_locks: Vec<Coded>,
+    /// `view=` and `variant=` of the placement (`None` where it says nothing).
+    pub info: crate::place_info::PlaceInfo,
     /// The frontend placed here (`block` is then `frontend`); `None` for a block.
     pub embed: Option<EmbedView>,
 }

@@ -42,6 +42,7 @@ pub fn view(title: &str, block: &str) -> View {
                 block: block.into(),
                 locks: Vec::new(),
                 slot_locks: Vec::new(),
+                info: fs_forms_run::PlaceInfo::default(),
                 embed: None,
             }],
         }],

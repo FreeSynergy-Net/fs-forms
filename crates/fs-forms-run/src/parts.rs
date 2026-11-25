@@ -10,6 +10,7 @@ use fs_components_widgets::states::{self, PartialNotice};
 
 use crate::compose::Node;
 use crate::panel::{Embedded, Panels};
+use crate::place_info::PlaceInfo;
 use crate::view::Coded;
 
 /// A part, with its sentences already made.
@@ -20,6 +21,7 @@ pub(crate) enum Part {
         place: String,
         block: String,
         title: Option<String>,
+        info: PlaceInfo,
     },
     /// Not drawn: the name of the part and one line per code.
     Locked { name: String, lines: Vec<String> },
@@ -81,11 +83,13 @@ pub(crate) fn parts_with(texts: &Mf2Texts, nodes: &[Node], panels: &Panels) -> V
                     place,
                     block,
                     title,
+                    info,
                     ..
                 } => Part::Block {
                     place: place.clone(),
                     block: block.clone(),
                     title: title.clone(),
+                    info: info.clone(),
                 },
                 Node::Locked { place, codes } => Part::Locked {
                     name: place.clone().unwrap_or_default(),

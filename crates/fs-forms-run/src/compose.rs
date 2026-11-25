@@ -11,6 +11,7 @@
 use fs_forms_bind::BindCode;
 
 use crate::catalog::Catalog;
+use crate::place_info::PlaceInfo;
 use crate::view::{Coded, EmbedView, PageView, View};
 
 /// How the window stands (the host's own states of the plan, `Teilweise` and so on).
@@ -37,6 +38,8 @@ pub enum Node {
         slot_locks: Vec<Coded>,
         /// The words of the placement's title, if there are any.
         title: Option<String>,
+        /// `view=` and `variant=` of the placement.
+        info: PlaceInfo,
     },
     /// A frontend placed here (the child is opened by the owner; a window-mode node draws nothing in this tree).
     Frontend {
@@ -127,6 +130,7 @@ fn screen(page: &PageView, catalog: &dyn Catalog) -> ScreenTree {
                 block: p.block.clone(),
                 slot_locks: p.slot_locks.clone(),
                 title: p.title.clone(),
+                info: p.info.clone(),
             });
         } else {
             nodes.push(Node::Locked {

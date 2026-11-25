@@ -20,6 +20,7 @@ use fs_components_words::Locale;
 
 use crate::after_write::AfterWrite;
 use crate::feed::Feed;
+use crate::place_info::PlaceInfo;
 use crate::records::Records;
 use crate::view::ActionView;
 use crate::write_gate::WriteGate;
@@ -34,6 +35,8 @@ pub(crate) const MIN_H: f32 = 380.0;
 /// A component mounted for a block of a page, with the look it was mounted for.
 pub(crate) struct Slot {
     block: String,
+    /// The declaration of the placement: two placements of one block with other `view=` are two components.
+    info: PlaceInfo,
     look: (StyleId, bool),
     mounted: Arc<dyn Mounted>,
 }
@@ -99,7 +102,7 @@ pub(crate) fn missing(name: &str) -> String {
 }
 
 /// What the view is given besides the data.
-fn draw_ctx(ctx: &Ctx, block: &str, look: (StyleId, bool)) -> DrawCtx {
+fn draw_ctx(ctx: &Ctx, block: &str, look: (StyleId, bool), _info: &PlaceInfo) -> DrawCtx {
     let form = crate::blocks::forms_of(block)
         .first()
         .map(|f| f.name().to_owned())
@@ -125,7 +128,13 @@ fn draw_ctx(ctx: &Ctx, block: &str, look: (StyleId, bool)) -> DrawCtx {
 }
 
 /// The block as an element, or `None` when this host has no drawing for it (the caller says so).
-pub(crate) fn block(name: &str, ctx: &Ctx, width: f32, height: f32) -> Option<Div> {
+pub(crate) fn block(
+    name: &str,
+    info: &PlaceInfo,
+    ctx: &Ctx,
+    width: f32,
+    height: f32,
+) -> Option<Div> {
     if name == "sidebar" {
         return Some(sidebar(ctx, width, height));
     }
@@ -134,14 +143,19 @@ pub(crate) fn block(name: &str, ctx: &Ctx, width: f32, height: f32) -> Option<Di
     let input = input_for(&*ctx.records, name, &ctx.feeds);
     let mounted = {
         let mut slots = ctx.mounts.lock().unwrap_or_else(PoisonError::into_inner);
-        if let Some(slot) = slots.iter().find(|s| s.block == name && s.look == look) {
+        if let Some(slot) = slots
+            .iter()
+            .find(|s| s.block == name && s.look == look && s.info == *info)
+        {
             slot.mounted.refresh(input);
             slot.mounted.clone()
         } else {
-            let mounted: Arc<dyn Mounted> = Arc::from(view.mount(input, draw_ctx(ctx, name, look)));
-            slots.retain(|s| s.block != name);
+            let mounted: Arc<dyn Mounted> =
+                Arc::from(view.mount(input, draw_ctx(ctx, name, look, info)));
+            slots.retain(|s| !(s.block == name && s.info == *info));
             slots.push(Slot {
                 block: name.to_owned(),
+                info: info.clone(),
                 look,
                 mounted: mounted.clone(),
             });

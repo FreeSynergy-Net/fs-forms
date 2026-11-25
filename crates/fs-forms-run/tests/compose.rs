@@ -23,6 +23,7 @@ fn place(name: &str, seq: u32, block: &str) -> PlaceView {
         block: block.into(),
         locks: Vec::new(),
         slot_locks: Vec::new(),
+        info: fs_forms_run::PlaceInfo::default(),
         embed: None,
     }
 }

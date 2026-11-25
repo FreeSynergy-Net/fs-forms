@@ -87,7 +87,9 @@ pub fn world(mode: &str) -> World {
     let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/embed");
     let dir = tempfile::tempdir().unwrap();
     for f in ["board-embed.toml", "settings.toml"] {
-        let text = std::fs::read_to_string(src.join(f)).unwrap();
+        let text = std::fs::read_to_string(src.join(f))
+            .unwrap()
+            .replace("\r\n", "\n"); // a Windows checkout has CRLF
         let text = text.replace("mode = \"panel\"", &format!("mode = \"{mode}\""));
         std::fs::write(dir.path().join(f), &text).unwrap();
         if f == "board-embed.toml" {

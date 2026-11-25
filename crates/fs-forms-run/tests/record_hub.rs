@@ -14,9 +14,16 @@
 use std::sync::Arc;
 
 use fs_components_kanban::Answer;
-use fs_forms_run::{
-    Coded, FakeModule, HoldCounts, Module, RecordHub, RecordKey, Records, SampleBoard,
-};
+use fs_forms_run::{Coded, FakeModule, HoldCounts, Module, RecordHub, RecordKey, Records};
+
+mod sample_source;
+use sample_source::{add_card, board, card, column, move_card, other_column};
+
+/// The `n`-th card of the data dropped into a column other than its own (nothing named: the data says which card and which column).
+fn drop_card(records: &dyn Records, n: usize) -> Answer {
+    let key = card(n);
+    move_card(records, &key, &other_column(&key))
+}
 
 fn key(scope: Option<&str>) -> RecordKey {
     RecordKey {
@@ -27,10 +34,7 @@ fn key(scope: Option<&str>) -> RecordKey {
 
 fn module() -> (Arc<dyn Module>, Arc<HoldCounts>) {
     let counts = Arc::new(HoldCounts::default());
-    let made = FakeModule::new(
-        Arc::clone(&counts),
-        Box::new(|_| Arc::new(SampleBoard::default()) as Arc<dyn Records>),
-    );
+    let made = FakeModule::new(Arc::clone(&counts), Box::new(|_| board()));
     (made, counts)
 }
 
@@ -44,10 +48,7 @@ fn ga1_two_views_share_the_cache_and_each_has_its_own_hold() {
     assert_eq!(counts.get(), (2, 0), "two views, two holds");
     let before = b.records().forms();
     assert_eq!((a.generation(), b.generation()), (0, 0));
-    assert_eq!(
-        fs_forms_run::sample_move_card(&*a.records(), "FS-1", "done"),
-        Answer::Accepted
-    );
+    assert_eq!(drop_card(&*a.records(), 0), Answer::Accepted);
     assert_eq!((a.generation(), b.generation()), (1, 1));
     assert_ne!(b.records().forms(), before, "the other view shows the move");
     assert_eq!(a.records().forms(), b.records().forms());
@@ -63,10 +64,7 @@ fn ga2_another_scope_shares_nothing() {
     assert!(!Arc::ptr_eq(&a.cache(), &b.cache()));
     assert!(!Arc::ptr_eq(&a.cache(), &none.cache()));
     let (untouched, other) = (b.records().forms(), none.records().forms());
-    assert_eq!(
-        fs_forms_run::sample_move_card(&*a.records(), "FS-1", "done"),
-        Answer::Accepted
-    );
+    assert_eq!(drop_card(&*a.records(), 0), Answer::Accepted);
     assert_eq!(
         (a.generation(), b.generation(), none.generation()),
         (1, 0, 0)
@@ -99,15 +97,12 @@ fn ga5_the_neighbour_learns_only_through_its_own_watch() {
     let hub = RecordHub::new();
     let a = hub.attach(&key(Some("urn:a")), &m).unwrap();
     let b = hub.attach(&key(Some("urn:a")), &m).unwrap();
-    assert_eq!(
-        fs_forms_run::sample_add_card(&*b.records(), "todo", "x"),
-        Answer::Accepted
-    );
+    assert_eq!(add_card(&*b.records(), &column(0), "x"), Answer::Accepted);
     // the writer is told by its own hold like everyone else, no counting at the writing place
     assert_eq!((a.generation(), b.generation()), (1, 1));
     // a write that is not accepted tells nobody
     assert_ne!(
-        fs_forms_run::sample_move_card(&*a.records(), "NOPE", "nowhere"),
+        move_card(&*a.records(), "NOPE", "nowhere"),
         Answer::Accepted
     );
     assert_eq!((a.generation(), b.generation()), (1, 1));
@@ -119,22 +114,16 @@ fn ga6_a_second_window_writing_with_an_old_revision_gets_conflict() {
     let hub = RecordHub::new();
     let a = hub.attach(&key(Some("urn:a")), &m).unwrap();
     let b = hub.attach(&key(Some("urn:a")), &m).unwrap();
-    assert_eq!(
-        fs_forms_run::sample_move_card(&*a.records(), "FS-1", "done"),
-        Answer::Accepted
-    );
+    assert_eq!(drop_card(&*a.records(), 0), Answer::Accepted);
     assert_eq!((a.seen(), b.seen()), (1, 0));
     assert_eq!(
-        fs_forms_run::sample_move_card(&*b.records(), "FS-2", "done"),
+        drop_card(&*b.records(), 1),
         fs_forms_run::refused("conflict"),
         "the same rule as between two people, though both are one person"
     );
     let _ = b.records().forms(); // b has seen the new state now
     assert_eq!(b.seen(), 1);
-    assert_eq!(
-        fs_forms_run::sample_move_card(&*b.records(), "FS-2", "done"),
-        Answer::Accepted
-    );
+    assert_eq!(drop_card(&*b.records(), 1), Answer::Accepted);
 }
 
 #[test]
@@ -143,10 +132,7 @@ fn the_cache_cannot_be_written_through() {
     let hub = RecordHub::new();
     let a = hub.attach(&key(Some("urn:a")), &m).unwrap();
     let before = a.cache().forms();
-    assert_ne!(
-        fs_forms_run::sample_move_card(&*a.cache(), "FS-1", "done"),
-        Answer::Accepted
-    );
+    assert_ne!(drop_card(&*a.cache(), 0), Answer::Accepted);
     assert_eq!((a.generation(), a.cache().forms()), (0, before));
 }
 
@@ -173,7 +159,7 @@ struct Refusing;
 
 impl Module for Refusing {
     fn records(&self, _scope: Option<&str>) -> Arc<dyn Records> {
-        Arc::new(SampleBoard::default())
+        board()
     }
     fn connect(
         &self,

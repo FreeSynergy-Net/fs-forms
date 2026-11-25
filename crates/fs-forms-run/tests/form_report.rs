@@ -35,15 +35,16 @@ fn a_required_channel_left_out_is_red_with_the_form_named() {
 #[test]
 fn a_form_no_component_draws_is_yellow_not_red() {
     let mut forms = groups();
-    forms[0].declared.form.name = "checklist".into();
+    // `members` is in the form catalog but frozen (superseded by `rows`): no component draws it.
+    forms[0].declared.form.name = "members".into();
     forms[0].declared.map = vec![
-        ("items".into(), vec!["Group".into()]),
-        ("done".into(), vec!["closed".into()]),
-        ("label".into(), vec!["name".into()]),
+        ("records".into(), vec!["Group".into()]),
+        ("person".into(), vec!["who".into()]),
+        ("role".into(), vec!["role".into()]),
     ];
     forms[0].declared.fields = vec![
-        ("closed".into(), fs_forms_bind::Basic::Bool),
-        ("name".into(), fs_forms_bind::Basic::Text),
+        ("who".into(), fs_forms_bind::Basic::Reference),
+        ("role".into(), fs_forms_bind::Basic::Reference),
     ];
     forms.truncate(1);
     let found = form_report(&records(forms));

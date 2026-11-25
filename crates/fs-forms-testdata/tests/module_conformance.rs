@@ -121,16 +121,10 @@ fn the_calendar_set_passes_the_rules_of_module_v1() {
     };
     let report = run(run_conformance(&fx));
     eprintln!("checked {}, skipped: {:#?}", report.checked, report.skipped);
-    let (wrapper, ours) = split(report.failures);
-    assert!(ours.is_empty(), "rules the sample module fails: {ours:#?}");
-    assert_eq!(
-        kinds(&wrapper),
-        WRAPPER_KINDS.into_iter().collect(),
-        "the module shows the same kinds of wrapper findings as the control"
-    );
-    eprintln!(
-        "wrapper findings (fs-rpc, same for every module): {}",
-        wrapper.len()
+    assert!(
+        report.failures.is_empty(),
+        "rules the sample module fails: {:#?}",
+        report.failures
     );
     assert!(
         report.checked > 40,
@@ -143,54 +137,15 @@ fn the_calendar_set_passes_the_rules_of_module_v1() {
     }
 }
 
-/// Failures that belong to the wrapper `fs_rpc::Guarded` (e3871c3b) and not to the module behind it: (1) its problem has the kind as title,
-/// rule 14 asks for text for people; (2) a cursor that is no UTF-8 text is `invalid-request` 422 there, rule 15 asks for `bad-arguments`.
-/// The control test below shows that the fake of fs-module has exactly these failures behind the same wrapper. Finding for C3 (fs-rpc), not
-/// worked around here.
-fn wrapper_kind(f: &str) -> Option<&'static str> {
-    if f.starts_with("14 refusal") && f.contains("has a title that is text for people") {
-        Some("14 title is the kind")
-    } else if f.starts_with("15 limits") && f.contains("garbage cursor") {
-        Some("15 garbage cursor is invalid-request")
-    } else if f.starts_with("14 an exception names") && f.contains("cursor is not valid") {
-        Some("14 exception uri of that 422")
-    } else {
-        None
-    }
-}
-
-/// The three kinds of the wrapper findings: the module and the control must show exactly these, no more, no fewer.
-const WRAPPER_KINDS: [&str; 3] = [
-    "14 exception uri of that 422",
-    "14 title is the kind",
-    "15 garbage cursor is invalid-request",
-];
-
-fn split(failures: Vec<String>) -> (Vec<String>, Vec<String>) {
-    failures
-        .into_iter()
-        .partition(|f| wrapper_kind(f).is_some())
-}
-
-fn kinds(wrapper: &[String]) -> std::collections::BTreeSet<&'static str> {
-    wrapper.iter().filter_map(|f| wrapper_kind(f)).collect()
-}
-
 #[test]
-fn control_the_fake_of_fs_module_has_the_same_wrapper_findings() {
+fn control_the_fake_of_fs_module_passes_the_rules_too() {
     use fs_module::{FakeCore, FakeFixture, Mode};
     let (one, two) = connect_core(FakeCore::new(Mode::Strict));
     let fx = FakeFixture::new(one).with_second(two);
     let report = run(run_conformance(&fx));
-    let (wrapper, ours) = split(report.failures);
     assert!(
-        ours.is_empty(),
-        "the control fails more than the wrapper findings: {ours:#?}"
-    );
-    eprintln!("control wrapper findings: {}", wrapper.len());
-    assert_eq!(
-        kinds(&wrapper),
-        WRAPPER_KINDS.into_iter().collect(),
-        "the wrapper findings changed (fs-rpc fixed?): drop `split` and expect no failure ({wrapper:#?})"
+        report.failures.is_empty(),
+        "the control fails: {:#?}",
+        report.failures
     );
 }

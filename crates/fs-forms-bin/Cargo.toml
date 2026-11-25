@@ -21,9 +21,9 @@ path = "src/main.rs"
 fs-forms-server = { path = "../fs-forms-server" }
 fs-forms-client = { path = "../fs-forms-client" }
 # No `fs-starter` pin here (forbidden edge, ADR 0105; fs-rpc has no such crate): the host is the repo fs-starter.
-fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "e3871c3b2438fae23fdc1eb6c72dd7c125f21abd" }
+fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "a773ceadb747ef6a0766b32983453e2b9855a8fd" }
 # One source per library: the same tags as fs-rpc and the client.
-fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "6b02b138b3e55c290d6cbd957976013cc49dca5d" }
+fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "4fcd013e60f8859ad70b203f2838d4b23912c1f4" }
 fs-types = { git = "https://github.com/FreeSynergy-Net/fs-types", rev = "722d3ce0156711d40cb278f2e835e865d9448290" }
 
 # The frontend `simple` is a package of its own (one deb/rpm per Cargo package, ADR 0094 draft): the program needs it.

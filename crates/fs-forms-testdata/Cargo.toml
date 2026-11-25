@@ -9,13 +9,13 @@ repository.workspace = true
 rust-version.workspace = true
 publish = false
 
-# Same pins as the rest of the workspace (fs-interfaces 6b02b138, fs-types 722d3ce0, fs-objects e38093f1, fs-components 81367489);
+# Same pins as the rest of the workspace (fs-interfaces 4f6c3281, fs-types 722d3ce0, fs-objects e38093f1, fs-components 508a25f3);
 # fs-jscalendar 0a3add97 is the rev fs-tasks-testdata pins together with fs-types 722d3ce0 (one fs-types in the graph).
 [dependencies]
 fs-forms-bind = { path = "../fs-forms-bind", version = "0.1.0" }
 # The description (Layout) and its blocks: the port `BlockForms` is ours, the block catalog (fs-components) stays on the host side (Entscheid C1/C2 Q1).
 fs-forms-layout = { path = "../fs-forms-layout", version = "0.1.0" }
-fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "4fcd013e60f8859ad70b203f2838d4b23912c1f4", version = "0.3.0" }
+fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "4f6c3281cab594a76640c50abaedb4f7c4e79d97", version = "0.3.0" }
 fs-types = { git = "https://github.com/FreeSynergy-Net/fs-types", rev = "722d3ce0156711d40cb278f2e835e865d9448290", version = "0.0.7" }
 fs-objects = { git = "https://github.com/FreeSynergy-Net/fs-objects", rev = "e38093f1ec61b7c9faaa6f6046f65addb11dcf46", version = "0.0.11" }
 fs-jscalendar = { git = "https://github.com/FreeSynergy-Net/fs-jscalendar", rev = "0a3add97339c92be0ab8b524a294ca44ee8dca25", version = "0.0.7" }
@@ -36,8 +36,8 @@ uuid = "1"
 [dev-dependencies]
 # Tests read the real descriptions with the exchange reader.
 fs-forms-exchange = { path = "../fs-forms-exchange", version = "0.1.0" }
-fs-module = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "4fcd013e60f8859ad70b203f2838d4b23912c1f4", version = "0.3.0" }
-fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "63e3a4860b09c77a04e950d1451c85da0198a4ef", version = "0.1.4" }
+fs-module = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "4f6c3281cab594a76640c50abaedb4f7c4e79d97", version = "0.3.0" }
+fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "b279f4285da84110f36a5e62a17262b7aab2b2d4", version = "0.1.4" }
 capnp = "0.27"
-fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "4fcd013e60f8859ad70b203f2838d4b23912c1f4", version = "0.3.0", features = ["fake"] }
+fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "4f6c3281cab594a76640c50abaedb4f7c4e79d97", version = "0.3.0", features = ["fake"] }
 tokio = { version = "1", features = ["rt", "macros"] }

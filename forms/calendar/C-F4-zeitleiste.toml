@@ -1,0 +1,158 @@
+# forms description of the calendar frontend "calendar-gantt" (C5 draft 25.11.2026, checked and corrected by C2 25.11.2026, workflow frontend-round step check). IMPORT FORM ONLY (ADR 0096 point 6), Format 4.
+# Source: contract events, type Event (JSCalendar Event, ADR 0085), as in C-F1..C-F3; tasks come as a second source later. The events module serves NO form for time views yet, so every block of
+# this file is placed WITHOUT bindings and the host shows "not built yet" for it. `timeline` has forms=["bars-in-time@^1.0.0"].
+# Commands are the contract keys of events (fs-events): event.create, event.update, event.delete. A key that no module serves keeps its control locked ("coming").
+# Menus follow the model (GNOME Calendar 47, dossier kalender/vorbilder/DOSSIER-A): what has no contract command yet is NOT written here (cards in BERICHT-kalender-frontends-check.md).
+# The switch between month, week, agenda and timeline is the frontend switch of the host (as in fs-tasks/forms/README.md, M-004..M-006); the menu "View" lists the view of this description.
+schema = 4
+kind = "frontend"
+id = "calendar-gantt"
+extends = "net.freesynergy.Calendar"
+exec = "fs-forms-run"
+title = "calendar-gantt-title"
+style = "default"
+
+[[requires]]
+elem = "requires:1"
+contract = "events@>=0.0.1, <0.1.0"
+
+# Source 1 = the events provider. "all" = every appointment; the time window is a scope parameter of the source (the module expands series).
+[[source]]
+elem = "source:1"
+n = 1
+contract = "events@>=0.0.1, <0.1.0"
+type = "Event"
+scope = "all"
+
+[[menu]]
+elem = "menu:0"
+kind = "standard-program"
+
+[[menu]]
+elem = "menu:1"
+kind = "menu"
+label = "menu-event"
+
+[[menu.entries]]
+elem = "menu:1.0"
+kind = "command"
+label = "menu-new"
+source = 1
+command = "event.create"
+key = "ctrl+n"
+
+[[menu]]
+elem = "menu:2"
+kind = "menu"
+label = "menu-view"
+
+[[menu.entries]]
+elem = "menu:2.0"
+kind = "view"
+label = "view-gantt"
+view = "gantt"
+
+[[menu]]
+elem = "menu:9"
+kind = "standard-help"
+
+# C-F4 Timeline (optional): bars start..end for tasks with a duration, today line, dependency arrows (relatedTo, RFC 9253). The only one of the three components with forms=["bars-in-time@^1.0.0"] (`timeline`).
+# events serves bars-in-time NOT yet, so the block stays without bindings (the sample below shows data for pictures). Pictures of the component: fs-components contract/umbau/bilder/timeline/gantt_*.png (local).
+[[page]]
+elem = "page:gantt"
+page = "gantt"
+frame = "workbench"
+navigation = "single"
+
+[[page.place]]
+elem = "block:gantt/main"
+at = "main"
+block = "timeline"
+source = 1
+
+[[page.place]]
+elem = "block:gantt/partial"
+at = "partial"
+block = "partial-notice"
+
+[[action]]
+elem = "action:1"
+at = "block:gantt/main"
+trigger = "quick-add"
+source = 1
+command = "event.create"
+
+[[view]]
+elem = "view:gantt"
+view = "gantt"
+
+[[message]]
+elem = "message:calendar-gantt-title/de"
+key = "calendar-gantt-title"
+lang = "de"
+text = "FreeSynergy Kalender: Zeitleiste"
+
+[[message]]
+elem = "message:calendar-gantt-title/en"
+key = "calendar-gantt-title"
+lang = "en"
+text = "FreeSynergy Calendar: timeline"
+
+[[message]]
+elem = "message:menu-event/de"
+key = "menu-event"
+lang = "de"
+text = "Termin"
+
+[[message]]
+elem = "message:menu-event/en"
+key = "menu-event"
+lang = "en"
+text = "Event"
+
+[[message]]
+elem = "message:menu-new/de"
+key = "menu-new"
+lang = "de"
+text = "Neu"
+
+[[message]]
+elem = "message:menu-new/en"
+key = "menu-new"
+lang = "en"
+text = "New"
+
+[[message]]
+elem = "message:menu-view/de"
+key = "menu-view"
+lang = "de"
+text = "Ansicht"
+
+[[message]]
+elem = "message:menu-view/en"
+key = "menu-view"
+lang = "en"
+text = "View"
+
+[[message]]
+elem = "message:view-gantt/de"
+key = "view-gantt"
+lang = "de"
+text = "Zeitleiste"
+
+[[message]]
+elem = "message:view-gantt/en"
+key = "view-gantt"
+lang = "en"
+text = "Timeline"
+
+
+# Sample data for pictures and development (--sample-data), never real entries: the fixed events of the contract events (adapter events.sample), same as C-F1..C-F3. Never written out.
+[sample]
+anchor = { month = "2026-11", zone = "Europe/Berlin" }
+
+[[sample.set]]
+source = 1
+form = "bars-in-time@^1.1.0"
+type = "Event"
+fixed = "events.sample"

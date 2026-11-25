@@ -14,6 +14,7 @@ use std::sync::Arc;
 use fs_components_kanban::{Answer, Reason};
 use fs_objects::UndoState;
 
+use crate::clock::{Clock, SystemClock};
 use crate::form_data::FormData;
 use crate::view::Coded;
 
@@ -92,6 +93,11 @@ pub trait Records: Send + Sync {
     /// The code of the failed read (`host-notice-data-reload`); [`Records::stale`] then says the board shows the old state.
     fn reread(&self) -> Result<(), Coded> {
         Ok(())
+    }
+    /// The clock of this data: what "now" is for a view of them. Default: the system clock (a connected module). Sample data say the
+    /// moment they were made (`FixedClock`); the window reads the time only through this port ([`crate::Clock`]).
+    fn clock(&self) -> Arc<dyn Clock> {
+        Arc::new(SystemClock)
     }
     /// Whether these records are made-up sample data: the window then says so (it never shows invented records as real ones).
     fn is_sample(&self) -> bool {

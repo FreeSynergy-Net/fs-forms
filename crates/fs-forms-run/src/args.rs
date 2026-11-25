@@ -23,6 +23,8 @@ The forms host: opens the window that the layout of a program describes. The sta
                      starter hands it on and the running host decides (switch, new window); a later start never copies the data
   --style NAME       the style set for the program: what a description that says `style = \"default\"` gets (admin, simple, apple,
                      windows, craft; the preset is admin); a description that names a style keeps its own
+  --sample-now T     with --sample-data only: the view takes T (RFC 3339, e.g. 2026-11-25T09:00:00Z) as now instead of the moment of the\n\
+                     sample data (pictures with another today). Without --sample-data it is an error, never a default\n\
   --sample-data      ask the data sources for sample records (the same port as real data; pictures, development; never a starter)\n\
   --list-blocks      print the blocks of the contract this build does not draw, each with its reason (no widget in the contract, or a widget\n\
                      without a view), then exit 0; the same list the window says one by one as `host-error-block-not-built`\n\
@@ -55,6 +57,9 @@ pub struct Config {
     pub steps: Option<PathBuf>,
     /// Fill the records blocks with the built-in sample data (pictures, development).
     pub sample_data: bool,
+    /// The "now" of the view (`--sample-now`, RFC 3339); only together with `sample_data`, never a default. `None` = the data say it
+    /// (sample data: their own moment) or the system clock (real data).
+    pub sample_now: Option<crate::clock::Moment>,
     /// The record (AS2 id) the frontend opens with (`--scope`); how a record reaches a program that already runs.
     pub scope: Option<String>,
     /// The page to show first.
@@ -104,6 +109,7 @@ pub fn parse(words: &[String]) -> Result<Command, String> {
             "--list-blocks" => return Ok(Command::ListBlocks),
             "--check" => check = true,
             "--sample-data" => c.sample_data = true,
+            "--sample-now" => c.sample_now = Some(parse_moment(&value("--sample-now")?)?),
             "--fresh" => c.resumed = false,
             "--resumed" => c.resumed = true,
             "--frontend" => c.frontend = value("--frontend")?,
@@ -142,6 +148,12 @@ pub fn parse(words: &[String]) -> Result<Command, String> {
                 .to_owned(),
         );
     }
+    if c.sample_now.is_some() && !c.sample_data {
+        return Err(
+            "--sample-now needs --sample-data (a real window never takes a made-up \"now\")"
+                .to_owned(),
+        );
+    }
     if c.steps.is_some() && picture.is_none() {
         return Err("--steps needs --picture (the input is played to draw the result)".to_owned());
     }
@@ -151,6 +163,14 @@ pub fn parse(words: &[String]) -> Result<Command, String> {
     } else {
         Command::Window(c)
     })
+}
+
+fn parse_moment(text: &str) -> Result<crate::clock::Moment, String> {
+    chrono::DateTime::parse_from_rfc3339(text)
+        .map(|m| m.with_timezone(&chrono::Utc))
+        .map_err(|_| {
+            format!("--sample-now wants an RFC 3339 date-time (2026-11-25T09:00:00Z), not {text}")
+        })
 }
 
 fn parse_size(text: &str) -> Result<(u32, u32), String> {

@@ -13,6 +13,7 @@ use fs_components_widgets::states;
 use fs_components_words::{Locale, Localized};
 
 use crate::after_write::AfterWrite;
+use crate::clock::Clock;
 use crate::compose::{Composition, HostState, Node, ScreenTree};
 use crate::draw::Ctx;
 use crate::error::HostError;
@@ -68,7 +69,7 @@ pub(crate) fn ctx_of(
     view: &View,
     records: Arc<dyn Records>,
     program_style: Arc<dyn StyleSource>,
-    after_write: AfterWrite,
+    (after_write, clock): (AfterWrite, Arc<dyn Clock>),
 ) -> Ctx {
     // the words of the board are asked by key while drawing; they are read once, here, from the host's own MF2 files
     let said = kanban_words(texts, locale);
@@ -82,6 +83,7 @@ pub(crate) fn ctx_of(
         mounts: Arc::default(),
         after_write,
         feeds: Arc::new(view.feeds_now()),
+        clock,
     }
 }
 
@@ -120,7 +122,7 @@ pub fn app_with(
 }
 
 /// The window for `comp`, with records and the source of the style set for the program (a description that says `default` gets
-/// that style, asked again at every drawing).
+/// that style, asked again at every drawing). "Now" is the clock of the records (`Records::clock`).
 ///
 /// # Errors
 /// The shell could not be made (no screen, a name that is empty).
@@ -132,7 +134,24 @@ pub fn app_styled(
     records: Arc<dyn Records>,
     program_style: Arc<dyn StyleSource>,
 ) -> Result<AppWidget, AppError> {
-    window_parts(texts, locale, view, comp, records, program_style).map(|(widget, _)| widget)
+    let clock = records.clock();
+    app_clocked(texts, locale, view, comp, records, program_style, clock)
+}
+
+/// [`app_styled`] with the clock of the view named: `Opened::clock` of `open` (`--sample-now` is decided there, once).
+///
+/// # Errors
+/// As [`app_styled`].
+pub fn app_clocked(
+    texts: &Mf2Texts,
+    locale: &Locale,
+    view: &View,
+    comp: &Composition,
+    records: Arc<dyn Records>,
+    program_style: Arc<dyn StyleSource>,
+    clock: Arc<dyn Clock>,
+) -> Result<AppWidget, AppError> {
+    window_parts(texts, locale, view, comp, records, program_style, clock).map(|(widget, _)| widget)
 }
 
 /// [`app_styled`] and the hook its gates fire after an accepted write.
@@ -143,6 +162,7 @@ pub(crate) fn window_parts(
     comp: &Composition,
     records: Arc<dyn Records>,
     program_style: Arc<dyn StyleSource>,
+    clock: Arc<dyn Clock>,
 ) -> Result<(AppWidget, AfterWrite), AppError> {
     let (sample, down) = (records.is_sample(), records.unavailable());
     let after = AfterWrite::default();
@@ -152,7 +172,7 @@ pub(crate) fn window_parts(
         view,
         Arc::clone(&records),
         program_style,
-        after.clone(),
+        (after.clone(), clock),
     );
     let labels = states::Labels::for_locale(locale);
     let title = if view.title.is_empty() {

@@ -10,6 +10,7 @@ use std::sync::Arc;
 use fs_components_mf2::Mf2Texts;
 
 use crate::args::Config;
+use crate::clock::{Clock, FixedClock, SystemClock};
 use crate::described::Described;
 use crate::feed::Want;
 use crate::parts::line;
@@ -24,6 +25,9 @@ pub struct Opened {
     pub notice: Option<Coded>,
     /// Whether real records are connected (the notice "data sources are not connected" then does not hold).
     pub connected: bool,
+    /// What "now" is for the window: `--sample-now` with sample data, else the clock of the records (sample data: their own moment,
+    /// real data: the system clock). One answer, decided here; the window and the draw path only read it.
+    pub clock: Arc<dyn Clock>,
 }
 
 /// The data sources a host can offer: it connects the module service that speaks a contract.
@@ -110,6 +114,7 @@ pub fn open(
             records: Arc::new(NoRecords),
             notice: None,
             connected: false,
+            clock: Arc::new(SystemClock),
         };
     }
     let asked = if sample {
@@ -119,6 +124,7 @@ pub fn open(
     };
     match asked {
         Ok(records) => Opened {
+            clock: clock_of(c, &*records),
             records,
             notice: None,
             connected: !sample,
@@ -127,7 +133,16 @@ pub fn open(
             records: Arc::new(Unavailable(line(texts, &code))),
             notice: Some(code),
             connected: false,
+            clock: Arc::new(SystemClock),
         },
+    }
+}
+
+/// `--sample-now` (the parser lets it through only with `--sample-data`) wins; else the data say what "now" is.
+fn clock_of(c: &Config, records: &dyn Records) -> Arc<dyn Clock> {
+    match c.sample_now {
+        Some(moment) if c.sample_data => Arc::new(FixedClock::new(moment)),
+        _ => records.clock(),
     }
 }
 

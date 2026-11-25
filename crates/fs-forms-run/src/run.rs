@@ -140,7 +140,7 @@ fn window(c: &Config, sources: &dyn Sources) -> i32 {
     let mut shown: Option<HostError> = None;
     // a block whose module does not fit its form is locked with the codes of the match: a picture run ends with 3 as well
     let mut misfit = false;
-    let (view, comp, records) = match fetch(c) {
+    let (view, comp, records, clock) = match fetch(c) {
         Ok(Fetched {
             mut view, layout, ..
         }) => {
@@ -157,7 +157,7 @@ fn window(c: &Config, sources: &dyn Sources) -> i32 {
             // the lane list that cannot be used is said in the place (a slot lock), never left out silently
             crate::lanes::show_notices(&mut view, opened.records.as_ref());
             let comp = compose(&view, &Blocks);
-            (view, comp, opened.records)
+            (view, comp, opened.records, opened.clock)
         }
         // fatal: the starter falls back to the standard frontend and says why; the others are shown here
         Err(e) if e.fatal() => return end(&e),
@@ -166,20 +166,29 @@ fn window(c: &Config, sources: &dyn Sources) -> i32 {
             shown = Some(e.clone());
             let none: std::sync::Arc<dyn crate::records::Records> =
                 std::sync::Arc::new(crate::records::NoRecords);
-            (View::default(), failure(&e), none)
+            let system: std::sync::Arc<dyn crate::clock::Clock> =
+                std::sync::Arc::new(crate::clock::SystemClock);
+            (View::default(), failure(&e), none, system)
         }
     };
     let program_style = std::sync::Arc::new(crate::style::StyleCell::new(
         c.style.unwrap_or(fs_components_styles::StyleId::Admin),
     ));
-    let widget =
-        match crate::window::app_styled(&texts, &locale, &view, &comp, records, program_style) {
-            Ok(w) => w,
-            Err(e) => {
-                eprintln!("fs-forms-run: {e}");
-                return CODE_FAILURE;
-            }
-        };
+    let widget = match crate::window::app_clocked(
+        &texts,
+        &locale,
+        &view,
+        &comp,
+        records,
+        program_style,
+        clock,
+    ) {
+        Ok(w) => w,
+        Err(e) => {
+            eprintln!("fs-forms-run: {e}");
+            return CODE_FAILURE;
+        }
+    };
     if let Some(page) = &c.page {
         widget.select(page);
     }

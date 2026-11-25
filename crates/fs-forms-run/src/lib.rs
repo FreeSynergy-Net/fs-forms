@@ -19,6 +19,7 @@ mod block_forms;
 mod blocks;
 mod catalog;
 mod changes;
+mod clock;
 mod compose;
 mod described;
 mod draw;
@@ -45,6 +46,8 @@ mod repaint;
 mod rules_adapter;
 mod run;
 #[cfg(test)]
+mod sample_clock_tests;
+#[cfg(test)]
 mod sample_probe;
 mod screens;
 mod sources;
@@ -65,6 +68,7 @@ pub use block_forms::CatalogBlockForms;
 pub use blocks::Blocks;
 pub use catalog::{Catalog, TestCatalog};
 pub use changes::{ChangeCounter, ChangeWatch};
+pub use clock::{Clock, FixedClock, Moment, SystemClock};
 pub use compose::{Composition, HostState, Node, ScreenTree, compose};
 pub use described::Described;
 pub use error::{EXIT_CONTRACT, HostError};
@@ -86,7 +90,7 @@ pub use run::{run, run_code, run_code_with, run_with};
 pub use sources::{NoSources, Opened, Sources, name_of, open};
 pub use style::{DEFAULT_STYLE, StyleCell, StyleSource, resolve, unknown};
 pub use view::{ActionView, Coded, MenuItem, MenuState, PageView, PlaceView, View};
-pub use window::{app, app_styled, app_with};
+pub use window::{app, app_clocked, app_styled, app_with};
 pub use window_owner::fake::{CountingRecords, FakeHold, FakeWindows};
 pub use window_owner::host::{
     Asked, BlincSurfaces, Descriptions, HostWindows, Modules, OpenAsk, Surfaces,

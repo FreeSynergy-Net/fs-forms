@@ -16,6 +16,7 @@ use fs_components_core::states::Load;
 use fs_components_kanban::Answer;
 use fs_forms_bind::{Basic, ModuleForm};
 
+use crate::clock::{Clock, SystemClock};
 use crate::records::{Records, SideItem};
 use crate::view::Coded;
 use crate::write::{Invocation, Writer, allowed, args_of, command_key};
@@ -76,6 +77,8 @@ pub struct FormRecords {
     /// A source of the description the host could not read, as `(source number, code)`: `form-source-unknown-scope{scope}` (the module
     /// does not know the scope), `host-notice-data-unreachable` ... The rest of the window runs; lanes whose heads are this source say it.
     pub problems: Vec<(u32, Coded)>,
+    /// The clock of the data; `None` = the system clock. Sample data set the moment they were made (`FixedClock`).
+    pub clock: Option<Arc<dyn Clock>>,
 }
 
 /// The building block that draws a fact of this basic type (`fs-components-fields`: the catalog of kinds); a type without a
@@ -152,6 +155,9 @@ pub fn empty_input(form: &str) -> FormInput {
 impl Records for FormRecords {
     fn side(&self) -> Vec<SideItem> {
         Vec::new()
+    }
+    fn clock(&self) -> Arc<dyn Clock> {
+        self.clock.clone().unwrap_or_else(|| Arc::new(SystemClock))
     }
     fn is_sample(&self) -> bool {
         fs_interfaces::module::ProviderKind::of(&self.provider)

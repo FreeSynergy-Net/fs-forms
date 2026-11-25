@@ -4,8 +4,10 @@
 
 use std::fmt::Write as _;
 
+use chrono::{DateTime, Utc};
 use fs_forms_bind::ModuleForm;
 use fs_objects::StoredObject;
+use fs_types::Zone;
 
 use crate::content::{self, ContentCtx};
 use crate::error::{Failure, SampleCode, fail};
@@ -73,6 +75,16 @@ impl SampleSet {
             names: Names::new(),
             now: None,
         }
+    }
+
+    /// The fixed "now" of the data as an instant in UTC (`now` is wall-clock time in the zone of the anchor, `zone`); `None` for generated
+    /// data. This is what a host gives a clock (`FixedClock::new`), so the view of sample data says the day the data were made.
+    ///
+    /// # Errors
+    /// `zone-unknown` when the zone is not in the zone database.
+    pub fn now_utc(&self, zone: &Zone) -> Result<Option<DateTime<Utc>>, Failure> {
+        let rule = content::zone_of(zone.id())?;
+        Ok(self.now.map(|moment| rule.to_utc(moment.wall())))
     }
 
     /// The rows of one form (`name@x.y.z`), read from the stored objects the way a module would send them.

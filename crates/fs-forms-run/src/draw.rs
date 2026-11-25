@@ -19,6 +19,7 @@ use fs_components_styles::StyleId;
 use fs_components_words::Locale;
 
 use crate::after_write::AfterWrite;
+use crate::clock::{Clock, Moment};
 use crate::feed::Feed;
 use crate::place_info::PlaceInfo;
 use crate::records::Records;
@@ -61,6 +62,17 @@ pub(crate) struct Ctx {
     pub after_write: AfterWrite,
     /// Which source feeds which block (by source, form and type, never by the form name alone).
     pub feeds: Arc<Vec<Feed>>,
+    /// What "now" is for this window: the ONLY way a block of the host learns the time (`tests/no_wall_clock.rs`).
+    pub clock: Arc<dyn Clock>,
+}
+
+impl Ctx {
+    /// The moment the window takes as now.
+    // Read by the host's own tests only until `fs_components_core::DrawCtx` carries the clock to the components (card in FEATURES-OFFEN).
+    #[cfg_attr(not(test), allow(dead_code))]
+    pub(crate) fn now(&self) -> Moment {
+        self.clock.now()
+    }
 }
 
 /// Whether the reader of this window sees the dark scheme.

@@ -54,6 +54,8 @@ fs-objects = { git = "https://github.com/FreeSynergy-Net/fs-objects", rev = "e38
 tokio = { version = "1", features = ["rt", "sync", "net", "time"] }
 # The scope of a record inside a `WindowId` (RFC 3986 percent-encoding; no encoder of our own).
 percent-encoding = "2.3"
+# "now" of a view: `Moment` is an instant in UTC; the real clock is `SystemTime` (no `clock` feature, no second zone reader), the parser is for `--sample-now`.
+chrono = { version = "0.4", default-features = false, features = ["std"] }
 
 # Picture tests (the window drawn without a window, read back): the same dev-dependencies as fs-forms-simple.
 [dev-dependencies]

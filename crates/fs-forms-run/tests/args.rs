@@ -125,3 +125,64 @@ fn scope_is_one_record_per_start_and_never_empty() {
     );
     assert!(fs_forms_run::HELP.contains("--scope AS2-ID"));
 }
+
+#[test]
+fn sample_now_comes_with_sample_data_and_is_read_as_rfc_3339() {
+    let Ok(Command::Window(c)) = parse(&words(
+        "--description x.toml --sample-data --sample-now 2026-11-25T10:00:00+01:00",
+    )) else {
+        panic!("not a window");
+    };
+    let want: fs_forms_run::Moment = "2026-11-25T09:00:00Z".parse().expect("rfc3339");
+    assert_eq!(
+        c.sample_now,
+        Some(want),
+        "an offset is an instant like any other"
+    );
+    let Ok(Command::Window(c)) = parse(&words("--description x.toml --sample-data")) else {
+        panic!("not a window");
+    };
+    assert_eq!(
+        c.sample_now, None,
+        "the data say their own now unless the switch does"
+    );
+}
+
+#[test]
+fn sample_now_without_sample_data_is_an_error_never_a_default() {
+    let Err(message) = parse(&words(
+        "--description x.toml --sample-now 2026-11-25T09:00:00Z",
+    )) else {
+        panic!("accepted without --sample-data");
+    };
+    assert!(
+        message.contains("--sample-now needs --sample-data"),
+        "{message}"
+    );
+}
+
+#[test]
+fn a_sample_now_that_is_no_rfc_3339_is_an_error() {
+    for bad in [
+        "tomorrow",
+        "2026-11-25",
+        "2026-11-25 09:00:00",
+        "25.11.2026",
+    ] {
+        let all = vec![
+            "--description".to_owned(),
+            "x.toml".to_owned(),
+            "--sample-data".to_owned(),
+            "--sample-now".to_owned(),
+            bad.to_owned(),
+        ];
+        let Err(message) = parse(&all) else {
+            panic!("{bad} was accepted");
+        };
+        assert!(
+            message.contains("--sample-now wants an RFC 3339"),
+            "{message}"
+        );
+    }
+    assert!(parse(&words("--description x.toml --sample-data --sample-now")).is_err());
+}

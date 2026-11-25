@@ -79,7 +79,16 @@ pub(crate) fn root_page(
     panels: &Panels,
     after_write: AfterWrite,
 ) -> Page {
-    let ctx: Ctx = ctx_of(texts, locale, view, records, program_style, after_write);
+    // a window the owner opens takes the time from its records (no command line there: the clock of the data is the whole answer)
+    let clock = records.clock();
+    let ctx: Ctx = ctx_of(
+        texts,
+        locale,
+        view,
+        records,
+        program_style,
+        (after_write, clock),
+    );
     let first = comp.screens.first();
     let mut shown = first
         .map(|s| parts_with(texts, &s.nodes, panels))

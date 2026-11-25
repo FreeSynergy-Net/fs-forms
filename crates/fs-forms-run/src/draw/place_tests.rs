@@ -22,6 +22,7 @@ fn ctx() -> Ctx {
         mounts: Arc::default(),
         after_write: AfterWrite::default(),
         feeds: Arc::default(),
+        clock: Arc::new(crate::clock::SystemClock),
     }
 }
 

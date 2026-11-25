@@ -121,6 +121,7 @@ fn window(records: &Arc<Moving>) -> (AppWidget, AfterWrite) {
         &comp,
         records.clone(),
         Arc::new(StyleCell::default()),
+        Arc::new(crate::clock::SystemClock),
     )
     .expect("a window")
 }

@@ -10,7 +10,8 @@ use std::sync::Arc;
 
 use fs_components_kanban::Answer;
 use fs_forms_run::{
-    CatalogBlockForms, Coded, Described, FormData, Records, SideItem, Sources, UndoState, Want,
+    CatalogBlockForms, Clock, Coded, Described, FormData, Records, SideItem, Sources, UndoState,
+    Want,
 };
 use fs_forms_testdata::SampleSpec;
 
@@ -106,6 +107,9 @@ impl Records for WithSide {
     }
     fn is_sample(&self) -> bool {
         self.inner.is_sample()
+    }
+    fn clock(&self) -> Arc<dyn Clock> {
+        self.inner.clock()
     }
     fn stale(&self) -> Option<String> {
         self.inner.stale()

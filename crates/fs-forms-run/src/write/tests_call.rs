@@ -22,6 +22,7 @@ fn an_accepted_call_reads_the_form_again_and_the_board_shows_the_new_state() {
     let d = data();
     let (a, from, to) = (first(), column_of(&d, &first()), other_column(&d, &first()));
     let (before, board) = (field(&d, "before"), field(&d, "lane"));
+    let col = field(&d, "column");
     let lane = lane_of(&d, &a);
     assert_eq!(
         columns(&r)
@@ -47,7 +48,7 @@ fn an_accepted_call_reads_the_form_again_and_the_board_shows_the_new_state() {
     assert_eq!(
         pairs(&call.args),
         [
-            ("column", to.as_str()),
+            (col.as_str(), to.as_str()),
             (before.as_str(), "c"),
             (board.as_str(), lane.as_str())
         ]

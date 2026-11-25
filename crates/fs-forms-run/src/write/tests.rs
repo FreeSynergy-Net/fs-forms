@@ -27,12 +27,22 @@ pub(super) fn pairs(v: &[(String, String)]) -> Vec<(&str, &str)> {
 }
 
 #[test]
+fn the_fields_of_the_module_are_not_named_like_the_channels() {
+    // otherwise a call that writes the channel name instead of the bound field would pass every test of the arguments
+    let d = data();
+    for channel in ["after", "before", "lane", "column", "title"] {
+        assert_ne!(field(&d, channel), channel, "{channel}");
+    }
+}
+
+#[test]
 fn the_arguments_are_what_the_form_says_the_command_writes_by_the_fields_of_the_module() {
     let d = data();
     let key = first();
     let a = d.rows.iter().find(|r| r.key == key);
     let (to, lane) = (other_column(&d, &key), lane_of(&d, &key));
     let (after, before, board) = (field(&d, "after"), field(&d, "before"), field(&d, "lane"));
+    let col = field(&d, "column");
     let args = args_of(
         &d,
         "move",
@@ -44,7 +54,7 @@ fn the_arguments_are_what_the_form_says_the_command_writes_by_the_fields_of_the_
     assert_eq!(
         pairs(&args),
         [
-            ("column", to.as_str()),
+            (col.as_str(), to.as_str()),
             (after.as_str(), "c"),
             (before.as_str(), "d"),
             (board.as_str(), lane.as_str())
@@ -64,7 +74,7 @@ fn the_arguments_are_what_the_form_says_the_command_writes_by_the_fields_of_the_
     .unwrap();
     assert_eq!(
         pairs(&args),
-        [("column", to.as_str()), (board.as_str(), lane.as_str())]
+        [(col.as_str(), to.as_str()), (board.as_str(), lane.as_str())]
     );
     // a place the gesture does not name at all is not a place of the gesture: only the scope comes from the record
     let args = args_of(&d, "move", a, &gesture(&[("column", &to)])).unwrap();

@@ -148,6 +148,7 @@ fn a_drop_is_one_call_with_the_column_the_place_and_the_lane_of_the_record() {
     let (d, a) = (data(), first());
     let (to, lane) = (other_column(&d, &a), lane_of(&d, &a));
     let (after, before, board) = (field(&d, "after"), field(&d, "before"), field(&d, "lane"));
+    let col = field(&d, "column");
     g.send(
         MOVE,
         Some(&a),
@@ -165,7 +166,7 @@ fn a_drop_is_one_call_with_the_column_the_place_and_the_lane_of_the_record() {
     assert_eq!(
         args,
         [
-            ("column", to.as_str()),
+            (col.as_str(), to.as_str()),
             (after.as_str(), "c"),
             (before.as_str(), "d"),
             (board.as_str(), lane.as_str())
@@ -180,6 +181,7 @@ fn a_drop_at_the_end_of_another_column_sends_no_place_even_when_the_record_has_o
     let g = module(described(), &w);
     let (d, a) = (data(), first());
     let (to, lane, board) = (other_column(&d, &a), lane_of(&d, &a), field(&d, "lane"));
+    let col = field(&d, "column");
     g.send(MOVE, Some(&a), &[text("column", &to)])
         .expect("accepted");
     let calls = w.calls.lock().unwrap();
@@ -190,7 +192,7 @@ fn a_drop_at_the_end_of_another_column_sends_no_place_even_when_the_record_has_o
         .collect();
     assert_eq!(
         args,
-        [("column", to.as_str()), (board.as_str(), lane.as_str())]
+        [(col.as_str(), to.as_str()), (board.as_str(), lane.as_str())]
     );
 }
 

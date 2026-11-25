@@ -33,9 +33,23 @@ pub(crate) fn set() -> SampleSet {
         .expect("the wish builds")
 }
 
-/// The declaration of the module: the generated map plus the binding of its commands to the keys of its contract.
+/// The prefix of the field names of the module: a module names its fields itself, so no field has the name of its channel (a call
+/// that wrote the channel name instead of the bound field would be seen by every test of the arguments).
+const FIELD_PREFIX: &str = "mod_";
+
+/// The declaration of the module: the generated map with the module's own field names (in `map` and in `fields` alike) plus the
+/// binding of its commands to the keys of its contract.
 pub(crate) fn declared() -> ModuleForm {
     let mut declared = set().declared.remove(0);
+    let known: Vec<String> = declared.fields.iter().map(|(f, _)| f.clone()).collect();
+    for (_, fields) in &mut declared.map {
+        for f in fields.iter_mut().filter(|f| known.contains(f)) {
+            *f = format!("{FIELD_PREFIX}{f}");
+        }
+    }
+    for (f, _) in &mut declared.fields {
+        *f = format!("{FIELD_PREFIX}{f}");
+    }
     for (channel, key) in [("move", MOVE), ("create", CREATE), ("remove", REMOVE)] {
         declared
             .map

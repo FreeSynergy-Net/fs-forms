@@ -9,7 +9,9 @@ use fs_module::conformance::run_conformance;
 use fs_module::{
     CommandKind, DeclaredCommand, DeclaredForm, FormSourceFixture, Param, Sample, Verify,
 };
-use module_support::{BARS, bars_with_writes, calendar, connect, connect_core, module, run};
+use module_support::{
+    BARS, bars_with_writes, calendar, connect, connect_core, fixed_events, module, run,
+};
 
 /// What the suite is told about `SampleModule` on the calendar set: the names come from the set and the declaration, one place.
 struct Fx {
@@ -106,11 +108,11 @@ fn keys(set: &SampleSet) -> Vec<String> {
     set.rows(BARS).unwrap().into_iter().map(|r| r.key).collect()
 }
 
-#[test]
-fn the_calendar_set_passes_the_rules_of_module_v1() {
-    let keys = keys(&calendar(false, 0, Vec::new()));
+/// One suite, any set: a fixed set is a module like a generated one (no `if fixed` anywhere).
+fn passes_the_rules(make: impl Fn(Vec<Forbid>) -> SampleSet) {
+    let keys = keys(&make(Vec::new()));
     let forbid = keys[1].clone();
-    let set = calendar(false, 0, vec![Forbid::on("move", &forbid)]);
+    let set = make(vec![Forbid::on("move", &forbid)]);
     let module = module(&set).declare(&bars_with_writes());
     let (one, two) = connect(module);
     let fx = Fx {
@@ -135,6 +137,16 @@ fn the_calendar_set_passes_the_rules_of_module_v1() {
     for s in &report.skipped {
         eprintln!("skipped: {s}");
     }
+}
+
+#[test]
+fn the_calendar_set_passes_the_rules_of_module_v1() {
+    passes_the_rules(|forbid| calendar(false, 0, forbid));
+}
+
+#[test]
+fn the_fixed_events_pass_the_rules_of_module_v1() {
+    passes_the_rules(fixed_events);
 }
 
 #[test]

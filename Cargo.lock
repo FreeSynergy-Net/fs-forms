@@ -1921,6 +1921,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "fs-events"
+version = "0.3.0"
+source = "git+https://github.com/FreeSynergy-Net/fs-interfaces?rev=76df54074910e827ad556ff613335ada49c86de3#76df54074910e827ad556ff613335ada49c86de3"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "chrono-tz",
+ "fs-jscalendar",
+ "fs-types",
+ "tokio",
+]
+
+[[package]]
 name = "fs-forms-bind"
 version = "0.1.0"
 dependencies = [
@@ -2054,6 +2067,7 @@ dependencies = [
  "capnp",
  "chrono",
  "fake",
+ "fs-events",
  "fs-forms-bind",
  "fs-forms-exchange",
  "fs-forms-layout",

@@ -14,6 +14,11 @@
 //! empty = { lane = 1 }
 //! cases = [ { case = "all-day", times = 2 }, { case = "multi-day", days = 3, times = 1 } ]
 //! invalid = 1
+//!
+//! [[sample.set]]                                           # fixed data instead of the generator (a named source, see `fixed`)
+//! source = 1
+//! form = "bars-in-time@^1.1.0"
+//! fixed = "events.sample"                                  # excludes count, distinct, empty, cases, invalid (`fixed-conflict`)
 //! ```
 //!
 //! Pattern: Adapter (TOML text in, the value objects of `spec` out; serde with `deny_unknown_fields`: an unknown key is an error, never
@@ -94,6 +99,7 @@ struct RawSet {
     #[serde(default)]
     cases: Vec<RawCase>,
     invalid: Option<u32>,
+    fixed: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -150,7 +156,7 @@ pub fn read_sample(text: &str) -> Result<Option<SampleToml>, Failure> {
                 record: f.record,
             })
             .collect(),
-        sets: raw.set.into_iter().map(set).collect(),
+        sets: raw.set.into_iter().map(set).collect::<Result<_, _>>()?,
     }))
 }
 
@@ -204,21 +210,37 @@ fn anchor(raw: &RawAnchor) -> Result<Anchor, Failure> {
     Ok(Anchor { period, zone })
 }
 
-fn set(raw: RawSet) -> SourceWish {
-    let mut wish = SetWish::new(
-        &raw.form,
-        "",
-        raw.count.unwrap_or(crate::defaults::DEFAULT_COUNT),
-    );
+/// `fixed` stands alone: every wish of the generator next to it is `fixed-conflict`, never ignored.
+fn set(raw: RawSet) -> Result<SourceWish, Failure> {
+    if raw.fixed.is_some() {
+        let written = [
+            ("count", raw.count.is_some()),
+            ("distinct", !raw.distinct.is_empty()),
+            ("empty", !raw.empty.is_empty()),
+            ("cases", !raw.cases.is_empty()),
+            ("invalid", raw.invalid.is_some()),
+        ];
+        if let Some((what, _)) = written.iter().find(|(_, w)| *w) {
+            return Err(fail(SampleCode::FixedConflict, "what", *what));
+        }
+    }
+    // A fixed set has no count (`fixed` excludes it), a generated one the default.
+    let count = raw.count.unwrap_or(if raw.fixed.is_some() {
+        0
+    } else {
+        crate::defaults::DEFAULT_COUNT
+    });
+    let mut wish = SetWish::new(&raw.form, "", count);
     wish.distinct = raw.distinct.into_iter().collect();
     wish.empty = raw.empty.into_iter().collect();
     wish.invalid = raw.invalid.unwrap_or(0);
     wish.cases = raw.cases.iter().map(case).collect();
-    SourceWish {
+    wish.fixed = raw.fixed;
+    Ok(SourceWish {
         source: raw.source,
         data_type: raw.data_type,
         wish,
-    }
+    })
 }
 
 fn case(raw: &RawCase) -> Case {

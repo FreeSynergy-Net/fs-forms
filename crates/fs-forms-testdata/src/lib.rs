@@ -10,6 +10,9 @@
 //! A description gives its wishes too: [`SampleSpec::from_description`] asks the blocks which forms they draw (the port [`BlockForms`]),
 //! reads `[sample]` ([`read_sample`]) and else takes the defaults of the declaration; [`SampleModule::from_description`] serves them.
 //!
+//! A wish may name a fixed source instead of the generator (`fixed = "events.sample"`, see [`FixedSource`], [`standard_fixed`]): the data of a
+//! model program as the contract gives them, with display names for what they point at (`SampleSet::names`) and their fixed "now".
+//!
 //! [`SampleModule`] serves a set as a `ModuleCore` (in memory; commands run from the `writes` column of the declaration).
 //!
 //! Written with the help of Claude (Anthropic). Interface status: draft (ADR 0043: pattern first, interface first).
@@ -28,6 +31,7 @@ pub mod content;
 mod defaults;
 mod described;
 mod error;
+mod fixed;
 mod interval;
 mod makers;
 mod module;
@@ -45,6 +49,7 @@ pub use case::{Case, IntervalCase};
 pub use defaults::{DEFAULT_COUNT, DEFAULT_DISTINCT};
 pub use described::{DEFAULT_SEED, SourceSpec};
 pub use error::{Failure, SampleCode};
+pub use fixed::{EventsSample, FixedRegistry, FixedSlice, FixedSource, Names, standard_fixed};
 pub use fs_interfaces::module::{ProviderKind, SAMPLE_PROVIDER};
 pub use makers::standard as standard_makers;
 pub use module::{SampleModule, SampleRules};

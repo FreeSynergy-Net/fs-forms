@@ -1,0 +1,13 @@
+# Proper names used in docs; without this clippy::pedantic wants backticks around them.
+doc-valid-idents = ["..", "ActivityStreams", "ChaCha8", "JSContact", "JSCalendar", "FreeSynergy", "CardDAV", "vCard", "iCalendar", "UUIDv7", "UTCDateTime", "LocalDateTime", "PatchObject", "AsyncAPI", "Kanidm", "AS2", "IRI", "IRIs", "ADR", "UUIDs", "SPN"]
+
+# Test data never read the clock and never use chance outside the seeded stream (ENTWURF feste Testdaten, test 4): the same input gives the same
+# set on every run. A clippy.toml of a crate replaces the one of the workspace, so the line above is repeated here.
+disallowed-methods = [
+    { path = "chrono::Utc::now", reason = "test data never read the clock (the fixed now comes from the data)" },
+    { path = "std::time::SystemTime::now", reason = "test data never read the clock" },
+    { path = "std::time::Instant::now", reason = "test data never read the clock" },
+    { path = "rand::random", reason = "test data use the seeded ChaCha8 stream of the builder only" },
+    { path = "rand::rng", reason = "test data use the seeded ChaCha8 stream of the builder only" },
+    { path = "uuid::Uuid::now_v7", reason = "ids are made from the data, not from the clock" },
+]

@@ -2,6 +2,7 @@
 //!
 //! Pattern: Builder steps (pure functions used by `SampleBuilder`).
 
+use fs_forms_bind::{FormRef, ModuleForm};
 use fs_interfaces::forms::{Art, Form};
 use fs_objects::{Envelope, ObjectId, StoredObject};
 use rand::RngExt;
@@ -168,5 +169,26 @@ pub fn map_records_channels(map: &mut Vec<(String, Vec<String>)>, form: &Form, d
         if !map.iter().any(|(c, _)| *c == channel.name) {
             map.insert(0, (channel.name.clone(), vec![data_type.to_owned()]));
         }
+    }
+}
+
+/// What a module declares for the records of `form` stored with `content`: the form, the type and the map channel -> field.
+pub fn module_form(
+    form: &Form,
+    content: &dyn content::Content,
+    ctx: &ContentCtx,
+    data_type: &str,
+) -> ModuleForm {
+    let (mut map, fields) = content.map(ctx, form);
+    map_records_channels(&mut map, form, data_type);
+    ModuleForm {
+        form: FormRef {
+            name: form.name.clone(),
+            major: u32::try_from(form.version.major).unwrap_or(0),
+            minor: u32::try_from(form.version.minor).unwrap_or(0),
+        },
+        data_type: data_type.to_owned(),
+        map,
+        fields,
     }
 }

@@ -125,6 +125,8 @@ pub struct SetWish {
     pub cases: Vec<Case>,
     /// Extra records (not in `count`) whose time pair is broken on purpose, so a view has to show a partial reading.
     pub invalid: u32,
+    /// The name of a fixed source (`events.sample`) that gives the records instead of the generator; then every other wish is empty.
+    pub fixed: Option<String>,
 }
 
 impl SetWish {
@@ -139,7 +141,15 @@ impl SetWish {
             empty: Vec::new(),
             cases: Vec::new(),
             invalid: 0,
+            fixed: None,
         }
+    }
+
+    /// The records come from the fixed source `name` (the generator makes none, so the other wishes stay empty).
+    #[must_use]
+    pub fn fixed(mut self, name: &str) -> Self {
+        self.fixed = Some(name.to_owned());
+        self
     }
 
     /// `channel` takes `n` different values.

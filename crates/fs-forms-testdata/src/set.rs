@@ -9,7 +9,9 @@ use fs_objects::StoredObject;
 
 use crate::content::{self, ContentCtx};
 use crate::error::{Failure, SampleCode, fail};
+use crate::fixed::{Names, resolve_names};
 use crate::spec::Forbid;
+use crate::value::Moment;
 
 /// The records of one form in `SampleSet::objects`: a slice, in the order of the set.
 #[derive(Clone, Debug)]
@@ -54,6 +56,10 @@ pub struct SampleSet {
     pub slices: Vec<Slice>,
     /// What `SampleModule` must refuse (from the spec).
     pub forbid: Vec<Forbid>,
+    /// The display names of what the records point at (calendars, people), IRI to name; `rows` puts them where a text channel holds an IRI.
+    pub names: Names,
+    /// The fixed "now" of the data when a fixed source gave them (wall clock in the zone of the anchor); `None` for generated data.
+    pub now: Option<Moment>,
 }
 
 impl SampleSet {
@@ -64,13 +70,15 @@ impl SampleSet {
             declared: Vec::new(),
             slices: Vec::new(),
             forbid,
+            names: Names::new(),
+            now: None,
         }
     }
 
     /// The rows of one form (`name@x.y.z`), read from the stored objects the way a module would send them.
     ///
     /// # Errors
-    /// `form-unknown` when the set has no such form.
+    /// `form-unknown` when the set has no such form; `name-missing` when a text channel holds an IRI the set has no name for.
     pub fn rows(&self, form: &str) -> Result<Vec<SampleRow>, Failure> {
         let slice = self
             .slices
@@ -78,13 +86,16 @@ impl SampleSet {
             .find(|s| s.form == form)
             .ok_or_else(|| fail(SampleCode::FormUnknown, "form", form))?;
         let reader = content::for_type(&slice.data_type);
-        Ok(self.objects[slice.first..slice.first + slice.len]
+        let mut rows: Vec<SampleRow> = self.objects[slice.first..slice.first + slice.len]
             .iter()
             .map(|o| SampleRow {
                 key: o.envelope.iri.clone().unwrap_or_default(),
                 values: reader.read(&slice.ctx, &o.content),
             })
-            .collect())
+            .collect();
+        let form = fs_interfaces::forms::find_key(&slice.form);
+        resolve_names(form, &self.names, &mut rows)?;
+        Ok(rows)
     }
 
     /// The set as text: one header per form, then one line per object (JSON with sorted keys). The golden test compares it.

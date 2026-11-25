@@ -144,3 +144,21 @@ pub fn refused<T>(r: Result<T, Refusal>) -> Refusal {
         Ok(_) => panic!("expected a refusal"),
     }
 }
+
+/// The fixed events of the sample of the contract `events` for a day of November 2026 without whole-day events (the same form, the same
+/// declaration as `calendar`). Why a day without whole-day events: the rule "time field has a value" of the suite wants an RFC 3339
+/// `date-time` for every `start`/`end`, while `bars-in-time@1.1.0` says `full-date` when `all-day` is set (forms.txt); card for C3.
+pub fn fixed_events(forbid: Vec<Forbid>) -> SampleSet {
+    SampleBuilder::new(SampleSpec {
+        seed: 1,
+        anchor: Anchor {
+            period: Period::Day(2026, 11, 17),
+            zone: Zone::iana("Europe/Berlin").unwrap(),
+        },
+        sets: vec![SetWish::new("bars-in-time@^1.1.0", "Event", 0).fixed("events.sample")],
+        forbid,
+    })
+    .relation(Relation::order("start", "end", Some("all-day")))
+    .build()
+    .expect("builds")
+}

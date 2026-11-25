@@ -50,6 +50,14 @@ pub enum SampleCode {
     WishTwice,
     /// `{block}`: the block catalog gives no block, or no slot, that the description's grouping binding names.
     BlockUnknown,
+    /// `{fixed}`: `fixed = "<name>"` names no fixed source of the registry.
+    FixedUnknown,
+    /// `{what}`: `fixed` stands next to a wish of the generator (count, distinct, empty, cases, invalid); a fixed set has none.
+    FixedConflict,
+    /// `{what}`: the `type` of the wish is not the type of the fixed source.
+    FixedType,
+    /// `{channel, key}`: a text channel holds an IRI and the set carries no display name for it; the IRI is never shown instead.
+    NameMissing,
 }
 
 impl ErrorCode for SampleCode {
@@ -76,6 +84,10 @@ impl ErrorCode for SampleCode {
         Self::TypeMismatch,
         Self::WishTwice,
         Self::BlockUnknown,
+        Self::FixedUnknown,
+        Self::FixedConflict,
+        Self::FixedType,
+        Self::NameMissing,
     ];
 
     fn as_str(self) -> &'static str {
@@ -101,6 +113,10 @@ impl ErrorCode for SampleCode {
             Self::TypeMismatch => "type-mismatch",
             Self::WishTwice => "wish-twice",
             Self::BlockUnknown => "block-unknown",
+            Self::FixedUnknown => "fixed-unknown",
+            Self::FixedConflict => "fixed-conflict",
+            Self::FixedType => "fixed-type",
+            Self::NameMissing => "name-missing",
         }
     }
 }

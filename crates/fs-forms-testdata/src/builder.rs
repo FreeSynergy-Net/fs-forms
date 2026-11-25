@@ -2,16 +2,16 @@
 //!
 //! Pattern: Test Data Builder – pure and deterministic (no clock, no I/O); the values come from the strategies per `Art`.
 
-use fs_forms_bind::{FormRef, ModuleForm};
 use fs_interfaces::forms::{self, Art, Form};
 use rand::SeedableRng;
 use rand::rngs::ChaCha8Rng;
 
 use crate::assemble::{
-    Pool, empty_channels, first_time, fnv, has, label_of, map_records_channels, pools, stored,
+    Pool, empty_channels, first_time, fnv, has, label_of, module_form, pools, stored,
 };
 use crate::content::{self, ContentCtx, Order};
 use crate::error::{Failure, SampleCode, fail};
+use crate::fixed::{FixedRegistry, place, standard_fixed};
 use crate::interval::{self, Pair};
 use crate::makers;
 use crate::plan::{Plan, plan};
@@ -24,6 +24,7 @@ pub struct SampleBuilder {
     spec: SampleSpec,
     makers: Vec<Box<dyn ValueMaker>>,
     relations: Vec<Relation>,
+    fixed: FixedRegistry,
 }
 
 /// One record on its way: its place in the set, its plan, the ids before it and the pools of the set.
@@ -56,7 +57,15 @@ impl SampleBuilder {
             spec,
             makers: makers::standard(),
             relations: Vec::new(),
+            fixed: standard_fixed(),
         }
+    }
+
+    /// Replaces the fixed sources a wish may name with `fixed`.
+    #[must_use]
+    pub fn fixed_sources(mut self, fixed: FixedRegistry) -> Self {
+        self.fixed = fixed;
+        self
     }
 
     /// A relation between channels; a set uses it when its form has the channels (every relation must be used by some set).
@@ -103,6 +112,12 @@ impl SampleBuilder {
         set: &mut SampleSet,
     ) -> Result<(), Failure> {
         let form = resolve(&wish.form)?;
+        if let Some(name) = &wish.fixed {
+            // A fixed set uses the relations of its form like a generated one (a relation no set uses is an error).
+            self.relations_of(form, used);
+            let window = (&span, &self.spec.anchor.zone);
+            return place(&self.fixed, name, wish, window, set);
+        }
         let key = form.key();
         let mut rng = ChaCha8Rng::seed_from_u64(self.spec.seed ^ fnv(&key));
         let (order, parent) = self.relations_of(form, used);
@@ -156,18 +171,8 @@ impl SampleBuilder {
             )?;
             set.objects.push(object);
         }
-        let (mut map, fields) = content.map(&ctx, form);
-        map_records_channels(&mut map, form, &wish.data_type);
-        set.declared.push(ModuleForm {
-            form: FormRef {
-                name: form.name.clone(),
-                major: u32::try_from(form.version.major).unwrap_or(0),
-                minor: u32::try_from(form.version.minor).unwrap_or(0),
-            },
-            data_type: wish.data_type.clone(),
-            map,
-            fields,
-        });
+        set.declared
+            .push(module_form(form, &*content, &ctx, &wish.data_type));
         set.slices.push(Slice {
             form: key,
             data_type: wish.data_type.clone(),

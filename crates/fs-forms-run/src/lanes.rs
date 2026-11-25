@@ -14,7 +14,7 @@
 
 use std::collections::HashSet;
 
-use fs_components_core::form_read::FormInput;
+use fs_components_core::form_read::{FormInput, HeadRow, Heads};
 use fs_components_kanban::{LaneHead, LanePlan};
 use fs_forms_bind::SlotRole;
 
@@ -138,6 +138,25 @@ fn heads_data<'a>(
     }
 }
 
+/// The cards with the lanes the board is told: `Off` = none asked, `Missing` = asked, not usable, `On` = the heads `align` matched (key and
+/// label as the cards carry them). The one place where the plan becomes the input of the component.
+fn with_heads(mut input: FormInput, plan: &LanePlan) -> FormInput {
+    input.heads = match plan {
+        LanePlan::Off => None,
+        LanePlan::Missing => Some(Heads::Missing),
+        LanePlan::On { heads, .. } => Some(Heads::Rows(
+            heads
+                .iter()
+                .map(|h| HeadRow {
+                    key: h.key.clone(),
+                    label: h.label.clone(),
+                })
+                .collect(),
+        )),
+    };
+    input
+}
+
 /// The data of the block `block`: its cards and, when its feed names heads, the lanes.
 #[must_use]
 pub fn placed(records: &dyn Records, block: &str, feeds: &[Feed]) -> Placed {
@@ -168,14 +187,14 @@ pub fn placed(records: &dyn Records, block: &str, feeds: &[Feed]) -> Placed {
                 heads: align(&heads, &input, &h.grouping),
             };
             Placed {
-                input,
+                input: with_heads(input, &plan),
                 heads: Some(heads),
                 plan,
                 notices: Vec::new(),
             }
         }
         Err(codes) => Placed {
-            input,
+            input: with_heads(input, &LanePlan::Missing),
             heads: None,
             plan: LanePlan::Missing,
             notices: std::iter::once(Coded::new("host-notice-lanes-missing"))

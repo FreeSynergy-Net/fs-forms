@@ -105,6 +105,7 @@ impl Records for SampleBoard {
     fn forms(&self) -> Arc<Vec<FormData>> {
         let mut all = self.forms.clone();
         all.push(board_form(&self.lock()));
+        all.push(lanes_form());
         Arc::new(all)
     }
     fn side(&self) -> Vec<SideItem> {
@@ -196,6 +197,37 @@ impl SampleBoard {
         }
         cols.push(Column::new(&key, title));
         Answer::Accepted
+    }
+}
+
+/// The lane list of the sample (source 2, type `Lane`, form `rows`): the people in charge by the name the sample cards carry, in the order
+/// of the lanes, and one lane no card is in yet (so the picture shows a head with nothing under it).
+fn lanes_form() -> FormData {
+    let lane = |name: &str| FormRow::of(name, &[("label", name)]);
+    FormData {
+        source: 2,
+        data_type: "Lane".to_owned(),
+        declared: ModuleForm {
+            data_type: "Lane".to_owned(),
+            form: FormRef {
+                name: "rows".to_owned(),
+                major: 1,
+                minor: 0,
+            },
+            map: vec![
+                ("items".to_owned(), vec!["Lane".to_owned()]),
+                ("label".to_owned(), vec!["name".to_owned()]),
+            ],
+            fields: vec![("name".to_owned(), Basic::Text)],
+        },
+        rows: vec![
+            lane("Ada Lovelace"),
+            lane("Grace Hopper"),
+            lane("Alan Turing"),
+        ],
+        may: Vec::new(),
+        commands: Vec::new(),
+        columns: Vec::new(),
     }
 }
 

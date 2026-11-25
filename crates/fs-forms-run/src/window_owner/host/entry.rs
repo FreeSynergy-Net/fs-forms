@@ -98,7 +98,7 @@ pub(super) fn rename_below(open: &mut Open, from: &WindowId, to: &WindowId) {
         .collect();
     for old in below {
         if let Some(mut e) = open.remove(&old) {
-            e.parent = e.parent.as_ref().map(&map);
+            e.parent = e.parent.as_ref().map(map);
             e.place.0 = map(&WindowId(e.place.0.clone())).0;
             open.insert(map(&old), e);
         }

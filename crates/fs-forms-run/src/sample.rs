@@ -226,6 +226,8 @@ fn board_form(columns: &[Column]) -> FormData {
         }
     }
     FormData {
+        source: 0,
+        data_type: String::new(),
         declared: ModuleForm {
             data_type: String::new(),
             form: FormRef {

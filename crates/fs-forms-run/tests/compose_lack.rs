@@ -21,6 +21,8 @@ fn place(name: &str, seq: u32, locks: Vec<Coded>) -> PlaceView {
 
 fn view(pages: Vec<PageView>) -> View {
     View {
+        wants: Vec::new(),
+        feeds: Vec::new(),
         pages,
         ..View::default()
     }

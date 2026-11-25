@@ -10,6 +10,7 @@ use std::sync::Arc;
 use fs_components_mf2::Mf2Texts;
 
 use crate::args::Config;
+use crate::feed::Want;
 use crate::parts::line;
 use crate::records::{NoRecords, Records, Unavailable};
 use crate::sample::SampleBoard;
@@ -39,6 +40,25 @@ pub trait Sources: Send + Sync {
         socket: Option<&Path>,
         running: &Path,
     ) -> Result<Arc<dyn Records>, Coded>;
+
+    /// The records for ALL sources of the description: one [`Want`] per `[[source]]` with the range, the data type and the scope the
+    /// description gives. The host reads each source with its own scope (`page(form, scope)`), chooses the `forms.json` entry of the
+    /// module by the TYPE, and numbers the [`crate::FormData`] it returns (`source`, `data_type`); a source it cannot read is a code in
+    /// the `problems` of the records, not a failure of the whole window. Default: the first source only, as before.
+    ///
+    /// # Errors
+    /// As [`Sources::connect`], for the first source (without it there is nothing to draw).
+    fn connect_wanted(
+        &self,
+        wants: &[Want],
+        socket: Option<&Path>,
+        running: &Path,
+    ) -> Result<Arc<dyn Records>, Coded> {
+        match wants.first() {
+            Some(first) => self.connect(&first.range, socket, running),
+            None => Err(Coded::new("host-notice-source-unknown")),
+        }
+    }
 }
 
 /// A host that offers no data source: every contract is unknown.
@@ -74,14 +94,14 @@ pub fn open(
             connected: false,
         };
     }
-    let Some(first) = view.sources.first() else {
+    if view.sources.is_empty() {
         return Opened {
             records: Arc::new(NoRecords),
             notice: None,
             connected: false,
         };
-    };
-    match sources.connect(first, c.socket.as_deref(), running) {
+    }
+    match sources.connect_wanted(&view.wants_or_ranges(), c.socket.as_deref(), running) {
         Ok(records) => Opened {
             records,
             notice: None,

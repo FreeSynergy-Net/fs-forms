@@ -110,6 +110,8 @@ pub fn view_of(layout: &Layout, lang: &str) -> View {
         .collect();
     View {
         actions,
+        wants: crate::feed::wants_of(layout),
+        feeds: crate::feed::feeds_of(layout),
         sources: doc.sources.iter().map(|s| s.v.range.clone()).collect(),
         frontend: doc.key.frontend.clone(),
         title: text(layout, &doc.title_key, lang),

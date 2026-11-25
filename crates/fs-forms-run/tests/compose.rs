@@ -39,6 +39,8 @@ fn page(name: &str, seq: u32, places: Vec<PlaceView>) -> PageView {
 
 fn tasks_board() -> View {
     View {
+        wants: Vec::new(),
+        feeds: Vec::new(),
         frontend: "board".into(),
         title: "Tasks".into(),
         style: None,

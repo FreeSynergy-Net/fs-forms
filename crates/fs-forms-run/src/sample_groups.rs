@@ -37,6 +37,8 @@ fn tree() -> FormData {
         )
     };
     FormData {
+        source: 0,
+        data_type: String::new(),
         declared: declared(
             "tree",
             &[
@@ -103,6 +105,8 @@ fn members() -> FormData {
         ],
     );
     FormData {
+        source: 0,
+        data_type: String::new(),
         declared,
         may: Vec::new(),
         commands: Vec::new(),

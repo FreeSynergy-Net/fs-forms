@@ -138,6 +138,8 @@ fn window(c: &Config, sources: &dyn Sources) -> i32 {
             }
             view.notices.extend(opened.notice);
             misfit = lock_misfits(&mut view, opened.records.as_ref());
+            // the lane list that cannot be used is said in the place (a slot lock), never left out silently
+            crate::lanes::show_notices(&mut view, opened.records.as_ref());
             let comp = compose(&view, &Blocks);
             (view, comp, opened.records)
         }

@@ -116,6 +116,46 @@ pub struct ActionView {
     pub open: Option<String>,
 }
 
+impl View {
+    /// What to read per source: the `wants` the layout gave, or (a view made by hand with only `sources`) the ranges alone.
+    #[must_use]
+    pub fn wants_or_ranges(&self) -> Vec<crate::feed::Want> {
+        if !self.wants.is_empty() {
+            return self.wants.clone();
+        }
+        self.sources
+            .iter()
+            .zip(1u32..)
+            .map(|(r, n)| crate::feed::Want {
+                n,
+                range: r.clone(),
+                data_type: String::new(),
+                scope: String::new(),
+            })
+            .collect()
+    }
+
+    /// The feeds with the slot locks the places carry NOW (the bind step adds them after the view is made).
+    #[must_use]
+    pub fn feeds_now(&self) -> Vec<crate::feed::Feed> {
+        let locks = |block: &str| {
+            self.pages
+                .iter()
+                .flat_map(|p| &p.places)
+                .find(|pl| pl.block == block)
+                .map(|pl| pl.slot_locks.clone())
+                .unwrap_or_default()
+        };
+        self.feeds
+            .iter()
+            .map(|f| crate::feed::Feed {
+                slot_locks: locks(&f.block),
+                ..f.clone()
+            })
+            .collect()
+    }
+}
+
 /// The plan as the host reads it.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct View {
@@ -123,6 +163,10 @@ pub struct View {
     pub actions: Vec<ActionView>,
     /// The contract range of each `[[source]]` (`tasks@>=0.2, <0.3`), in order: what the host picks its records by.
     pub sources: Vec<String>,
+    /// What to read for each `[[source]]` (range, type, scope), in order: `Sources::connect_wanted` gets these.
+    pub wants: Vec<crate::feed::Want>,
+    /// Which source feeds which block.
+    pub feeds: Vec<crate::feed::Feed>,
     /// The frontend key.
     pub frontend: String,
     /// The title of the window.

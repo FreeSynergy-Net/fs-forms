@@ -102,6 +102,11 @@ pub trait Records: Send + Sync {
     fn stale(&self) -> Option<String> {
         None
     }
+    /// The sources of the description the host could not read, as `(number, code)` (numbers count from 1). Default: none. The window
+    /// goes on; what depends on such a source (the heads of lanes) says so, never silently.
+    fn source_problems(&self) -> Vec<(u32, Coded)> {
+        Vec::new()
+    }
     /// The sentence that says why the data source the description names is not there (the window shows it as a problem in its
     /// status line); `None` when the records are what they claim to be.
     fn unavailable(&self) -> Option<String> {

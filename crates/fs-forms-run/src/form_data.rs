@@ -17,6 +17,7 @@ use fs_components_kanban::Answer;
 use fs_forms_bind::{Basic, ModuleForm};
 
 use crate::records::{Records, SideItem};
+use crate::view::Coded;
 use crate::write::{Invocation, Writer, allowed, args_of, command_key};
 
 pub use fs_components_core::form_read::FormRow;
@@ -24,6 +25,11 @@ pub use fs_components_core::form_read::FormRow;
 /// One form a module offers: its declaration and its rows.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FormData {
+    /// The number of the source of the description these rows were read for (counts from 1, as `source` of a block); `0` = not said
+    /// (old callers: such rows serve every source).
+    pub source: u32,
+    /// The data type of the records of that source (`type` of the `[[source]]`, `Lane`, `Task`); `""` = not said.
+    pub data_type: String,
     /// The form, the version the module keeps and the map channel to field (`catalog/forms.json` of the module).
     pub declared: ModuleForm,
     /// The rows.
@@ -42,6 +48,8 @@ impl FormData {
     #[must_use]
     pub fn read_only(declared: ModuleForm, rows: Vec<FormRow>) -> Self {
         Self {
+            source: 0,
+            data_type: String::new(),
             declared,
             rows,
             may: Vec::new(),
@@ -65,6 +73,9 @@ pub struct FormRecords {
     /// The code of the last failed reading after an accepted call (`host-notice-data-reload`): the module HAS written, the board shows
     /// the old state; `None` after a good reading. The notice waits for `fs-notification` (SW-4b).
     pub stale: Arc<RwLock<Option<String>>>,
+    /// A source of the description the host could not read, as `(source number, code)`: `form-source-unknown-scope{scope}` (the module
+    /// does not know the scope), `host-notice-data-unreachable` ... The rest of the window runs; lanes whose heads are this source say it.
+    pub problems: Vec<(u32, Coded)>,
 }
 
 /// The building block that draws a fact of this basic type (`fs-components-fields`: the catalog of kinds); a type without a
@@ -221,6 +232,9 @@ impl Records for FormRecords {
             .read()
             .unwrap_or_else(PoisonError::into_inner)
             .clone()
+    }
+    fn source_problems(&self) -> Vec<(u32, Coded)> {
+        self.problems.clone()
     }
 }
 

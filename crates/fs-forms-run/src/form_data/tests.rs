@@ -21,6 +21,8 @@ fn declared() -> ModuleForm {
 #[test]
 fn the_input_of_a_component_has_the_channels_with_their_fields_and_the_named_columns() {
     let data = FormData {
+        source: 0,
+        data_type: String::new(),
         declared: declared(),
         rows: vec![FormRow::of("a", &[("title", "One")])],
         may: Vec::new(),

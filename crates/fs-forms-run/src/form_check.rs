@@ -85,34 +85,43 @@ fn small(n: u64) -> u32 {
     u32::try_from(n).unwrap_or(u32::MAX)
 }
 
+/// The form a NEED of a component (`rows@^1.0.0`) draws, as bind reads it: the HIGHEST version of the catalog the need draws, else
+/// `0.0` (the form is named, but no version of the catalog is drawn: the match says `form-version-mismatch`). A form the catalog does
+/// not know gives `None`.
+pub(crate) fn drawn(need: &fs_components_catalog::FormRef) -> Option<FormRef> {
+    let catalog = catalog();
+    // the catalog is in file order: `1.0.0` before `1.1.0`
+    let named = || catalog.iter().filter(|f| f.name == need.name());
+    let best = named()
+        .filter(|f| {
+            format!("{}@{}", f.name, f.version)
+                .parse::<InterfaceVersion>()
+                .is_ok_and(|offered| need.draws(&offered))
+        })
+        .max_by_key(|f| f.version.clone());
+    let name = named().next()?.name.clone();
+    let (major, minor) = best.map_or((0, 0), |f| (small(f.version.major), small(f.version.minor)));
+    Some(FormRef { name, major, minor })
+}
+
+/// The red codes of the match of one declared form (the check of a head source: its rows must fit the form it is read as).
+pub(crate) fn misfit(data: &crate::form_data::FormData) -> Vec<Coded> {
+    match match_form(&forms(), &data.declared, &components(), None) {
+        Matched::Refused(codes) => codes.iter().map(coded).collect(),
+        _ => Vec::new(),
+    }
+}
+
 /// What each block draws, as the COMPONENT declares it (`forms=` of the block contract, read by the catalog): the host holds no
 /// table of its own. A component declares a NEED (`tree@^1.0.0`), bind compares the version up to which the component draws: that is
 /// the HIGHEST version of the catalog the need draws, else `0.0` (the form is named, but no version of the catalog is drawn: the match
 /// says `form-version-mismatch`). A form the catalog does not know is not listed.
 fn components() -> Vec<ComponentForms> {
-    let catalog = catalog();
     crate::blocks::forms_of_blocks()
         .into_iter()
         .map(|(block, forms)| ComponentForms {
             block,
-            forms: forms
-                .iter()
-                .filter_map(|need| {
-                    // the HIGHEST version of the catalog the need draws (the catalog is in file order: `1.0.0` before `1.1.0`)
-                    let named = || catalog.iter().filter(|f| f.name == need.name());
-                    let drawn = named()
-                        .filter(|f| {
-                            format!("{}@{}", f.name, f.version)
-                                .parse::<InterfaceVersion>()
-                                .is_ok_and(|offered| need.draws(&offered))
-                        })
-                        .max_by_key(|f| f.version.clone());
-                    let name = named().next()?.name.clone();
-                    let (major, minor) =
-                        drawn.map_or((0, 0), |f| (small(f.version.major), small(f.version.minor)));
-                    Some(FormRef { name, major, minor })
-                })
-                .collect(),
+            forms: forms.iter().filter_map(drawn).collect(),
         })
         .collect()
 }

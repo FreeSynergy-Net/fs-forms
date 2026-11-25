@@ -81,6 +81,7 @@ pub(crate) fn ctx_of(
         locale: locale.clone(),
         mounts: Arc::default(),
         after_write,
+        feeds: Arc::new(view.feeds_now()),
     }
 }
 

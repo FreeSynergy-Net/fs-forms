@@ -25,6 +25,8 @@ pub fn settings() -> FrontendKey {
 
 pub fn view(title: &str, block: &str) -> View {
     View {
+        wants: Vec::new(),
+        feeds: Vec::new(),
         frontend: title.into(),
         title: title.into(),
         style: None,

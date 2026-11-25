@@ -19,7 +19,7 @@ use fs_components_styles::StyleId;
 use fs_components_words::Locale;
 
 use crate::after_write::AfterWrite;
-use crate::form_data::{empty_input, input_of};
+use crate::feed::Feed;
 use crate::records::Records;
 use crate::view::ActionView;
 use crate::write_gate::WriteGate;
@@ -56,6 +56,8 @@ pub(crate) struct Ctx {
     pub mounts: MountSlot,
     /// Fired after every accepted write of the gate: the window sets its menus again.
     pub after_write: AfterWrite,
+    /// Which source feeds which block (by source, form and type, never by the form name alone).
+    pub feeds: Arc<Vec<Feed>>,
 }
 
 /// Whether the reader of this window sees the dark scheme.
@@ -79,16 +81,8 @@ fn view_of(block: &str) -> Option<&'static dyn FormView> {
 }
 
 /// The form `block` is fed with (the first one its contract names), as the module gives it now.
-fn input_for(records: &dyn Records, block: &str) -> FormInput {
-    let name = crate::blocks::forms_of(block)
-        .first()
-        .map(|f| f.name().to_owned())
-        .unwrap_or_default();
-    records
-        .forms()
-        .iter()
-        .find(|d| d.declared.form.name == name)
-        .map_or_else(|| empty_input(&name), input_of)
+fn input_for(records: &dyn Records, block: &str, feeds: &[Feed]) -> FormInput {
+    crate::lanes::placed(records, block, feeds).input
 }
 
 /// Whether a function draws the block: the one composition, or a component with a view.
@@ -110,7 +104,12 @@ fn draw_ctx(ctx: &Ctx, block: &str, look: (StyleId, bool)) -> DrawCtx {
         .first()
         .map(|f| f.name().to_owned())
         .unwrap_or_default();
-    let (records, block, say) = (ctx.records.clone(), block.to_owned(), ctx.say.clone());
+    let (records, block, say, feeds) = (
+        ctx.records.clone(),
+        block.to_owned(),
+        ctx.say.clone(),
+        ctx.feeds.clone(),
+    );
     DrawCtx {
         look,
         say: Arc::new(move |key: &str| say.say(key)),
@@ -121,7 +120,7 @@ fn draw_ctx(ctx: &Ctx, block: &str, look: (StyleId, bool)) -> DrawCtx {
             form,
             after: ctx.after_write.clone(),
         }),
-        reread: Arc::new(move || input_for(&*records, &block)),
+        reread: Arc::new(move || input_for(&*records, &block, &feeds)),
     }
 }
 
@@ -132,7 +131,7 @@ pub(crate) fn block(name: &str, ctx: &Ctx, width: f32, height: f32) -> Option<Di
     }
     let view = view_of(name)?;
     let look = ((ctx.style)(), dark());
-    let input = input_for(&*ctx.records, name);
+    let input = input_for(&*ctx.records, name, &ctx.feeds);
     let mounted = {
         let mut slots = ctx.mounts.lock().unwrap_or_else(PoisonError::into_inner);
         if let Some(slot) = slots.iter().find(|s| s.block == name && s.look == look) {

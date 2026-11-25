@@ -67,6 +67,8 @@ pub(crate) fn row(key: &str, column: &str, label: &str, may: &[&str]) -> FormRow
 /// The data of the fake module: card `a` may be moved, card `b` may not, the page may create.
 pub(crate) fn data() -> FormData {
     FormData {
+        source: 0,
+        data_type: String::new(),
         declared: declared(),
         rows: vec![
             row("a", "todo", "To do", &["card.move"]),

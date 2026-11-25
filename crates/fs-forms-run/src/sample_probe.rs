@@ -132,12 +132,13 @@ fn the_layout_and_the_sample_section_of_a_real_file_reach_the_sources_and_decide
 fn without_the_section_the_same_path_gives_the_defaults_of_the_declaration() {
     // counter-test: the same file with the section cut off; nothing else differs
     let text = std::fs::read_to_string(fixture("board-sample.toml")).expect("fixture");
+    // a checkout with CRLF line ends (Windows autocrlf) must cut as well: the cut is at the line feed, the CR before it goes with `trim_end`
     let cut = text
         .find("\n[sample]")
         .expect("the fixture has the section");
     let dir = tempfile::tempdir().expect("dir");
     let path = dir.path().join("board.toml");
-    std::fs::write(&path, &text[..cut]).expect("write");
+    std::fs::write(&path, text[..cut].trim_end()).expect("write");
     let a = through(path);
     assert!(a.had_layout && !a.had_sample && a.module_ok, "{a:?}");
     assert_eq!(a.wished[0].2, 8, "{a:?}");

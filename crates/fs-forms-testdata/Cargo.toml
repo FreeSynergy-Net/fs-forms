@@ -37,7 +37,7 @@ uuid = "1"
 # Tests read the real descriptions with the exchange reader.
 fs-forms-exchange = { path = "../fs-forms-exchange", version = "0.1.0" }
 fs-module = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "76df54074910e827ad556ff613335ada49c86de3", version = "0.3.0" }
-fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "459c1e8d1226896cca53c3140f5aa912f43a5305", version = "0.1.4" }
+fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "aa59c6bd6b9d2efa7f49e349ad44ef51bcb687d3", version = "0.1.4" }
 capnp = "0.27"
 fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "76df54074910e827ad556ff613335ada49c86de3", version = "0.3.0", features = ["fake"] }
 tokio = { version = "1", features = ["rt", "macros"] }

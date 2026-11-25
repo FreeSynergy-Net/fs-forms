@@ -15,6 +15,7 @@
 mod after_write;
 mod args;
 mod bind_spec;
+mod block_forms;
 mod blocks;
 mod catalog;
 mod changes;
@@ -59,6 +60,7 @@ mod write_gate;
 
 pub use args::{Command, Config, HELP, parse};
 pub use bind_spec::{block_spec, module_forms};
+pub use block_forms::CatalogBlockForms;
 pub use blocks::Blocks;
 pub use catalog::{Catalog, TestCatalog};
 pub use changes::{ChangeCounter, ChangeWatch};

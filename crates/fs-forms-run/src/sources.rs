@@ -59,6 +59,20 @@ pub trait Sources: Send + Sync {
             None => Err(Coded::new("host-notice-source-unknown")),
         }
     }
+    /// The sample records for `--sample-data`: the SAME question as [`Sources::connect_wanted`] (the host decides what sample means, not
+    /// the caller). Default: the built-in board and side list (`SampleBoard`); the host replaces it with the test data it derives from
+    /// the description (`fs-forms-testdata`), then `SampleBoard` can go.
+    ///
+    /// # Errors
+    /// As [`Sources::connect_wanted`].
+    fn connect_sample(
+        &self,
+        _wants: &[Want],
+        _socket: Option<&Path>,
+        _running: &Path,
+    ) -> Result<Arc<dyn Records>, Coded> {
+        Ok(Arc::new(SampleBoard::default()))
+    }
 }
 
 /// A host that offers no data source: every contract is unknown.
@@ -77,8 +91,8 @@ pub fn name_of(range: &str) -> &str {
     fs_forms_layout::split_range(range).0
 }
 
-/// The records for `view`: the sample data when asked for (`--sample-data`), else what `sources` connects for the first source of
-/// the description; a description without a source gets no records and no notice (nothing is asked for).
+/// The records for `view`: what `sources` connects for the sources of the description (`--sample-data` asks the SAME port
+/// ([`Sources::connect_sample`]), the flag is read here once); a description without a source gets no records and no notice (nothing is asked for).
 #[must_use]
 pub fn open(
     c: &Config,
@@ -87,25 +101,25 @@ pub fn open(
     running: &Path,
     sources: &dyn Sources,
 ) -> Opened {
-    if c.sample_data {
-        return Opened {
-            records: Arc::new(SampleBoard::default()),
-            notice: None,
-            connected: false,
-        };
-    }
-    if view.sources.is_empty() {
+    let wants = view.wants_or_ranges();
+    let sample = c.sample_data;
+    if !sample && view.sources.is_empty() {
         return Opened {
             records: Arc::new(NoRecords),
             notice: None,
             connected: false,
         };
     }
-    match sources.connect_wanted(&view.wants_or_ranges(), c.socket.as_deref(), running) {
+    let asked = if sample {
+        sources.connect_sample(&wants, c.socket.as_deref(), running)
+    } else {
+        sources.connect_wanted(&wants, c.socket.as_deref(), running)
+    };
+    match asked {
         Ok(records) => Opened {
             records,
             notice: None,
-            connected: true,
+            connected: !sample,
         },
         Err(code) => Opened {
             records: Arc::new(Unavailable(line(texts, &code))),
@@ -145,5 +159,79 @@ mod tests {
         let c = crate::args::Config::default();
         let o = open(&c, &View::default(), &texts, Path::new("x"), &NoSources);
         assert!(o.notice.is_none() && !o.connected);
+    }
+}
+
+#[cfg(test)]
+mod sample_tests {
+    use std::sync::Mutex;
+
+    use super::*;
+    use crate::words::words;
+
+    /// Spy: says which question the host asked.
+    #[derive(Default)]
+    struct Spy(Mutex<Vec<&'static str>>);
+
+    impl Sources for Spy {
+        fn connect(&self, _: &str, _: Option<&Path>, _: &Path) -> Result<Arc<dyn Records>, Coded> {
+            self.0.lock().expect("lock").push("connect");
+            Ok(Arc::new(NoRecords))
+        }
+
+        fn connect_sample(
+            &self,
+            wants: &[Want],
+            _: Option<&Path>,
+            _: &Path,
+        ) -> Result<Arc<dyn Records>, Coded> {
+            let n = wants.len();
+            self.0
+                .lock()
+                .expect("lock")
+                .push(if n == 1 { "sample-1" } else { "sample-n" });
+            Ok(Arc::new(NoRecords))
+        }
+    }
+
+    #[test]
+    fn with_sample_data_the_sources_are_asked_for_sample_and_never_for_real_data() {
+        let texts = words(&fs_components_words::Locale::english());
+        let view = View {
+            sources: vec!["groups@>=0.1, <0.2".into()],
+            ..View::default()
+        };
+        let c = Config {
+            sample_data: true,
+            ..Config::default()
+        };
+        let spy = Spy::default();
+        let o = open(&c, &view, &texts, Path::new("x"), &spy);
+        assert_eq!(*spy.0.lock().expect("lock"), vec!["sample-1"]);
+        assert!(o.notice.is_none() && !o.connected);
+    }
+
+    #[test]
+    fn the_default_sample_of_a_host_is_the_built_in_board() {
+        let texts = words(&fs_components_words::Locale::english());
+        let c = Config {
+            sample_data: true,
+            ..Config::default()
+        };
+        let o = open(&c, &View::default(), &texts, Path::new("x"), &NoSources);
+        assert!(o.records.is_sample() && o.notice.is_none() && !o.connected);
+    }
+
+    #[test]
+    fn without_the_flag_the_real_question_is_asked() {
+        let texts = words(&fs_components_words::Locale::english());
+        let view = View {
+            sources: vec!["groups@>=0.1, <0.2".into()],
+            ..View::default()
+        };
+        let spy = Spy::default();
+        let o = open(&Config::default(), &view, &texts, Path::new("x"), &spy);
+        assert_eq!(*spy.0.lock().expect("lock"), vec!["connect"]);
+        assert!(o.connected);
     }
 }

@@ -23,7 +23,7 @@ The forms host: opens the window that the layout of a program describes. The sta
                      starter hands it on and the running host decides (switch, new window); a later start never copies the data
   --style NAME       the style set for the program: what a description that says `style = \"default\"` gets (admin, simple, apple,
                      windows, craft; the preset is admin); a description that names a style keeps its own
-  --sample-data      fill the board and side list with built-in sample records (pictures, development; never a starter)\n\
+  --sample-data      ask the data sources for sample records (the same port as real data; pictures, development; never a starter)\n\
   --list-blocks      print the blocks of the contract this build does not draw, each with its reason (no widget in the contract, or a widget\n\
                      without a view), then exit 0; the same list the window says one by one as `host-error-block-not-built`\n\
   --picture FILE     draw the window to a picture, without opening it (exit 3 if the picture shows a host error; the PNG is written anyway)\n\

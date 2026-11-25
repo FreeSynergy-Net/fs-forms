@@ -43,6 +43,7 @@ mod rules;
 mod schemes;
 mod scope_token;
 pub mod shim;
+mod source_of;
 mod types;
 mod walk;
 mod words;

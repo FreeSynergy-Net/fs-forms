@@ -1,21 +1,13 @@
 //! Which forms a description needs: what its blocks draw (`forms=` of the block contract) and what the heads of a grouping slot come as.
 //!
-//! Pattern: Port (consumer side, [`BlockForms`]; the host gives the adapter over the block catalog, this crate links no component crate)
+//! Pattern: Port (consumer side, [`BlockForms`] lives in `fs-forms-bind`; the host gives the adapter over the block catalog, this crate links no component crate)
 //! + Template method (`needs` reads the layout and asks the port; nothing is decided here).
 
-use fs_forms_bind::{BlockSpec, FormRef};
+pub use fs_forms_bind::BlockForms;
+use fs_forms_bind::FormRef;
 use fs_forms_layout::{BindFrom, Layout};
 
 use crate::error::{Failure, SampleCode, fail};
-
-/// Pattern: Port (consumer side) – what the block catalog says; the host implements it over `blocks::forms_of` and `bind_spec::block_spec`.
-pub trait BlockForms {
-    /// The forms the component of `block` draws (`forms=` of the block contract); none for a block that draws no whole form.
-    fn forms(&self, block: &str) -> Vec<FormRef>;
-
-    /// The block with its slots (the `heads` of a grouping slot are the forms its heads come as), or `None` for an unknown block.
-    fn spec(&self, block: &str) -> Option<BlockSpec>;
-}
 
 /// One form a source must serve for the blocks of the description.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -36,16 +28,14 @@ pub struct Need {
 /// `block-unknown` when the catalog gives no block or no slot for a grouping binding (never a head wish left out in silence).
 pub fn needs(layout: &Layout, blocks: &dyn BlockForms) -> Result<Vec<Need>, Failure> {
     let doc = layout.doc();
-    let first = u32::from(!doc.sources.is_empty());
     let mut out: Vec<Need> = Vec::new();
     let mut add = |source: u32, form: FormRef| -> Result<(), Failure> {
         if source == 0 {
             return Ok(()); // no source at all: nothing is asked of anybody
         }
-        let at = usize::try_from(source).ok().and_then(|n| n.checked_sub(1));
-        let data_type = at
-            .and_then(|i| doc.sources.get(i))
-            .map(|s| s.v.data_type.clone())
+        let data_type = doc
+            .source_type(source)
+            .map(str::to_owned)
             .ok_or_else(|| fail(SampleCode::SourceUnknown, "source", source.to_string()))?;
         let same = |n: &&mut Need| {
             n.source == source && n.form.name == form.name && n.form.major == form.major
@@ -63,7 +53,7 @@ pub fn needs(layout: &Layout, blocks: &dyn BlockForms) -> Result<Vec<Need>, Fail
     for page in &doc.pages {
         for leaf in page.v.leaves() {
             let block = leaf.v;
-            let source = block.source.unwrap_or(first);
+            let source = doc.source_of(block);
             for form in blocks.forms(&block.block) {
                 add(source, form)?;
             }

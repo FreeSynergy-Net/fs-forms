@@ -15,6 +15,7 @@
 #![deny(missing_docs)]
 #![warn(clippy::pedantic)]
 
+mod block_forms;
 mod build;
 mod build_heads;
 mod build_menu;
@@ -49,6 +50,7 @@ pub mod suite;
 #[cfg(feature = "testing")]
 pub mod testing;
 
+pub use block_forms::BlockForms;
 pub use build::Bind;
 pub use catalog::{BlockSpec, Catalog, SlotSpec, check_bindings};
 pub use coded::{Coded, Family, Reason, SlotRole};

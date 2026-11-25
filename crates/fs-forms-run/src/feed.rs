@@ -4,7 +4,7 @@
 //!
 //! Pattern: Value objects read from the layout (the plan of the description in, plain lists out); no decision is made here.
 
-use fs_forms_layout::{BindFrom, BlockDoc, Layout, PageDoc, PlaceNode};
+use fs_forms_layout::{BlockDoc, Layout, PageDoc, PlaceNode};
 
 use crate::view::Coded;
 
@@ -86,30 +86,17 @@ fn blocks_of(page: &PageDoc) -> Vec<&BlockDoc> {
 #[must_use]
 pub fn feeds_of(layout: &Layout) -> Vec<Feed> {
     let doc = layout.doc();
-    let type_of = |n: u32| {
-        usize::try_from(n)
-            .ok()
-            .and_then(|n| n.checked_sub(1))
-            .and_then(|i| doc.sources.get(i))
-            .map(|s| s.v.data_type.clone())
-    };
-    let first = u32::from(!doc.sources.is_empty());
+    let type_of = |n: u32| doc.source_type(n).map(str::to_owned);
     doc.pages
         .iter()
         .flat_map(|p| blocks_of(&p.v))
         .map(|b| {
-            let source = b.source.unwrap_or(first);
-            let heads = b
-                .bindings
-                .iter()
-                .find_map(|x| match (&x.v.from, x.v.source) {
-                    (BindFrom::Grouping(g), Some(h)) => Some(HeadsRef {
-                        source: h,
-                        data_type: type_of(h).unwrap_or_default(),
-                        grouping: g.clone(),
-                    }),
-                    _ => None,
-                });
+            let source = doc.source_of(b);
+            let heads = doc.heads_of(b).map(|(h, g)| HeadsRef {
+                source: h,
+                data_type: type_of(h).unwrap_or_default(),
+                grouping: g.to_owned(),
+            });
             Feed {
                 block: b.block.clone(),
                 source,

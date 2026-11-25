@@ -1,6 +1,7 @@
 //! Pure decisions at run time, per record and per page: tested without a window.
 //!
-//! Pattern: Specification (one predicate per rule, case tables in tests).
+//! Pattern: Specification (one predicate per rule, case tables in tests); field reading is a Projection of the record's
+//! `(path, value)` entries (a repeated path is a list, never reduced to its first entry).
 
 use crate::coded::Coded;
 use crate::codes::{BindCode, Part, PartLock};
@@ -10,8 +11,10 @@ use crate::types::{HiddenReason, Limits, RecordPage, RecordView};
 /// What a field slot shows for one record.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FieldShown {
-    /// The value text.
+    /// The value text (exactly one value).
     Value(String),
+    /// A repeated value of one path (`assignee` with two people): ALL of them in the order the module gave, at least two, none empty.
+    Values(Vec<String>),
     /// No value; distinct from hidden.
     Empty,
     /// Hidden for this person: shows "verborgen" + reason, NEVER a value.
@@ -41,16 +44,23 @@ impl FieldShown {
     }
 }
 
-/// What the field shows for the record: hidden wins over any value.
+/// What the field shows for the record: hidden wins over any value; a path the module repeats shows every one of its values.
 #[must_use]
 pub fn field_shown(fill: &FieldFill, record: &RecordView) -> FieldShown {
     let path = fill.path.join(".");
     if let Some((_, reason)) = record.hidden.iter().find(|(p, _)| *p == path) {
         return FieldShown::Hidden { reason: *reason };
     }
-    match record.values.iter().find(|(p, _)| *p == path) {
-        Some((_, v)) if !v.is_empty() => FieldShown::Value(v.clone()),
-        _ => FieldShown::Empty,
+    let mut all: Vec<String> = record
+        .values
+        .iter()
+        .filter(|(p, v)| *p == path && !v.is_empty())
+        .map(|(_, v)| v.clone())
+        .collect();
+    match all.len() {
+        0 => FieldShown::Empty,
+        1 => FieldShown::Value(all.remove(0)),
+        _ => FieldShown::Values(all),
     }
 }
 

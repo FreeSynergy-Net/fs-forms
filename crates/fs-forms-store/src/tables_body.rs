@@ -86,7 +86,7 @@ pub const BINDING: Table = Table {
 
 /// F1b NEW (user 32.4, PLAN-grundtyp-felder §8b.2): the COMPLETE allowed scheme list of ONE field use, in suggestion order
 /// (question 38 = JA). No row for a field whose type carries schemes (webAddress, link, image) = read error `schemes-missing`.
-/// Lower case only; `javascript`/`vbscript` refused in code (32.1).
+/// Lower case only; only names of the instance's positive list pass in code (`scheme-not-allowed`; `javascript` etc. never).
 pub const BINDING_SCHEME: Table = Table {
     name: "forms_binding_scheme",
     cols: &[

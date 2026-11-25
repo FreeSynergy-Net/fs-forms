@@ -4,6 +4,8 @@
 //!
 //! Pattern: Value Object with a default.
 
+use crate::schemes::DEFAULT_ALLOWED;
+
 /// Where a limit came from; carried as parameter `by` in every `too-many` and `text-too-long` code.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LimitSource {
@@ -61,6 +63,10 @@ pub struct Limits {
     pub ops_max: u32,
     /// Live overlays on one layout.
     pub overlays_max: u32,
+    /// The scheme names a binding list may use (instance policy, lower case; the fixed floor `NEVER_ALLOWED` still applies).
+    /// Only `effective` sets it from the instance; a person's value here is ignored there. Load the instance list once at start
+    /// (`Box::leak`), it lives as long as the process.
+    pub schemes: &'static [&'static str],
     /// Where each value came from.
     pub by: LimitSources,
 }
@@ -80,6 +86,9 @@ pub struct CeilingSet {
     pub ops_max: Option<u32>,
     /// Ceiling of `overlays_max`.
     pub overlays_max: Option<u32>,
+    /// The schemes the instance allows (replaces the default list, never widens past `NEVER_ALLOWED`); `None` = the admin set
+    /// nothing, then `DEFAULT_ALLOWED` applies. A person or package can not widen it: `Limits::effective` ignores their list.
+    pub schemes: Option<&'static [&'static str]>,
 }
 
 /// Technical limits, each with evidence; everything else is a setting.
@@ -114,6 +123,7 @@ impl Limits {
             text_bytes_max: 16 * 1024,
             ops_max: 1024,
             overlays_max: 64,
+            schemes: DEFAULT_ALLOWED,
             by: LimitSources {
                 elements: d,
                 menu_depth: d,
@@ -161,6 +171,7 @@ impl Limits {
             text_bytes_max,
             ops_max,
             overlays_max,
+            schemes: ceiling.schemes.unwrap_or(DEFAULT_ALLOWED),
             by: LimitSources {
                 elements,
                 menu_depth,

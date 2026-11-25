@@ -10,7 +10,7 @@ use crate::codes::LayoutCode;
 use crate::doc::{ActionTarget, Item, LayoutDoc, MenuDoc, MenuKind};
 use crate::ids::ElemId;
 use crate::limits::Limits;
-use crate::schemes::scheme_names_rule;
+use crate::schemes::{SchemePolicy, scheme_names_rule_with};
 use crate::shim::Coded;
 
 type Problems = Vec<Coded<LayoutCode>>;
@@ -40,7 +40,10 @@ pub(crate) fn doc_rules(doc: &LayoutDoc, limits: &Limits, out: &mut Problems) {
             for bd in &b.v.bindings {
                 if let Some(list) = &bd.v.schemes {
                     let names: Vec<String> = list.iter().map(|x| x.v.clone()).collect();
-                    out.extend(scheme_names_rule(elem(bd), &names));
+                    let policy = SchemePolicy {
+                        allowed: limits.schemes,
+                    };
+                    out.extend(scheme_names_rule_with(elem(bd), &names, policy));
                 }
             }
         }

@@ -121,7 +121,7 @@ fn what_check_accepts_the_tables_accept() {
             (seed >> 33) % n
         };
         let (mut accepted, mut refused) = (0, 0);
-        for _ in 0..200 {
+        for _ in 0..800 {
             let mut d = full_doc();
             let kinds = [
                 MenuKind::Menu,
@@ -147,7 +147,8 @@ fn what_check_accepts_the_tables_accept() {
                 },
             )];
             d.pages[0].v.blocks[0].v.source = [None, Some(1), Some(9)][next(3) as usize];
-            let word = ["https", "HTTPS", "x-y.z+1", "1a", "javascript", ""][next(6) as usize];
+            let word =
+                ["https", "http", "HTTPS", "x-y.z+1", "1a", "javascript", ""][next(7) as usize];
             d.pages[0].v.blocks[0].v.bindings[0].v.schemes =
                 Some(vec![it("scheme:a/0", word.to_owned())]);
             d.pages[0].v.blocks[0].v.bindings[0].v.nth = next(20) as u32;

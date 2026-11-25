@@ -62,7 +62,7 @@ fn k2_edges_are_refused() {
     }
 }
 
-/// Documents: `allows_scheme` trusts the list; keeping `javascript` out of it is F1b's job (never-list).
+/// Documents: `allows_scheme` trusts the list; keeping `javascript` out of it is the job of the layout check (positive list plus the fixed floor `NEVER_ALLOWED`).
 #[test]
 fn k2_list_is_trusted() {
     assert!(fill(Basic::Link, Some(vec!["javascript"])).allows_scheme("javascript"));

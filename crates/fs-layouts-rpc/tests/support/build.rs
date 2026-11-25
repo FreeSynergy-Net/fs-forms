@@ -147,7 +147,7 @@ pub fn rich(frontend: &str) -> LayoutDoc {
     block.text_key = Some("x".into());
     block.bindings[0].v.schemes = Some(vec![
         item("scheme:a", "https".to_owned()),
-        item("scheme:b", "mailto".to_owned()),
+        item("scheme:b", "http".to_owned()),
     ]);
     block.bindings.push(item(
         "binding:board/main/group/0",

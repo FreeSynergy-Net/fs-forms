@@ -14,6 +14,11 @@ use crate::shim::Coded;
 /// `scheme-not-allowed` until a caller passes a wider `SchemePolicy`.
 pub const DEFAULT_ALLOWED: &[&str] = &["https", "http", "ssh"];
 
+/// The schemes no policy may ever allow, whatever the instance says: they run code or read local data when opened
+/// (`javascript`, `vbscript`: script in the page; `data`, `blob`: inline or in-memory content that bypasses the address; `file`:
+/// local files). Fixed floor under every `SchemePolicy`, answered with `scheme-not-allowed`; compared ASCII case-insensitively.
+pub const NEVER_ALLOWED: &[&str] = &["javascript", "vbscript", "data", "file", "blob"];
+
 /// Which schemes a list may name (lower case). Default: `DEFAULT_ALLOWED`.
 #[derive(Debug, Clone, Copy)]
 pub struct SchemePolicy<'a> {
@@ -36,7 +41,7 @@ pub fn scheme_names_rule(elem: &str, list: &[String]) -> Vec<Coded<LayoutCode>> 
 }
 
 /// The name rules: not empty, no doubles (ASCII case-insensitive), each name an RFC 3986 scheme (`scheme-bad`, so also no
-/// whitespace/control characters), only names of the policy (`scheme-not-allowed`), and in canonical lower case (`scheme-bad`).
+/// whitespace/control characters), only names of the policy and not of the fixed floor `NEVER_ALLOWED` (`scheme-not-allowed`), and in canonical lower case (`scheme-bad`).
 #[must_use]
 pub fn scheme_names_rule_with(
     elem: &str,
@@ -51,7 +56,8 @@ pub fn scheme_names_rule_with(
     for name in list {
         let p = |c| Coded::new(c).with("elem", elem).with("scheme", name);
         let lower = name.to_ascii_lowercase();
-        let listed = policy.allowed.contains(&lower.as_str());
+        let listed =
+            policy.allowed.contains(&lower.as_str()) && !NEVER_ALLOWED.contains(&lower.as_str());
         if !seen.insert(lower) {
             out.push(p(LayoutCode::SchemeTwice));
         } else if !scheme_grammar(name) {

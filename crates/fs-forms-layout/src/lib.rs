@@ -71,7 +71,8 @@ pub use providers::{
 };
 pub use resolved::{Applied, Effect, Layer, LayerInfo, Resolved};
 pub use schemes::{
-    DEFAULT_ALLOWED, SchemePolicy, scheme_names_rule, scheme_names_rule_with, schemes_rule,
+    DEFAULT_ALLOWED, NEVER_ALLOWED, SchemePolicy, scheme_names_rule, scheme_names_rule_with,
+    schemes_rule,
 };
 pub use scope_token::{SCOPE_TOKEN_MAX, ScopeToken};
 pub use shim::{Coded, ErrorCode, ObjectId, Reference, Utc};

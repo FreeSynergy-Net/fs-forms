@@ -1,4 +1,4 @@
-//! Running a command from the declaration: the arguments are checked against the `let channel = .find(|w| w.1 && !args.iter().any(|(p, _)| p == &w.0))rites.iter().find(|w| &w.0 == path).and_then(|w| form.channel(&w.0));rites` column and written into the record.
+//! Running a command from the declaration: the arguments are checked against the `writes` column and written into the record.
 //!
 //! Pattern: Command + Interpreter (the effect is the same for every command: write the arguments into the channels of `writes`;
 //! no name is matched) + Memento (`revert` restores the values before). Failures are refusals that carry a `SampleCode`.

@@ -13,7 +13,9 @@ use fs_forms_testdata::{
 };
 use fs_interfaces::forms::{self, Form};
 use fs_interfaces::formsource_capnp::form_source;
-use fs_interfaces::module::{Actor, Caller, Claimed, Context};
+use fs_interfaces::module::{
+    Actor, Caller, Claimed, Context, Invocation, ModuleCore, Page, PageQuery, Refusal, Value,
+};
 use fs_interfaces::owner::fake::person;
 use fs_rpc::{Guarded, PerConnection, Ports};
 use fs_types::Zone;
@@ -114,4 +116,33 @@ pub fn connect_core<M: fs_interfaces::module::ModuleCore>(
         FromClientHook::new(g.bootstrap(&fs_rpc::Caller::new(who, None)).hook)
     };
     (one("a"), one("b"))
+}
+
+pub fn call(command: &str, record: Option<&str>, args: &[(&str, &str)]) -> Invocation {
+    let mut i = Invocation::default();
+    command.clone_into(&mut i.command);
+    i.record = record.map(str::to_owned);
+    i.args = args.iter().map(|(p, t)| Value::new(p, t)).collect();
+    i
+}
+
+pub fn page(m: &SampleModule, form: &str) -> Page {
+    let mut q = PageQuery::default();
+    form.clone_into(&mut q.form);
+    run(m.page(&cx("p"), q)).expect("page")
+}
+
+pub fn text<'a>(page: &'a Page, record: &str, path: &str) -> Option<&'a str> {
+    let r = page.records.iter().find(|r| r.id == record)?;
+    r.values
+        .iter()
+        .find(|v| v.path == path)
+        .map(|v| v.text.as_str())
+}
+
+pub fn refused<T>(r: Result<T, Refusal>) -> Refusal {
+    match r {
+        Err(e) => e,
+        Ok(_) => panic!("expected a refusal"),
+    }
 }

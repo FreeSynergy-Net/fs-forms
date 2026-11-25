@@ -1,4 +1,4 @@
-//! What the declaratio.all(|n| writes.iter().any(|w| w.0 == *n)) of a form says about its commands: the one place that reads the `writes` column.
+//! What the `writes` column of a form says about its commands: the one place that reads it.
 //!
 //! Pattern: Interpreter of the declaration (no `match` on a command name: the shape of `writes` decides) + Value object.
 

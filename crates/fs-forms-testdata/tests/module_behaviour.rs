@@ -4,43 +4,14 @@
 mod module_support;
 
 use fs_forms_testdata::{Forbid, SAMPLE_PROVIDER, SampleModule, is_sample_provider};
-use fs_interfaces::module::{
-    Ask, ChangeKind, Invocation, ModuleCore, Page, PageQuery, Refusal, StepRef, Value,
-};
+use fs_interfaces::module::{Ask, ChangeKind, Invocation, ModuleCore, Refusal, StepRef};
 use fs_types::Utc;
-use module_support::{BARS, bars_with_writes, board, calendar, cx, module, run};
-
-fn call(command: &str, record: Option<&str>, args: &[(&str, &str)]) -> Invocation {
-    let mut i = Invocation::default();
-    command.clone_into(&mut i.command);
-    i.record = record.map(str::to_owned);
-    i.args = args.iter().map(|(p, t)| Value::new(p, t)).collect();
-    i
-}
-
-fn page(m: &SampleModule, form: &str) -> Page {
-    let mut q = PageQuery::default();
-    form.clone_into(&mut q.form);
-    run(m.page(&cx("p"), q)).expect("page")
-}
-
-fn text<'a>(page: &'a Page, record: &str, path: &str) -> Option<&'a str> {
-    let r = page.records.iter().find(|r| r.id == record)?;
-    r.values
-        .iter()
-        .find(|v| v.path == path)
-        .map(|v| v.text.as_str())
-}
+use module_support::{
+    BARS, bars_with_writes, board, calendar, call, cx, module, page, refused, run, text,
+};
 
 fn calendar_module(forbid: Vec<Forbid>) -> SampleModule {
     module(&calendar(true, 1, forbid)).declare(&bars_with_writes())
-}
-
-fn refused<T>(r: Result<T, Refusal>) -> Refusal {
-    match r {
-        Err(e) => e,
-        Ok(_) => panic!("expected a refusal"),
-    }
 }
 
 const MOVE: [(&str, &str); 3] = [

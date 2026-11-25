@@ -72,9 +72,9 @@ pub struct MakeCx<'a> {
     pub flavor: Flavor,
 }
 
-/// Makes the values of one kind of channel (`Art`). Records and commands make no values and have no strategy.
-///
 /// Pattern: Strategy – one implementation per `Art`; the builder picks it from the declaration of the channel and knows no name.
+///
+/// Makes the values of one kind of channel (`Art`). Records and commands make no values and have no strategy.
 pub trait ValueMaker {
     /// The kind of channel this strategy serves.
     fn art(&self) -> Art;

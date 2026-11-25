@@ -51,9 +51,9 @@ pub struct Parts {
 /// The map of a form onto the fields of a content: channel to field names, and the basic type of each field.
 pub type FieldMap = (Vec<(String, Vec<String>)>, Vec<(String, Basic)>);
 
-/// A content standard.
-///
 /// Pattern: Strategy – one per standard (JSCalendar for `Event`, plain AS2 for everything else).
+///
+/// A content standard.
 pub trait Content {
     /// The media type of the content.
     fn content_type(&self) -> &'static str;

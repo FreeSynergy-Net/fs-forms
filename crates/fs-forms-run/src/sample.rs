@@ -39,7 +39,7 @@ fn card(key: &str, title: &str, due: Option<(&str, DueState)>, who: Option<&str>
         text: t.to_owned(),
         state,
     });
-    c.assignee = who.map(str::to_owned);
+    c.assignees = who.map(str::to_owned).into_iter().collect();
     c
 }
 
@@ -208,7 +208,7 @@ fn board_form(columns: &[Column]) -> FormData {
         for (at, card) in column.cards.iter().enumerate() {
             let label = label_of(&card.key);
             let due = card.due.as_ref().map_or("", |d| d.text.as_str());
-            let who = card.assignee.as_deref().unwrap_or("");
+            let who = card.assignee().unwrap_or("");
             let mut row = FormRow::of(
                 &card.key,
                 &[
@@ -220,8 +220,9 @@ fn board_form(columns: &[Column]) -> FormData {
             );
             row.values.push((
                 "facts".to_owned(),
-                vec![label.to_owned(), due.to_owned(), who.to_owned()],
+                vec![label.to_owned(), due.to_owned()],
             ));
+            row.values.push(("assignee".to_owned(), vec![who.to_owned()]));
             rows.push(row);
         }
     }
@@ -240,8 +241,9 @@ fn board_form(columns: &[Column]) -> FormData {
                 ("order".to_owned(), vec!["index".to_owned()]),
                 (
                     "facts".to_owned(),
-                    vec!["label".to_owned(), "due".to_owned(), "assignee".to_owned()],
+                    vec!["label".to_owned(), "due".to_owned()],
                 ),
+                ("assignee".to_owned(), vec!["assignee".to_owned()]),
             ],
             fields: vec![
                 ("title".to_owned(), Basic::Text),

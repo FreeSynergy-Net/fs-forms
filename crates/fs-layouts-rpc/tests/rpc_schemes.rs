@@ -40,17 +40,17 @@ fn a_scheme_the_instance_allows_comes_back_through_the_client() {
 
 #[test]
 fn the_service_still_refuses_what_its_policy_does_not_list() {
-    let d = dir();
-    let s = person(&d.path().join("l.sock"));
+    let tmp = dir();
+    let svc = person(&tmp.path().join("l.sock"));
     run(async {
-        let c = client(&s.socket);
-        let r = c.create(with_scheme("mailto"), &who()).await;
-        let blocked = match r {
+        let cli = client(&svc.socket);
+        let reply = cli.create(with_scheme("mailto"), &who()).await;
+        let blocked = match reply {
             Ok(rep) => rep
                 .problems
                 .iter()
                 .any(|p| p.code == LayoutCode::SchemeNotAllowed),
-            Err(e) => e.code == LayoutCode::SchemeNotAllowed,
+            Err(err) => err.code == LayoutCode::SchemeNotAllowed,
         };
         assert!(blocked);
     });

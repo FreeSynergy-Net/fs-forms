@@ -17,7 +17,8 @@ bind-error-field-hidden = verborgen ({$reason})
 bind-error-settings-defaults = Einstellungen nicht erreichbar; es gelten die Voreinstellungen.
 bind-error-no-selection = Erst einen Eintrag auswählen.
 bind-error-elem-orphan = Ein Hinweis zur Beschreibung betrifft ein Element, das es nicht mehr gibt ({$elem}).
-# Der Formabgleich (Code-Präfix `form-`, ohne `-error-`; nicht bei den 18 Bind-Codes mitgezählt).
+bind-error-heads-form-missing = Die Bahnliste fehlt: das Modul erklärt keine Form „{$form}“ für den Typ „{$type}“.
+# Der Formabgleich (Code-Präfix `form-`, ohne `-error-`; nicht bei den 19 Bind-Codes mitgezählt).
 form-unknown = Die Form „{$form}“ {$version} steht nicht im Formkatalog.
 form-version-mismatch = Der Baustein „{$block}“ zeichnet {$form} in Version {$component}, das Modul bietet {$module}.
 form-channel-unmapped = Das Modul gibt kein Feld für den Pflichtkanal „{$channel}“ der Form „{$form}“.

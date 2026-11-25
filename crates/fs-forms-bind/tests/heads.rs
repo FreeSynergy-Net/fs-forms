@@ -52,7 +52,7 @@ fn lanes_layout(heads: Option<u32>) -> Resolved {
         elem: "s1".into(),
         capability: "planning".into(),
         range: Range {
-            min: (0, 0, 1),
+            min: (0, 0, 0),
             max: (0, 1, 0),
         },
         data_type: "Lane".into(),

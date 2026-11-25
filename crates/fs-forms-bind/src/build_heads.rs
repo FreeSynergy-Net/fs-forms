@@ -9,6 +9,7 @@ use crate::build_place::Env;
 use crate::coded::Coded;
 use crate::codes::{BindCode, Part, PartLock};
 use crate::forms::FormRef;
+use crate::model::{BindingIn, PlaceIn};
 
 /// `None` = the heads are fine; otherwise the one lock of the slot (source locked, source unknown, form entry missing).
 pub(crate) fn heads_lock(
@@ -51,4 +52,21 @@ pub(crate) fn heads_lock(
         .with("form", form)
         .with("type", src.data_type.clone());
     Some(PartLock::locked(slot.clone(), c))
+}
+
+/// The rule for one grouping binding: the heads forms come from the slot of the block (`heads=` of the contract).
+pub(crate) fn heads_of_slot(
+    env: &Env<'_>,
+    p: &PlaceIn,
+    b: &BindingIn,
+    heads: u32,
+    slot: &Part,
+) -> Option<PartLock> {
+    let wanted = env
+        .catalog
+        .need(&p.block)
+        .ok()
+        .and_then(|s| s.slots.iter().find(|s| s.name == b.slot))
+        .map_or(&[][..], |s| s.heads.as_slice());
+    heads_lock(env, wanted, heads, slot)
 }

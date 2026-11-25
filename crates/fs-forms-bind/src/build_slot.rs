@@ -3,6 +3,7 @@
 //! Pattern: Builder (continued from `build_place`). One lock per slot; every further problem goes to the placement.
 
 use crate::build::Pool;
+use crate::build_heads::heads_of_slot;
 use crate::build_place::Env;
 use crate::codes::{BindCode, Part, PartLock};
 use crate::commands::command_plan;
@@ -54,16 +55,8 @@ pub(crate) fn slot(
     let fill = match &b.kind {
         BindKind::Records(s) => Fill::Records { source: *s },
         BindKind::Grouping { name, heads } => {
-            if let Some(h) = *heads {
-                let wanted = env
-                    .catalog
-                    .need(&p.block)
-                    .ok()
-                    .and_then(|s| s.slots.iter().find(|s| s.name == b.slot))
-                    .map_or(&[][..], |s| s.heads.as_slice());
-                if let Some(l) = crate::build_heads::heads_lock(env, wanted, h, &spart) {
-                    keep_second(&mut slot_lock, l, locks, place);
-                }
+            if let Some(l) = heads.and_then(|h| heads_of_slot(env, p, b, h, &spart)) {
+                keep_second(&mut slot_lock, l, locks, place);
             }
             Fill::Grouping {
                 name: name.clone(),

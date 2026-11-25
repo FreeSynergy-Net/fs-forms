@@ -37,12 +37,12 @@ fn suite_codes_are_once_and_match_the_rules() {
 }
 
 #[test]
-fn bind_codes_are_eighteen_unique_kebab_names() {
+fn bind_codes_are_nineteen_unique_kebab_names() {
     let mut names: Vec<&str> = BindCode::ALL.iter().map(|c| c.name()).collect();
-    assert_eq!(names.len(), 18);
+    assert_eq!(names.len(), 19);
     names.sort_unstable();
     names.dedup();
-    assert_eq!(names.len(), 18);
+    assert_eq!(names.len(), 19);
     for c in BindCode::ALL {
         assert_eq!(c.key(), format!("bind-error-{}", c.name()));
         assert!(

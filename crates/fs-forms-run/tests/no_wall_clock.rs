@@ -1,8 +1,7 @@
 //! A view reads the time only through the port `Clock` (`src/clock.rs`): no direct read of the wall clock anywhere else in the host.
 //!
 //! Test: reads the sources of this crate. Mutant: a `SystemTime::now()` in `src/draw.rs` -> red, and it names the file.
-//! (Why no clippy `disallowed-methods`: the layout store and a test of `fs-forms-core` read the clock too, in other crates; a ban for
-//! the workspace needs an exception per site, and this crate is the one that draws. Card: widen it when those two take a port.)
+//! (Second fence: `clippy.toml` of this crate bans `SystemTime::now`; the exception is `SystemClock` only. Instant, Utc and Local stay with this test.)
 
 use std::path::{Path, PathBuf};
 

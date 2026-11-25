@@ -9,6 +9,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use fs_objects::UndoState;
 
 use super::RecordKey;
+use crate::clock::Clock;
 use crate::form_data::FormData;
 use crate::records::{Records, SideItem};
 
@@ -58,6 +59,9 @@ impl Records for Shared {
     }
     fn can_channel(&self, form: &str, channel: &str, record: Option<&str>) -> bool {
         self.cache.can_channel(form, channel, record)
+    }
+    fn clock(&self) -> Arc<dyn Clock> {
+        self.cache.clock()
     }
     fn is_sample(&self) -> bool {
         self.cache.is_sample()

@@ -13,6 +13,7 @@ use fs_objects::UndoState;
 use super::port::{ChangeSink, Link};
 use super::shared::Shared;
 use crate::changes::ChangeCounter;
+use crate::clock::Clock;
 use crate::form_data::FormData;
 use crate::records::{Records, SideItem};
 use crate::repaint::Repaint;
@@ -122,6 +123,9 @@ impl Records for Inner {
         values: &[(String, String)],
     ) -> Answer {
         self.write(|w| w.invoke(form, channel, record, values))
+    }
+    fn clock(&self) -> Arc<dyn Clock> {
+        self.shared().clock()
     }
     fn is_sample(&self) -> bool {
         self.shared().is_sample()

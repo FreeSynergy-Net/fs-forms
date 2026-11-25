@@ -1,0 +1,6 @@
+# The host reads the wall clock in ONE place: `SystemClock` (src/clock.rs, with the allow). Everything else asks the port `Clock`.
+# A crate-local file replaces the root one, so the root keys are repeated.
+disallowed-methods = [
+    { path = "std::time::SystemTime::now", reason = "ask the port `Clock` (`Records::clock`), only `SystemClock` reads the wall clock" },
+]
+doc-valid-idents = ["..", "ActivityStreams", "ChaCha8", "JSContact", "JSCalendar", "FreeSynergy", "CardDAV", "vCard", "iCalendar", "UUIDv7", "UTCDateTime", "LocalDateTime", "PatchObject", "AsyncAPI", "Kanidm", "AS2", "IRI", "IRIs", "ADR", "UUIDs", "SPN"]

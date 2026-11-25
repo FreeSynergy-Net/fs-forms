@@ -14,7 +14,7 @@ use chrono::{DateTime, Utc};
 /// A point in time, as an instant in UTC (RFC 3339 on the command line, `UTCDateTime` of JSCalendar in the data).
 pub type Moment = DateTime<Utc>;
 
-/// What "now" is for a view.
+/// Pattern: Strategy / Port – what "now" is for a view.
 pub trait Clock: Send + Sync + Debug {
     /// The moment the view takes as now.
     fn now(&self) -> Moment;
@@ -26,6 +26,8 @@ pub struct SystemClock;
 
 impl Clock for SystemClock {
     fn now(&self) -> Moment {
+        #[allow(clippy::disallowed_methods)]
+        // the one place that reads the wall clock (clippy.toml of this crate)
         Moment::from(SystemTime::now())
     }
 }

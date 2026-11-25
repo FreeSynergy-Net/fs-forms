@@ -127,10 +127,10 @@ fn data_of(page: &Page, declared: &fs_forms_bind::ModuleForm) -> FormData {
     }
     let mut columns: Vec<(String, String)> = Vec::new();
     for row in &rows {
-        if let Some(key) = row.get("column") {
-            if !columns.iter().any(|(k, _)| k == key) {
-                columns.push((key.to_owned(), key.to_owned()));
-            }
+        if let Some(key) = row.get("column")
+            && !columns.iter().any(|(k, _)| k == key)
+        {
+            columns.push((key.to_owned(), key.to_owned()));
         }
     }
     FormData {
@@ -213,10 +213,10 @@ pub fn card(n: usize) -> String {
 pub fn columns(records: &dyn Records) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
     for row in rows(records) {
-        if let Some(c) = row.get("column") {
-            if !out.iter().any(|o| o == c) {
-                out.push(c.to_owned());
-            }
+        if let Some(c) = row.get("column")
+            && !out.iter().any(|o| o == c)
+        {
+            out.push(c.to_owned());
         }
     }
     out

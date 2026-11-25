@@ -6,33 +6,53 @@
 //! Tests: after each action the next drawing differs from the one before; two drawings without an action are equal (the
 //! difference is the action, not noise). The data path of the gestures is tested in `src/write/tests.rs` and `fs-components-kanban`.
 
+mod sample_source;
 mod support;
 use std::sync::Arc;
 
-use fs_forms_run::{SampleBoard, sample_add_card, sample_add_column, sample_move_card};
+use fs_forms_run::{Records, SampleBoard, sample_add_column};
+use sample_source::{add_card, board as sample_board, card, column, move_card, other_column};
 use support::board;
 
 /// Wide enough that a fourth column is in the picture.
 const WIDE: u32 = 1700;
 
-type Step = Box<dyn Fn(&SampleBoard)>;
+/// What the action is done on: the records, and the gesture.
+type Step = Box<dyn Fn(&dyn Records)>;
 
-fn actions() -> Vec<(&'static str, Step)> {
+/// A board of the new source (the wish of `tests/fixtures/sample/board-parity.toml`); the cards and columns are read from its data.
+fn new_source() -> Arc<dyn Records> {
+    sample_board()
+}
+
+/// A board of the old fixture: only for the action the new source cannot do yet (a column: `cards-in-columns` has no command for it, card of package 5a).
+fn old_source() -> Arc<dyn Records> {
+    Arc::new(SampleBoard::default())
+}
+
+/// A case: its name, the source it runs on and the gesture.
+type Case = (&'static str, fn() -> Arc<dyn Records>, Step);
+
+fn actions() -> Vec<Case> {
     vec![
         (
             "add-card",
+            new_source,
             Box::new(|b| {
-                let _ = sample_add_card(b, "todo", "Ship the first release");
+                let _ = add_card(b, &column(0), "Ship the first release");
             }),
         ),
         (
             "move-card",
+            new_source,
             Box::new(|b| {
-                let _ = sample_move_card(b, "FS-1", "doing");
+                let key = card(0);
+                let _ = move_card(b, &key, &other_column(&key));
             }),
         ),
         (
             "add-column",
+            old_source,
             Box::new(|b| {
                 let _ = sample_add_column(b, "Review");
             }),
@@ -56,8 +76,8 @@ fn each_action_on_the_sample_board_shows_in_the_next_drawing_of_the_same_window(
         .resolve("", "")
         .unwrap();
     let comp = fs_forms_run::compose(&view, &fs_forms_run::Blocks);
-    for (name, act) in actions() {
-        let records = Arc::new(SampleBoard::default());
+    for (name, source, act) in actions() {
+        let records = source();
         let widget = fs_forms_run::app_styled(
             &texts,
             &locale,
@@ -88,7 +108,7 @@ fn each_action_on_the_sample_board_shows_in_the_next_drawing_of_the_same_window(
             return;
         }
         widget.picture(WIDE, 760, &again).unwrap();
-        act(&records);
+        act(&*records);
         widget.picture(WIDE, 760, &after).unwrap();
         let read = |p: &std::path::Path| std::fs::read(p).unwrap();
         // `assert!` on a bool: a failed `assert_eq!` would print both pictures as bytes

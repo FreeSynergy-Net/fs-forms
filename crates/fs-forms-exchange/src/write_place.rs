@@ -3,7 +3,9 @@
 //!
 //! Pattern: Composite writer (recursion like the menu entries).
 
-use fs_forms_layout::{AttrDoc, BlockDoc, Coded, Item, LayoutCode, PageDoc, PlaceNode};
+use fs_forms_layout::{
+    AttrDoc, BlockDoc, Coded, EmbedDoc, Item, LayoutCode, PageDoc, PlaceNode, Words,
+};
 
 use crate::tree::Tree;
 use crate::write::{Pairs, binding, elem, int, list, obj, opt};
@@ -32,9 +34,35 @@ fn block(e: (&'static str, Tree), b: &BlockDoc) -> Tree {
     obj(q)
 }
 
+/// A frontend node: the key as a table, `mode` and `shown` always written (a file says what it does).
+fn embed(e: (&'static str, Tree), d: &EmbedDoc) -> Tree {
+    let key = Tree::obj(vec![
+        ("extends", Tree::s(&d.key.extends)),
+        ("frontend", Tree::s(&d.key.frontend)),
+    ]);
+    let mut q = vec![
+        e,
+        ("at", Tree::s(&d.place)),
+        ("frontend", key),
+        ("mode", Tree::s(d.mode.word())),
+        ("shown", Tree::s(d.shown.word())),
+    ];
+    if let Some(s) = &d.scope_from {
+        q.push(("scope-from", Tree::s(s.as_str())));
+    }
+    if !d.user.is_empty() {
+        q.push((
+            "user",
+            Tree::Arr(d.user.iter().map(|u| Tree::s(u)).collect()),
+        ));
+    }
+    obj(q)
+}
+
 fn node(i: &Item<PlaceNode>) -> Result<Tree, Coded<LayoutCode>> {
     match &i.v {
         PlaceNode::Block(b) => Ok(block(elem(i), b)),
+        PlaceNode::Frontend(e) => Ok(embed(elem(i), e)),
         PlaceNode::Frame(f) => {
             let mut q = vec![
                 elem(i),

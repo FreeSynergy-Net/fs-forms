@@ -3,7 +3,8 @@
 //! Pattern: Adapter (model -> wire), one small function per struct.
 
 use fs_forms_layout::{
-    ActionDoc, ActionTarget, BindFrom, ElemId, Item, LayoutDoc, MenuDoc, PageDoc, SourceDoc,
+    ActionDoc, ActionTarget, BindFrom, Coded, ElemId, Item, LayoutCode, LayoutDoc, MenuDoc,
+    PageDoc, SourceDoc,
 };
 
 use super::text::{R, n};
@@ -62,7 +63,7 @@ pub(crate) fn write_doc(mut out: w::layout_doc::Builder<'_>, d: &LayoutDoc) -> R
     }
     let mut l = out.reborrow().init_actions(n(&d.actions));
     for (i, a) in (0..).zip(&d.actions) {
-        write_action(l.reborrow().get(i), i + 1, a);
+        write_action(l.reborrow().get(i), i + 1, a)?;
     }
     let mut l = out.reborrow().init_views(n(&d.views));
     for (i, v) in (0..).zip(&d.views) {
@@ -143,7 +144,7 @@ pub(crate) fn write_binding(mut x: w::binding::Builder<'_>, b: &Item<fs_forms_la
     }
 }
 
-fn write_action(mut e: w::action::Builder<'_>, nth: u32, a: &Item<ActionDoc>) {
+fn write_action(mut e: w::action::Builder<'_>, nth: u32, a: &Item<ActionDoc>) -> R<()> {
     e.set_elem(elem_text(a));
     e.set_n(nth);
     e.set_trigger(a.v.trigger.word());
@@ -157,8 +158,13 @@ fn write_action(mut e: w::action::Builder<'_>, nth: u32, a: &Item<ActionDoc>) {
             e.set_target("workflow");
             e.set_workflow(&r.0);
         }
+        // the wire has no member for `open` yet (S6-4): refused, never dropped
+        ActionTarget::Open { .. } => {
+            return Err(Coded::new(LayoutCode::ExportFailed).with("what", "action-open"));
+        }
     }
     e.set_confirm(a.v.confirm.map_or("", Words::word));
+    Ok(())
 }
 
 #[cfg(test)]

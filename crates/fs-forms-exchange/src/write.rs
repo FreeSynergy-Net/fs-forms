@@ -77,6 +77,7 @@ pub(crate) fn layout_tree(l: &Layout, own_views: bool) -> Result<Tree, Coded<Lay
                     q.push(("command", Tree::s(command)));
                 }
                 ActionTarget::Workflow(w) => q.push(("workflow", Tree::s(&w.0))),
+                ActionTarget::Open { elem } => q.push(("open", Tree::s(elem.as_str()))),
             }
             if let Some(c) = i.v.confirm {
                 q.push(("confirm", Tree::s(c.word())));

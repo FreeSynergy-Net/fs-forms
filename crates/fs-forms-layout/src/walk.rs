@@ -164,6 +164,8 @@ fn places(items: &mut [Item<PlaceNode>], page: &str, path: &[String], f: &mut Vi
                 attrs(&mut fr.set, &parts, f);
                 places(&mut fr.children, page, &here, f);
             }
+            // the id of a frontend node is written by the author (`elem`, required): the window id is built from it, never from a path
+            PlaceNode::Frontend(_) => {}
         }
     }
 }

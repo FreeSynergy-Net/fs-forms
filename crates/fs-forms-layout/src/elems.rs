@@ -95,6 +95,7 @@ fn in_tree(pages: &[Item<PageDoc>], kind: ElemKind, id: &ElemId) -> bool {
                     || go(&f.children, kind, id)
             }
             PlaceNode::Block(b) => kind == ElemKind::Attr && has(&b.set, id),
+            PlaceNode::Frontend(_) => false, // no attributes; overlays cannot reach it yet (S6-4)
         })
     }
     pages.iter().any(|p| {
@@ -109,6 +110,7 @@ fn drop_place(items: &mut Vec<Item<PlaceNode>>, kind: ElemKind, id: &ElemId) {
         let is_kind = match &i.v {
             PlaceNode::Block(_) => kind == ElemKind::Block,
             PlaceNode::Frame(_) => kind == ElemKind::Frame,
+            PlaceNode::Frontend(_) => false,
         };
         !(is_kind && is(i.elem.as_ref(), id))
     });
@@ -123,7 +125,7 @@ fn drop_place(items: &mut Vec<Item<PlaceNode>>, kind: ElemKind, id: &ElemId) {
             PlaceNode::Block(b) if kind == ElemKind::Attr => {
                 b.set.retain(|a| !is(a.elem.as_ref(), id));
             }
-            PlaceNode::Block(_) => {}
+            PlaceNode::Block(_) | PlaceNode::Frontend(_) => {}
         }
     }
 }

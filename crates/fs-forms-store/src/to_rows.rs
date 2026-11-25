@@ -83,6 +83,21 @@ fn origin_word(o: Origin) -> &'static str {
     }
 }
 
+/// The cells of an action target: (target word, command, source, workflow). `open` has no column yet (S6-4): refused, never dropped.
+fn action_cells(t: &ActionTarget) -> Result<(&'static str, Cell, Cell, Cell), Coded<LayoutCode>> {
+    Ok(match t {
+        ActionTarget::Command { source, command } => {
+            ("command", text(command), int(*source), Cell::Null)
+        }
+        ActionTarget::Workflow(w) => ("workflow", Cell::Null, Cell::Null, text(&w.0)),
+        ActionTarget::Open { .. } => {
+            return Err(Coded::new(LayoutCode::ExportFailed)
+                .with("file", "")
+                .with("kind", "action-open-not-supported-yet"));
+        }
+    })
+}
+
 /// Rows of one layout, all tables of the description (not the overlay tables).
 ///
 /// # Errors
@@ -155,12 +170,7 @@ pub fn to_rows(layout: &Layout, meta: &LayoutMeta) -> Result<Rows, Coded<LayoutC
     menu_rows(&d.menu, None, &id, &mut node, &mut rows);
     pages(layout, &id, &mut rows)?;
     for (n, a) in d.actions.iter().enumerate() {
-        let (target, command, source, workflow) = match &a.v.target {
-            ActionTarget::Command { source, command } => {
-                ("command", text(command), int(*source), Cell::Null)
-            }
-            ActionTarget::Workflow(w) => ("workflow", Cell::Null, Cell::Null, text(&w.0)),
-        };
+        let (target, command, source, workflow) = action_cells(&a.v.target)?;
         RowBuilder::new(&t::ACTION)
             .set("layout", id.clone())
             .set("action", int(u32::try_from(n + 1).unwrap_or(0)))

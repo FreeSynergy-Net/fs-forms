@@ -1,11 +1,11 @@
 //! The tree of places on a page: a place holds a block (leaf) or a frame that has places of its own.
 //!
-//! Pattern: Composite (see `PlaceNode`): leaf or composite; the types are Value Objects, the
+//! Pattern: Composite (see `PlaceNode`): leaf (block, frontend) or composite (frame); the types are Value Objects, the
 //! behaviour (walk, check, draw) lives outside. [`PageDoc::leaves`] is an Iterator over the leaves in document order.
 //! Deviation from the pattern book: no `List` node; several children on one place ARE the list (their order is the file order).
 
-use crate::doc::{BlockDoc, Item, PageDoc};
-use crate::ids::ElemId;
+use crate::doc::{BlockDoc, Item, PageDoc, Placement, Shown};
+use crate::ids::{ElemId, FrontendKey};
 
 /// Pattern: Composite: one node of the place tree, a leaf (`Block`) or a composite (`Frame`) with children.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -15,6 +15,34 @@ pub enum PlaceNode {
     Block(BlockDoc),
     /// A frame with places of its own.
     Frame(FrameDoc),
+    /// A frontend of another (or the same) program on this place (leaf; Stage 6).
+    Frontend(EmbedDoc),
+}
+
+/// A frontend embedded on a place: which one, how it appears, when it is opened. Pure description (Value Object); opening it is
+/// the job of the window owner (`fs-forms-run`), never of this crate. The `elem` of the item is the stable id the window id is
+/// built from, so it is required (the natural ids of the walk are never made for this node).
+///
+/// Pattern: Composite leaf (see `PlaceNode`); `mode` is a Strategy word (see `Placement`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct EmbedDoc {
+    /// Place in the parent.
+    pub place: String,
+    /// The embedded frontend: `AppStream` id of its program and its name.
+    pub key: FrontendKey,
+    /// Panel on the place or window of its own.
+    pub mode: Placement,
+    /// At the start of the parent or only by an action `open`.
+    pub shown: Shown,
+    /// Element id of a neighbour node whose selection is the `scope` of the child.
+    pub scope_from: Option<ElemId>,
+    /// Flags the person may use; known: `window` (switch panel and window).
+    pub user: Vec<String>,
+}
+
+impl EmbedDoc {
+    /// The only user flag that exists so far.
+    pub const USER_FLAGS: &'static [&'static str] = &["window"];
 }
 
 /// A frame placed on a place; its parameters (`axis`, `sizes`, `active` ...) are attributes in `set`.
@@ -46,6 +74,7 @@ impl PlaceNode {
         match self {
             Self::Block(b) => &b.place,
             Self::Frame(f) => &f.place,
+            Self::Frontend(e) => &e.place,
         }
     }
 }
@@ -96,6 +125,7 @@ fn collect<'a>(items: &'a [Item<PlaceNode>], out: &mut Vec<Leaf<'a>>) {
                 v: b,
             }),
             PlaceNode::Frame(f) => collect(&f.children, out),
+            PlaceNode::Frontend(_) => {}
         }
     }
 }
@@ -109,6 +139,7 @@ fn collect_mut<'a>(items: &'a mut [Item<PlaceNode>], out: &mut Vec<LeafMut<'a>>)
                 v: b,
             }),
             PlaceNode::Frame(f) => collect_mut(&mut f.children, out),
+            PlaceNode::Frontend(_) => {}
         }
     }
 }

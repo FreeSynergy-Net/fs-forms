@@ -128,6 +128,30 @@ fn draw_ctx(ctx: &Ctx, block: &str, look: (StyleId, bool), info: &PlaceInfo) -> 
     }
 }
 
+/// The component of the placement: the kept one for (block, look, info), else a new one.
+fn mount(ctx: &Ctx, name: &str, info: &PlaceInfo) -> Option<Arc<dyn Mounted>> {
+    let view = view_of(name)?;
+    let look = ((ctx.style)(), dark());
+    let input = input_for(&*ctx.records, name, &ctx.feeds);
+    let mut slots = ctx.mounts.lock().unwrap_or_else(PoisonError::into_inner);
+    if let Some(slot) = slots
+        .iter()
+        .find(|s| s.block == name && s.look == look && s.info == *info)
+    {
+        slot.mounted.refresh(input);
+        return Some(slot.mounted.clone());
+    }
+    let mounted: Arc<dyn Mounted> = Arc::from(view.mount(input, draw_ctx(ctx, name, look, info)));
+    slots.retain(|s| !(s.block == name && s.info == *info));
+    slots.push(Slot {
+        block: name.to_owned(),
+        info: info.clone(),
+        look,
+        mounted: mounted.clone(),
+    });
+    Some(mounted)
+}
+
 /// The block as an element, or `None` when this host has no drawing for it (the caller says so).
 pub(crate) fn block(
     name: &str,
@@ -139,30 +163,7 @@ pub(crate) fn block(
     if name == "sidebar" {
         return Some(sidebar(ctx, width, height));
     }
-    let view = view_of(name)?;
-    let look = ((ctx.style)(), dark());
-    let input = input_for(&*ctx.records, name, &ctx.feeds);
-    let mounted = {
-        let mut slots = ctx.mounts.lock().unwrap_or_else(PoisonError::into_inner);
-        if let Some(slot) = slots
-            .iter()
-            .find(|s| s.block == name && s.look == look && s.info == *info)
-        {
-            slot.mounted.refresh(input);
-            slot.mounted.clone()
-        } else {
-            let mounted: Arc<dyn Mounted> =
-                Arc::from(view.mount(input, draw_ctx(ctx, name, look, info)));
-            slots.retain(|s| !(s.block == name && s.info == *info));
-            slots.push(Slot {
-                block: name.to_owned(),
-                info: info.clone(),
-                look,
-                mounted: mounted.clone(),
-            });
-            mounted
-        }
-    };
+    let mounted = mount(ctx, name, info)?;
     Some(mounted.build(width, height))
 }
 

@@ -188,11 +188,11 @@ impl WindowOwner for FakeWindows {
         let mut open = self.lock();
         let (program, elem, parent) = match &req.parent {
             Some((pid, elem)) => {
-                let p = open.get(pid).ok_or_else(|| {
+                open.get(pid).ok_or_else(|| {
                     Coded::new("host-notice-window-unknown").with("id", pid.as_str())
                 })?;
                 (
-                    p.key.extends.clone(),
+                    pid.as_str().to_owned(),
                     elem.as_str().to_owned(),
                     Some(pid.clone()),
                 )

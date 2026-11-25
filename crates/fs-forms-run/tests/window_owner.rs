@@ -16,12 +16,15 @@ use fs_forms_run::{OpenFrontend, Placement, WindowId, WindowOwner};
 use window_owner_common::{child, elem, fake, id, key, root, settings, tasks, view};
 
 #[test]
-fn the_id_is_program_slash_elem_and_stable() {
+fn the_id_is_program_slash_elem_and_the_child_id_is_parent_slash_elem() {
     let owner = fake();
     let r = root(&owner);
     assert_eq!(r, WindowId("net.freesynergy.Tasks/board".into()));
     let c = child(&owner, &r, "settings-embed", Placement::InFrame);
-    assert_eq!(c, WindowId("net.freesynergy.Tasks/settings-embed".into()));
+    assert_eq!(
+        c,
+        WindowId("net.freesynergy.Tasks/board/settings-embed".into())
+    );
     // Another owner, the same request: the same id (never a counter).
     let other = fake();
     let r2 = root(&other);

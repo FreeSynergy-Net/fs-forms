@@ -62,3 +62,6 @@ host-notice-window-unknown = This window is not open
 host-notice-open-ask-failed = The question could not be shown; nothing was opened
 host-notice-window-failed = The window could not be opened
 host-menu-view = View
+host-notice-scope-from-not-built = The record of this panel comes from the selection of another part; that is not built yet, so the panel is not shown (frontend)
+host-notice-frontend-on-open-not-built = This frontend opens through the action open; that is not built yet, so it is not shown (frontend)
+host-notice-frontend-loop = This frontend would contain itself, directly or through other frontends; it is not shown (frontend)

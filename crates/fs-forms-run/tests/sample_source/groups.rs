@@ -1,6 +1,6 @@
 //! The test data of the groups module (a tree of two depths and a member list), made from the wish
-//! `tests/fixtures/sample/groups-parity.toml` and read through `SampleModule::page` the way the host reads a module. It replaces
-//! `sample_groups()` of the host (the old hand-built one) in the tests that need a groups module: no test names a node or a member.
+//! `tests/fixtures/sample/groups-parity.toml` and read through `SampleModule::page` the way the host reads a module. It serves
+//! the tests that need a groups module: no test names a node or a member.
 //!
 //! Pattern: Adapter (`Page` -> `FormData`, the function `data_of` of the parent) over a Fake Object (`SampleModule`).
 

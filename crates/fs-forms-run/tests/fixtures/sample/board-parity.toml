@@ -1,4 +1,4 @@
-# The wish that stands in for the old hand-built sample board (`src/sample.rs`, SampleBoard): the section `[sample]` of a description, nothing else.
+# The wish for the sample board: the section `[sample]` of a description, nothing else.
 # Five cards in three columns (a column per category), a few cards without an assignee, labels as the text facts. Read by `tests/sample_source`.
 [sample]
 seed = 5

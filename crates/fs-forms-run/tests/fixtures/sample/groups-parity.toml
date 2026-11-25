@@ -1,4 +1,4 @@
-# The wish that stands in for the old hand-built sample groups (`src/sample_groups.rs`): the section `[sample]` of a description, nothing else.
+# The wish for the sample groups: the section `[sample]` of a description, nothing else.
 # A tree of two depths (two chains: four levels and two) and a member list of five. Read by `tests/sample_source/groups.rs`.
 [sample]
 seed = 9

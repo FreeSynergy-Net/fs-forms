@@ -1,9 +1,9 @@
 //! The test data of the board tests: made from a wish (`[sample]`, `tests/fixtures/sample/board-parity.toml`) by `fs-forms-testdata`,
 //! served by `SampleModule`, and given to the host as `Records` the way a connected module is (`FormRecords` + the port `Writer`).
-//! It replaces `SampleBoard` (package 5a): a test names no card, column or text; it reads them from the data (`card`, `column`).
+//! A test names no card, column or text; it reads them from the data (`card`, `column`).
 //!
-//! The turn of a module into `Records` for the real host is package 4b (fs-starter); this is the one the tests of this crate use
-//! until then (the module lives on its own thread: `SampleModule` is not `Send`, the port `Writer` is).
+//! The turn of a module into `Records` for the real host is the adapter of the starter (package 4b, fs-starter); this is the one the
+//! tests of this crate use (the module lives on its own thread: `SampleModule` is not `Send`, the port `Writer` is).
 //!
 //! Pattern: Adapter (`SampleModule` -> `Writer` + `FormData`) behind the existing `FormRecords`; Fake Object inside.
 

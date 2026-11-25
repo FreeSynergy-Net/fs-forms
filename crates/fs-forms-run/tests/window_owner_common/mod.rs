@@ -40,6 +40,7 @@ pub fn view(title: &str, block: &str) -> View {
                 block: block.into(),
                 locks: Vec::new(),
                 slot_locks: Vec::new(),
+                embed: None,
             }],
         }],
         menu: vec![MenuItem {

@@ -14,6 +14,7 @@ use fs_components_app::{Element, Surface};
 use fs_components_widgets::states::{self, EmptyState};
 
 use crate::draw::{self, Ctx};
+use crate::panel;
 use crate::parts::{Part, notice};
 use crate::unfinished;
 
@@ -39,7 +40,7 @@ pub(crate) struct Regions {
 
 fn place_of(part: &Part) -> &str {
     match part {
-        Part::Block { place, .. } => place,
+        Part::Block { place, .. } | Part::Panel { place, .. } => place,
         Part::Locked { name, .. } => name,
         Part::Empty(_) => "",
     }
@@ -87,6 +88,7 @@ impl Page {
                 Part::Locked { name, lines } => {
                     column.child(notice(&self.labels, name, lines).build())
                 }
+                Part::Panel { head, child, .. } => column.child(panel::draw(head, child, inner)),
                 Part::Empty(sentence) => column.child(self.empty_slot("page", sentence)),
                 Part::Block {
                     place,
@@ -150,10 +152,11 @@ impl Surface for Page {
 
     fn styles(&self) -> String {
         format!(
-            "{}{}{}.fs-forms-side {{ flex-shrink: 0; border-right-width: 1px; border-right-color: var(--border); background: var(--surface); }}\n",
+            "{}{}{}{}.fs-forms-side {{ flex-shrink: 0; border-right-width: 1px; border-right-color: var(--border); background: var(--surface); }}\n",
             fs_components_workbenches::people::styles(),
             states::STYLES,
             fs_components_widgets::disabled::STYLES,
+            panel::STYLES,
         )
     }
 }

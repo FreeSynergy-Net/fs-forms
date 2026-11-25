@@ -6,9 +6,9 @@
 //!
 //! Pattern: Adapter over the Composite (`PlaceNode` in, the flat `PlaceView` out) with an explicit "not built" arm.
 
-use fs_forms_layout::{Layout, PageDoc, PlaceNode};
+use fs_forms_layout::{EmbedDoc, Layout, PageDoc, PlaceNode, Placement, Shown};
 
-use crate::view::{Coded, PlaceView};
+use crate::view::{Coded, EmbedView, PlaceView};
 
 fn text(layout: &Layout, key: &str, lang: &str) -> String {
     let find = |l: &str| {
@@ -45,7 +45,13 @@ pub(crate) fn place_views(layout: &Layout, page: &PageDoc, lang: &str) -> Vec<Pl
                 title: None,
                 locks: vec![Coded::new("host-notice-frame-not-built").with("frame", &f.frame)],
                 slot_locks: Vec::new(),
+                embed: None,
             },
+            PlaceNode::Frontend(e) => embed_view(
+                e,
+                n.elem.as_ref().map(fs_forms_layout::ElemId::as_str),
+                next(),
+            ),
             // a kind of node this host does not know: said, never skipped
             _ => PlaceView {
                 place: String::new(),
@@ -54,6 +60,7 @@ pub(crate) fn place_views(layout: &Layout, page: &PageDoc, lang: &str) -> Vec<Pl
                 title: None,
                 locks: vec![Coded::new("host-notice-frame-not-built").with("frame", "?")],
                 slot_locks: Vec::new(),
+                embed: None,
             },
         });
     }
@@ -68,5 +75,25 @@ fn block_view(layout: &Layout, b: &fs_forms_layout::BlockDoc, seq: u32, lang: &s
         title: b.title_key.as_deref().map(|k| text(layout, k, lang)),
         locks: Vec::new(),
         slot_locks: Vec::new(),
+        embed: None,
+    }
+}
+
+/// A frontend node: the host does not draw it, the owner of the open frontends opens it (panel here, or a window of its own).
+fn embed_view(e: &EmbedDoc, elem: Option<&str>, seq: u32) -> PlaceView {
+    PlaceView {
+        place: e.place.clone(),
+        seq,
+        block: "frontend".to_owned(),
+        title: None,
+        locks: Vec::new(),
+        slot_locks: Vec::new(),
+        embed: Some(EmbedView {
+            elem: elem.unwrap_or(&e.place).to_owned(),
+            key: e.key.clone(),
+            panel: e.mode == Placement::Panel,
+            on_open: e.shown == Shown::OnOpen,
+            scope_from: e.scope_from.as_ref().map(|i| i.as_str().to_owned()),
+        }),
     }
 }

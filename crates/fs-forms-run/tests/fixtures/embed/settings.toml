@@ -1,0 +1,86 @@
+# Test data of S6-7 (fs-forms only, no data of a foreign repo): the frontend `settings` of a FOREIGN program (`net.freesynergy.Settings`),
+# embedded by `board-embed`. It draws the forms `tree` and `rows` of its own fake module (the groups data stand in for settings data).
+# forms description of a groups frontend: the group tree beside the member list. IMPORT FORM ONLY (ADR 0096 point 6), like board.toml.
+# Used by the tests of the forms `tree` and `rows` (blocks `tree` and `table`, drawn by channel, `--sample-data`). Format 3 (A5 F6).
+schema = 3
+kind = "frontend"
+id = "settings"
+extends = "net.freesynergy.Settings"
+exec = "fs-forms-run"
+title = "groups-title"
+style = "default"
+
+[[requires]]
+elem = "requires:1"
+contract = "groups@>=0.1, <0.2"
+
+[[source]]
+elem = "source:1"
+n = 1
+contract = "groups@>=0.1, <0.2"
+type = "Group"
+scope = "all"
+
+[[menu]]
+elem = "menu:0"
+kind = "standard-program"
+
+[[menu]]
+elem = "menu:1"
+kind = "standard-help"
+
+[[page]]
+elem = "page:groups"
+page = "groups"
+frame = "workbench"
+navigation = "list-detail"
+
+[[page.place]]
+elem = "block:groups/side"
+at = "side"
+block = "tree"
+source = 1
+title = "groups-tree-title"
+
+[[page.place]]
+elem = "block:groups/main"
+at = "main"
+block = "table"
+source = 1
+title = "groups-members-title"
+
+[[message]]
+elem = "message:groups-members-title/de"
+key = "groups-members-title"
+lang = "de"
+text = "Mitglieder"
+
+[[message]]
+elem = "message:groups-members-title/en"
+key = "groups-members-title"
+lang = "en"
+text = "Members"
+
+[[message]]
+elem = "message:groups-title/de"
+key = "groups-title"
+lang = "de"
+text = "Gruppen"
+
+[[message]]
+elem = "message:groups-title/en"
+key = "groups-title"
+lang = "en"
+text = "Groups"
+
+[[message]]
+elem = "message:groups-tree-title/de"
+key = "groups-tree-title"
+lang = "de"
+text = "Gruppen"
+
+[[message]]
+elem = "message:groups-tree-title/en"
+key = "groups-tree-title"
+lang = "en"
+text = "Groups"

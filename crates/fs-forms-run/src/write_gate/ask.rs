@@ -46,6 +46,7 @@ fn invoke_answers_with_ask_and_the_question_of_the_records_is_refused_with_its_o
         actions: Arc::new(vec![ActionView {
             trigger: "drop".into(),
             command: "card.move".into(),
+            open: None,
         }]),
         form: "cards-in-columns".into(),
     };

@@ -23,6 +23,7 @@ fn place(name: &str, seq: u32, block: &str) -> PlaceView {
         block: block.into(),
         locks: Vec::new(),
         slot_locks: Vec::new(),
+        embed: None,
     }
 }
 
@@ -180,7 +181,7 @@ fn every_lock_of_the_plan_is_in_the_tree() {
         .flat_map(|n| match n {
             Node::Locked { codes, .. } => codes.iter().map(|c| c.code.clone()).collect(),
             Node::Block { slot_locks, .. } => slot_locks.iter().map(|c| c.code.clone()).collect(),
-            Node::Empty { .. } => Vec::new(),
+            Node::Empty { .. } | Node::Frontend { .. } => Vec::new(),
         })
         .chain(c.notices.iter().map(|c| c.code.clone()))
         .collect();

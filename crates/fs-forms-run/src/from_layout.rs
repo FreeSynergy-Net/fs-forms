@@ -96,9 +96,16 @@ pub fn view_of(layout: &Layout, lang: &str) -> View {
             ActionTarget::Command { command, .. } => Some(ActionView {
                 trigger: trigger_name(a.v.trigger).to_owned(),
                 command: command.clone(),
+                open: None,
             }),
-            // a workflow is no command; `open` is opened by the window owner (S6-7); until then neither is offered
-            ActionTarget::Workflow(_) | ActionTarget::Open { .. } => None,
+            // `open` is carried out by the window owner (`HostWindows::open_embed`), no command of a module
+            ActionTarget::Open { elem } => Some(ActionView {
+                trigger: trigger_name(a.v.trigger).to_owned(),
+                command: "open".to_owned(),
+                open: Some(elem.as_str().to_owned()),
+            }),
+            // a workflow is no command; it is not offered
+            ActionTarget::Workflow(_) => None,
         })
         .collect();
     View {

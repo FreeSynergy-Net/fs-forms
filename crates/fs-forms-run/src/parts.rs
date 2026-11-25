@@ -9,6 +9,7 @@ use fs_components_mf2::Mf2Texts;
 use fs_components_widgets::states::{self, PartialNotice};
 
 use crate::compose::Node;
+use crate::panel::{Embedded, Panels};
 use crate::view::Coded;
 
 /// A part, with its sentences already made.
@@ -24,6 +25,12 @@ pub(crate) enum Part {
     Locked { name: String, lines: Vec<String> },
     /// An empty page with its sentence.
     Empty(String),
+    /// A frontend of another (or the same) program, opened as a panel in this place: its own page, drawn here.
+    Panel {
+        place: String,
+        head: String,
+        child: Embedded,
+    },
 }
 
 /// The sentence of a code, with the code and its parameters behind it; a code without a sentence is shown as itself.
@@ -41,24 +48,51 @@ pub(crate) fn line(texts: &Mf2Texts, c: &Coded) -> String {
 }
 
 pub(crate) fn parts(texts: &Mf2Texts, nodes: &[Node]) -> Vec<Part> {
+    parts_with(texts, nodes, &Panels::new())
+}
+
+/// The parts of `nodes`; a frontend node is the panel the owner opened for its place (`panels`), a locked part when there is none (this
+/// window has no owner, or the child was refused). A node in a window of its own draws nothing here.
+pub(crate) fn parts_with(texts: &Mf2Texts, nodes: &[Node], panels: &Panels) -> Vec<Part> {
     nodes
         .iter()
-        .map(|n| match n {
-            Node::Block {
-                place,
-                block,
-                title,
-                ..
-            } => Part::Block {
-                place: place.clone(),
-                block: block.clone(),
-                title: title.clone(),
-            },
-            Node::Locked { place, codes } => Part::Locked {
-                name: place.clone().unwrap_or_default(),
-                lines: codes.iter().map(|c| line(texts, c)).collect(),
-            },
-            Node::Empty { .. } => Part::Empty(texts.plain("host-page-empty")),
+        .filter_map(|n| {
+            Some(match n {
+                Node::Frontend { embed, .. } if !embed.panel => return None,
+                Node::Frontend { place, embed } => match panels.get(place) {
+                    Some(Ok((head, child))) => Part::Panel {
+                        place: place.clone(),
+                        head: head.clone(),
+                        child: child.clone(),
+                    },
+                    other => {
+                        let why = match other {
+                            Some(Err(c)) => c.clone(),
+                            _ => Coded::new("host-notice-frontend-not-opened")
+                                .with("frontend", embed.key.frontend.clone()),
+                        };
+                        Part::Locked {
+                            name: place.clone(),
+                            lines: vec![line(texts, &why)],
+                        }
+                    }
+                },
+                Node::Block {
+                    place,
+                    block,
+                    title,
+                    ..
+                } => Part::Block {
+                    place: place.clone(),
+                    block: block.clone(),
+                    title: title.clone(),
+                },
+                Node::Locked { place, codes } => Part::Locked {
+                    name: place.clone().unwrap_or_default(),
+                    lines: codes.iter().map(|c| line(texts, c)).collect(),
+                },
+                Node::Empty { .. } => Part::Empty(texts.plain("host-page-empty")),
+            })
         })
         .collect()
 }

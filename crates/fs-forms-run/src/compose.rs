@@ -1,13 +1,17 @@
 //! The plan becomes a tree of nodes: a block that is drawn, a part that is locked with its codes, an empty page. Pure: no window,
 //! no clock, no I/O, so every rule of the host is testable without Blinc.
 //!
+//! A frontend node (`PlaceNode::Frontend`) is a node of the tree like a block: [`Node::Frontend`] says which frontend is placed where and
+//! how (panel or window). The tree stays pure; the owner of the open frontends (`HostWindows`) opens the child, composes ITS plan
+//! the same way (the recursion) and puts the child's page into the place of the panel.
+//!
 //! Pattern: Interpreter (plan in, tree out) with the catalog asked for every block (Abstract Factory seen from the host: it never
 //! picks, it only asks whether the chosen block is built). Nothing is dropped: every lock of the plan is in the tree.
 
 use fs_forms_bind::BindCode;
 
 use crate::catalog::Catalog;
-use crate::view::{Coded, PageView, View};
+use crate::view::{Coded, EmbedView, PageView, View};
 
 /// How the window stands (the host's own states of the plan, `Teilweise` and so on).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -33,6 +37,13 @@ pub enum Node {
         slot_locks: Vec<Coded>,
         /// The words of the placement's title, if there are any.
         title: Option<String>,
+    },
+    /// A frontend placed here (the child is opened by the owner; a window-mode node draws nothing in this tree).
+    Frontend {
+        /// The placement.
+        place: String,
+        /// What is placed.
+        embed: EmbedView,
     },
     /// A part that is not drawn: a `partial-notice` with every code. `place` is `None` for the page itself.
     Locked {
@@ -105,6 +116,11 @@ fn screen(page: &PageView, catalog: &dyn Catalog) -> ScreenTree {
                 place: Some(p.place.clone()),
                 codes: p.locks.clone(),
             });
+        } else if let Some(embed) = &p.embed {
+            nodes.push(Node::Frontend {
+                place: p.place.clone(),
+                embed: embed.clone(),
+            });
         } else if catalog.draws(&p.block) {
             nodes.push(Node::Block {
                 place: p.place.clone(),
@@ -176,7 +192,7 @@ pub fn compose(view: &View, catalog: &dyn Catalog) -> Composition {
     let drawn = screens
         .iter()
         .flat_map(|s| &s.nodes)
-        .any(|n| matches!(n, Node::Block { .. }));
+        .any(|n| matches!(n, Node::Block { .. } | Node::Frontend { .. }));
     let lacking = lacking_of(&screens);
     let state = match (drawn, lacking.is_empty()) {
         (true, true) => HostState::Ready,

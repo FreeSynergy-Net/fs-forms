@@ -16,7 +16,8 @@ use fs_components_words::{Locale, Localized};
 use crate::compose::Composition;
 use crate::draw::Ctx;
 use crate::page::Page;
-use crate::parts::{Part, line, parts};
+use crate::panel::Panels;
+use crate::parts::{Part, line, parts_with};
 use crate::records::Records;
 use crate::style::StyleSource;
 use crate::view::{Coded, View};
@@ -42,7 +43,7 @@ impl FrontendCell {
         *self.page.lock().unwrap_or_else(PoisonError::into_inner) = Arc::new(page);
     }
 
-    fn current(&self) -> Arc<Page> {
+    pub(crate) fn page(&self) -> Arc<Page> {
         Arc::clone(&self.page.lock().unwrap_or_else(PoisonError::into_inner))
     }
 
@@ -56,15 +57,16 @@ struct Cell(Arc<FrontendCell>);
 
 impl Surface for Cell {
     fn build(&self, width: f32, height: f32) -> Box<dyn Element> {
-        self.0.current().build(width, height)
+        self.0.page().build(width, height)
     }
 
     fn styles(&self) -> String {
-        self.0.current().styles()
+        self.0.page().styles()
     }
 }
 
-/// The page of a composition: its first screen, and the notices of the window as a locked part when there are any.
+/// The page of a composition: its first screen (with the panels `panels` the owner opened for its frontend nodes), and the notices
+/// of the window as a locked part when there are any.
 pub(crate) fn root_page(
     texts: &Mf2Texts,
     locale: &Locale,
@@ -72,10 +74,13 @@ pub(crate) fn root_page(
     comp: &Composition,
     records: Arc<dyn Records>,
     program_style: Arc<dyn StyleSource>,
+    panels: &Panels,
 ) -> Page {
     let ctx: Ctx = ctx_of(texts, locale, view, records, program_style);
     let first = comp.screens.first();
-    let mut shown = first.map(|s| parts(texts, &s.nodes)).unwrap_or_default();
+    let mut shown = first
+        .map(|s| parts_with(texts, &s.nodes, panels))
+        .unwrap_or_default();
     let mut lines: Vec<String> = comp.notices.iter().map(|c| line(texts, c)).collect();
     if comp.screens.len() > 1 {
         // no silent drop: the pages 2..n are not reachable in this window yet, and the window says so (a cell per page needs a fixed

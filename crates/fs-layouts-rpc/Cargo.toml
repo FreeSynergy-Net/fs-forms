@@ -10,7 +10,7 @@ repository.workspace = true
 
 [dependencies]
 # One source per library: the same tags as fs-forms-server (fs-rpc pins fs-types, fs-interfaces and fs-objects by tag itself).
-fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "9585ed181fc98db7e504272f451a10245dca7f1a", version = "0.1.4" }
+fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "9aff426a", version = "0.1.4" }
 fs-forms-layout = { path = "../fs-forms-layout", version = "0.1.0" }
 # The contracts `common`, `layouts` and `bind` (schemas and generated code) come from fs-interfaces a395979b.
 fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "a395979b5df2fbff91347bf10b3324a2e1bfa33d", version = "0.2.0" }

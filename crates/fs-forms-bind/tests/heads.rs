@@ -148,7 +148,7 @@ fn a_locked_head_source_locks_only_the_slot() {
     let l = lanes_slot(&p).lock.expect("slot lock");
     assert_eq!(code_of(&l), "accepts-error-contract-missing");
     assert!(matches!(l.part, Part::Slot { .. }));
-    assert!(locks_of(&p, "board", "main").is_empty());
+    assert_eq!(locks_of(&p, "board", "main"), vec![]);
     let PlaceStatus::Ready(r) = &p.place("board", "main").unwrap().status else {
         panic!("ready")
     };

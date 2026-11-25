@@ -18,7 +18,7 @@ fn lane_rows_and_task_rows_land_at_their_own_place() {
     assert_eq!(keys(&p.input), ["t1", "t2"], "the cards are the Task rows");
     let heads = p.heads.expect("heads");
     assert_eq!(keys(&heads), ["urn:p:anna", "urn:p:ben", "urn:p:cleo"]);
-    assert!(p.notices.is_empty());
+    assert_eq!(p.notices, vec![]);
     // the cards carry NAMES, the heads are IRIs: the lane takes the name as key, the label is the name (an empty lane stays)
     let LanePlan::On { grouping, heads } = p.plan else {
         panic!("lanes are on");

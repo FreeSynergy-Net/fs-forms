@@ -18,7 +18,7 @@ pub(crate) fn heads_lock(
     heads: u32,
     slot: &Part,
 ) -> Option<PartLock> {
-    let Some(src) = env.sources.get(heads as usize) else {
+    let Some(src) = crate::plan_query::source_by_number(env.sources, heads) else {
         let c = Coded::new("layout-error-source-unknown").with("index", heads.to_string());
         return Some(PartLock::locked(slot.clone(), c));
     };

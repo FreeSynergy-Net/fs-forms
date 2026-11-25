@@ -75,3 +75,16 @@ impl FieldFill {
                 .is_some_and(|l| l.iter().any(|s| s.eq_ignore_ascii_case(scheme)))
     }
 }
+
+/// The source with the layout number `n`: numbers count from 1 (`[[source]]` first = 1, as `source = N` in the layout and as
+/// `Want`/`FormData.source` of the host); 0 and numbers past the end are unknown. The ONE place that turns a number into a slice
+/// index (`Part::Source` keeps the 0-based position, so the digest does not move).
+///
+/// Pattern: Adapter (anti-corruption boundary between the layout numbering and the position in the plan).
+pub(crate) fn source_by_number(
+    sources: &[crate::plan::SourcePlan],
+    n: u32,
+) -> Option<&crate::plan::SourcePlan> {
+    let pos = usize::try_from(n.checked_sub(1)?).ok()?;
+    sources.get(pos)
+}

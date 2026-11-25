@@ -117,7 +117,7 @@ pub enum Trigger {
 pub enum ActionTarget {
     /// A command of a source.
     Command {
-        /// Source number.
+        /// Source number: counts from 1 (`source = N` = the N-th `[[source]]`); the same numbers in `fs-forms-bind` and `fs-forms-run`.
         source: u32,
         /// Command name.
         command: String,

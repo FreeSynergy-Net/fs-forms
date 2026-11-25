@@ -66,7 +66,7 @@ fn duplicate_shortcut_conflicts_and_keeps_both() {
         p.keys
             .keymap_for(&p.menu, None, Platform::Linux)
             .dispatch(&press("ctrl+n"), FocusContext::Global),
-        Outcome::Conflict(vec![CommandId::new("0/create"), CommandId::new("0/other")])
+        Outcome::Conflict(vec![CommandId::new("1/create"), CommandId::new("1/other")])
     );
 }
 
@@ -98,7 +98,7 @@ fn delete_runs_in_a_list_never_in_a_text_field() {
     );
     assert_eq!(
         km.dispatch(&press("Delete"), FocusContext::List),
-        Outcome::Run(CommandId::new("0/delete"))
+        Outcome::Run(CommandId::new("1/delete"))
     );
 }
 

@@ -33,7 +33,7 @@ fn field_bind(slot_name: &str, nth: u32, f: FieldDesc, role: Role) -> BindingIn 
 /// The tasks-board placements by hand (the shape F1b's import of `tasks-board.toml` gives).
 #[must_use]
 pub fn board_bindings() -> Vec<BindingIn> {
-    let mut v = vec![bind("b-cards", "cards", 0, BindKind::Records(0))];
+    let mut v = vec![bind("b-cards", "cards", 0, BindKind::Records(1))];
     v.push(field_bind(
         "card-title",
         0,
@@ -157,7 +157,7 @@ pub fn tasks_resolved() -> Resolved {
                     "main",
                     0,
                     "board",
-                    Some(0),
+                    Some(1),
                     board_bindings(),
                 )],
             },
@@ -172,7 +172,7 @@ pub fn tasks_resolved() -> Resolved {
                         "props",
                         0,
                         "board-detail",
-                        Some(0),
+                        Some(1),
                         vec![field_bind(
                             "properties",
                             0,

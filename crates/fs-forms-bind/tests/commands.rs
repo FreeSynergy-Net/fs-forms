@@ -31,7 +31,7 @@ fn surfaces(
     key: &str,
 ) -> (Option<Shown>, Shown, Outcome) {
     let arr = plan.menu.arrangement(sel);
-    let id = format!("0/{name}");
+    let id = format!("1/{name}");
     let menu = arr.iter().find(|a| a.id == id).map(|a| a.shown.clone());
     let c = plan
         .menu
@@ -73,7 +73,7 @@ fn table_on_all_surfaces() {
         (
             Some(Shown::Enabled),
             Shown::Enabled,
-            Outcome::Run(CommandId::new("0/claim"))
+            Outcome::Run(CommandId::new("1/claim"))
         )
     );
     // release: not in may -> absent on every surface, key does nothing.

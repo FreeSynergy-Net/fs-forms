@@ -38,10 +38,10 @@ fn rich() -> Plan {
 
 #[test]
 fn golden_digest_of_the_tasks_plan() {
-    // A5 F6: the digest changed ON PURPOSE (a node is a variant `block`/`frame`, `set` is a field); tests/tree.rs holds the counter-proofs.
+    // Source numbers count from 1 now: the fixture input changed (source 0 -> 1), the canon encoding did not. A5 F6: the digest changed ON PURPOSE (a node is a variant `block`/`frame`, `set` is a field); tests/tree.rs holds the counter-proofs.
     assert_eq!(
         hex(tasks_plan().digest_without_style()),
-        "c5200e3d738581f48afd13f3431ad76da3105a8c86018ffc703571e63f361b31"
+        "76b6800491b1a33e81d9d754eccf1fa01e56094ab2e2b7d065cd22d88f657c4e"
     );
 }
 
@@ -57,7 +57,7 @@ fn golden_digest_of_a_plan_with_notices_and_locks() {
     assert!(!p.notices.is_empty() && !p.menu.locks.is_empty() && p.sources[0].status.is_err());
     assert_eq!(
         hex(p.digest_without_style()),
-        "9d78d7c8e6976b9ec9facee7b9a584aaea2ddcd95a5ba2d0d2781df6128f5665"
+        "6dd09f9f0ec37cbaa7de81dbb7202d44754f8f42db9d01556e29084d4a2fc21f"
     );
 }
 

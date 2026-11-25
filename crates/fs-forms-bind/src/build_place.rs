@@ -42,7 +42,7 @@ pub(crate) fn build_place(
         locks.push(PartLock::locked(part.clone(), c));
     }
     if let Some(i) = p.source {
-        match env.sources.get(i as usize).map(|s| &s.status) {
+        match crate::plan_query::source_by_number(env.sources, i).map(|s| &s.status) {
             Some(Err(l)) => locks.push(PartLock {
                 part: part.clone(),
                 severity: Severity::Locked,

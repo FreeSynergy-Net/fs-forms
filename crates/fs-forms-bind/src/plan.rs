@@ -44,7 +44,7 @@ pub struct Plan {
     pub state: PlanState,
 }
 
-/// A source as reached for the asking person.
+/// Position in `Resolved.sources` (0-based; the layout NUMBER of this source is `idx + 1`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SourcePlan {
     /// Index.
@@ -98,7 +98,7 @@ pub struct PlacePlan {
     pub seq: u32,
     /// Block.
     pub block: String,
-    /// Source used.
+    /// Source number used (from 1).
     pub source: Option<u32>,
     /// Attributes (`set`).
     pub set: Vec<crate::plan_tree::AttrPlan>,
@@ -171,7 +171,7 @@ pub struct SlotFill {
 pub enum Fill {
     /// Records of a source.
     Records {
-        /// Source index.
+        /// Source number (from 1, the layout number).
         source: u32,
     },
     /// A field.
@@ -224,7 +224,7 @@ pub enum InputState {
 /// A command as bound; visibility per record is decided by `command_state`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CommandPlan {
-    /// Source index.
+    /// Source number (from 1, the layout number).
     pub source: u32,
     /// Name.
     pub name: String,

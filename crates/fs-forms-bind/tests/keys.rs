@@ -72,7 +72,7 @@ fn r4_delete_runs_only_in_a_list() {
     );
     assert_eq!(
         km.dispatch(&press("Delete"), FocusContext::List),
-        Outcome::Run(CommandId::new("0/delete"))
+        Outcome::Run(CommandId::new("1/delete"))
     );
 }
 

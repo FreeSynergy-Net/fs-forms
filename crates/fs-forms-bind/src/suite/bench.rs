@@ -99,7 +99,7 @@ impl BindBench {
             place: name.into(),
             seq,
             block: "notes-list".into(),
-            source: Some(1),
+            source: Some(2),
             bindings: vec![],
             set: vec![],
         };

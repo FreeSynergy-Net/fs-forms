@@ -1,6 +1,12 @@
 //! The layout input of `Bind::build`: a narrow mirror of the F1b `Resolved` (original + overlays, open conflicts, live problems).
 //!
 //! Pattern: Anti-corruption mirror. Edge to F1b: replaced by `fs_forms_layout::Resolved` when its probe is pushed.
+//!
+//! SOURCE NUMBERS COUNT FROM 1, everywhere in this file: `PlaceIn.source`, `CommandIn.source`, `BindKind::Records(n)` and
+//! `BindKind::Grouping.heads` are the numbers of the layout (`source = N`, the N-th `[[source]]`, first = 1; the same numbers as
+//! `Want`/`Feed`/`FormData.source` of the host). 0 means no source; a number past `Resolved.sources` is unknown
+//! (`layout-error-source-unknown`). The numbers go into the plan unchanged. The ONE conversion to a position in
+//! `Resolved.sources` / `Plan.sources` (0-based, `SourcePlan.idx`, `Part::Source`, the digest) is `plan_query::source_by_number`.
 
 use crate::types::{Basic, CommandDesc, FieldDesc, Role};
 
@@ -69,7 +75,7 @@ pub enum Target {
 /// A command reference (slot, menu, action).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CommandIn {
-    /// Source index.
+    /// Source number (counts from 1, as `source = N` of the layout; 0 = none).
     pub source: u32,
     /// Command name.
     pub name: String,
@@ -82,7 +88,7 @@ pub struct CommandIn {
 /// What one slot occurrence is bound to.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum BindKind {
-    /// The records of a source.
+    /// The records of a source (the source NUMBER, from 1).
     Records(u32),
     /// A field in a role, with the per-use scheme list.
     Field {
@@ -95,11 +101,11 @@ pub enum BindKind {
     },
     /// A command.
     Command(CommandIn),
-    /// A grouping by name; `heads` = the source whose records are the heads of the groups (the lanes), `None` = from the cards.
+    /// A grouping by name; `heads` = the source NUMBER (from 1) whose records are the heads of the groups (the lanes), `None` = from the cards.
     Grouping {
         /// Grouping (field) name.
         name: String,
-        /// Source index of the heads.
+        /// Source number of the heads (from 1).
         heads: Option<u32>,
     },
     /// An order by name.
@@ -137,7 +143,7 @@ pub struct PlaceIn {
     pub seq: u32,
     /// Block name.
     pub block: String,
-    /// Source index used.
+    /// Source number used (from 1).
     pub source: Option<u32>,
     /// Bindings in binding order.
     pub bindings: Vec<BindingIn>,

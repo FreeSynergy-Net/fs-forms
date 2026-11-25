@@ -65,9 +65,7 @@ pub(crate) fn slot(
         }
         BindKind::Order(n) => Fill::Order(n.clone()),
         BindKind::Command(c) => {
-            let src = env
-                .sources
-                .get(c.source as usize)
+            let src = crate::plan_query::source_by_number(env.sources, c.source)
                 .and_then(|s| s.status.as_ref().err());
             Fill::Command(command_plan(c, env.host, src))
         }

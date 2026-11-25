@@ -76,14 +76,15 @@ pub(super) fn source_lock_spreads(f: &dyn PlanFixture) -> R {
             for pl in page
                 .leaves()
                 .into_iter()
-                .filter(|p| p.source == Some(s.idx))
+                .filter(|p| p.source == Some(s.idx + 1))
             {
                 let got = plan.place(&page.page, &pl.place);
                 let ok = matches!(got.map(|g| &g.status), Some(PlaceStatus::Locked(v)) if v.iter().any(|l| l.cause == lock.cause));
                 if !ok {
                     return Err(format!(
                         "place {} of locked source {} is not locked with its cause",
-                        pl.place, s.idx
+                        pl.place,
+                        s.idx + 1
                     ));
                 }
             }

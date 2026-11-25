@@ -108,9 +108,7 @@ impl Walk<'_> {
                 on_selected,
                 shortcut,
             } => {
-                let src_lock = self
-                    .sources
-                    .get(command.source as usize)
+                let src_lock = crate::plan_query::source_by_number(self.sources, command.source)
                     .and_then(|s| s.status.as_ref().err());
                 let cmd = command_plan(command, self.host, src_lock);
                 let id = crate::commands::command_id(&cmd);

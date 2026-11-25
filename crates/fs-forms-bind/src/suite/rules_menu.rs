@@ -12,9 +12,7 @@ pub(super) fn commands(f: &dyn PlanFixture) -> R {
     let plan = f.build();
     let host = f.host();
     for c in plan_commands(&plan) {
-        let source_locked = plan
-            .sources
-            .get(c.source as usize)
+        let source_locked = crate::plan_query::source_by_number(&plan.sources, c.source)
             .is_some_and(|s| s.status.is_err());
         let expect_coming = !c.description.supported && !source_locked;
         let coming = c

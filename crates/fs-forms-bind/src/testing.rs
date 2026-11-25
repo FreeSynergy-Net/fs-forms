@@ -159,7 +159,7 @@ pub fn field(path: &str, basic: Basic) -> FieldDesc {
 #[must_use]
 pub fn cmd(name: &str, supported: bool, writes: bool, on_record: bool) -> CommandIn {
     CommandIn {
-        source: 0,
+        source: 1,
         name: name.to_owned(),
         desc: CommandDesc {
             supported,

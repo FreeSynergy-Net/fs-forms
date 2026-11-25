@@ -99,11 +99,11 @@ fn a_form_entry_with_the_type_of_the_head_source_keeps_the_slot_open() {
         true,
         vec![entry("rows", 1, "Task"), entry("rows", 1, "Lane")],
     );
-    let p = build(&lanes_layout(Some(1)), &f);
+    let p = build(&lanes_layout(Some(2)), &f);
     assert!(lanes_slot(&p).lock.is_none(), "{:?}", lanes_slot(&p).lock);
     assert!(matches!(
         lanes_slot(&p).fill,
-        Fill::Grouping { heads: Some(1), .. }
+        Fill::Grouping { heads: Some(2), .. }
     ));
 }
 
@@ -111,7 +111,7 @@ fn a_form_entry_with_the_type_of_the_head_source_keeps_the_slot_open() {
 fn without_an_entry_of_that_type_the_slot_is_locked_and_the_block_lives() {
     // The module declares rows@1.0 only for `Task`: the type decides, not the form name.
     let f = facts(true, vec![entry("rows", 0, "Task")]);
-    let p = build(&lanes_layout(Some(1)), &f);
+    let p = build(&lanes_layout(Some(2)), &f);
     let l = lanes_slot(&p).lock.expect("slot lock");
     assert_eq!(code_of(&l), "bind-error-heads-form-missing");
     let c = l.cause.coded();
@@ -128,13 +128,13 @@ fn without_an_entry_of_that_type_the_slot_is_locked_and_the_block_lives() {
 fn the_form_name_and_the_minor_version_must_fit() {
     let slot_wants_1_0 = facts(true, vec![entry("rows", 0, "Lane")]);
     assert!(
-        lanes_slot(&build(&lanes_layout(Some(1)), &slot_wants_1_0))
+        lanes_slot(&build(&lanes_layout(Some(2)), &slot_wants_1_0))
             .lock
             .is_none()
     );
     let other_name = facts(true, vec![entry("tree", 1, "Lane")]);
     assert!(
-        lanes_slot(&build(&lanes_layout(Some(1)), &other_name))
+        lanes_slot(&build(&lanes_layout(Some(2)), &other_name))
             .lock
             .is_some()
     );
@@ -144,7 +144,7 @@ fn the_form_name_and_the_minor_version_must_fit() {
 fn a_locked_head_source_locks_only_the_slot() {
     // `planning` is not installed: the lanes slot shows the cause of the source; the block and the other slots live.
     let f = facts(false, vec![entry("rows", 1, "Lane")]);
-    let p = build(&lanes_layout(Some(1)), &f);
+    let p = build(&lanes_layout(Some(2)), &f);
     let l = lanes_slot(&p).lock.expect("slot lock");
     assert_eq!(code_of(&l), "accepts-error-contract-missing");
     assert!(matches!(l.part, Part::Slot { .. }));
@@ -172,12 +172,12 @@ fn an_unknown_head_source_is_a_slot_lock() {
 fn the_digest_takes_the_heads_only_when_they_are_set() {
     let f = facts(true, vec![entry("rows", 1, "Lane")]);
     let none = build(&lanes_layout(None), &f);
-    let some = build(&lanes_layout(Some(1)), &f);
+    let some = build(&lanes_layout(Some(2)), &f);
     assert!(lanes_slot(&none).lock.is_none());
     assert_ne!(none.digest_without_style(), some.digest_without_style());
     // Equal inputs, equal plans (the field is part of the digest, nothing else moves).
     assert_eq!(
         some.digest_without_style(),
-        build(&lanes_layout(Some(1)), &f).digest_without_style()
+        build(&lanes_layout(Some(2)), &f).digest_without_style()
     );
 }

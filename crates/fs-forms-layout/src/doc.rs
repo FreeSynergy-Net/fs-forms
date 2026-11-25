@@ -101,7 +101,7 @@ pub struct BlockDoc {
     pub place: String,
     /// Block name in the component catalog.
     pub block: String,
-    /// Source number.
+    /// Source number: counts from 1 (`source = N` = the N-th `[[source]]`); the same numbers in `fs-forms-bind` and `fs-forms-run`.
     pub source: Option<u32>,
     /// MF2 key of the title.
     pub title_key: Option<String>,
@@ -123,7 +123,7 @@ pub struct BindingDoc {
     pub from: BindFrom,
     /// Scheme list, in suggestion order, for fields whose type carries schemes.
     pub schemes: Option<Vec<Item<String>>>,
-    /// Source number (format 4; only for `grouping`): the heads of the groups come from that source instead of the block's.
+    /// Source number, counts from 1 (format 4; only for `grouping`): the heads of the groups come from that source instead of the block's.
     pub source: Option<u32>,
 }
 /// An action.

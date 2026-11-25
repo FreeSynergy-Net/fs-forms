@@ -1,0 +1,28 @@
+[package]
+name = "fs-forms-testdata"
+description = "FreeSynergy Forms: generic, deterministic test data made from the declaration of a form (builder, strategies per channel kind, AS2 objects with JSCalendar content)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish = false
+
+# Same pins as the rest of the workspace (fs-interfaces ad56e2f4, fs-types 722d3ce0, fs-objects e38093f1, fs-components 77b23ea3);
+# fs-jscalendar 0a3add97 is the rev fs-tasks-testdata pins together with fs-types 722d3ce0 (one fs-types in the graph).
+[dependencies]
+fs-forms-bind = { path = "../fs-forms-bind", version = "0.1.0" }
+fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "ad56e2f4b953ebf51d41bb7aec8202dfafebdfac", version = "0.2.0" }
+fs-types = { git = "https://github.com/FreeSynergy-Net/fs-types", rev = "722d3ce0156711d40cb278f2e835e865d9448290", version = "0.0.7" }
+fs-objects = { git = "https://github.com/FreeSynergy-Net/fs-objects", rev = "e38093f1ec61b7c9faaa6f6046f65addb11dcf46", version = "0.0.11" }
+fs-jscalendar = { git = "https://github.com/FreeSynergy-Net/fs-jscalendar", rev = "0a3add97339c92be0ab8b524a294ca44ee8dca25", version = "0.0.7" }
+# Text fillers (titles, words): no word lists of our own. Pinned EXACTLY: the lists change between versions, the golden test
+# then has to be renewed on purpose. 5.1.0 (MIT OR Apache-2.0) uses rand 0.10, the rand already in the graph.
+fake = { version = "=5.1.0", default-features = false }
+rand = { version = "0.10", default-features = false, features = ["std", "chacha"] }
+chrono = { version = "0.4", default-features = false, features = ["std"] }
+semver = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = "1"

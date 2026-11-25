@@ -1,6 +1,6 @@
 //! The records a block draws: a port the host asks, so no block holds data of its own. A connected module gives
-//! [`crate::FormRecords`] (rows by channel); without one the implementation is [`NoRecords`] (nothing: the blocks stay empty and say so); [`crate::SampleBoard`] is
-//! built-in, writable sample data for pictures and development (`--sample-data`), never used by a starter.
+//! [`crate::FormRecords`] (rows by channel); without one the implementation is [`NoRecords`] (nothing: the blocks stay empty and say so).
+//! Sample data for pictures and development (`--sample-data`) comes from the host (`Sources::connect_sample`), never from this crate.
 //!
 //! The port also says which gestures the records take: a channel the module binds to a command ([`Records::command_of`]) is allowed
 //! by [`Records::can_channel`] and carried out by [`Records::invoke`]; what is not said is locked.

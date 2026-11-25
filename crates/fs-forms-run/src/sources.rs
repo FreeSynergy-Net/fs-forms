@@ -14,7 +14,6 @@ use crate::described::Described;
 use crate::feed::Want;
 use crate::parts::line;
 use crate::records::{NoRecords, Records, Unavailable};
-use crate::sample::SampleBoard;
 use crate::view::{Coded, View};
 
 /// What the window draws from, and what it must say about it.
@@ -61,8 +60,8 @@ pub trait Sources: Send + Sync {
         }
     }
     /// The sample records for `--sample-data`: the SAME question as [`Sources::connect_wanted`] (the host decides what sample means, not
-    /// the caller). Default: the built-in board and side list (`SampleBoard`); the host replaces it with the test data it derives from
-    /// the description (`fs-forms-testdata`), then `SampleBoard` can go.
+    /// the caller). Default: none (`host-notice-source-unknown`, the contract is `sample`); the host derives the test data from the
+    /// description (`fs-forms-testdata`, the section `[sample]`), as the starter does. This crate holds no sample data of its own.
     ///
     /// # Errors
     /// As [`Sources::connect_wanted`].
@@ -73,7 +72,7 @@ pub trait Sources: Send + Sync {
         _socket: Option<&Path>,
         _running: &Path,
     ) -> Result<Arc<dyn Records>, Coded> {
-        Ok(Arc::new(SampleBoard::default()))
+        Err(Coded::new("host-notice-source-unknown").with("contract", "sample"))
     }
 }
 
@@ -230,7 +229,7 @@ mod sample_tests {
     }
 
     #[test]
-    fn the_default_sample_of_a_host_is_the_built_in_board() {
+    fn a_host_without_sample_data_says_so_and_the_crate_makes_none_up() {
         let texts = words(&fs_components_words::Locale::english());
         let c = Config {
             sample_data: true,
@@ -244,7 +243,9 @@ mod sample_tests {
             Path::new("x"),
             &NoSources,
         );
-        assert!(o.records.is_sample() && o.notice.is_none() && !o.connected);
+        assert!(!o.records.is_sample() && !o.connected);
+        let notice = o.notice.expect("a visible notice, not an empty window");
+        assert_eq!(notice.code, "host-notice-source-unknown");
     }
 
     #[test]

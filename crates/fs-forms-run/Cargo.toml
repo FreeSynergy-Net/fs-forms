@@ -24,31 +24,31 @@ path = "src/main.rs"
 fs-forms-client = { path = "../fs-forms-client", version = "0.1.0" }
 fs-forms-layout = { path = "../fs-forms-layout", version = "0.1.0" }
 fs-forms-exchange = { path = "../fs-forms-exchange", version = "0.1.0" }
-fs-components = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "233c920831a1399df3eb54b5e2054409655453f3", features = ["views"], version = "0.1.0" }
-fs-components-app = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "233c920831a1399df3eb54b5e2054409655453f3", features = ["play"], version = "0.1.0" }
-fs-components-widgets = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "233c920831a1399df3eb54b5e2054409655453f3", version = "0.1.0" }
-fs-components-mf2 = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "233c920831a1399df3eb54b5e2054409655453f3", version = "0.1.0" }
-fs-components-kanban = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "233c920831a1399df3eb54b5e2054409655453f3", version = "0.1.0" }
-fs-components-fields = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "233c920831a1399df3eb54b5e2054409655453f3", version = "0.1.0" }
-fs-components-styles = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "233c920831a1399df3eb54b5e2054409655453f3", version = "0.1.0" }
-fs-components-words = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "233c920831a1399df3eb54b5e2054409655453f3", version = "0.1.0" }
+fs-components = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "77b23ea3a3b2d788f5f60c62e975db9501a137ef", features = ["views"], version = "0.1.0" }
+fs-components-app = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "77b23ea3a3b2d788f5f60c62e975db9501a137ef", features = ["play"], version = "0.1.0" }
+fs-components-widgets = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "77b23ea3a3b2d788f5f60c62e975db9501a137ef", version = "0.1.0" }
+fs-components-mf2 = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "77b23ea3a3b2d788f5f60c62e975db9501a137ef", version = "0.1.0" }
+fs-components-kanban = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "77b23ea3a3b2d788f5f60c62e975db9501a137ef", version = "0.1.0" }
+fs-components-fields = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "77b23ea3a3b2d788f5f60c62e975db9501a137ef", version = "0.1.0" }
+fs-components-styles = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "77b23ea3a3b2d788f5f60c62e975db9501a137ef", version = "0.1.0" }
+fs-components-words = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "77b23ea3a3b2d788f5f60c62e975db9501a137ef", version = "0.1.0" }
 # What the blocks of the contract are (and what they accept and render): the host asks it, it has no table of its own.
-fs-components-catalog = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "233c920831a1399df3eb54b5e2054409655453f3", version = "0.1.0" }
+fs-components-catalog = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "77b23ea3a3b2d788f5f60c62e975db9501a137ef", version = "0.1.0" }
 # The command `layout.frontend` and the lines of the frontends as data (C0): the menu `View` is made of its rows, no list of our own.
-fs-components-commands = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "233c920831a1399df3eb54b5e2054409655453f3", version = "0.1.0" }
-fs-components-core = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "233c920831a1399df3eb54b5e2054409655453f3", version = "0.1.0" }
+fs-components-commands = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "77b23ea3a3b2d788f5f60c62e975db9501a137ef", version = "0.1.0" }
+fs-components-core = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "77b23ea3a3b2d788f5f60c62e975db9501a137ef", version = "0.1.0" }
 # The people workbench (widget of the block `contact-row`; `fs-components-widgets` does not hold it): one dependency, nothing copied.
-fs-components-workbenches = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "233c920831a1399df3eb54b5e2054409655453f3", version = "0.1.0" }
+fs-components-workbenches = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "77b23ea3a3b2d788f5f60c62e975db9501a137ef", version = "0.1.0" }
 
 # The question the host asks when a place is open with another record (`Notification::ask`, ADR 0106): the one existing facade, no own dialog.
-fs-notification = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "233c920831a1399df3eb54b5e2054409655453f3", version = "0.1.0" }
+fs-notification = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "77b23ea3a3b2d788f5f60c62e975db9501a137ef", version = "0.1.0" }
 
 # The form catalog (`fs_interfaces::forms`, forms.txt) and the one form match (`fs-forms-bind`): the host holds no table of forms.
-fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "a395979b5df2fbff91347bf10b3324a2e1bfa33d", version = "0.2.0" }
+fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "ad56e2f4b953ebf51d41bb7aec8202dfafebdfac", version = "0.2.0" }
 # `InterfaceVersion` (V-1, fs-types rev 722d3ce0 = v0.0.7, the same rev as fs-components): the one reader of "name@x.y.z"; the block catalog answers `draws(&InterfaceVersion)`.
 fs-types = { git = "https://github.com/FreeSynergy-Net/fs-types", rev = "722d3ce0156711d40cb278f2e835e865d9448290", version = "0.0.7" }
 fs-forms-bind = { path = "../fs-forms-bind", version = "0.1.0" }
-fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "9aff426a37cfbaec657b9164c1b11389c6d1712b", version = "0.1.4" }
+fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "0f639470a7c1e5bbae5f84fbbbb41bf2504c232a", version = "0.1.4" }
 # `UndoState` (the depth of the undo of one actor) for `Records::history`: one type, no copy. The rev is the one of S3-3 (v0.0.11); only the type is used.
 fs-objects = { git = "https://github.com/FreeSynergy-Net/fs-objects", rev = "e38093f1ec61b7c9faaa6f6046f65addb11dcf46", version = "0.0.11" }
 tokio = { version = "1", features = ["rt", "sync", "net", "time"] }

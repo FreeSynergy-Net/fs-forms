@@ -92,7 +92,7 @@ pub fn name_of(range: &str) -> &str {
 }
 
 /// The records for `view`: what `sources` connects for the sources of the description (`--sample-data` asks the SAME port
-/// ([`Sources::connect_sample`]), the flag is read here once); a description without a source gets no records and no notice (nothing is asked for).
+/// ([`Sources::connect_sample`]), the flag is read here once); without the flag, a description without a source gets no records and no notice (nothing is asked for).
 #[must_use]
 pub fn open(
     c: &Config,

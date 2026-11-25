@@ -1,4 +1,4 @@
-//! The block catalog of this build as the port the test data asks (`fs_forms_binames("board") == ["cards-in-columns"],d::BlockForms`): the same knowledge as `feed::feeds_of`
+//! The block catalog of this build as the port the test data asks (`fs_forms_bind::BlockForms`): the same knowledge as `feed::feeds_of`
 //! and `feed::wants_of` have of the description, here of the blocks; nothing is decided, the contract answers.
 //!
 //! Pattern: Adapter (the contract of the catalog in, the port of `fs-forms-bind` out).
@@ -9,7 +9,7 @@ use crate::bind_spec::block_spec;
 use crate::blocks::forms_of;
 use crate::form_check::drawn;
 
-/// The adapter over the block contract this host is built with.
+/// Pattern: Adapter – the block contract this host is built with, answered as the port `fs_forms_bind::BlockForms`.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct CatalogBlockForms;
 

@@ -25,3 +25,7 @@ repository = "https://github.com/FreeSynergy/fs-forms"
 # fs-rpc and fs-components need 1.89.
 rust-version = "1.89"
 
+
+# DEV-ONLY [patch] – vor Landen entfernen: ONE fs-interfaces (7b238133) in the graph, because fs-rpc (9aff426a) still pulls a395979b. A git patch onto the same URL is refused by cargo, so a local clone.
+[patch."https://github.com/FreeSynergy-Net/fs-interfaces"]
+fs-interfaces = { path = "../fs-interfaces/crates/fs-interfaces" }

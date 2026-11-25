@@ -10,7 +10,7 @@
 use std::sync::atomic::AtomicU64;
 use std::sync::{Arc, Mutex};
 
-use fs_components_app::Status;
+use fs_components_app::{AppError, AppWidget, Status};
 use fs_components_commands::FrontendRow;
 use fs_components_words::Locale;
 use fs_forms_layout::FrontendKey;
@@ -21,13 +21,15 @@ use super::{Descriptions, Modules, OpenFrontend, WindowId};
 use crate::catalog::Catalog;
 use crate::compose::compose;
 use crate::frontend_cell::root_page;
+use crate::history::{Attached, Edit, edit_menu_for};
 use crate::menus::{line_prefix, menus_of};
 use crate::parts::line;
 use crate::record_hub::RecordHub;
+use crate::records::Records;
 use crate::repaint::Repaint;
 use crate::status::set_status_line;
 use crate::style::StyleCell;
-use crate::view::Coded;
+use crate::view::{Coded, View};
 use crate::words::words;
 
 /// What the change needs from the owner; the owner holds it in an `Arc`, a menu handler only a `Weak` of it (no cycle through the entry).
@@ -113,11 +115,19 @@ impl Core {
             Arc::new(StyleCell::default()),
             &inside.panels,
         );
-        let menus = menus_of(&texts, &view, &rows, frontend);
         if let Some(app) = &e.app {
-            app.set_menus(menus, Self::handler(self_arc, e.token))
-                .map_err(|_| refused(&Coded::new("menu-duplicate")))?;
             let records = e.grip.records();
+            Self::install(
+                self_arc,
+                app,
+                e.token,
+                &view,
+                rows,
+                frontend,
+                &records,
+                &e.attached,
+            )
+            .map_err(|_| refused(&Coded::new("menu-duplicate")))?;
             set_status_line(app, &texts, &comp, &*records);
         }
         e.cell.set(page);
@@ -140,6 +150,35 @@ impl Core {
         drop(gone); // outside the lock: the grips sign off at their modules
         self_arc.repaint.wake();
         Ok(inside.windows)
+    }
+
+    /// Puts the menus of the window (program, Edit, View), the one handler and the shortcuts into `app`: the lines of the history
+    /// are answered with `records`, the lines of the frontends by [`Core::handler`].
+    #[allow(clippy::too_many_arguments)] // one call site per way a window is made; a struct of these would only be built twice
+    pub(super) fn install(
+        core: &Arc<Self>,
+        app: &AppWidget,
+        token: u64,
+        view: &View,
+        rows: Vec<FrontendRow>,
+        chosen: &str,
+        records: &Arc<dyn Records>,
+        attached: &Attached,
+    ) -> Result<(), AppError> {
+        let (view, chosen, locale) = (view.clone(), chosen.to_owned(), core.locale.clone());
+        let for_menus = Arc::clone(records);
+        let edit = Edit {
+            records: Arc::clone(records),
+            locale: core.locale.clone(),
+            repaint: Arc::clone(&core.repaint),
+            menus: Arc::new(move || {
+                let edit = edit_menu_for(&*for_menus, &locale);
+                menus_of(&words(&locale), &view, &rows, &chosen, edit)
+            }),
+            inner: Arc::new(Self::handler(core, token)),
+            app: attached.cell(),
+        };
+        edit.install(app)
     }
 
     /// The handler of the menus of the window with `token`: a line `layout.frontend.<name>` changes the frontend; a refusal is said in

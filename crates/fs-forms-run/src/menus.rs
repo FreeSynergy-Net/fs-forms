@@ -51,15 +51,17 @@ pub(crate) fn frontend_menu(texts: &Mf2Texts, rows: &[FrontendRow], chosen: &str
     })
 }
 
-/// Both menus of a window, in the order of the title bar.
+/// The menus of a window, in the order of the title bar: the program's, "Edit" (undo, redo), "View".
 pub(crate) fn menus_of(
     texts: &Mf2Texts,
     view: &View,
     rows: &[FrontendRow],
     chosen: &str,
+    edit: Menu,
 ) -> Vec<Menu> {
     program_menu(texts, view)
         .into_iter()
+        .chain([edit])
         .chain(frontend_menu(texts, rows, chosen))
         .collect()
 }

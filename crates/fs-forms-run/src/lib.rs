@@ -25,6 +25,7 @@ mod form_data;
 mod from_layout;
 mod from_places;
 mod frontend_cell;
+pub mod history;
 mod link;
 mod menus;
 mod page;

@@ -18,7 +18,7 @@ use super::switch::{Core, rows};
 use super::{OpenFrontend, Placement, WindowId};
 use crate::compose::compose;
 use crate::frontend_cell::{FrontendCell, root_page};
-use crate::menus::menus_of;
+use crate::history::Attached;
 use crate::record_hub::RecordKey;
 use crate::status::set_status_line;
 use crate::style::StyleCell;
@@ -94,19 +94,22 @@ impl Core {
         } else {
             view.title.clone()
         };
+        let attached = Attached::default();
         let app = if req.mode == Placement::Window {
             let app = AppWidget::new(head.clone(), vec![cell.screen()]).map_err(failed)?;
             set_status_line(&app, &texts, &comp, &*grip.records());
-            let menus = menus_of(
-                &texts,
+            let rows = rows(&*self.descriptions, &req.key);
+            Self::install(
+                self,
+                &app,
+                token,
                 &view,
-                &rows(&*self.descriptions, &req.key),
+                rows,
                 &req.key.frontend,
-            );
-            if !menus.is_empty() {
-                app.set_menus(menus, Self::handler(self, token))
-                    .map_err(failed)?;
-            }
+                &grip.records(),
+                &attached,
+            )
+            .map_err(failed)?;
             Some(app)
         } else {
             None
@@ -119,6 +122,7 @@ impl Core {
             grip,
             module,
             app,
+            attached,
             cell,
             panels: heads,
             missing,

@@ -6,10 +6,12 @@ use std::collections::HashMap;
 use std::sync::{Mutex, MutexGuard, PoisonError};
 
 use fs_components_app::AppWidget;
+
 use fs_forms_layout::FrontendKey;
 
 use super::{OpenedFrontend, Placement, WindowId};
 use crate::frontend_cell::FrontendCell;
+use crate::history::Attached;
 use crate::record_hub::{Module, RecordGrip};
 use std::sync::Arc;
 
@@ -23,6 +25,8 @@ pub(super) struct Entry {
     pub(super) module: Arc<dyn Module>,
     /// The window; `None` for a panel (it has no window, its page is drawn inside the page of its parent).
     pub(super) app: Option<AppWidget>,
+    /// Lets the window go when the entry drops (the menu handler would keep it alive otherwise).
+    pub(super) attached: Attached,
     /// The page of the frontend that is open now (what `use_frontend` exchanges).
     pub(super) cell: Arc<FrontendCell>,
     /// The panels drawn inside it: (place, head with the program the panel comes from), in tree order.

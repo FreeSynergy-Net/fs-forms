@@ -15,10 +15,13 @@ use fs_components_words::{Locale, Localized};
 use crate::compose::{Composition, HostState, Node, ScreenTree};
 use crate::draw::Ctx;
 use crate::error::HostError;
+use crate::history::{Edit, edit_menu_for};
 use crate::menus::program_menu;
 use crate::records::{NoRecords, Records};
+use crate::repaint::BlincRepaint;
 use crate::style::{StyleCell, StyleSource, resolve};
 use crate::view::{Coded, View};
+use crate::words::words;
 
 /// The composition of a failure that is shown in the window instead of ending the host.
 #[must_use]
@@ -126,7 +129,7 @@ pub fn app_styled(
     program_style: Arc<dyn StyleSource>,
 ) -> Result<AppWidget, AppError> {
     let (sample, down) = (records.is_sample(), records.unavailable());
-    let ctx = ctx_of(texts, locale, view, records, program_style);
+    let ctx = ctx_of(texts, locale, view, Arc::clone(&records), program_style);
     let labels = states::Labels::for_locale(locale);
     let title = if view.title.is_empty() {
         texts.plain("host-title")
@@ -135,9 +138,23 @@ pub fn app_styled(
     };
     let screens = crate::screens::screens_of(texts, comp, &ctx, &labels, &title);
     let widget = AppWidget::new(title, screens)?;
-    if let Some(menu) = program_menu(texts, view) {
-        widget.set_menus(vec![menu], |_| {})?;
-    }
+    // the program's menu and the menu "Edit" (undo, redo); a click or a shortcut reaches the one handler of `history::Edit`
+    let (menu_view, menu_locale, menu_records) =
+        (view.clone(), locale.clone(), Arc::clone(&records));
+    let edit = Edit {
+        records,
+        locale: locale.clone(),
+        repaint: Arc::new(BlincRepaint),
+        menus: Arc::new(move || {
+            program_menu(&words(&menu_locale), &menu_view)
+                .into_iter()
+                .chain([edit_menu_for(&*menu_records, &menu_locale)])
+                .collect()
+        }),
+        inner: Arc::new(|_| {}),
+        app: Arc::default(),
+    };
+    edit.install(&widget)?;
     widget.set_status(Some(crate::status::status(
         texts,
         comp.state,

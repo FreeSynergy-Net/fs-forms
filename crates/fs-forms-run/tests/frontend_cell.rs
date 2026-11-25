@@ -222,3 +222,25 @@ fn gc6h_a_window_over_a_module_that_is_not_there_says_so_in_its_status_line() {
         "{said:?}"
     );
 }
+
+#[test]
+fn s39c_the_window_of_the_owner_has_the_menu_edit_and_a_frontend_change_keeps_it() {
+    let (host, _id) = opened("board");
+    let window = host.shown.widgets.lock().unwrap()[0].1.clone();
+    let edit_ids = |w: &fs_components_app::AppWidget| {
+        w.with_shell(|s| {
+            s.menus()
+                .iter()
+                .flat_map(|m| m.entries.iter().map(|e| e.id.clone()))
+                .filter(|i| i.starts_with("app."))
+                .collect::<Vec<_>>()
+        })
+    };
+    assert_eq!(edit_ids(&window), ["app.undo", "app.redo"]);
+    assert!(window.choose("layout.frontend.board-compact"));
+    assert_eq!(
+        edit_ids(&window),
+        ["app.undo", "app.redo"],
+        "the menus are made again with the frontend change, Edit stays"
+    );
+}

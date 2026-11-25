@@ -103,8 +103,6 @@ impl FormWrite for WriteGate {
             Answer::Ask(_) => Err(WriteRefused::new(
                 fs_components_core::form_write::ASK_UNSUPPORTED,
             )),
-            // an answer of a later version of the board is not carried out
-            _ => Err(WriteRefused::new("unsupported")),
         }
     }
 }

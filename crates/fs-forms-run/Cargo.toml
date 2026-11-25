@@ -24,31 +24,31 @@ path = "src/main.rs"
 fs-forms-client = { path = "../fs-forms-client", version = "0.1.0" }
 fs-forms-layout = { path = "../fs-forms-layout", version = "0.1.0" }
 fs-forms-exchange = { path = "../fs-forms-exchange", version = "0.1.0" }
-fs-components = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "508a25f3915270e28ea6a306411fa336e563d9e1", features = ["views"], version = "0.1.0" }
-fs-components-app = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "508a25f3915270e28ea6a306411fa336e563d9e1", features = ["play"], version = "0.1.0" }
-fs-components-widgets = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "508a25f3915270e28ea6a306411fa336e563d9e1", version = "0.1.0" }
-fs-components-mf2 = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "508a25f3915270e28ea6a306411fa336e563d9e1", version = "0.1.0" }
-fs-components-kanban = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "508a25f3915270e28ea6a306411fa336e563d9e1", version = "0.1.0" }
-fs-components-fields = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "508a25f3915270e28ea6a306411fa336e563d9e1", version = "0.1.0" }
-fs-components-styles = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "508a25f3915270e28ea6a306411fa336e563d9e1", version = "0.1.0" }
-fs-components-words = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "508a25f3915270e28ea6a306411fa336e563d9e1", version = "0.1.0" }
+fs-components = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "33550c616f739cc50ba8483c3e5fb07df3091407", features = ["views"], version = "0.1.0" }
+fs-components-app = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "33550c616f739cc50ba8483c3e5fb07df3091407", features = ["play"], version = "0.1.0" }
+fs-components-widgets = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "33550c616f739cc50ba8483c3e5fb07df3091407", version = "0.1.0" }
+fs-components-mf2 = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "33550c616f739cc50ba8483c3e5fb07df3091407", version = "0.1.0" }
+fs-components-kanban = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "33550c616f739cc50ba8483c3e5fb07df3091407", version = "0.1.0" }
+fs-components-fields = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "33550c616f739cc50ba8483c3e5fb07df3091407", version = "0.1.0" }
+fs-components-styles = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "33550c616f739cc50ba8483c3e5fb07df3091407", version = "0.1.0" }
+fs-components-words = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "33550c616f739cc50ba8483c3e5fb07df3091407", version = "0.1.0" }
 # What the blocks of the contract are (and what they accept and render): the host asks it, it has no table of its own.
-fs-components-catalog = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "508a25f3915270e28ea6a306411fa336e563d9e1", version = "0.1.0" }
+fs-components-catalog = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "33550c616f739cc50ba8483c3e5fb07df3091407", version = "0.1.0" }
 # The command `layout.frontend` and the lines of the frontends as data (C0): the menu `View` is made of its rows, no list of our own.
-fs-components-commands = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "508a25f3915270e28ea6a306411fa336e563d9e1", version = "0.1.0" }
-fs-components-core = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "508a25f3915270e28ea6a306411fa336e563d9e1", version = "0.1.0" }
+fs-components-commands = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "33550c616f739cc50ba8483c3e5fb07df3091407", version = "0.1.0" }
+fs-components-core = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "33550c616f739cc50ba8483c3e5fb07df3091407", version = "0.1.0" }
 # The people workbench (widget of the block `contact-row`; `fs-components-widgets` does not hold it): one dependency, nothing copied.
-fs-components-workbenches = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "508a25f3915270e28ea6a306411fa336e563d9e1", version = "0.1.0" }
+fs-components-workbenches = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "33550c616f739cc50ba8483c3e5fb07df3091407", version = "0.1.0" }
 
 # The question the host asks when a place is open with another record (`Notification::ask`, ADR 0106): the one existing facade, no own dialog.
-fs-notification = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "508a25f3915270e28ea6a306411fa336e563d9e1", version = "0.1.0" }
+fs-notification = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "33550c616f739cc50ba8483c3e5fb07df3091407", version = "0.1.0" }
 
 # The form catalog (`fs_interfaces::forms`, forms.txt) and the one form match (`fs-forms-bind`): the host holds no table of forms.
 fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "76df54074910e827ad556ff613335ada49c86de3", version = "0.3.0" }
 # `InterfaceVersion` (V-1, fs-types rev 722d3ce0 = v0.0.7, the same rev as fs-components): the one reader of "name@x.y.z"; the block catalog answers `draws(&InterfaceVersion)`.
 fs-types = { git = "https://github.com/FreeSynergy-Net/fs-types", rev = "722d3ce0156711d40cb278f2e835e865d9448290", version = "0.0.7" }
 fs-forms-bind = { path = "../fs-forms-bind", version = "0.1.0" }
-fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "459c1e8d1226896cca53c3140f5aa912f43a5305", version = "0.1.4" }
+fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "aa59c6bd6b9d2efa7f49e349ad44ef51bcb687d3", version = "0.1.4" }
 # `UndoState` (the depth of the undo of one actor) for `Records::history`: one type, no copy. The rev is the one of S3-3 (v0.0.11); only the type is used.
 fs-objects = { git = "https://github.com/FreeSynergy-Net/fs-objects", rev = "e38093f1ec61b7c9faaa6f6046f65addb11dcf46", version = "0.0.11" }
 tokio = { version = "1", features = ["rt", "sync", "net", "time"] }

@@ -134,7 +134,7 @@ pub fn answer(records: &dyn Records, id: &str) -> Said {
             code: reason.code,
         },
         // a step back asks no question; if the records ask one, it is shown as a refusal with its own code, never dropped
-        _ => Said::Refused {
+        Answer::Ask(_) => Said::Refused {
             redo,
             code: "ask-unsupported".to_owned(),
         },

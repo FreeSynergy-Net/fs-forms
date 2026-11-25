@@ -16,6 +16,7 @@ mod apply;
 mod check;
 mod check_frontend;
 mod check_places;
+mod check_sources;
 mod check_text;
 mod codes;
 mod doc;
@@ -40,6 +41,7 @@ mod providers;
 mod resolved;
 mod rules;
 mod schemes;
+mod scope_token;
 pub mod shim;
 mod types;
 mod walk;
@@ -53,7 +55,7 @@ pub use doc::*;
 pub use ids::{
     ElemId, ElemKind, ElemRef, FrontendKey, LayoutId, OverlayId, PackageRef, Rev, Stamp, Who,
 };
-pub use layout::{BindingView, El, FORMAT_KNOWN, Layout};
+pub use layout::{BindingView, El, FORMAT_KNOWN, FORMAT_MIN, Layout};
 pub use limits::{CeilingSet, LimitSource, LimitSources, Limits, Technical};
 pub use memory::MemoryLayoutStore;
 pub use overlay::{
@@ -69,6 +71,7 @@ pub use providers::{
 };
 pub use resolved::{Applied, Effect, Layer, LayerInfo, Resolved};
 pub use schemes::{scheme_names_rule, schemes_rule};
+pub use scope_token::{SCOPE_TOKEN_MAX, ScopeToken};
 pub use shim::{Coded, ErrorCode, ObjectId, Reference, Utc};
 pub use types::{
     Health, LayoutFilter, LogAction, LogEntry, Mode, Origin, OverlayDoc, Page, Report, Summary,

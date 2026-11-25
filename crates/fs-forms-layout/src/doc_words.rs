@@ -2,15 +2,38 @@
 //!
 //! Pattern: Value Object: closed enums with a 1:1 text form in the exchange format.
 
+use crate::scope_token::ScopeToken;
 use crate::shim::Reference;
 
-/// Which records a source delivers.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+/// Which records a source delivers. `All` and `SelectedList` are words of the host; any other valid token goes unchanged to the module.
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SourceScope {
     /// All.
     All,
     /// The selected list.
     SelectedList,
+    /// A word of the module (never `all` or `selected-list`: those are read as the host words).
+    Module(ScopeToken),
+}
+impl SourceScope {
+    /// The word of the exchange file.
+    #[must_use]
+    pub fn text(&self) -> &str {
+        match self {
+            Self::All => "all",
+            Self::SelectedList => "selected-list",
+            Self::Module(t) => t.as_str(),
+        }
+    }
+    /// The scope of a word: a host word, or a valid [`ScopeToken`]; `None` when the grammar is broken.
+    #[must_use]
+    pub fn from_text(w: &str) -> Option<Self> {
+        match w {
+            "all" => Some(Self::All),
+            "selected-list" => Some(Self::SelectedList),
+            _ => ScopeToken::parse(w).map(Self::Module),
+        }
+    }
 }
 /// Kind of a menu entry.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

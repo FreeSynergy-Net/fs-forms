@@ -82,7 +82,7 @@ fn pages_tree(l: &Layout) -> Vec<fs_forms_layout::Item<PlaceNode>> {
 fn the_export_of_a_tree_is_the_fixed_reference_text() {
     let out = export(&layout(&file(TREE)));
     // the writer puts the scalars of a table first and the lists after: same order as the input here, `set` last of the scalars
-    assert!(out.starts_with("schema = 3\n"), "{out}");
+    assert!(out.starts_with("schema = 4\n"), "{out}");
     assert!(out.contains("[[page.place.place.place]]\nelem = \"block:board/main/panel/one\"\nat = \"pane\"\nblock = \"field-card\"\n"), "{out}");
     assert!(
         out.contains("set = { axis = \"row\", sizes = \"0.3 0.7\" }\n"),

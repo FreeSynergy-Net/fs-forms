@@ -3,8 +3,7 @@
 //! Pattern: Value Object with a 1:1 text form.
 
 use crate::doc::{
-    Confirm, MenuKind, MenuStandard, Navigation, OnWhat, OrderBy, Placement, Shown, SourceScope,
-    Trigger,
+    Confirm, MenuKind, MenuStandard, Navigation, OnWhat, OrderBy, Placement, Shown, Trigger,
 };
 
 /// A closed word list: every variant has exactly one word.
@@ -23,7 +22,6 @@ macro_rules! words {
         }
     };
 }
-words!(SourceScope { All => "all", SelectedList => "selected-list" });
 words!(OnWhat { Always => "always", Selected => "selected" });
 words!(Navigation { Single => "single", ListDetail => "list-detail" });
 words!(Trigger { Button => "button", Menu => "menu", Key => "key", Drop => "drop", QuickAdd => "quick-add", Submit => "submit" });

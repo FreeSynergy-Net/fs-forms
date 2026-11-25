@@ -36,6 +36,7 @@ pub fn doc(frontend: &str) -> LayoutDoc {
             role: "display".into(),
         },
         schemes: None,
+        source: None,
     };
     let block = BlockDoc {
         place: "main".into(),
@@ -54,7 +55,7 @@ pub fn doc(frontend: &str) -> LayoutDoc {
         places: vec![],
     };
     LayoutDoc {
-        format: 3,
+        format: 4,
         key: key(frontend),
         exec: "fs-forms-run".into(),
         title_key: "board-title".into(),
@@ -155,6 +156,7 @@ pub fn rich(frontend: &str) -> LayoutDoc {
             nth: 0,
             from: BindFrom::Grouping("by-state".into()),
             schemes: None,
+            source: None,
         },
     ));
     block.bindings.push(item(
@@ -164,6 +166,7 @@ pub fn rich(frontend: &str) -> LayoutDoc {
             nth: 1,
             from: BindFrom::Lock,
             schemes: None,
+            source: None,
         },
     ));
     // the store keeps bindings in the order of their element ids

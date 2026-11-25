@@ -69,6 +69,7 @@ pub fn full_block(e: &str, place: &str) -> Item<PlaceNode> {
                     nth: 0,
                     from: BindFrom::Grouping("status".into()),
                     schemes: None,
+                    source: None,
                 },
             ),
             it(
@@ -84,6 +85,7 @@ pub fn full_block(e: &str, place: &str) -> Item<PlaceNode> {
                         it(&format!("scheme:{e}/0"), "ssh".to_owned()),
                         it(&format!("scheme:{e}/1"), "https".to_owned()),
                     ]),
+                    source: None,
                 },
             ),
         ];
@@ -103,7 +105,7 @@ pub fn layout(places: Vec<Item<PlaceNode>>, flat: Vec<Item<BlockDoc>>) -> Layout
         )
     };
     let doc = LayoutDoc {
-        format: 3,
+        format: 4,
         key: FrontendKey {
             extends: "net.example.Tasks".into(),
             frontend: "board".into(),

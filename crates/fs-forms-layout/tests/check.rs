@@ -53,11 +53,11 @@ fn k63_format_and_elem_problems() {
         .push(item("message:board-title/de", d.messages[0].v.clone()));
     assert!(codes(check(d)).contains(&LayoutCode::ElemTwice));
     let mut d = doc("board");
-    d.format = 4;
+    d.format = 5;
     let e = d.check(&OpenCatalog, &Limits::declared()).unwrap_err();
     assert_eq!(
         (e[0].code, e[0].param("found"), e[0].param("known")),
-        (LayoutCode::FormatNewer, Some("4"), Some("3"))
+        (LayoutCode::FormatNewer, Some("5"), Some("4"))
     );
     let mut d = doc("board");
     d.format = 0;

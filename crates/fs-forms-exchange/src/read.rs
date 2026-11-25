@@ -5,7 +5,8 @@
 
 use fs_forms_layout::{
     ActionDoc, ActionTarget, BindFrom, BindingDoc, Coded, FrontendKey, Item, LayoutCode, LayoutDoc,
-    MenuDoc, MenuKind, MessageDoc, OrderDoc, PageDoc, Reference, RequiresDoc, SourceDoc, ViewDoc,
+    MenuDoc, MenuKind, MessageDoc, OrderDoc, PageDoc, Reference, RequiresDoc, SourceDoc,
+    SourceScope, ViewDoc,
 };
 
 use crate::fields::{Ctx, Fields};
@@ -18,6 +19,16 @@ fn word<W: Words>(f: &mut Fields<'_>, cx: &mut Ctx<'_>, key: &str) -> Option<W> 
     let got = W::from_word(&w);
     if got.is_none() {
         cx.bad("type", &w);
+    }
+    got
+}
+
+/// The `scope` of a source: a host word or a valid scope token; a broken grammar is `import-invalid` `scope-invalid`.
+fn scope(f: &mut Fields<'_>, cx: &mut Ctx<'_>) -> Option<SourceScope> {
+    let w = f.str(cx, "scope")?;
+    let got = SourceScope::from_text(&w);
+    if got.is_none() {
+        cx.bad("scope-invalid", &w);
     }
     got
 }
@@ -54,11 +65,11 @@ pub(crate) fn layout_doc(root: &Tree, cx: &mut Ctx<'_>) -> Option<LayoutDoc> {
     {
         cx.bad("type", "kind");
     }
-    if (1..fs_forms_layout::FORMAT_KNOWN).contains(&format) {
+    if (1..fs_forms_layout::FORMAT_MIN).contains(&format) {
         cx.errs.push(
             Coded::new(LayoutCode::FormatOld)
                 .with("found", format)
-                .with("known", fs_forms_layout::FORMAT_KNOWN),
+                .with("known", fs_forms_layout::FORMAT_MIN),
         );
         return None; // no second reading path: old files are written again, not converted
     }
@@ -79,7 +90,7 @@ pub(crate) fn layout_doc(root: &Tree, cx: &mut Ctx<'_>) -> Option<LayoutDoc> {
         SourceDoc {
             range: f.req_str(cx, "contract"),
             data_type: f.req_str(cx, "type"),
-            scope: word(f, cx, "scope"),
+            scope: scope(f, cx),
         }
     });
     let menu = menus(f.list(cx, "menu"), cx);
@@ -158,12 +169,14 @@ pub(crate) fn binding(f: &mut Fields<'_>, cx: &mut Ctx<'_>) -> BindingDoc {
         _ if condition => BindFrom::Condition,
         _ => BindFrom::Records,
     };
+    let source = f.uint(cx, "source");
     let schemes = f.has_list("schemes").then(|| scheme_items(f, cx));
     BindingDoc {
         slot,
         nth,
         from,
         schemes,
+        source,
     }
 }
 

@@ -59,6 +59,7 @@ pub fn doc(frontend: &str) -> LayoutDoc {
             role: "display".into(),
         },
         schemes: None,
+        source: None,
     };
     let block = BlockDoc {
         place: "main".into(),
@@ -77,7 +78,7 @@ pub fn doc(frontend: &str) -> LayoutDoc {
         places: vec![],
     };
     LayoutDoc {
-        format: 3,
+        format: 4,
         key: FrontendKey {
             extends: "net.example.Tasks".into(),
             frontend: frontend.into(),

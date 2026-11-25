@@ -59,7 +59,7 @@ fn model_words_are_in_the_closed_lists() {
         in_list(w::CAUSE, c.as_str());
     }
     for s in [SourceScope::All, SourceScope::SelectedList] {
-        in_list(w::SCOPE_SRC, s.word());
+        in_list(w::SCOPE_SRC, s.text());
     }
     for n in [Navigation::Single, Navigation::ListDetail] {
         in_list(w::NAVIGATION, n.word());

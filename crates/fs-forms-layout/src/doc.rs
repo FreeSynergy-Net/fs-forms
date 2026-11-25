@@ -123,6 +123,8 @@ pub struct BindingDoc {
     pub from: BindFrom,
     /// Scheme list, in suggestion order, for fields whose type carries schemes.
     pub schemes: Option<Vec<Item<String>>>,
+    /// Source number (format 4; only for `grouping`): the heads of the groups come from that source instead of the block's.
+    pub source: Option<u32>,
 }
 /// An action.
 #[derive(Clone, Debug, PartialEq, Eq)]

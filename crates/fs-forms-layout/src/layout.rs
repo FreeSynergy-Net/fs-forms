@@ -9,7 +9,10 @@ use crate::doc::{BindFrom, LayoutDoc};
 use crate::ids::ElemId;
 
 /// The format version this crate reads.
-pub const FORMAT_KNOWN: u32 = 3;
+pub const FORMAT_KNOWN: u32 = 4;
+
+/// The oldest format this crate still reads (3 is a subset of 4: no second reading path, the writer always writes 4).
+pub const FORMAT_MIN: u32 = 3;
 
 /// A checked element: id plus value.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -41,6 +44,8 @@ pub struct BindingView {
     pub from: BindFrom,
     /// Scheme list in suggestion order.
     pub schemes: Option<Vec<String>>,
+    /// Source number of the heads (`grouping` only).
+    pub source: Option<u32>,
 }
 
 impl Layout {
@@ -55,7 +60,7 @@ impl Layout {
     pub fn doc(&self) -> &LayoutDoc {
         &self.doc
     }
-    /// Back to layer 1 for the exchange writer: format 3 (`FORMAT_KNOWN`), every id set. `to_doc` then `check` gives the same layout.
+    /// Back to layer 1 for the exchange writer: format 4 (`FORMAT_KNOWN`), every id set. `to_doc` then `check` gives the same layout.
     #[must_use]
     pub fn to_doc(&self) -> LayoutDoc {
         LayoutDoc {
@@ -85,6 +90,7 @@ impl Layout {
                     .schemes
                     .as_ref()
                     .map(|l| l.iter().map(|s| s.v.clone()).collect()),
+                source: b.v.source,
             })
             .collect()
     }

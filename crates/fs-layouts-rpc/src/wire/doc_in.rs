@@ -5,7 +5,7 @@
 
 use fs_forms_layout::{
     ActionDoc, ActionTarget, BindFrom, BindingDoc, FrontendKey, Item, LayoutDoc, MenuDoc,
-    MessageDoc, PageDoc, Reference, RequiresDoc, SourceDoc,
+    MessageDoc, PageDoc, Reference, RequiresDoc, SourceDoc, SourceScope,
 };
 
 use super::filter::read_view;
@@ -89,7 +89,9 @@ pub(crate) fn read_doc(d: w::layout_doc::Reader<'_>, lim: &TreeLimits) -> R<Layo
                 SourceDoc {
                     range: read_range(s.get_range().map_err(lost("range"))?)?,
                     data_type: txt(s.get_data_type())?,
-                    scope: opt(s.get_scope())?.map(|t| word_of(&t)).transpose()?,
+                    scope: opt(s.get_scope())?
+                        .map(|t| SourceScope::from_text(&t).ok_or_else(|| bad(&t)))
+                        .transpose()?,
                 },
             ))
         })
@@ -232,6 +234,7 @@ pub(crate) fn read_binding(b: w::binding::Reader<'_>) -> R<Item<BindingDoc>> {
             nth: b.get_nth(),
             from,
             schemes,
+            source: None,
         },
     ))
 }

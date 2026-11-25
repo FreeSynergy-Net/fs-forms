@@ -5,7 +5,7 @@
 
 use fs_forms_layout::{
     BindFrom, Cause, Confirm, Field, FilterCond, FilterOp, LogAction, MenuKind, Navigation, OnWhat,
-    OrderBy, Origin, OverlayState, Position, SourceScope, Trigger,
+    OrderBy, Origin, OverlayState, Position, Trigger,
 };
 
 /// A closed word list: every variant has exactly one word.
@@ -32,7 +32,7 @@ macro_rules! shared {
         }
     )*};
 }
-shared!(SourceScope, OnWhat, Navigation, Trigger, Confirm, OrderBy);
+shared!(OnWhat, Navigation, Trigger, Confirm, OrderBy);
 words!(FilterOp { And => "and", Or => "or", Not => "not", Xor => "xor", Is => "is" });
 words!(FilterCond { Equals => "equals", AnyOf => "any-of", Range => "range", IsEmpty => "is-empty", Term => "term" });
 words!(Origin { Package => "package", Person => "person", Import => "import" });

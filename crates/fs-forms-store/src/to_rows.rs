@@ -163,7 +163,10 @@ pub fn to_rows(layout: &Layout, meta: &LayoutMeta) -> Result<Rows, Coded<LayoutC
             .set("below_minor", Cell::Int(v[4]))
             .set("below_patch", Cell::Int(v[5]))
             .set("data_type", text(&s.v.data_type))
-            .set("scope", s.v.scope.map_or(Cell::Null, |w| text(w.word())))
+            .set(
+                "scope",
+                s.v.scope.as_ref().map_or(Cell::Null, |w| text(w.text())),
+            )
             .push_into(&mut rows);
     }
     let mut node = 0_u32;

@@ -71,7 +71,7 @@ lang = "de"
 text = "Eins"
 "#;
 
-const GOLDEN: &str = r#"schema = 3
+const GOLDEN: &str = r#"schema = 4
 kind = "frontend"
 id = "board"
 extends = "net.example.Tasks"

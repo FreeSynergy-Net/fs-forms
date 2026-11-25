@@ -1,4 +1,4 @@
-//! The model to the canonical tree (always format 3). Order: lists in the order of the model (= their `seq`), bindings by
+//! The model to the canonical tree (always format 4). Order: lists in the order of the model (= their `seq`), bindings by
 //! (slot in byte order, nth), scheme lists NEVER sorted (suggestion order), messages by (key, lang) in byte order.
 //! Views of a person (with `owner`) are left out unless asked for: they are the person's data, not the package's.
 //!
@@ -37,7 +37,10 @@ pub(crate) fn obj(p: Pairs) -> Tree {
 pub(crate) fn layout_tree(l: &Layout, own_views: bool) -> Result<Tree, Coded<LayoutCode>> {
     let d = l.doc();
     let mut p: Pairs = vec![
-        ("schema", Tree::Int(3)),
+        (
+            "schema",
+            Tree::Int(i64::from(fs_forms_layout::FORMAT_KNOWN)),
+        ),
         ("kind", Tree::s("frontend")),
         ("id", Tree::s(&d.key.frontend)),
         ("extends", Tree::s(&d.key.extends)),
@@ -58,8 +61,8 @@ pub(crate) fn layout_tree(l: &Layout, own_views: bool) -> Result<Tree, Coded<Lay
             ("contract", Tree::s(&i.v.range)),
             ("type", Tree::s(&i.v.data_type)),
         ];
-        if let Some(s) = i.v.scope {
-            q.push(("scope", Tree::s(s.word())));
+        if let Some(s) = &i.v.scope {
+            q.push(("scope", Tree::s(s.text())));
         }
         obj(q)
     });
@@ -165,6 +168,9 @@ pub(crate) fn binding(i: &Item<BindingDoc>) -> Tree {
         BindFrom::Command(c) => q.push(("command", Tree::s(c))),
         BindFrom::Lock => q.push(("lock", Tree::Bool(true))),
         BindFrom::Condition => q.push(("condition", Tree::Bool(true))),
+    }
+    if let Some(n) = b.source {
+        q.push(("source", int(n)));
     }
     if let Some(s) = &b.schemes {
         q.push((

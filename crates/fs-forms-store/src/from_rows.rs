@@ -144,7 +144,9 @@ fn sources(rows: &Rows, key: &str) -> Vec<Item<SourceDoc>> {
     src.sort_by_key(|r| r.int("source"));
     src.iter()
         .map(|r| {
-            let scope = r.text("scope").and_then(|w| Words::from_word(&w));
+            let scope = r
+                .text("scope")
+                .and_then(|w| fs_forms_layout::SourceScope::from_text(&w));
             item(
                 r,
                 SourceDoc {
@@ -293,6 +295,7 @@ pub(crate) fn binding_from(
             nth: r.uint("nth").unwrap_or(0),
             from,
             schemes,
+            source: None,
         },
     )
 }

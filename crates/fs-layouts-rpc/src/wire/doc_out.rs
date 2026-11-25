@@ -4,7 +4,7 @@
 
 use fs_forms_layout::{
     ActionDoc, ActionTarget, BindFrom, Coded, ElemId, Item, LayoutCode, LayoutDoc, MenuDoc,
-    PageDoc, SourceDoc,
+    PageDoc, SourceDoc, SourceScope,
 };
 
 use super::text::{R, n};
@@ -85,7 +85,7 @@ fn write_source(mut e: w::source::Builder<'_>, nth: u32, s: &Item<SourceDoc>) {
     e.set_n(nth);
     write_range(e.reborrow().init_range(), &s.v.range);
     e.set_data_type(&s.v.data_type);
-    e.set_scope(s.v.scope.map_or("", Words::word));
+    e.set_scope(s.v.scope.as_ref().map_or("", SourceScope::text));
 }
 
 fn write_menu(mut e: w::menu_node::Builder<'_>, m: &Item<MenuDoc>) {

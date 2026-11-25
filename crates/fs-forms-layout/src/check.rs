@@ -6,6 +6,7 @@ use std::collections::HashSet;
 
 use crate::check_frontend::check_frontends;
 use crate::check_places::check_tree;
+use crate::check_sources::check_binding_sources;
 use crate::codes::LayoutCode;
 use crate::doc::{BindingDoc, Item, LayoutDoc};
 use crate::ids::{ElemId, ElemKind};
@@ -199,6 +200,7 @@ impl LayoutDoc {
                 let elem = b.elem.as_ref().map_or("", ElemId::as_str);
                 if catalog.block_known(&b.v.block) {
                     check_bindings(&b.v.block, &b.v.bindings, catalog, out);
+                    check_binding_sources(&b.v.bindings, self.sources.len(), out);
                 } else {
                     out.push(
                         Coded::new(LayoutCode::BlockUnknown)

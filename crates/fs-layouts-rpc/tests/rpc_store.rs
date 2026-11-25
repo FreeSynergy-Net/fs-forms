@@ -72,7 +72,7 @@ fn a_refusal_is_a_code_with_parameters_and_nothing_changed() {
         assert_eq!(code(&e), "format-newer");
         assert_eq!(
             (param(&e, "found"), param(&e, "known")),
-            (Some("9"), Some("3"))
+            (Some("9"), Some("4"))
         );
     });
 }

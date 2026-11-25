@@ -142,7 +142,7 @@ fn k64_problems_have_codes_and_lines() {
 #[test]
 fn missing_key_and_wrong_format_are_visible() {
     assert!(codes(&FILE.replace("id = \"board\"\n", "")).contains(&LayoutCode::ImportInvalid));
-    let d = read(&FILE.replace("schema = 3", "schema = 4"), Format::Toml).unwrap();
+    let d = read(&FILE.replace("schema = 3", "schema = 5"), Format::Toml).unwrap();
     let e = d.check(&OpenCatalog, &Limits::declared()).unwrap_err();
     assert_eq!(e[0].code, LayoutCode::FormatNewer);
 }

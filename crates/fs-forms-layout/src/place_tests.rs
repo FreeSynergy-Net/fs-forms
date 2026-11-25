@@ -49,7 +49,7 @@ fn page() -> PageDoc {
 }
 fn layout(p: PageDoc) -> LayoutDoc {
     crate::doc::LayoutDoc {
-        format: 3,
+        format: 4,
         key: crate::ids::FrontendKey {
             extends: "x".into(),
             frontend: "y".into(),

@@ -131,6 +131,16 @@ impl<'a> Fields<'a> {
             None
         }
     }
+    /// A table value as it stands (its keys are not read here), or `None`; a value that is no table is reported.
+    pub(crate) fn raw_table(&mut self, cx: &mut Ctx<'_>, key: &str) -> Option<&'a Tree> {
+        let t = self.take(key)?;
+        if matches!(t, Tree::Obj(..)) {
+            Some(t)
+        } else {
+            cx.bad_at(self.line, "type", key);
+            None
+        }
+    }
     pub(crate) fn list(&mut self, cx: &mut Ctx<'_>, key: &str) -> &'a [Tree] {
         match self.take(key) {
             None => &[],

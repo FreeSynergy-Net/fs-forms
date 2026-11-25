@@ -174,6 +174,7 @@ fn layout() -> Layout {
                 },
             ),
         ],
+        sample: None,
     };
     doc.check(&OpenCatalog, &Limits::declared()).unwrap()
 }

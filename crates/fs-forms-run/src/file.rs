@@ -168,6 +168,8 @@ fn available_in(dir: &Path, limits: &Limits, extends: &str) -> Result<Vec<String
 pub struct Loaded {
     /// The resolved description.
     pub view: View,
+    /// The checked description the view was made from (what a host needs besides the view: e.g. the test data it derives from it).
+    pub layout: Layout,
     /// The file that was read, relative to the folder the link was made with (for a single file: its file name).
     pub file: PathBuf,
 }
@@ -218,6 +220,7 @@ impl FileLink {
         };
         Ok(Loaded {
             view: view_of(&layout, &self.lang),
+            layout,
             file,
         })
     }

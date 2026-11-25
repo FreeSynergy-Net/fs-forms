@@ -64,6 +64,7 @@ fn layout(p: PageDoc) -> LayoutDoc {
         actions: vec![],
         views: vec![],
         messages: vec![],
+        sample: None,
     }
 }
 fn r(kind: ElemKind, e: &str) -> ElemRef {

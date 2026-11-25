@@ -209,6 +209,7 @@ pub fn full_doc() -> LayoutDoc {
                 message: "Aufgaben".into(),
             },
         )],
+        sample: None,
     }
 }
 

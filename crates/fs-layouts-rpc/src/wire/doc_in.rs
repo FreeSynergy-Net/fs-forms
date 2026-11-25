@@ -151,6 +151,7 @@ pub(crate) fn read_doc(d: w::layout_doc::Reader<'_>, lim: &TreeLimits) -> R<Layo
         actions,
         views,
         messages,
+        sample: None,
     })
 }
 

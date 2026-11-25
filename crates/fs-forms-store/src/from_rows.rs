@@ -86,6 +86,7 @@ pub fn from_rows(rows: &Rows, id: &LayoutId) -> Result<Layout, Vec<Coded<LayoutC
         actions: Vec::new(),
         views: Vec::new(),
         messages: Vec::new(),
+        sample: None,
     };
     let mut walk = Walk::default();
     doc.pages = pages(rows, key, &mut walk);

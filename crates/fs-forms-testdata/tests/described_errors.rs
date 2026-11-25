@@ -135,3 +135,28 @@ fn a_catalog_that_lacks_the_block_or_the_slot_of_a_grouping_binding_is_a_code_no
     let err = needs(&l, &Empty).expect_err("a grouping binding with no block spec");
     assert_eq!(err.code(), SampleCode::BlockUnknown);
 }
+
+/// The way a real file takes: exchange reader hands `[sample]` on as text, `from_description` gives it to `read_sample` (strict).
+#[test]
+fn a_broken_section_in_a_real_file_is_refused_by_read_sample_not_by_the_exchange_reader() {
+    let head = describe(&["Task"], &[("board", 1)]);
+    // the exchange reader takes the section whole: the file is read and checked
+    let broken = read(&format!("{head}\n[sample]\nseeed = 1\n"));
+    let text = broken
+        .doc()
+        .sample
+        .clone()
+        .expect("the exchange reader gave the text");
+    assert_eq!(
+        SampleSpec::from_description(&broken, &Table, Some(&text))
+            .unwrap_err()
+            .code(),
+        SampleCode::SectionBad
+    );
+    // the same file with a good section: the text from the file takes effect (count 3 instead of 8)
+    let good = read(&format!(
+        "{head}\n[[sample.set]]\nsource = 1\nform = \"cards-in-columns@^1.0.0\"\ncount = 3\n"
+    ));
+    let got = SampleSpec::from_description(&good, &Table, good.doc().sample.as_deref()).unwrap();
+    assert_eq!(got[0].spec.sets[0].count, 3);
+}

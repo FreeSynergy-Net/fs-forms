@@ -10,6 +10,7 @@ use std::sync::Arc;
 use fs_components_mf2::Mf2Texts;
 
 use crate::args::Config;
+use crate::described::Described;
 use crate::feed::Want;
 use crate::parts::line;
 use crate::records::{NoRecords, Records, Unavailable};
@@ -68,6 +69,7 @@ pub trait Sources: Send + Sync {
     fn connect_sample(
         &self,
         _wants: &[Want],
+        _described: &Described<'_>,
         _socket: Option<&Path>,
         _running: &Path,
     ) -> Result<Arc<dyn Records>, Coded> {
@@ -97,6 +99,7 @@ pub fn name_of(range: &str) -> &str {
 pub fn open(
     c: &Config,
     view: &View,
+    described: &Described<'_>,
     texts: &Mf2Texts,
     running: &Path,
     sources: &dyn Sources,
@@ -111,7 +114,7 @@ pub fn open(
         };
     }
     let asked = if sample {
-        sources.connect_sample(&wants, c.socket.as_deref(), running)
+        sources.connect_sample(&wants, described, c.socket.as_deref(), running)
     } else {
         sources.connect_wanted(&wants, c.socket.as_deref(), running)
     };
@@ -142,7 +145,14 @@ mod tests {
             ..View::default()
         };
         let c = crate::args::Config::default();
-        let o = open(&c, &view, &texts, Path::new("x"), &NoSources);
+        let o = open(
+            &c,
+            &view,
+            &Described::none(),
+            &texts,
+            Path::new("x"),
+            &NoSources,
+        );
         assert!(!o.connected);
         let code = o.notice.expect("a notice");
         assert_eq!(code.code, "host-notice-source-unknown");
@@ -157,7 +167,14 @@ mod tests {
     fn no_source_in_the_description_asks_for_nothing() {
         let texts = words(&fs_components_words::Locale::english());
         let c = crate::args::Config::default();
-        let o = open(&c, &View::default(), &texts, Path::new("x"), &NoSources);
+        let o = open(
+            &c,
+            &View::default(),
+            &Described::none(),
+            &texts,
+            Path::new("x"),
+            &NoSources,
+        );
         assert!(o.notice.is_none() && !o.connected);
     }
 }
@@ -182,6 +199,7 @@ mod sample_tests {
         fn connect_sample(
             &self,
             wants: &[Want],
+            _: &Described<'_>,
             _: Option<&Path>,
             _: &Path,
         ) -> Result<Arc<dyn Records>, Coded> {
@@ -206,7 +224,7 @@ mod sample_tests {
             ..Config::default()
         };
         let spy = Spy::default();
-        let o = open(&c, &view, &texts, Path::new("x"), &spy);
+        let o = open(&c, &view, &Described::none(), &texts, Path::new("x"), &spy);
         assert_eq!(*spy.0.lock().expect("lock"), vec!["sample-1"]);
         assert!(o.notice.is_none() && !o.connected);
     }
@@ -218,7 +236,14 @@ mod sample_tests {
             sample_data: true,
             ..Config::default()
         };
-        let o = open(&c, &View::default(), &texts, Path::new("x"), &NoSources);
+        let o = open(
+            &c,
+            &View::default(),
+            &Described::none(),
+            &texts,
+            Path::new("x"),
+            &NoSources,
+        );
         assert!(o.records.is_sample() && o.notice.is_none() && !o.connected);
     }
 
@@ -230,7 +255,14 @@ mod sample_tests {
             ..View::default()
         };
         let spy = Spy::default();
-        let o = open(&Config::default(), &view, &texts, Path::new("x"), &spy);
+        let o = open(
+            &Config::default(),
+            &view,
+            &Described::none(),
+            &texts,
+            Path::new("x"),
+            &spy,
+        );
         assert_eq!(*spy.0.lock().expect("lock"), vec!["connect"]);
         assert!(o.connected);
     }

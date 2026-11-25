@@ -77,9 +77,17 @@ fn is_tables(t: &Tree) -> bool {
     matches!(t, Tree::Arr(a) if !a.is_empty() && a.iter().all(|x| matches!(x, Tree::Obj(..))))
 }
 
+/// A table that holds a list of tables (at any depth) cannot be inline: it gets its own header.
+fn holds_tables(t: &Tree) -> bool {
+    match t {
+        Tree::Obj(o, _) => o.iter().any(|(_, v)| is_tables(v) || holds_tables(v)),
+        _ => false,
+    }
+}
+
 fn table(path: &str, items: &[(String, Tree)], out: &mut String) {
     for (k, v) in items {
-        if is_tables(v) || matches!(v, Tree::Arr(a) if a.is_empty()) {
+        if is_tables(v) || holds_tables(v) || matches!(v, Tree::Arr(a) if a.is_empty()) {
             continue;
         }
         let _ = write!(out, "{k} = ");
@@ -87,6 +95,15 @@ fn table(path: &str, items: &[(String, Tree)], out: &mut String) {
         out.push('\n');
     }
     for (k, v) in items {
+        if let (true, Tree::Obj(inner, _)) = (holds_tables(v), v) {
+            let here = if path.is_empty() {
+                k.clone()
+            } else {
+                format!("{path}.{k}")
+            };
+            let _ = write!(out, "\n[{here}]\n");
+            table(&here, inner, out);
+        }
         if let (true, Tree::Arr(list)) = (is_tables(v), v) {
             for o in list {
                 if let Tree::Obj(inner, _) = o {

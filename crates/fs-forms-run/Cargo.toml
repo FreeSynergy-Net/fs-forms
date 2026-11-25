@@ -60,3 +60,6 @@ percent-encoding = "2.3"
 tempfile = "3"
 png = "0.18"
 proptest = "1"
+# The probe of the consumer path (`src/sample_probe.rs`): the test data of a description, derived with the real catalog adapter. No cycle:
+# testdata depends on bind and layout only.
+fs-forms-testdata = { path = "../fs-forms-testdata", version = "0.1.0" }

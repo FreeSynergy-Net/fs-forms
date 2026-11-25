@@ -94,6 +94,7 @@ pub(super) fn doc(places: Vec<Item<PlaceNode>>) -> LayoutDoc {
         actions: vec![],
         views: vec![],
         messages: vec![],
+        sample: None,
     }
 }
 

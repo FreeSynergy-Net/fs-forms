@@ -123,7 +123,26 @@ pub(crate) fn layout_tree(l: &Layout, own_views: bool) -> Result<Tree, Coded<Lay
         ])
     });
     p.push(("message", Tree::Arr(msgs.collect())));
+    if let Some(text) = &d.sample {
+        p.push(("sample", sample_table(text)?));
+    }
     Ok(obj(p))
+}
+
+/// The section `[sample]` as it was read: the text back to a tree, the table under its key.
+fn sample_table(text: &str) -> Result<Tree, Coded<LayoutCode>> {
+    match crate::tree::from_toml(text) {
+        Ok(Tree::Obj(items, _)) => items
+            .into_iter()
+            .find(|(k, _)| k == "sample")
+            .map(|(_, t)| t),
+        _ => None,
+    }
+    .ok_or_else(|| {
+        Coded::new(LayoutCode::ExportFailed)
+            .with("file", "")
+            .with("kind", "sample-not-toml")
+    })
 }
 
 fn menu(i: &Item<MenuDoc>) -> Tree {

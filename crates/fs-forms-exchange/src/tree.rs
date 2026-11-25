@@ -84,6 +84,12 @@ pub(crate) fn from_item(item: &toml_edit::Item, text: &str) -> Result<Tree, &'st
     }
 }
 
+/// The tree of a TOML text (the text a reader gave back for a section it keeps whole).
+pub(crate) fn from_toml(text: &str) -> Result<Tree, &'static str> {
+    let doc = toml_edit::ImDocument::parse(text).map_err(|_| "toml")?;
+    from_item(doc.as_item(), text)
+}
+
 /// Converts a parsed JSON value; floats, nulls are not part of the format.
 #[cfg(feature = "json")]
 pub(crate) fn from_json(v: serde_json::Value) -> Result<Tree, &'static str> {

@@ -10,6 +10,7 @@ use fs_components_app::{WindowOptions, launch};
 use crate::args::{Command, Config, HELP, parse};
 use crate::blocks::Blocks;
 use crate::compose::compose;
+use crate::described::Described;
 use crate::error::{EXIT_CONTRACT, HostError};
 use crate::file::FileLink;
 use crate::form_check::lock_misfits;
@@ -18,6 +19,7 @@ use crate::sources::{NoSources, Sources, open};
 use crate::view::View;
 use crate::window::failure;
 use crate::words::{session_locale, words};
+use fs_forms_layout::Layout;
 
 /// The exit code for success, as a plain number.
 const CODE_SUCCESS: i32 = 0;
@@ -70,14 +72,14 @@ pub fn run_code_with(args: &[String], sources: &dyn Sources) -> i32 {
             }
             CODE_SUCCESS
         }
-        Ok(Command::Check(c)) => match fetch_from(&c) {
-            Ok((view, line)) => {
-                if let Some(line) = line {
+        Ok(Command::Check(c)) => match fetch(&c) {
+            Ok(got) => {
+                if let Some(line) = got.line {
                     println!("fs-forms-run: {line}");
                 }
                 println!(
                     "fs-forms-run: the description of the frontend {} is there",
-                    view.frontend
+                    got.view.frontend
                 );
                 CODE_SUCCESS
             }
@@ -87,20 +89,31 @@ pub fn run_code_with(args: &[String], sources: &dyn Sources) -> i32 {
     }
 }
 
-fn fetch(c: &Config) -> Result<View, HostError> {
-    fetch_from(c).map(|(view, _file)| view)
+/// What a fetch brings: the view, the checked description it was made from (a description on disk; the socket gives none yet) and
+/// the line `frontend <id> from <file>`.
+pub(crate) struct Fetched {
+    pub(crate) view: View,
+    pub(crate) layout: Option<Layout>,
+    pub(crate) line: Option<String>,
 }
 
-/// The view and, for a description on disk, the file that was really loaded (the line `frontend <id> from <file>`).
-fn fetch_from(c: &Config) -> Result<(View, Option<String>), HostError> {
+pub(crate) fn fetch(c: &Config) -> Result<Fetched, HostError> {
     if let Some(path) = &c.description {
         let lang = session_locale().primary().to_owned();
         let loaded = FileLink::new(path, lang).load(&c.extends, &c.frontend)?;
         let line = loaded.line();
-        return Ok((loaded.view, Some(line)));
+        return Ok(Fetched {
+            view: loaded.view,
+            layout: Some(loaded.layout),
+            line: Some(line),
+        });
     }
     let view = SocketLink::open(c.forms_socket.as_deref())?.resolve(&c.extends, &c.frontend)?;
-    Ok((view, None))
+    Ok(Fetched {
+        view,
+        layout: None,
+        line: None,
+    })
 }
 
 fn end(e: &HostError) -> i32 {
@@ -128,9 +141,12 @@ fn window(c: &Config, sources: &dyn Sources) -> i32 {
     // a block whose module does not fit its form is locked with the codes of the match: a picture run ends with 3 as well
     let mut misfit = false;
     let (view, comp, records) = match fetch(c) {
-        Ok(mut view) => {
+        Ok(Fetched {
+            mut view, layout, ..
+        }) => {
             let running = std::env::current_exe().unwrap_or_default();
-            let opened = open(c, &view, &texts, &running, sources);
+            let described = Described::of(layout.as_ref());
+            let opened = open(c, &view, &described, &texts, &running, sources);
             // real or sample records (or a source that is not there) make "data sources are not connected in this version" untrue
             if opened.connected || opened.notice.is_some() || opened.records.is_sample() {
                 view.notices

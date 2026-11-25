@@ -136,6 +136,7 @@ pub fn layout(places: Vec<Item<PlaceNode>>, flat: Vec<Item<BlockDoc>>) -> Layout
         actions: Vec::new(),
         views: Vec::new(),
         messages: vec![msg("de"), msg("en")],
+        sample: None,
     };
     doc.check(&OpenCatalog, &Limits::declared()).expect("check")
 }

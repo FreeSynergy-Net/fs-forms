@@ -1968,6 +1968,7 @@ dependencies = [
  "fs-forms-client",
  "fs-forms-exchange",
  "fs-forms-layout",
+ "fs-forms-testdata",
  "fs-interfaces",
  "fs-notification",
  "fs-objects",

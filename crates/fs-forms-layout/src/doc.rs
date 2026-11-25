@@ -44,6 +44,9 @@ pub struct LayoutDoc {
     pub views: Vec<Item<ViewDoc>>,
     /// Texts (MF2 source) by key and language.
     pub messages: Vec<Item<MessageDoc>>,
+    /// The section `[sample]` as TOML text with the top-level key `sample` (the test data the description asks for), or `None`. The
+    /// layer does NOT check it: its one reader is `fs-forms-testdata` (`read_sample`, strict). Wire and store do not carry it (`None`).
+    pub sample: Option<String>,
 }
 
 /// A required contract range, e.g. `tasks@>=0.2, <0.3`.

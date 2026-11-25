@@ -108,6 +108,10 @@ pub(crate) fn layout_doc(root: &Tree, cx: &mut Ctx<'_>) -> Option<LayoutDoc> {
         lang: f.req_str(cx, "lang"),
         message: f.req_str(cx, "text"),
     });
+    // `[sample]` is handed on as text; its keys are checked by its one reader (`fs-forms-testdata`), not here
+    let sample = f
+        .raw_table(cx, "sample")
+        .map(|t| crate::emit::to_toml(&Tree::obj(vec![("sample", t.clone())])));
     f.done(cx);
     let key = FrontendKey { extends, frontend };
     Some(LayoutDoc {
@@ -123,6 +127,7 @@ pub(crate) fn layout_doc(root: &Tree, cx: &mut Ctx<'_>) -> Option<LayoutDoc> {
         actions,
         views,
         messages,
+        sample,
     })
 }
 

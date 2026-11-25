@@ -74,6 +74,7 @@ pub fn doc(frontend: &str) -> LayoutDoc {
                 message: "Aufgaben".into(),
             },
         )],
+        sample: None,
     }
 }
 

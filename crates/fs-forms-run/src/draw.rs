@@ -102,7 +102,7 @@ pub(crate) fn missing(name: &str) -> String {
 }
 
 /// What the view is given besides the data.
-fn draw_ctx(ctx: &Ctx, block: &str, look: (StyleId, bool), _info: &PlaceInfo) -> DrawCtx {
+fn draw_ctx(ctx: &Ctx, block: &str, look: (StyleId, bool), info: &PlaceInfo) -> DrawCtx {
     let form = crate::blocks::forms_of(block)
         .first()
         .map(|f| f.name().to_owned())
@@ -114,6 +114,7 @@ fn draw_ctx(ctx: &Ctx, block: &str, look: (StyleId, bool), _info: &PlaceInfo) ->
         ctx.feeds.clone(),
     );
     DrawCtx {
+        place: info.clone(),
         look,
         say: Arc::new(move |key: &str| say.say(key)),
         locale: ctx.locale.clone(),
@@ -180,3 +181,6 @@ mod tests {
         }
     }
 }
+
+#[cfg(test)]
+mod place_tests;

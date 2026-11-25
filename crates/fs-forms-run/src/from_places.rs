@@ -78,7 +78,7 @@ fn block_view(layout: &Layout, b: &fs_forms_layout::BlockDoc, seq: u32, lang: &s
         title: b.title_key.as_deref().map(|k| text(layout, k, lang)),
         locks: Vec::new(),
         slot_locks: Vec::new(),
-        info: PlaceInfo::from_doc(&b.set),
+        info: crate::place_info::from_doc(&b.set),
         embed: None,
     }
 }

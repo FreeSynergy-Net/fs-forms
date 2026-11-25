@@ -1,4 +1,4 @@
-//! The three calendar descriptions (month, week, agenda) ask for the fixed events: read with the exchange reader, built like the host does.
+//! The four calendar descriptions (month, week, agenda, timeline) ask for the fixed events: read with the exchange reader, built like the host does.
 
 mod described_support;
 
@@ -14,12 +14,13 @@ fn layout_of(name: &str) -> (fs_forms_layout::Layout, String) {
 }
 
 #[test]
-fn month_week_and_agenda_show_the_fixed_events_of_their_window() {
+fn month_week_agenda_and_timeline_show_the_fixed_events_of_their_window() {
     // (file, the kind of anchor it writes)
     for (file, anchor) in [
         ("C-F1-monat.toml", "month"),
         ("C-F2-woche.toml", "week"),
         ("C-F3-agenda.toml", "month"),
+        ("C-F4-zeitleiste.toml", "month"),
     ] {
         let (layout, text) = layout_of(file);
         assert!(text.contains(anchor), "{file}");

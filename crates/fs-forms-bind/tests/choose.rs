@@ -62,6 +62,7 @@ fn catalog_with_any() -> TestCatalog {
             name: "any".into(),
             min: 0,
             max: None,
+            heads: Vec::new(),
         });
     c
 }

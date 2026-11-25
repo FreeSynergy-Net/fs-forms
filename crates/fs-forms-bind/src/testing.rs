@@ -22,6 +22,7 @@ fn slot(name: &str, min: u32, max: Option<u32>) -> SlotSpec {
         name: name.to_owned(),
         min,
         max,
+        heads: Vec::new(),
     }
 }
 

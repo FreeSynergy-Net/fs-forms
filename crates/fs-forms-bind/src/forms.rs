@@ -130,6 +130,8 @@ pub struct FormRef {
 pub struct ModuleForm {
     /// The form and the version the module declares.
     pub form: FormRef,
+    /// The data type this entry serves (forms.json `type`); `""` = not declared (old callers).
+    pub data_type: String,
     /// Channel to field names (a channel may take several fields; a name not in the form is ignored here).
     pub map: Vec<(String, Vec<String>)>,
     /// The basic type of each field of the module, by field name (from the type catalog).

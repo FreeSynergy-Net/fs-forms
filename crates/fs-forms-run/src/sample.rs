@@ -227,6 +227,7 @@ fn board_form(columns: &[Column]) -> FormData {
     }
     FormData {
         declared: ModuleForm {
+            data_type: String::new(),
             form: FormRef {
                 name: BOARD_FORM.to_owned(),
                 major: 1,

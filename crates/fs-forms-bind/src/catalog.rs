@@ -15,6 +15,8 @@ pub struct SlotSpec {
     pub min: u32,
     /// Most bindings (`None` = unbounded).
     pub max: Option<u32>,
+    /// Forms the heads of a grouping slot come as (`heads=` of the slot, e.g. `rows.0`); empty = the slot takes no heads.
+    pub heads: Vec<crate::forms::FormRef>,
 }
 
 /// A block of the block contract with its `accepts`.

@@ -14,6 +14,7 @@ use crate::view::Coded;
 pub(crate) fn declared() -> ModuleForm {
     let pair = |c: &str, f: &[&str]| (c.to_owned(), f.iter().map(|x| (*x).to_owned()).collect());
     ModuleForm {
+        data_type: String::new(),
         form: FormRef {
             name: "cards-in-columns".into(),
             major: 1,

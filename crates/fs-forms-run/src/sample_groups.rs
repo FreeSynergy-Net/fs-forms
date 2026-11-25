@@ -9,6 +9,7 @@ use crate::form_data::{FormData, FormRow};
 
 fn declared(name: &str, map: &[(&str, &str)], fields: &[(&str, Basic)]) -> ModuleForm {
     ModuleForm {
+        data_type: String::new(),
         form: FormRef {
             name: name.to_owned(),
             major: 1,

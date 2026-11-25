@@ -30,7 +30,7 @@ bind_codes! {
     ShortcutInvalid = "shortcut-invalid", KeyReserved = "key-reserved", StandardTwice = "standard-twice",
     SeqTwice = "seq-twice", PageEmpty = "page-empty", PageRefused = "page-refused",
     FieldHidden = "field-hidden", SettingsDefaults = "settings-defaults", NoSelection = "no-selection",
-    ElemOrphan = "elem-orphan",
+    ElemOrphan = "elem-orphan", HeadsFormMissing = "heads-form-missing",
 }
 
 impl BindCode {

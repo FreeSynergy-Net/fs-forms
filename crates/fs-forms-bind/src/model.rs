@@ -95,8 +95,13 @@ pub enum BindKind {
     },
     /// A command.
     Command(CommandIn),
-    /// A grouping by name.
-    Grouping(String),
+    /// A grouping by name; `heads` = the source whose records are the heads of the groups (the lanes), `None` = from the cards.
+    Grouping {
+        /// Grouping (field) name.
+        name: String,
+        /// Source index of the heads.
+        heads: Option<u32>,
+    },
     /// An order by name.
     Order(String),
     /// A filter input bound to a field (slot kind `condition`, proposal).

@@ -104,6 +104,7 @@ pub fn tree_module() -> ModuleForm {
     let map = |c: &str, f: &str| (c.to_owned(), vec![f.to_owned()]);
     ModuleForm {
         form: form_ref("tree", 1, 0),
+        data_type: "Group".into(),
         map: vec![
             map("nodes", "Group"),
             map("parent", "parent"),

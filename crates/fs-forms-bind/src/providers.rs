@@ -33,6 +33,10 @@ pub enum Offer {
 pub trait ProviderFacts {
     /// The offer for a capability.
     fn offer(&self, capability: &str) -> Offer;
+    /// The forms the module of the capability declares (forms.json entries, each with its data type). Default: none declared.
+    fn forms(&self, _capability: &str) -> Vec<crate::forms::ModuleForm> {
+        Vec::new()
+    }
 }
 
 /// Health of the settings store.

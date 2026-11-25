@@ -80,6 +80,7 @@ impl Bind {
                 catalog,
                 host: env_host,
                 sources: &sources,
+                facts: providers.records,
             };
             let places = build_nodes(&env, page, &page.places, &mut pool);
             pages.push(PagePlan {

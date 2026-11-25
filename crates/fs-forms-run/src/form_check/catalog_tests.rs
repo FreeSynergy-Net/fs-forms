@@ -116,6 +116,7 @@ fn minimal_module(def: &FormDef) -> ModuleForm {
         map.push((c.name.clone(), vec![format!("f-{}", c.name)]));
     }
     ModuleForm {
+        data_type: String::new(),
         form: fref(def),
         map,
         fields,

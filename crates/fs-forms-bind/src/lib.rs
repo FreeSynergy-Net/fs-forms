@@ -16,8 +16,10 @@
 #![warn(clippy::pedantic)]
 
 mod build;
+mod build_heads;
 mod build_menu;
 mod build_place;
+mod build_slot;
 mod build_tree;
 mod canon;
 mod catalog;

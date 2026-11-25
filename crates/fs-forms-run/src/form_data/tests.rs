@@ -7,6 +7,7 @@ use fs_forms_bind::FormRef;
 
 fn declared() -> ModuleForm {
     ModuleForm {
+        data_type: String::new(),
         form: FormRef {
             name: "cards-in-columns".into(),
             major: 1,

@@ -177,7 +177,12 @@ pub enum Fill {
     /// A field.
     Field(FieldFill),
     /// A grouping.
-    Grouping(String),
+    Grouping {
+        /// Grouping (field) name.
+        name: String,
+        /// Source index of the heads (the lanes); `None` = the heads come from the cards.
+        heads: Option<u32>,
+    },
     /// An order.
     Order(String),
     /// A command.

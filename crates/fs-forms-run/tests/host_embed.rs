@@ -8,8 +8,8 @@
 
 mod embed_common;
 
-use embed_common::{SETTINGS, TASKS, child_id, open_board, world};
-use fs_forms_run::{Placement, WindowId, WindowOwner, sample_groups};
+use embed_common::{SETTINGS, TASKS, child_id, groups, open_board, world};
+use fs_forms_run::{Placement, WindowId, WindowOwner};
 
 #[test]
 fn a_panel_is_a_frontend_of_its_own_module_inside_the_page_of_its_parent() {
@@ -44,7 +44,7 @@ fn a_panel_is_a_frontend_of_its_own_module_inside_the_page_of_its_parent() {
             .map(|f| f.declared.form.name.clone())
             .collect()
     };
-    let groups: Vec<String> = sample_groups()
+    let groups: Vec<String> = groups()
         .iter()
         .map(|f| f.declared.form.name.clone())
         .collect();

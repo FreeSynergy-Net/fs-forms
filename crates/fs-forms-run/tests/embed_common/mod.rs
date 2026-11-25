@@ -14,8 +14,13 @@ use fs_forms_layout::FrontendKey;
 use fs_forms_run::{
     Blocks, Coded, Descriptions, FakeModule, FileLink, FormRecords, HoldCounts, HostWindows,
     LayoutLink, Module, Modules, OpenFrontend, Placement, Records, Repaint, SampleBoard, Surfaces,
-    View, WindowId, WindowOpened, WindowOwner, sample_groups,
+    View, WindowId, WindowOpened, WindowOwner,
 };
+
+// The data of the groups module standing in for the settings data: made from a wish by the generator (package 5b).
+#[path = "../sample_source/mod.rs"]
+mod sample_source;
+pub use sample_source::groups;
 
 pub const TASKS: &str = "net.freesynergy.Tasks";
 pub const SETTINGS: &str = "net.freesynergy.Settings";
@@ -105,7 +110,7 @@ pub fn world(mode: &str) -> World {
     let boards: Mutex<HashMap<Option<String>, Arc<SampleBoard>>> = Mutex::default();
     let groups: Arc<dyn Records> = Arc::new(FormRecords {
         provider: "fake".into(),
-        forms: sample_groups(),
+        forms: groups(),
         ..FormRecords::default()
     });
     let modules = HashMap::from([

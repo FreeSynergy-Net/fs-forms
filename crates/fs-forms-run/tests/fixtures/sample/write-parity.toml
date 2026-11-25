@@ -11,3 +11,5 @@ form = "cards-in-columns@~1.2.0"
 type = "Task"
 count = 2
 distinct = { column = 2, lane = 1, column-label = 2 }
+# the neighbours of a card (`after`, `before`) are what a drop writes, not what a card carries: the generator fills every second record, so they are taken away
+empty = { after = 1, before = 1 }

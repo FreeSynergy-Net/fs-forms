@@ -1,7 +1,10 @@
 //! SQ-4: `form_report` (what `--check` of a host shows) is the match of every declared form: green = nothing, a missing required
 //! channel = red `form-channel-unmapped`, a form no component draws = yellow `form-no-component`.
 
-use fs_forms_run::{FormData, FormRecords, form_report, sample_groups};
+mod sample_source;
+
+use fs_forms_run::{FormData, FormRecords, form_report};
+use sample_source::groups;
 
 fn records(forms: Vec<FormData>) -> FormRecords {
     FormRecords {
@@ -13,12 +16,12 @@ fn records(forms: Vec<FormData>) -> FormRecords {
 
 #[test]
 fn a_module_that_fits_gives_no_finding() {
-    assert_eq!(form_report(&records(sample_groups())), Vec::new());
+    assert_eq!(form_report(&records(groups())), Vec::new());
 }
 
 #[test]
 fn a_required_channel_left_out_is_red_with_the_form_named() {
-    let mut forms = sample_groups();
+    let mut forms = groups();
     forms[0].declared.map.retain(|(c, _)| c != "label");
     let found = form_report(&records(forms));
     let red: Vec<_> = found.iter().filter(|f| f.red).collect();
@@ -31,7 +34,7 @@ fn a_required_channel_left_out_is_red_with_the_form_named() {
 
 #[test]
 fn a_form_no_component_draws_is_yellow_not_red() {
-    let mut forms = sample_groups();
+    let mut forms = groups();
     forms[0].declared.form.name = "checklist".into();
     forms[0].declared.map = vec![
         ("items".into(), vec!["Group".into()]),

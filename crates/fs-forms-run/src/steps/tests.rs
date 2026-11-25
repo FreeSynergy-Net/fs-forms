@@ -14,7 +14,8 @@ use fs_components_app::replay::parse;
 use super::{play, read};
 use crate::file::FileLink;
 use crate::link::LayoutLink;
-use crate::write::fixture::{FakeWriter, data, records};
+use crate::write::fixture::{FakeWriter, records};
+use crate::write::generated::{CREATE, MOVE, data, first, other_column};
 
 const ELEMENT: &str = "element-6066-11e4-a52e-4f735466cecf";
 
@@ -82,11 +83,11 @@ fn widget(writer: &Arc<FakeWriter>, dir: &std::path::Path) -> fs_components_app:
     let text = include_str!("../../tests/fixtures/board.toml")
         .replace(
             "trigger = \"drop\"\nsource = 1\ncommand = \"move\"",
-            "trigger = \"drop\"\nsource = 1\ncommand = \"card.move\"",
+            &format!("trigger = \"drop\"\nsource = 1\ncommand = \"{MOVE}\""),
         )
         .replace(
             "trigger = \"quick-add\"\nsource = 1\ncommand = \"create\"",
-            "trigger = \"quick-add\"\nsource = 1\ncommand = \"task.create\"",
+            &format!("trigger = \"quick-add\"\nsource = 1\ncommand = \"{CREATE}\""),
         );
     let board = dir.join("board.toml");
     std::fs::write(&board, text).unwrap();
@@ -124,7 +125,12 @@ fn the_input_of_a_file_moves_a_card_and_then_the_picture_is_written() {
     let out = keep.path().join("moved.png");
     let _ = std::fs::remove_file(&out);
     let writer = Arc::new(FakeWriter::default());
-    let plan = parse(&body(&drag("fs-board-card-a", "fs-board-col-doing"))).unwrap();
+    let (key, to) = (first(), other_column(&data(), &first()));
+    let plan = parse(&body(&drag(
+        &format!("fs-board-card-{key}"),
+        &format!("fs-board-col-{to}"),
+    )))
+    .unwrap();
     if let Err((message, code)) = play(
         &widget(&writer, keep.path()),
         &plan,
@@ -138,8 +144,8 @@ fn the_input_of_a_file_moves_a_card_and_then_the_picture_is_written() {
     }
     let calls = writer.calls.lock().unwrap();
     assert_eq!(calls.len(), 1, "{calls:?}");
-    assert_eq!(calls[0].command, "card.move");
-    assert_eq!(calls[0].record.as_deref(), Some("a"));
+    assert_eq!(calls[0].command, MOVE);
+    assert_eq!(calls[0].record.as_deref(), Some(key.as_str()));
     assert!(out.metadata().unwrap().len() > 1000, "the picture is there");
 }
 

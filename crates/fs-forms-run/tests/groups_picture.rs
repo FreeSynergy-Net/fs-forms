@@ -5,11 +5,13 @@
 //! Mutants: the match is off (no lock, rc 0); the sample data is not drawn (pictures equal).
 //! Set `FS_PICTURE_OUT=<dir>` to keep the pictures.
 
+mod sample_source;
 mod support;
 use std::path::Path;
 use std::sync::Arc;
 
-use fs_forms_run::{Coded, FormRecords, Records, Sources, run_code_with, sample_groups};
+use fs_forms_run::{Coded, FormRecords, Records, Sources, run_code_with};
+use sample_source::groups as sample_groups;
 use support::{draw, out_dir};
 
 fn groups() -> String {

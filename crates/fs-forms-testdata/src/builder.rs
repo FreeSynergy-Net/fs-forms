@@ -154,7 +154,17 @@ impl SampleBuilder {
             )?;
             set.objects.push(object);
         }
-        let (map, fields) = content.map(&ctx, form);
+        let (mut map, fields) = content.map(&ctx, form);
+        // the channel of art `records` says which kind of record the rows are (a module maps it to its type: `cards` -> `Task`)
+        for channel in form
+            .channels
+            .iter()
+            .filter(|c| c.arts.contains(&Art::Records))
+        {
+            if !map.iter().any(|(c, _)| *c == channel.name) {
+                map.insert(0, (channel.name.clone(), vec![wish.data_type.clone()]));
+            }
+        }
         set.declared.push(ModuleForm {
             form: FormRef {
                 name: form.name.clone(),

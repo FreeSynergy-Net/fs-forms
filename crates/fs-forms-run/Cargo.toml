@@ -63,3 +63,5 @@ proptest = "1"
 # The probe of the consumer path (`src/sample_probe.rs`): the test data of a description, derived with the real catalog adapter. No cycle:
 # testdata depends on bind and layout only.
 fs-forms-testdata = { path = "../fs-forms-testdata", version = "0.1.0" }
+# The test data of the board tests (`tests/sample_source`): `SampleModule` answers in process; its rights come from the `fake` owner.
+fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "6b02b138b3e55c290d6cbd957976013cc49dca5d", version = "0.3.0", features = ["fake"] }

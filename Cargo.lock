@@ -172,7 +172,7 @@ dependencies = [
  "objc2-foundation 0.3.2",
  "parking_lot",
  "percent-encoding",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
  "x11rb",
 ]
 
@@ -1430,7 +1430,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e35d6e78f4cebb90e51d543db8fe41528851d6deeef6ef21ebd4bfdc1e784776"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -2075,7 +2075,7 @@ dependencies = [
 [[package]]
 name = "fs-interfaces"
 version = "0.3.0"
-source = "git+https://github.com/FreeSynergy-Net/fs-interfaces?rev=4f6c3281cab594a76640c50abaedb4f7c4e79d97#4f6c3281cab594a76640c50abaedb4f7c4e79d97"
+source = "git+https://github.com/FreeSynergy-Net/fs-interfaces?rev=76df54074910e827ad556ff613335ada49c86de3#76df54074910e827ad556ff613335ada49c86de3"
 dependencies = [
  "capnp",
  "fs-types",
@@ -2116,7 +2116,7 @@ dependencies = [
 [[package]]
 name = "fs-module"
 version = "0.3.0"
-source = "git+https://github.com/FreeSynergy-Net/fs-interfaces?rev=4f6c3281cab594a76640c50abaedb4f7c4e79d97#4f6c3281cab594a76640c50abaedb4f7c4e79d97"
+source = "git+https://github.com/FreeSynergy-Net/fs-interfaces?rev=76df54074910e827ad556ff613335ada49c86de3#76df54074910e827ad556ff613335ada49c86de3"
 dependencies = [
  "capnp",
  "capnp-rpc",
@@ -2169,7 +2169,7 @@ dependencies = [
 [[package]]
 name = "fs-rpc"
 version = "0.1.4"
-source = "git+https://github.com/FreeSynergy-Net/fs-rpc?rev=b279f4285da84110f36a5e62a17262b7aab2b2d4#b279f4285da84110f36a5e62a17262b7aab2b2d4"
+source = "git+https://github.com/FreeSynergy-Net/fs-rpc?rev=459c1e8d1226896cca53c3140f5aa912f43a5305#459c1e8d1226896cca53c3140f5aa912f43a5305"
 dependencies = [
  "capnp",
  "capnp-rpc",
@@ -2207,7 +2207,7 @@ dependencies = [
 [[package]]
 name = "fs-trusted-path"
 version = "0.1.4"
-source = "git+https://github.com/FreeSynergy-Net/fs-rpc?rev=b279f4285da84110f36a5e62a17262b7aab2b2d4#b279f4285da84110f36a5e62a17262b7aab2b2d4"
+source = "git+https://github.com/FreeSynergy-Net/fs-rpc?rev=459c1e8d1226896cca53c3140f5aa912f43a5305#459c1e8d1226896cca53c3140f5aa912f43a5305"
 dependencies = [
  "windows-sys 0.61.2",
 ]
@@ -5061,7 +5061,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -5599,7 +5599,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix 1.1.6",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -6772,7 +6772,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]

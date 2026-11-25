@@ -4,6 +4,7 @@
 
 use std::collections::HashSet;
 
+use crate::check_frontend::check_frontends;
 use crate::check_places::check_tree;
 use crate::codes::LayoutCode;
 use crate::doc::{BindingDoc, Item, LayoutDoc};
@@ -107,6 +108,7 @@ impl LayoutDoc {
         for p in &self.pages {
             check_tree(p, catalog, limits, &mut out);
         }
+        check_frontends(&self, &mut out);
         doc_rules(&self, limits, &mut out);
         if out.is_empty() {
             Ok(Layout::from_checked(self))

@@ -25,6 +25,7 @@ fn name(n: &PlaceNode) -> &str {
     match n {
         PlaceNode::Block(b) => &b.block,
         PlaceNode::Frame(f) => &f.frame,
+        PlaceNode::Frontend(_) => "frontend",
     }
 }
 
@@ -34,7 +35,7 @@ fn depth(items: &[Item<PlaceNode>]) -> u32 {
         .iter()
         .map(|i| match &i.v {
             PlaceNode::Frame(f) => 1 + depth(&f.children),
-            PlaceNode::Block(_) => 1,
+            PlaceNode::Block(_) | PlaceNode::Frontend(_) => 1,
         })
         .max()
         .unwrap_or(0)
@@ -121,10 +122,15 @@ fn level(
 fn page_ids(p: &PageDoc, out: &mut Problems) {
     fn go(items: &[Item<PlaceNode>], seen: &mut HashMap<String, ElemKind>, out: &mut Problems) {
         for i in items {
-            note(i.elem.as_ref(), kind_of(&i.v), seen, out);
             match &i.v {
-                PlaceNode::Block(b) => attr_ids(&b.set, seen, out),
+                // frontend ids: see `check_frontend` (one id per layout, not per page)
+                PlaceNode::Frontend(_) => {}
+                PlaceNode::Block(b) => {
+                    note(i.elem.as_ref(), ElemKind::Block, seen, out);
+                    attr_ids(&b.set, seen, out);
+                }
                 PlaceNode::Frame(f) => {
+                    note(i.elem.as_ref(), ElemKind::Frame, seen, out);
                     attr_ids(&f.set, seen, out);
                     go(&f.children, seen, out);
                 }
@@ -133,13 +139,6 @@ fn page_ids(p: &PageDoc, out: &mut Problems) {
     }
     let mut seen = HashMap::new();
     go(&p.places, &mut seen, out);
-}
-
-fn kind_of(n: &PlaceNode) -> ElemKind {
-    match n {
-        PlaceNode::Block(_) => ElemKind::Block,
-        PlaceNode::Frame(_) => ElemKind::Frame,
-    }
 }
 
 fn attr_ids(set: &[Item<AttrDoc>], seen: &mut HashMap<String, ElemKind>, out: &mut Problems) {
@@ -190,6 +189,7 @@ pub(crate) fn set_warnings(doc: &LayoutDoc, catalog: &dyn CatalogRules) -> Probl
                     check(&f.frame, &f.set, c, out);
                     go(&f.children, c, out);
                 }
+                PlaceNode::Frontend(_) => {} // no `set`
             }
         }
     }

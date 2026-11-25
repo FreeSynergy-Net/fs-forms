@@ -128,6 +128,8 @@ codes! {
     SetUnknown => "set-unknown",
     /// `{found, known}` a file in a format before 3 (`[[page.block]]`); it is not read, write it again in format 3.
     FormatOld => "format-old",
+    /// `{elem, cause}` a frontend node (S6-3): cause = extends-empty, frontend-empty, user-unknown (`flag`), scope-from-unknown (`scope-from`).
+    FrontendInvalid => "frontend-invalid",
 }
 
 /// The error texts of the layouts interface, German (ADR 0057, `MessageFormat` 2); one line per code: `layout-error-<code> = text`.

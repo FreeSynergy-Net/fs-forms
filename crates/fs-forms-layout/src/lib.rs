@@ -14,6 +14,7 @@
 
 mod apply;
 mod check;
+mod check_frontend;
 mod check_places;
 mod check_text;
 mod codes;
@@ -59,7 +60,7 @@ pub use overlay::{
     Cause, Conflict, ElemLock, Field, Op, OpKind, Overlay, OverlayScope, OverlayState, Position,
     Resolution, Value,
 };
-pub use place::{AttrDoc, FrameDoc, Leaf, LeafMut, PlaceNode};
+pub use place::{AttrDoc, EmbedDoc, FrameDoc, Leaf, LeafMut, PlaceNode};
 pub use port::{
     LayoutAdmin, LayoutRead, LayoutStore, LayoutWrite, OverlayWrite, PackageLayouts, Pending,
 };

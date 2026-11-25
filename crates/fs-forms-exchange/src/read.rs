@@ -188,13 +188,19 @@ fn scheme_items(f: &mut Fields<'_>, cx: &mut Ctx<'_>) -> Vec<Item<String>> {
 
 fn action(f: &mut Fields<'_>, cx: &mut Ctx<'_>) -> ActionDoc {
     let trigger = word(f, cx, "trigger").unwrap_or(fs_forms_layout::Trigger::Button);
-    let target = match (
+    let open = f.str(cx, "open");
+    let (source, command, workflow) = (
         f.uint(cx, "source"),
         f.str(cx, "command"),
         f.str(cx, "workflow"),
-    ) {
-        (Some(source), Some(command), _) => ActionTarget::Command { source, command },
-        (_, _, Some(w)) => ActionTarget::Workflow(Reference(w)),
+    );
+    if open.is_some() && (source.is_some() || command.is_some() || workflow.is_some()) {
+        cx.bad("key-twice", "open"); // one target per action
+    }
+    let target = match (source, command, workflow, open) {
+        (_, _, _, Some(text)) => open_target(&text, cx),
+        (Some(source), Some(command), _, _) => ActionTarget::Command { source, command },
+        (_, _, Some(w), _) => ActionTarget::Workflow(Reference(w)),
         _ => {
             cx.bad("key-missing", "action");
             ActionTarget::Workflow(Reference(String::new()))
@@ -204,6 +210,17 @@ fn action(f: &mut Fields<'_>, cx: &mut Ctx<'_>) -> ActionDoc {
         trigger,
         target,
         confirm: word(f, cx, "confirm"),
+    }
+}
+
+/// `open = "<elem>"`: the id of a frontend node (that it exists is a check of the layout, not of the reader).
+fn open_target(text: &str, cx: &mut Ctx<'_>) -> ActionTarget {
+    match fs_forms_layout::ElemId::parse(text) {
+        Ok(elem) => ActionTarget::Open { elem },
+        Err(c) => {
+            cx.errs.push(c.with("line", cx.line_of(text)));
+            ActionTarget::Workflow(Reference(String::new()))
+        }
     }
 }
 

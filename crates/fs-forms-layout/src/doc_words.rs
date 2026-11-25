@@ -101,6 +101,31 @@ pub enum ActionTarget {
     },
     /// A workflow.
     Workflow(Reference),
+    /// Opens the frontend node with this id (`PlaceNode::Frontend`) in its own `mode`.
+    Open {
+        /// Element id of the frontend node (checked: it must name one).
+        elem: crate::ids::ElemId,
+    },
+}
+/// How an embedded frontend appears; the parent node decides, the child frontend is the same in both cases.
+///
+/// Pattern: Strategy (the parent chooses the way); "Tab" is a panel in a frame `tabs`, no mode of its own.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Placement {
+    /// Inside the frame of the parent, on its place.
+    #[default]
+    Panel,
+    /// In a window of its own.
+    Window,
+}
+/// When an embedded frontend is opened.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Shown {
+    /// With the parent.
+    #[default]
+    Start,
+    /// Only by an action `open`.
+    OnOpen,
 }
 /// Confirmation of an action.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

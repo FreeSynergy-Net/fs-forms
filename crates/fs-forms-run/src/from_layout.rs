@@ -97,7 +97,8 @@ pub fn view_of(layout: &Layout, lang: &str) -> View {
                 trigger: trigger_name(a.v.trigger).to_owned(),
                 command: command.clone(),
             }),
-            ActionTarget::Workflow(_) => None,
+            // a workflow is no command; `open` is opened by the window owner (S6-7); until then neither is offered
+            ActionTarget::Workflow(_) | ActionTarget::Open { .. } => None,
         })
         .collect();
     View {

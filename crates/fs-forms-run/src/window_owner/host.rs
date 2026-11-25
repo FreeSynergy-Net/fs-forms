@@ -11,11 +11,12 @@
 //! engine with a backend is open.
 
 mod ask;
+mod build;
 mod entry;
 mod ports;
 mod switch;
 
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::AtomicU64;
 use std::sync::{Arc, Mutex};
 
 use fs_components_app::AppWidget;
@@ -24,22 +25,16 @@ use fs_components_words::Locale;
 pub use self::ask::{Asked, OpenAsk};
 use self::entry::{Entry, Open, family, lock, snapshot};
 pub use self::ports::{BlincSurfaces, Descriptions, Modules, Surfaces};
-use self::switch::{Core, rows};
+use self::switch::Core;
 use super::open::{at_place, exact};
 use super::{
     Decision, OpenFrontend, Opened, OpenedFrontend, Placement, WhenOpen, WindowId, WindowOwner,
     decide,
 };
 use crate::catalog::Catalog;
-use crate::compose::compose;
-use crate::frontend_cell::{FrontendCell, root_page};
-use crate::menus::menus_of;
 use crate::record_hub::{RecordGrip, RecordHub, RecordKey};
 use crate::repaint::Repaint;
-use crate::status::set_status_line;
-use crate::style::StyleCell;
 use crate::view::Coded;
-use crate::words::words;
 
 /// Pattern: Strategy (the real [`WindowOwner`], `Window` only) – see the module.
 pub struct HostWindows {
@@ -92,80 +87,17 @@ impl HostWindows {
         lock(&self.open).get(id).map(|e| e.grip.clone())
     }
 
+    /// The panels inside the open frontend `id` as data: (place, head). The head names the frontend and the program it comes from.
+    /// `None` when `id` is not open.
+    #[must_use]
+    pub fn panels_of(&self, id: &WindowId) -> Option<Vec<(String, String)>> {
+        lock(&self.open).get(id).map(|e| e.panels.clone())
+    }
+
     /// How many read caches are alive (one per record, however many windows show it).
     #[must_use]
     pub fn records_alive(&self) -> usize {
         self.hub.live()
-    }
-
-    fn fresh(
-        &self,
-        req: &OpenFrontend,
-        id: &WindowId,
-        parent: Option<WindowId>,
-        place: (String, String),
-    ) -> Result<Entry, Coded> {
-        let refused = |cause: &Coded| {
-            Coded::new("host-notice-frontend-refused")
-                .with("extends", req.key.extends.clone())
-                .with("frontend", req.key.frontend.clone())
-                .with("cause", cause.code.clone())
-        };
-        let view = self.descriptions.view(&req.key)?;
-        let module = self
-            .modules
-            .module(&req.key.extends)
-            .map_err(|c| refused(&c))?;
-        let key = RecordKey {
-            range: req.key.extends.clone(),
-            scope: req.scope.clone(),
-        };
-        let grip = self.hub.attach(&key, &module).map_err(|c| refused(&c))?;
-        let comp = compose(&view, &*self.catalog);
-        let texts = words(&self.locale);
-        let page = root_page(
-            &texts,
-            &self.locale,
-            &view,
-            &comp,
-            grip.records(),
-            Arc::new(StyleCell::default()),
-        );
-        let cell = FrontendCell::new(page);
-        let failed = |_: fs_components_app::AppError| {
-            Coded::new("host-notice-window-failed").with("id", id.as_str())
-        };
-        let title = if view.title.is_empty() {
-            texts.plain("host-title")
-        } else {
-            view.title.clone()
-        };
-        let app = AppWidget::new(title, vec![cell.screen()]).map_err(failed)?;
-        let records = grip.records();
-        set_status_line(&app, &texts, &comp, &*records);
-        let token = self.serial.fetch_add(1, Ordering::SeqCst);
-        let menus = menus_of(
-            &texts,
-            &view,
-            &rows(&*self.descriptions, &req.key),
-            &req.key.frontend,
-        );
-        if !menus.is_empty() {
-            app.set_menus(menus, Core::handler(&self.core, token))
-                .map_err(failed)?;
-        }
-        Ok(Entry {
-            key: req.key.clone(),
-            place,
-            scope: req.scope.clone(),
-            parent,
-            grip,
-            module,
-            app,
-            cell,
-            raised: 0,
-            token,
-        })
     }
 
     /// The window of the entry with `token` is shown; when it is gone, that entry (and its children) fall.
@@ -215,6 +147,7 @@ impl HostWindows {
 
 impl WindowOwner for HostWindows {
     fn open(&self, req: OpenFrontend) -> Result<Opened, Coded> {
+        // a panel is made by the description of its parent (a frontend node, `shown = start`), never on its own
         if req.mode != Placement::Window {
             return Err(Coded::new("host-notice-placement-unsupported")
                 .with("frontend", req.key.frontend.clone()));
@@ -251,13 +184,30 @@ impl WindowOwner for HostWindows {
                 if open.contains_key(&id) {
                     return Err(Coded::new("host-notice-window-id-taken").with("id", id.as_str()));
                 }
-                let entry = self.fresh(&req, &id, parent, place)?;
-                let (app, token) = (entry.app.clone(), entry.token);
-                open.insert(id.clone(), entry);
+                let built = self.build(&req, &id, parent, place, &[])?;
+                let clash = built.children.iter().any(|(c, _)| open.contains_key(c));
+                if clash {
+                    return Err(Coded::new("host-notice-window-id-taken").with("id", id.as_str()));
+                }
+                let (shell, token) = (built.entry.app.clone(), built.entry.token);
+                open.insert(id.clone(), built.entry);
+                open.extend(built.children);
                 drop(open);
-                if let Err(e) = self.show(token, &app) {
-                    drop(lock(&self.open).remove(&id)); // nothing stays that is not shown
+                if let Some(shell) = &shell
+                    && let Err(e) = self.show(token, shell)
+                {
+                    let doomed: Vec<Entry> = {
+                        let mut o = lock(&self.open);
+                        family(&o, &id).iter().filter_map(|d| o.remove(d)).collect()
+                    };
+                    drop(doomed); // nothing stays that is not shown
                     return Err(e);
+                }
+                for window in built.windows {
+                    // a window of the description that fails is said, never silent; the parent stays
+                    if let Err(c) = self.open(window) {
+                        eprintln!("fs-forms-run: {} {:?}", c.code, c.params);
+                    }
                 }
                 Ok(Opened::New(id))
             }
@@ -273,8 +223,8 @@ impl WindowOwner for HostWindows {
             let ids = family(&open, id);
             ids.iter().filter_map(|d| open.remove(d)).collect()
         };
-        for e in &gone {
-            e.app.quit(); // the window goes; its `on_closed` finds nothing left
+        for e in gone.iter().filter_map(|e| e.app.as_ref()) {
+            e.quit(); // the window goes; its `on_closed` finds nothing left
         }
         Ok(())
     }

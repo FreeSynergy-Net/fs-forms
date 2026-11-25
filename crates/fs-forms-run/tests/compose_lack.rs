@@ -15,6 +15,7 @@ fn place(name: &str, seq: u32, locks: Vec<Coded>) -> PlaceView {
         block: "board".into(),
         locks,
         slot_locks: Vec::new(),
+        embed: None,
     }
 }
 

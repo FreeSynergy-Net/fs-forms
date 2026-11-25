@@ -23,6 +23,7 @@ fn action(trigger: &str, command: &str) -> ActionView {
     ActionView {
         trigger: trigger.into(),
         command: command.into(),
+        open: None,
     }
 }
 

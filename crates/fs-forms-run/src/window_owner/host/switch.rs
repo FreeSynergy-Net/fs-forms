@@ -7,6 +7,7 @@
 //! (not `frontend-other-program`, which only the double can tell); the state of the person (selection of a board) is in the mounts of the
 //! old page and does not move to the new one (a rule for open input does not exist in the host yet).
 
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use fs_components_app::Status;
@@ -96,13 +97,15 @@ impl Core {
             &comp,
             e.grip.records(),
             Arc::new(StyleCell::default()),
+            &HashMap::new(),
         );
         let menus = menus_of(&texts, &view, &rows, frontend);
-        e.app
-            .set_menus(menus, Self::handler(self_arc, e.token))
-            .map_err(|_| refused(&Coded::new("menu-duplicate")))?;
-        let records = e.grip.records();
-        set_status_line(&e.app, &texts, &comp, &*records);
+        if let Some(app) = &e.app {
+            app.set_menus(menus, Self::handler(self_arc, e.token))
+                .map_err(|_| refused(&Coded::new("menu-duplicate")))?;
+            let records = e.grip.records();
+            set_status_line(app, &texts, &comp, &*records);
+        }
         e.cell.set(page);
         if let Some(e) = open.get_mut(id) {
             e.key = key;
@@ -129,7 +132,7 @@ impl Core {
                 let open = lock(&core.open);
                 open.iter()
                     .find(|(_, e)| e.token == token)
-                    .map(|(id, e)| (id.clone(), e.app.clone()))
+                    .and_then(|(id, e)| Some((id.clone(), e.app.clone()?)))
             };
             if let Some((id, app)) = found
                 && let Err(refused) = Self::switch(&core, &id, frontend)

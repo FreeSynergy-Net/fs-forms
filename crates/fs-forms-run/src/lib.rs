@@ -28,6 +28,7 @@ mod frontend_cell;
 mod link;
 mod menus;
 mod page;
+mod panel;
 mod parts;
 mod record_hub;
 mod records;

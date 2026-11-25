@@ -4,6 +4,8 @@
 //!
 //! Pattern: Anti-corruption mirror (value objects). Replaced by `From<&fs_forms_bind::Plan>` when that crate is pinned.
 
+use fs_forms_layout::FrontendKey;
+
 /// A code with its parameters (`bind-error-locked{part, cause}` and the codes it carries).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Coded {
@@ -30,6 +32,22 @@ impl Coded {
     }
 }
 
+/// A frontend of another (or the same) program placed here (the layout node `PlaceNode::Frontend`, S6-7): the host never draws it
+/// by itself, the owner of the open frontends opens it as a panel in this place or as a window of its own.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct EmbedView {
+    /// The id of the node (the window id of the child is made of it).
+    pub elem: String,
+    /// The frontend: (`AppStream` id of its program, name).
+    pub key: FrontendKey,
+    /// `true`: a panel in this place; `false`: a window of its own.
+    pub panel: bool,
+    /// `true`: only by an action `open` (not with the parent).
+    pub on_open: bool,
+    /// The element id of the neighbour whose selection is the `scope` of the child.
+    pub scope_from: Option<String>,
+}
+
 /// One placement of a page.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PlaceView {
@@ -45,6 +63,8 @@ pub struct PlaceView {
     pub locks: Vec<Coded>,
     /// Locks of single slots (the block is still drawn).
     pub slot_locks: Vec<Coded>,
+    /// The frontend placed here (`block` is then `frontend`); `None` for a block.
+    pub embed: Option<EmbedView>,
 }
 
 /// One page.
@@ -92,6 +112,8 @@ pub struct ActionView {
     pub trigger: String,
     /// The command name (`create`, `move`, ...); actions that start a workflow are not read here.
     pub command: String,
+    /// For the action `open`: the element id of the frontend node it opens; `None` for a command.
+    pub open: Option<String>,
 }
 
 /// The plan as the host reads it.

@@ -21,9 +21,12 @@ pub(super) struct Entry {
     pub(super) parent: Option<WindowId>,
     pub(super) grip: RecordGrip,
     pub(super) module: Arc<dyn Module>,
-    pub(super) app: AppWidget,
+    /// The window; `None` for a panel (it has no window, its page is drawn inside the page of its parent).
+    pub(super) app: Option<AppWidget>,
     /// The page of the frontend that is open now (what `use_frontend` exchanges).
     pub(super) cell: Arc<FrontendCell>,
+    /// The panels drawn inside it: (place, head with the program the panel comes from), in tree order.
+    pub(super) panels: Vec<(String, String)>,
     pub(super) raised: usize,
     /// Names THIS window for good (a switch changes the id, never the token): the `on_closed` of the surface finds the entry by it, so
     /// a closed window never removes the entry of a later window that got the same id.
@@ -42,7 +45,11 @@ pub(super) fn snapshot(open: &Open) -> Vec<OpenedFrontend> {
         .map(|(id, e)| OpenedFrontend {
             id: id.clone(),
             key: e.key.clone(),
-            mode: Placement::Window,
+            mode: if e.app.is_some() {
+                Placement::Window
+            } else {
+                Placement::InFrame
+            },
             parent: e.parent.clone(),
             scope: e.scope.clone(),
         })

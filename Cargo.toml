@@ -25,3 +25,27 @@ repository = "https://github.com/FreeSynergy/fs-forms"
 # fs-rpc and fs-components need 1.89.
 rust-version = "1.89"
 
+
+# DEV-ONLY: ONE fs-components (main 233c9208, C4-0) in the whole graph, because fs-rpc still pulls 2ffa1c4d. A git patch onto the same URL is refused by cargo, so a local clone. Remove before landing.
+[patch."https://github.com/FreeSynergy-Net/fs-components"]
+fs-components = { path = "../fs-components/crates/fs-components" }
+fs-components-app = { path = "../fs-components/crates/fs-components-app" }
+fs-components-catalog = { path = "../fs-components/crates/fs-components-catalog" }
+fs-components-commands = { path = "../fs-components/crates/fs-components-commands" }
+fs-components-core = { path = "../fs-components/crates/fs-components-core" }
+fs-components-editor = { path = "../fs-components/crates/fs-components-editor" }
+fs-components-fields = { path = "../fs-components/crates/fs-components-fields" }
+fs-components-kanban = { path = "../fs-components/crates/fs-components-kanban" }
+fs-components-lists = { path = "../fs-components/crates/fs-components-lists" }
+fs-components-measures = { path = "../fs-components/crates/fs-components-measures" }
+fs-components-mf2 = { path = "../fs-components/crates/fs-components-mf2" }
+fs-components-overlays = { path = "../fs-components/crates/fs-components-overlays" }
+fs-components-primitives = { path = "../fs-components/crates/fs-components-primitives" }
+fs-components-render = { path = "../fs-components/crates/fs-components-render" }
+fs-components-replay = { path = "../fs-components/crates/fs-components-replay" }
+fs-components-styles = { path = "../fs-components/crates/fs-components-styles" }
+fs-components-widgets = { path = "../fs-components/crates/fs-components-widgets" }
+fs-components-words = { path = "../fs-components/crates/fs-components-words" }
+fs-components-workbenches = { path = "../fs-components/crates/fs-components-workbenches" }
+fs-notification = { path = "../fs-components/crates/fs-notification" }
+fs-settings = { path = "../fs-components/crates/fs-settings" }

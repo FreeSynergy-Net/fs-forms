@@ -7,6 +7,7 @@
 use std::sync::Arc;
 
 use fs_components_app::{AppError, AppWidget};
+use fs_components_kanban::{WORD_KEYS, WORD_TEXTS, word_id};
 use fs_components_mf2::Mf2Texts;
 use fs_components_widgets::states;
 use fs_components_words::{Locale, Localized};
@@ -41,45 +42,18 @@ pub fn failure(error: &HostError) -> Composition {
     }
 }
 
-/// The keys the kanban board asks for (`kanban.refused.*` codes come from the provider; the port names its own codes in `fs_components_kanban::form::words`).
-const KANBAN_KEYS: &[&str] = &[
-    "kanban.add_column",
-    "kanban.add_card",
-    "kanban.add_card_hint",
-    "kanban.add_card_ok",
-    "kanban.new_column",
-    "kanban.column_name",
-    "kanban.rename",
-    "kanban.limit",
-    "kanban.limit_placeholder",
-    "kanban.limit_hint",
-    "kanban.limit_invalid",
-    "kanban.drop",
-    "kanban.grab",
-    "kanban.move_left",
-    "kanban.move_right",
-    "kanban.more_facts",
-    "kanban.empty",
-    "kanban.soon",
-    "kanban.refused.locked",
-    "kanban.refused.unsupported",
-    "kanban.refused.ask-unsupported",
-    "kanban.refused.unreachable",
-    "kanban.refused.conflict",
-    "kanban.refused.rejected",
-    "kanban.refused.no-board",
-    "kanban.refused.failed",
-];
-
 /// The head of a column of the member list, by channel (the words come from the MF2 files, `host-channel-*`).
 const CHANNEL_KEYS: &[&str] = &["channel.label", "channel.role", "channel.level"];
 
-/// The sentence of each key of the board (MF2 ids carry a hyphen where the key has a dot).
-fn kanban_words(texts: &Mf2Texts) -> std::collections::HashMap<String, String> {
-    KANBAN_KEYS
+/// The sentence of each key the board asks for: the words of the board come from its own port (`WORD_KEYS`, `WORD_TEXTS`), the
+/// heads of the member list from the host's files (MF2 ids carry a hyphen where the key has a dot).
+fn kanban_words(texts: &Mf2Texts, locale: &Locale) -> std::collections::HashMap<String, String> {
+    let board = Mf2Texts::new(WORD_TEXTS, locale);
+    let from = |t: &Mf2Texts, k: &str| (k.to_owned(), t.plain(&word_id(k)));
+    WORD_KEYS
         .iter()
-        .chain(CHANNEL_KEYS)
-        .map(|k| ((*k).to_owned(), texts.plain(&k.replace('.', "-"))))
+        .map(|k| from(&board, k))
+        .chain(CHANNEL_KEYS.iter().map(|k| from(texts, k)))
         .collect()
 }
 
@@ -92,7 +66,7 @@ pub(crate) fn ctx_of(
     program_style: Arc<dyn StyleSource>,
 ) -> Ctx {
     // the words of the board are asked by key while drawing; they are read once, here, from the host's own MF2 files
-    let said = kanban_words(texts);
+    let said = kanban_words(texts, locale);
     let named = view.style.clone();
     Ctx {
         style: Arc::new(move || resolve(named.as_deref(), program_style.current())),
@@ -183,9 +157,9 @@ mod tests {
     fn every_key_of_the_board_has_a_sentence_in_both_languages_never_its_raw_key() {
         for lang in ["en", "de"] {
             let locale = Locale::from_posix(lang).expect("a locale");
-            let said = kanban_words(&words(&locale));
-            assert_eq!(said.len(), KANBAN_KEYS.len() + CHANNEL_KEYS.len());
-            for key in KANBAN_KEYS.iter().chain(CHANNEL_KEYS) {
+            let said = kanban_words(&words(&locale), &locale);
+            assert_eq!(said.len(), WORD_KEYS.len() + CHANNEL_KEYS.len());
+            for key in WORD_KEYS.iter().chain(CHANNEL_KEYS) {
                 let text = &said[*key];
                 assert!(
                     !text.is_empty()

@@ -256,21 +256,6 @@ impl Records for LinkWriter {
     ) -> Answer {
         self.guarded(|s| s.invoke(form, channel, record, values))
     }
-    fn add_card(&self, column: &str, title: &str) -> Answer {
-        self.guarded(|s| s.add_card(column, title))
-    }
-    fn move_card(&self, key: &str, to: &str) -> Answer {
-        self.guarded(|s| s.move_card(key, to))
-    }
-    fn add_column(&self, title: &str) -> Answer {
-        self.guarded(|s| s.add_column(title))
-    }
-    fn rename_column(&self, column: &str, name: &str) -> Answer {
-        self.guarded(|s| s.rename_column(column, name))
-    }
-    fn set_limit(&self, column: &str, limit: Option<u32>) -> Answer {
-        self.guarded(|s| s.set_limit(column, limit))
-    }
     fn history(&self) -> UndoState {
         self.store.history()
     }

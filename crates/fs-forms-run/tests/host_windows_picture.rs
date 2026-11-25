@@ -94,11 +94,11 @@ fn two_windows_one_record_the_other_window_shows_the_move() {
     };
     let b_before = draw(&widget(1), &out.join("two-windows-b-before.png")).unwrap();
     assert_eq!(
-        host.owner
-            .grip_of(&first)
-            .unwrap()
-            .records()
-            .move_card("FS-1", "done"),
+        fs_forms_run::sample_move_card(
+            &*host.owner.grip_of(&first).unwrap().records(),
+            "FS-1",
+            "done"
+        ),
         Answer::Accepted
     );
     let b_after = draw(&widget(1), &out.join("two-windows-b-after.png")).unwrap();

@@ -32,8 +32,14 @@ impl Records for Undoable {
     fn side(&self) -> Vec<fs_forms_run::SideItem> {
         Vec::new()
     }
-    fn move_card(&self, key: &str, to: &str) -> Answer {
-        let a = self.board.move_card(key, to);
+    fn invoke(
+        &self,
+        form: &str,
+        channel: &str,
+        record: Option<&str>,
+        values: &[(String, String)],
+    ) -> Answer {
+        let a = self.board.invoke(form, channel, record, values);
         if a == Answer::Accepted {
             self.steps.fetch_add(1, Ordering::SeqCst);
         }
@@ -77,7 +83,10 @@ fn s1a_a_neighbours_write_makes_the_change_watch_of_the_other_view_grow_once() {
     let b = hub.attach(&key(), &m).unwrap();
     let mut watch = ChangeWatch::new();
     assert!(!watch.grew(&*b.records()), "nothing happened yet");
-    assert_eq!(a.records().move_card("FS-1", "done"), Answer::Accepted);
+    assert_eq!(
+        fs_forms_run::sample_move_card(&*a.records(), "FS-1", "done"),
+        Answer::Accepted
+    );
     assert!(watch.grew(&*b.records()), "the neighbour's write is seen");
     assert!(!watch.grew(&*b.records()), "only once per change");
     assert_eq!(b.records().changed(), b.generation(), "ONE counter");
@@ -90,7 +99,10 @@ fn s1b_the_history_is_read_through_the_cache() {
     let hub = RecordHub::new();
     let a = hub.attach(&key(), &m).unwrap();
     assert_eq!(a.records().history().undoable, 0);
-    assert_eq!(a.records().move_card("FS-1", "done"), Answer::Accepted);
+    assert_eq!(
+        fs_forms_run::sample_move_card(&*a.records(), "FS-1", "done"),
+        Answer::Accepted
+    );
     assert_eq!(a.records().history().undoable, 1);
     assert_eq!(a.cache().history().undoable, 1, "the cache reads it too");
 }
@@ -102,7 +114,10 @@ fn s1c_a_step_back_goes_over_the_own_connection_with_the_seen_revision() {
     let hub = RecordHub::new();
     let a = hub.attach(&key(), &m).unwrap();
     let b = hub.attach(&key(), &m).unwrap();
-    assert_eq!(a.records().move_card("FS-1", "done"), Answer::Accepted);
+    assert_eq!(
+        fs_forms_run::sample_move_card(&*a.records(), "FS-1", "done"),
+        Answer::Accepted
+    );
     assert_eq!(
         b.records().step_back(false),
         fs_forms_run::refused("conflict"),
@@ -127,11 +142,14 @@ fn s2_the_module_refuses_a_writer_made_at_an_old_revision_without_the_client() {
     let other = m.connect(Arc::new(Mute)).unwrap();
     link.watch(Some("urn:a"));
     let first = link.writer(Some("urn:a"), link.rev(Some("urn:a")));
-    assert_eq!(first.move_card("FS-1", "done"), Answer::Accepted);
+    assert_eq!(
+        fs_forms_run::sample_move_card(&*first, "FS-1", "done"),
+        Answer::Accepted
+    );
     // `other` still holds a writer made at revision 0: no client in between checks it
     let stale = other.writer(Some("urn:a"), 0);
     assert_eq!(
-        stale.move_card("FS-2", "done"),
+        fs_forms_run::sample_move_card(&*stale, "FS-2", "done"),
         fs_forms_run::refused("conflict")
     );
     assert_eq!(
@@ -140,5 +158,8 @@ fn s2_the_module_refuses_a_writer_made_at_an_old_revision_without_the_client() {
         "the stale write did not happen"
     );
     let fresh = other.writer(Some("urn:a"), other.rev(Some("urn:a")));
-    assert_eq!(fresh.move_card("FS-2", "done"), Answer::Accepted);
+    assert_eq!(
+        fs_forms_run::sample_move_card(&*fresh, "FS-2", "done"),
+        Answer::Accepted
+    );
 }

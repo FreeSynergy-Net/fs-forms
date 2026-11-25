@@ -2,8 +2,8 @@
 //! [`crate::FormRecords`] (rows by channel); without one the implementation is [`NoRecords`] (nothing: the blocks stay empty and say so); [`crate::SampleBoard`] is
 //! built-in, writable sample data for pictures and development (`--sample-data`), never used by a starter.
 //!
-//! The port also says which changes the records can take ([`Records::can`]) and takes them (`add_card`, `move_card`,
-//! `add_column`, `rename_column`, `set_limit`); every one defaults to "cannot", so a provider that does not name an operation leaves its control locked.
+//! The port also says which gestures the records take: a channel the module binds to a command ([`Records::command_of`]) is allowed
+//! by [`Records::can_channel`] and carried out by [`Records::invoke`]; what is not said is locked.
 //!
 //! Pattern: Port (`Records`) with a null object and a fixture.
 //!
@@ -11,7 +11,7 @@
 
 use std::sync::Arc;
 
-use fs_components_kanban::{Answer, Operation, Reason};
+use fs_components_kanban::{Answer, Reason};
 use fs_objects::UndoState;
 
 use crate::form_data::FormData;
@@ -106,31 +106,6 @@ pub trait Records: Send + Sync {
     /// status line); `None` when the records are what they claim to be.
     fn unavailable(&self) -> Option<String> {
         None
-    }
-    /// Whether these records can do `op` now. A control of an operation they cannot do stays locked ("Comes later").
-    fn can(&self, _op: Operation) -> bool {
-        false
-    }
-    /// A card titled `title` in `column` (only called when [`Records::can`] says [`Operation::AddCard`]).
-    fn add_card(&self, _column: &str, _title: &str) -> Answer {
-        unsupported()
-    }
-    /// The card `key` to column `to` (only called when [`Records::can`] says [`Operation::Move`]).
-    fn move_card(&self, _key: &str, _to: &str) -> Answer {
-        unsupported()
-    }
-    /// A column named `title` (only called when [`Records::can`] says [`Operation::AddColumn`]).
-    fn add_column(&self, _title: &str) -> Answer {
-        unsupported()
-    }
-    /// The column `column` named `name` (only called when [`Records::can`] says [`Operation::Rename`]).
-    fn rename_column(&self, _column: &str, _name: &str) -> Answer {
-        unsupported()
-    }
-    /// The column `column` limited to `limit` cards, `None` = no limit (only called when [`Records::can`] says
-    /// [`Operation::Limit`]).
-    fn set_limit(&self, _column: &str, _limit: Option<u32>) -> Answer {
-        unsupported()
     }
 }
 

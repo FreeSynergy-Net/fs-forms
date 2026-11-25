@@ -7,7 +7,7 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, PoisonError, Weak};
 
-use fs_components_kanban::{Answer, Operation};
+use fs_components_kanban::Answer;
 use fs_objects::UndoState;
 
 use super::port::{ChangeSink, Link};
@@ -132,9 +132,6 @@ impl Records for Inner {
     fn unavailable(&self) -> Option<String> {
         self.shared().unavailable()
     }
-    fn can(&self, op: Operation) -> bool {
-        self.shared().can(op)
-    }
     /// The depth of the history of the module (read through the cache, like everything that is read).
     fn history(&self) -> UndoState {
         self.shared().history()
@@ -147,20 +144,5 @@ impl Records for Inner {
     /// The ONE counter of this view: what its own `watch` told (the same number as [`RecordGrip::generation`]).
     fn changed(&self) -> u64 {
         self.sink.generation()
-    }
-    fn add_card(&self, column: &str, title: &str) -> Answer {
-        self.write(|w| w.add_card(column, title))
-    }
-    fn move_card(&self, key: &str, to: &str) -> Answer {
-        self.write(|w| w.move_card(key, to))
-    }
-    fn add_column(&self, title: &str) -> Answer {
-        self.write(|w| w.add_column(title))
-    }
-    fn rename_column(&self, column: &str, name: &str) -> Answer {
-        self.write(|w| w.rename_column(column, name))
-    }
-    fn set_limit(&self, column: &str, limit: Option<u32>) -> Answer {
-        self.write(|w| w.set_limit(column, limit))
     }
 }

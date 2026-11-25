@@ -27,7 +27,10 @@ fn key() -> RecordKey {
 fn neighbour_write(inner: &Arc<dyn Module>) {
     let link = inner.connect(Arc::new(Mute)).unwrap();
     let w = link.writer(Some("urn:a"), link.rev(Some("urn:a")));
-    assert_eq!(w.add_card("todo", "from the neighbour"), Answer::Accepted);
+    assert_eq!(
+        fs_forms_run::sample_add_card(&*w, "todo", "from the neighbour"),
+        Answer::Accepted
+    );
 }
 
 struct Mute;
@@ -108,14 +111,17 @@ fn r1_the_view_takes_the_revision_of_its_own_change_as_seen() {
     let m = racing(true, false);
     let hub = RecordHub::new();
     let a = hub.attach(&key(), &m).unwrap();
-    assert_eq!(a.records().move_card("FS-1", "done"), Answer::Accepted);
+    assert_eq!(
+        fs_forms_run::sample_move_card(&*a.records(), "FS-1", "done"),
+        Answer::Accepted
+    );
     assert_eq!(
         a.seen(),
         1,
         "its own change, not the neighbour's revision 2"
     );
     assert_eq!(
-        a.records().move_card("FS-2", "done"),
+        fs_forms_run::sample_move_card(&*a.records(), "FS-2", "done"),
         refused("conflict"),
         "it has not seen the neighbour's change"
     );

@@ -4,18 +4,18 @@
 //!
 //! Tests: description without action, records that cannot, one action per operation, the key of the contract against the channel
 //! name, a card the module does not allow, one call per drop with column/place/lane, no old place at the end of a column, a refusal
-//! given back as its code, `send` refuses on its own, the old way (records without commands), an action that calls another command
+//! given back as its code, `send` refuses on its own, records that bind no command (locked, the module is not asked), an action that calls another command
 //! than the module bound to its gesture is warned.
 //!
 //! Pattern: none (tests).
 
-use std::sync::{Arc, Mutex, PoisonError};
+use std::sync::Arc;
 
 use fs_components_core::form_write::{FormWrite, WriteArg, WriteValue};
-use fs_components_kanban::{Answer, COLUMN_CREATE, COLUMN_LIMIT, COLUMN_RENAME, CREATE, MOVE};
+use fs_components_kanban::{COLUMN_CREATE, COLUMN_LIMIT, COLUMN_RENAME, CREATE, MOVE};
 
 use super::WriteGate;
-use crate::records::{NoRecords, Records, SideItem};
+use crate::records::{NoRecords, Records};
 use crate::view::ActionView;
 use crate::write::fixture::{FakeWriter, data, records};
 
@@ -50,36 +50,6 @@ fn text(name: &str, value: &str) -> WriteArg {
     WriteArg {
         name: name.into(),
         value: WriteValue::Text(value.into()),
-    }
-}
-
-/// Records without a bound command: the operations of the old way, counted.
-#[derive(Default)]
-struct Old {
-    can: Vec<fs_components_kanban::Operation>,
-    calls: Mutex<Vec<String>>,
-}
-
-impl Records for Old {
-    fn side(&self) -> Vec<SideItem> {
-        Vec::new()
-    }
-    fn can(&self, op: fs_components_kanban::Operation) -> bool {
-        self.can.contains(&op)
-    }
-    fn move_card(&self, key: &str, to: &str) -> Answer {
-        self.calls
-            .lock()
-            .unwrap_or_else(PoisonError::into_inner)
-            .push(format!("move {key} {to}"));
-        Answer::Accepted
-    }
-    fn add_column(&self, title: &str) -> Answer {
-        self.calls
-            .lock()
-            .unwrap_or_else(PoisonError::into_inner)
-            .push(format!("column {title}"));
-        Answer::Accepted
     }
 }
 
@@ -163,10 +133,8 @@ fn send_refuses_on_its_own_when_the_description_has_no_action() {
     let refused = g.send(CREATE, None, &[text("title", "x")]).unwrap_err();
     assert_eq!(refused.code, "locked");
     assert!(w.calls.lock().unwrap().is_empty());
-    let old = Arc::new(Old::default());
-    let g = gate(Vec::new(), old.clone());
+    let g = gate(Vec::new(), Arc::new(NoRecords));
     assert!(g.send(COLUMN_CREATE, None, &[text("name", "x")]).is_err());
-    assert!(old.calls.lock().unwrap().is_empty());
 }
 
 #[test]
@@ -244,27 +212,14 @@ fn a_quick_add_creates_with_title_and_column_and_a_refusal_is_given_back_as_its_
 }
 
 #[test]
-fn the_old_way_asks_the_records_for_each_operation_and_needs_the_action_too() {
-    use fs_components_kanban::Operation;
-    let old = Arc::new(Old {
-        can: vec![Operation::Move, Operation::AddColumn],
-        ..Old::default()
-    });
+fn records_that_bind_no_command_keep_the_gesture_locked_and_say_so_when_sent() {
     let all = vec![action("drop", MOVE), action("button", COLUMN_CREATE)];
-    let g = gate(all, old.clone());
-    assert!(g.can(MOVE, Some("k")) && g.can(COLUMN_CREATE, None));
-    // rename and limit: records cannot, and there is no action
-    assert!(!g.can(COLUMN_RENAME, Some("todo")) && !g.can(COLUMN_LIMIT, Some("todo")));
-    // the records cannot add a card (and the description has no quick-add either): locked
-    assert!(!g.can(CREATE, None));
-    g.send(MOVE, Some("k"), &[text("column", "done")])
-        .expect("accepted");
-    g.send(COLUMN_CREATE, None, &[text("name", "Review")])
-        .expect("accepted");
-    assert_eq!(
-        *old.calls.lock().unwrap(),
-        ["move k done".to_owned(), "column Review".to_owned()]
-    );
+    let g = gate(all, Arc::new(NoRecords));
+    assert!(!g.can(MOVE, Some("k")) && !g.can(COLUMN_CREATE, None));
+    let refused = g
+        .send(MOVE, Some("k"), &[text("column", "done")])
+        .unwrap_err();
+    assert_eq!(refused.code, "locked");
 }
 
 #[test]

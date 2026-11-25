@@ -9,7 +9,7 @@
 mod support;
 use std::sync::Arc;
 
-use fs_forms_run::{Records, SampleBoard};
+use fs_forms_run::{SampleBoard, sample_add_card, sample_add_column, sample_move_card};
 use support::board;
 
 /// Wide enough that a fourth column is in the picture.
@@ -22,19 +22,19 @@ fn actions() -> Vec<(&'static str, Step)> {
         (
             "add-card",
             Box::new(|b| {
-                b.add_card("todo", "Ship the first release");
+                let _ = sample_add_card(b, "todo", "Ship the first release");
             }),
         ),
         (
             "move-card",
             Box::new(|b| {
-                b.move_card("FS-1", "doing");
+                let _ = sample_move_card(b, "FS-1", "doing");
             }),
         ),
         (
             "add-column",
             Box::new(|b| {
-                b.add_column("Review");
+                let _ = sample_add_column(b, "Review");
             }),
         ),
     ]

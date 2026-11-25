@@ -47,7 +47,10 @@ fn h1_two_windows_of_two_frontends_show_one_record() {
     );
     assert!(Arc::ptr_eq(&ga.cache(), &gb.cache()));
     let before = gb.records().forms();
-    assert_eq!(ga.records().move_card("FS-1", "done"), Answer::Accepted);
+    assert_eq!(
+        fs_forms_run::sample_move_card(&*ga.records(), "FS-1", "done"),
+        Answer::Accepted
+    );
     assert_ne!(gb.records().forms(), before, "B shows what A moved");
     assert_eq!(
         (ga.generation(), gb.generation()),

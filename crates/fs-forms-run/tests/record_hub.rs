@@ -44,7 +44,10 @@ fn ga1_two_views_share_the_cache_and_each_has_its_own_hold() {
     assert_eq!(counts.get(), (2, 0), "two views, two holds");
     let before = b.records().forms();
     assert_eq!((a.generation(), b.generation()), (0, 0));
-    assert_eq!(a.records().move_card("FS-1", "done"), Answer::Accepted);
+    assert_eq!(
+        fs_forms_run::sample_move_card(&*a.records(), "FS-1", "done"),
+        Answer::Accepted
+    );
     assert_eq!((a.generation(), b.generation()), (1, 1));
     assert_ne!(b.records().forms(), before, "the other view shows the move");
     assert_eq!(a.records().forms(), b.records().forms());
@@ -60,7 +63,10 @@ fn ga2_another_scope_shares_nothing() {
     assert!(!Arc::ptr_eq(&a.cache(), &b.cache()));
     assert!(!Arc::ptr_eq(&a.cache(), &none.cache()));
     let (untouched, other) = (b.records().forms(), none.records().forms());
-    assert_eq!(a.records().move_card("FS-1", "done"), Answer::Accepted);
+    assert_eq!(
+        fs_forms_run::sample_move_card(&*a.records(), "FS-1", "done"),
+        Answer::Accepted
+    );
     assert_eq!(
         (a.generation(), b.generation(), none.generation()),
         (1, 0, 0)
@@ -93,11 +99,17 @@ fn ga5_the_neighbour_learns_only_through_its_own_watch() {
     let hub = RecordHub::new();
     let a = hub.attach(&key(Some("urn:a")), &m).unwrap();
     let b = hub.attach(&key(Some("urn:a")), &m).unwrap();
-    assert_eq!(b.records().add_card("todo", "x"), Answer::Accepted);
+    assert_eq!(
+        fs_forms_run::sample_add_card(&*b.records(), "todo", "x"),
+        Answer::Accepted
+    );
     // the writer is told by its own hold like everyone else, no counting at the writing place
     assert_eq!((a.generation(), b.generation()), (1, 1));
     // a write that is not accepted tells nobody
-    assert_ne!(a.records().move_card("NOPE", "nowhere"), Answer::Accepted);
+    assert_ne!(
+        fs_forms_run::sample_move_card(&*a.records(), "NOPE", "nowhere"),
+        Answer::Accepted
+    );
     assert_eq!((a.generation(), b.generation()), (1, 1));
 }
 
@@ -107,16 +119,22 @@ fn ga6_a_second_window_writing_with_an_old_revision_gets_conflict() {
     let hub = RecordHub::new();
     let a = hub.attach(&key(Some("urn:a")), &m).unwrap();
     let b = hub.attach(&key(Some("urn:a")), &m).unwrap();
-    assert_eq!(a.records().move_card("FS-1", "done"), Answer::Accepted);
+    assert_eq!(
+        fs_forms_run::sample_move_card(&*a.records(), "FS-1", "done"),
+        Answer::Accepted
+    );
     assert_eq!((a.seen(), b.seen()), (1, 0));
     assert_eq!(
-        b.records().move_card("FS-2", "done"),
+        fs_forms_run::sample_move_card(&*b.records(), "FS-2", "done"),
         fs_forms_run::refused("conflict"),
         "the same rule as between two people, though both are one person"
     );
     let _ = b.records().forms(); // b has seen the new state now
     assert_eq!(b.seen(), 1);
-    assert_eq!(b.records().move_card("FS-2", "done"), Answer::Accepted);
+    assert_eq!(
+        fs_forms_run::sample_move_card(&*b.records(), "FS-2", "done"),
+        Answer::Accepted
+    );
 }
 
 #[test]
@@ -125,7 +143,10 @@ fn the_cache_cannot_be_written_through() {
     let hub = RecordHub::new();
     let a = hub.attach(&key(Some("urn:a")), &m).unwrap();
     let before = a.cache().forms();
-    assert_ne!(a.cache().move_card("FS-1", "done"), Answer::Accepted);
+    assert_ne!(
+        fs_forms_run::sample_move_card(&*a.cache(), "FS-1", "done"),
+        Answer::Accepted
+    );
     assert_eq!((a.generation(), a.cache().forms()), (0, before));
 }
 

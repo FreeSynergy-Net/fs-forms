@@ -1,17 +1,20 @@
-//! Sample data that takes changes in memory (and the sample groups, see `sample_groups`): three columns, five cards, a card can be added and moved and a column added. It is
+//! Sample data that takes changes in memory (and the sample groups, see `sample_groups`): three columns, five cards, a card can be added and moved and a column added, all by the bound commands of the board form ([`Records::invoke`]). It is
 //! "Sample data (not your records)" in every picture and window (`is_sample`), and nothing leaves the process.
 //!
-//! Pattern: Fixture behind the port `Records`, state behind a `Mutex` (the board asks and changes from the interface thread).
+//! Pattern: Fixture behind the port `Records` (binds the channels of the board to commands named like the channels, so the gate asks it like any module), state behind a `Mutex` (the board asks and changes from the interface thread).
 
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
-use fs_components_kanban::{Answer, Card, Column, Due, DueState, Operation};
+use fs_components_kanban::{Answer, COLUMN_CREATE, CREATE, Card, Column, Due, DueState, MOVE};
 
 use fs_forms_bind::{Basic, FormRef, ModuleForm};
 
 use crate::form_data::{FormData, FormRow};
 use crate::records::{Records, SideItem};
 use crate::sample_groups::groups;
+
+/// The name of the board form of the sample (the form the gestures of the board are bound on).
+pub const BOARD_FORM: &str = "cards-in-columns";
 
 /// Sample records the reader can change; the changes live only in memory.
 #[derive(Debug)]
@@ -113,13 +116,39 @@ impl Records for SampleBoard {
             })
             .collect()
     }
-    /// What this fixture can do: add a card, move a card, add a column. Rename and limit stay locked.
-    fn can(&self, op: Operation) -> bool {
-        matches!(
-            op,
-            Operation::AddCard | Operation::Move | Operation::AddColumn
-        )
+    /// The board gestures this fixture binds (a command named like the channel); rename and limit are not bound.
+    fn command_of(&self, form: &str, channel: &str) -> Option<String> {
+        (form == BOARD_FORM && [MOVE, CREATE, COLUMN_CREATE].contains(&channel))
+            .then(|| channel.to_owned())
     }
+    fn can_channel(&self, form: &str, channel: &str, _record: Option<&str>) -> bool {
+        self.command_of(form, channel).is_some()
+    }
+    fn invoke(
+        &self,
+        form: &str,
+        channel: &str,
+        record: Option<&str>,
+        values: &[(String, String)],
+    ) -> Answer {
+        let value = |name: &str| {
+            values
+                .iter()
+                .find(|(n, _)| n == name)
+                .map_or("", |(_, v)| v.as_str())
+        };
+        if self.command_of(form, channel).is_none() {
+            return refused("unsupported");
+        }
+        match channel {
+            MOVE => self.move_card(record.unwrap_or_default(), value("column")),
+            CREATE => self.add_card(value("column"), value("title")),
+            _ => self.add_column(value("name")),
+        }
+    }
+}
+
+impl SampleBoard {
     fn add_card(&self, column: &str, title: &str) -> Answer {
         let mut cols = self.lock();
         let next = cols
@@ -199,7 +228,7 @@ fn board_form(columns: &[Column]) -> FormData {
     FormData {
         declared: ModuleForm {
             form: FormRef {
-                name: "cards-in-columns".to_owned(),
+                name: BOARD_FORM.to_owned(),
                 major: 1,
                 minor: 0,
             },

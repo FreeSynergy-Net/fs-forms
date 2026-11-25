@@ -6,7 +6,6 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use fs_components_kanban::Operation;
 use fs_objects::UndoState;
 
 use super::RecordKey;
@@ -68,9 +67,6 @@ impl Records for Shared {
     }
     fn unavailable(&self) -> Option<String> {
         self.cache.unavailable()
-    }
-    fn can(&self, op: Operation) -> bool {
-        self.cache.can(op)
     }
     fn history(&self) -> UndoState {
         self.cache.history()

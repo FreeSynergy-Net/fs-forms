@@ -1,0 +1,2 @@
+# Golden files are compared byte for byte with the rendered text (LF); never let git convert them (Windows autocrlf).
+crates/fs-forms-testdata/tests/golden/* text eol=lf

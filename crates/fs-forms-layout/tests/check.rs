@@ -157,18 +157,19 @@ fn k66_scheme_lists() {
 
 #[test]
 fn schemes_rule_is_one_source() {
+    let pol = SchemePolicy::default();
     let list = vec!["https".to_owned()];
     assert_eq!(
-        schemes_rule("e", "p", true, None)[0].code,
+        schemes_rule("e", "p", true, None, &pol)[0].code,
         LayoutCode::SchemesMissing
     );
     assert_eq!(
-        schemes_rule("e", "p", false, Some(&list))[0].code,
+        schemes_rule("e", "p", false, Some(&list), &pol)[0].code,
         LayoutCode::SchemesUnexpected
     );
-    assert!(schemes_rule("e", "p", true, Some(&list)).is_empty());
+    assert!(schemes_rule("e", "p", true, Some(&list), &pol).is_empty());
     assert_eq!(
-        schemes_rule("e", "p", true, Some(&[]))[0].code,
+        schemes_rule("e", "p", true, Some(&[]), &pol)[0].code,
         LayoutCode::SchemesEmpty
     );
 }

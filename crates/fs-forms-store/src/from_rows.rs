@@ -6,7 +6,7 @@
 
 use fs_forms_layout::{
     BindFrom, BindingDoc, BlockDoc, Coded, ElemId, FrontendKey, Item, Layout, LayoutCode,
-    LayoutDoc, LayoutId, Limits, OpenCatalog, PageDoc, Words,
+    LayoutDoc, LayoutId, Limits, OpenCatalog, PageDoc, SchemePolicy, Words,
 };
 
 use crate::from_rows_head::{menu, messages, requires, sources};
@@ -38,6 +38,8 @@ pub(crate) fn same(r: &RowReader<'_>, id: &str) -> bool {
 
 fn limits_off() -> Limits {
     let mut l = Limits::declared();
+    // reading rows: the writer already applied the instance policy, so only grammar and the floor are asked again
+    l.schemes = SchemePolicy::any_valid();
     (
         l.elements_max,
         l.menu_depth_max,

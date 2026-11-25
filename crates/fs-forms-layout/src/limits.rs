@@ -4,7 +4,7 @@
 //!
 //! Pattern: Value Object with a default.
 
-use crate::schemes::DEFAULT_ALLOWED;
+use crate::schemes::SchemePolicy;
 
 /// Where a limit came from; carried as parameter `by` in every `too-many` and `text-too-long` code.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -49,7 +49,7 @@ pub struct LimitSources {
 }
 
 /// Limits applied while checking a description and storing overlays. Values are not measured yet.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Limits {
     /// All elements of one layout.
     pub elements_max: u32,
@@ -64,15 +64,15 @@ pub struct Limits {
     /// Live overlays on one layout.
     pub overlays_max: u32,
     /// The scheme names a binding list may use (instance policy, lower case; the fixed floor `NEVER_ALLOWED` still applies).
-    /// Only `effective` sets it from the instance; a person's value here is ignored there. Load the instance list once at start
-    /// (`Box::leak`), it lives as long as the process.
-    pub schemes: &'static [&'static str],
+    /// Only `effective` sets it from the instance; a person's value here is ignored there. A `SchemePolicy` is a value: build a
+    /// new one when the setting changes.
+    pub schemes: SchemePolicy,
     /// Where each value came from.
     pub by: LimitSources,
 }
 
 /// Instance ceilings; `None` = the admin set nothing.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct CeilingSet {
     /// Ceiling of `elements_max`.
     pub elements_max: Option<u32>,
@@ -88,7 +88,7 @@ pub struct CeilingSet {
     pub overlays_max: Option<u32>,
     /// The schemes the instance allows (replaces the default list, never widens past `NEVER_ALLOWED`); `None` = the admin set
     /// nothing, then `DEFAULT_ALLOWED` applies. A person or package can not widen it: `Limits::effective` ignores their list.
-    pub schemes: Option<&'static [&'static str]>,
+    pub schemes: Option<SchemePolicy>,
 }
 
 /// Technical limits, each with evidence; everything else is a setting.
@@ -123,7 +123,7 @@ impl Limits {
             text_bytes_max: 16 * 1024,
             ops_max: 1024,
             overlays_max: 64,
-            schemes: DEFAULT_ALLOWED,
+            schemes: SchemePolicy::default(),
             by: LimitSources {
                 elements: d,
                 menu_depth: d,
@@ -171,7 +171,7 @@ impl Limits {
             text_bytes_max,
             ops_max,
             overlays_max,
-            schemes: ceiling.schemes.unwrap_or(DEFAULT_ALLOWED),
+            schemes: ceiling.schemes.clone().unwrap_or_default(),
             by: LimitSources {
                 elements,
                 menu_depth,

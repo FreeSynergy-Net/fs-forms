@@ -63,3 +63,24 @@ fn provider_away_is_a_warning_never_a_lock() {
     assert_eq!(r.warnings[0].code, LayoutCode::ProviderUnchecked);
     assert_eq!(r.warnings[0].param("capability"), Some("tasks"));
 }
+
+/// The instance policy reaches `resolve`: a store whose instance allows `mailto` does not report the line it just accepted on write.
+#[test]
+fn resolve_uses_the_policy_of_the_instance() {
+    let mailto = |l: Limits| {
+        let s = MemoryLayoutStore::new(Box::new(OpenCatalog), l, who().actor)
+            .with_providers(Rc::new(Fake(Ok(Some(true)))));
+        let mut d = with_source();
+        d.pages[0].v.blocks[0].v.bindings[0].v.schemes =
+            Some(vec![item("scheme:b/0", "mailto".to_owned())]);
+        install(&s, d, "1.0");
+        block_on(s.resolve(&key("board"))).unwrap().unwrap()
+    };
+    let ceil = CeilingSet {
+        schemes: Some(SchemePolicy::listed(["https", "mailto"]).unwrap()),
+        ..CeilingSet::default()
+    };
+    let wide = mailto(Limits::effective(&Limits::declared(), &ceil));
+    assert!(wide.problems.is_empty(), "{:?}", wide.problems);
+    // default policy: the same description is refused already when it is written (`install` would fail), so only the wide store runs
+}

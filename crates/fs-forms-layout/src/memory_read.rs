@@ -168,7 +168,7 @@ impl LayoutRead for MemoryLayoutStore {
                 return Ok(None);
             };
             let codes = match &self.providers {
-                Some(p) => check_providers(&r.layout, &**p).await?,
+                Some(p) => check_providers(&r.layout, &**p, &self.limits.schemes).await?,
                 None => unchecked_capabilities(&r.layout),
             };
             (r.problems, r.warnings) = split_provider_codes(codes);

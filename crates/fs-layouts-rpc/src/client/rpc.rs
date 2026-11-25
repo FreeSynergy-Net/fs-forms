@@ -7,7 +7,9 @@
 use std::path::Path;
 use std::rc::Rc;
 
-use fs_forms_layout::{CatalogRules, Coded, Layout, LayoutCode, LayoutDoc, Limits, OpenCatalog};
+use fs_forms_layout::{
+    CatalogRules, Coded, Layout, LayoutCode, LayoutDoc, Limits, OpenCatalog, SchemePolicy,
+};
 
 use super::RpcLayoutAdmin;
 use super::ctx::ClientTimes;
@@ -33,6 +35,8 @@ fn first(problems: Vec<Coded<LayoutCode>>) -> Coded<LayoutCode> {
 /// The limits of "the service decides": nothing is refused by size here.
 fn unlimited() -> Limits {
     let mut l = Limits::declared();
+    // the service decided which schemes are listed (its instance policy); the client asks only grammar and the floor
+    l.schemes = SchemePolicy::any_valid();
     (
         l.elements_max,
         l.menu_depth_max,

@@ -7,7 +7,7 @@ use crate::codes::LayoutCode;
 use crate::doc::BindFrom;
 use crate::layout::Layout;
 use crate::port::Pending;
-use crate::schemes::schemes_rule;
+use crate::schemes::{SchemePolicy, schemes_rule};
 use crate::shim::Coded;
 
 /// Asks a provider about a field of a data type.
@@ -22,10 +22,11 @@ pub trait ProviderCatalogs {
     ) -> Pending<'a, Option<bool>>;
 }
 
-/// Checks the layout against the providers. A provider that is away gives `provider-unchecked{capability}` once, never silence.
+/// Checks the layout against the providers, with the scheme policy of the instance. A provider that is away gives `provider-unchecked{capability}` once, never silence.
 pub fn check_providers<'a>(
     layout: &'a Layout,
     providers: &'a dyn ProviderCatalogs,
+    policy: &'a SchemePolicy,
 ) -> Pending<'a, Vec<Coded<LayoutCode>>> {
     Box::pin(async move {
         let doc = layout.doc();
@@ -56,7 +57,7 @@ pub fn check_providers<'a>(
                         .field_has_schemes(&src.v.range, &src.v.data_type, path)
                         .await;
                     if let Ok(Some(carries)) = answer {
-                        out.extend(schemes_rule(elem, path, carries, list.as_deref()));
+                        out.extend(schemes_rule(elem, path, carries, list.as_deref(), policy));
                     } else {
                         // away, or the provider does not know the type or field: not checkable, said, never silent
                         let c = Coded::new(LayoutCode::ProviderUnchecked)

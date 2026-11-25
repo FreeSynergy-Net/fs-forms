@@ -57,12 +57,21 @@ pub fn dir() -> TempDir {
 
 /// The memory store with a counting clock (the same one for the service and for the local copy the tests compare with).
 pub fn mem(instance: bool, providers: Option<Rc<dyn ProviderCatalogs>>) -> MemoryLayoutStore {
+    mem_with(instance, providers, Limits::declared())
+}
+
+/// The same with the limits of the instance (its scheme policy included).
+pub fn mem_with(
+    instance: bool,
+    providers: Option<Rc<dyn ProviderCatalogs>>,
+    limits: Limits,
+) -> MemoryLayoutStore {
     let t = Cell::new(1_000_i64);
     let clock = move || {
         t.set(t.get() + 10);
         Utc(t.get())
     };
-    let mut mem = MemoryLayoutStore::new(Box::new(OpenCatalog), Limits::declared(), who().actor)
+    let mut mem = MemoryLayoutStore::new(Box::new(OpenCatalog), limits, who().actor)
         .with_clock(Box::new(clock));
     if instance {
         mem = mem.as_instance();
@@ -160,6 +169,14 @@ pub fn serve_on(
         stop: Some(stop),
         thread: Some(thread),
     }
+}
+
+/// A person-level service whose store has these limits.
+pub fn person_with(socket: &Path, limits: Limits) -> Server {
+    serve_on(socket, move || {
+        let store = Rc::new(UuidStore(mem_with(false, None, limits), Arc::default()));
+        LayoutService::<dyn LayoutStore>::new(store, Reference(PERSON.to_owned()))
+    })
 }
 
 pub fn person(socket: &Path) -> Server {

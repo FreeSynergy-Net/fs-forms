@@ -71,10 +71,8 @@ fn the_list_is_a_parameter_default_stays_closed() {
         "tel".to_owned(),
         "javascript".to_owned(),
     ];
-    let wide = SchemePolicy {
-        allowed: &["mailto", "tel"],
-    };
-    let got: Vec<_> = scheme_names_rule_with("e", &list, wide)
+    let wide = SchemePolicy::listed(["mailto", "tel"]).unwrap();
+    let got: Vec<_> = scheme_names_rule_with("e", &list, &wide)
         .into_iter()
         .map(|c| c.code)
         .collect();

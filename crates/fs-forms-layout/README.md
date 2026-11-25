@@ -8,4 +8,4 @@ Licence: MIT OR Apache-2.0.
 
 ## Rule for the host
 
-A field binding without a scheme list means "no scheme is allowed" (fail closed). A person's overlay can never widen a scheme list; the instance can (its scheme list, default `https`, `http`, `ssh`; a closed positive list). The schemes `javascript`, `vbscript`, `data`, `file`, `blob` are never allowed, whatever the instance says (`scheme-not-allowed`).
+A field binding without a scheme list means "no scheme is allowed" (fail closed). A person's overlay can never widen a scheme list; the instance can (its scheme list, a `SchemePolicy`, default `https`, `http`, `ssh`; a closed positive list). The schemes `javascript`, `vbscript`, `data`, `file`, `blob` are never allowed, whatever the instance says (`scheme-not-allowed`).

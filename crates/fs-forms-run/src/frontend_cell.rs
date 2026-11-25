@@ -13,6 +13,7 @@ use fs_components_mf2::Mf2Texts;
 use fs_components_widgets::states;
 use fs_components_words::{Locale, Localized};
 
+use crate::after_write::AfterWrite;
 use crate::compose::Composition;
 use crate::draw::Ctx;
 use crate::page::Page;
@@ -67,6 +68,7 @@ impl Surface for Cell {
 
 /// The page of a composition: its first screen (with the panels `panels` the owner opened for its frontend nodes), and the notices
 /// of the window as a locked part when there are any.
+#[allow(clippy::too_many_arguments)] // two call sites (open, switch); a struct of these would only be built twice
 pub(crate) fn root_page(
     texts: &Mf2Texts,
     locale: &Locale,
@@ -75,8 +77,9 @@ pub(crate) fn root_page(
     records: Arc<dyn Records>,
     program_style: Arc<dyn StyleSource>,
     panels: &Panels,
+    after_write: AfterWrite,
 ) -> Page {
-    let ctx: Ctx = ctx_of(texts, locale, view, records, program_style);
+    let ctx: Ctx = ctx_of(texts, locale, view, records, program_style, after_write);
     let first = comp.screens.first();
     let mut shown = first
         .map(|s| parts_with(texts, &s.nodes, panels))

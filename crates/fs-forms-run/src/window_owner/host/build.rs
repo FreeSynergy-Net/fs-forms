@@ -74,6 +74,7 @@ impl Core {
         let mut above = chain.to_vec();
         above.push(req.key.clone());
         let inside = self.inside_of(id, &comp, &above);
+        let attached = Attached::default();
         let page = root_page(
             &texts,
             &self.locale,
@@ -82,6 +83,7 @@ impl Core {
             grip.records(),
             Arc::new(StyleCell::default()),
             &inside.panels,
+            attached.hook(),
         );
         let (heads, missing) = (inside.heads(), inside.missing());
         let cell = FrontendCell::new(page);
@@ -94,7 +96,6 @@ impl Core {
         } else {
             view.title.clone()
         };
-        let attached = Attached::default();
         let app = if req.mode == Placement::Window {
             let app = AppWidget::new(head.clone(), vec![cell.screen()]).map_err(failed)?;
             set_status_line(&app, &texts, &comp, &*grip.records());

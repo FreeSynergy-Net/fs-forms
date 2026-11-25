@@ -18,6 +18,7 @@ use fs_components_kanban::Answer;
 use fs_components_words::Locale;
 use fs_objects::UndoState;
 
+use crate::after_write::AfterWrite;
 use crate::parts::line;
 use crate::records::Records;
 use crate::repaint::Repaint;
@@ -190,6 +191,8 @@ pub struct Edit {
     /// The window the handler answers in (set by [`Edit::install`]). An owner that closes windows gives the cell of an
     /// [`Attached`], so the window is not kept alive by its own handler; a one-window host gives `Arc::default()`.
     pub app: Arc<Mutex<Option<AppWidget>>>,
+    /// The hook of the gate of the board ([`crate::draw::Ctx`]); [`Edit::install`] sets it so the lines follow every accepted write.
+    pub after: AfterWrite,
 }
 
 /// The owner of the cell of a window's handler: when it drops (the window is closed), the handler lets the window go, so the window,
@@ -197,7 +200,7 @@ pub struct Edit {
 ///
 /// Pattern: RAII guard.
 #[derive(Default)]
-pub struct Attached(Arc<Mutex<Option<AppWidget>>>);
+pub struct Attached(Arc<Mutex<Option<AppWidget>>>, AfterWrite);
 
 impl Attached {
     /// The cell to put into [`Edit::app`].
@@ -205,21 +208,50 @@ impl Attached {
     pub fn cell(&self) -> Arc<Mutex<Option<AppWidget>>> {
         Arc::clone(&self.0)
     }
+
+    /// The hook to put into [`Edit::after`] and into the drawing context of the pages of this window.
+    #[must_use]
+    pub fn hook(&self) -> AfterWrite {
+        self.1.clone()
+    }
 }
 
 impl Drop for Attached {
     fn drop(&mut self) {
         *self.0.lock().unwrap_or_else(PoisonError::into_inner) = None;
+        self.1.clear();
     }
 }
 
 impl Edit {
-    /// Puts the menus, the one handler and the shortcuts into `app` (call again to refresh the locked lines).
+    /// Puts the menus, the one handler and the shortcuts into `app` (call again to refresh the locked lines) and sets the hook
+    /// [`Edit::after`]: after every accepted write of the board the lines are set again, so "Undo" is open after a card was moved.
     ///
     /// # Errors
     /// [`AppError::DuplicateMenuEntry`] when two lines share an id; nothing changes then.
     pub fn install(&self, app: &AppWidget) -> Result<(), AppError> {
         *self.app.lock().unwrap_or_else(PoisonError::into_inner) = Some(app.clone());
+        self.menus_into(app)?;
+        // the hook holds a copy with a hook of its own that nobody sets (no cycle hook - copy - hook)
+        let again = Self {
+            after: AfterWrite::default(),
+            ..self.clone()
+        };
+        self.after.set(move || {
+            let app = again
+                .app
+                .lock()
+                .unwrap_or_else(PoisonError::into_inner)
+                .clone();
+            if let Some(app) = app {
+                // a failure to refresh leaves the old lines; the write itself is done
+                let _ = again.menus_into(&app);
+            }
+        });
+        Ok(())
+    }
+
+    fn menus_into(&self, app: &AppWidget) -> Result<(), AppError> {
         app.set_menus((self.menus)(), self.handler())?;
         let say = shell_words(&self.locale);
         app.set_shortcuts(
@@ -250,7 +282,7 @@ impl Edit {
                 edit.repaint.wake();
             }
             // the locked lines follow the new depth of the history; a failure to refresh leaves the old menus, the status still shows
-            let _ = edit.install(&app);
+            let _ = edit.menus_into(&app);
             app.set_status(Some(status));
         }
     }

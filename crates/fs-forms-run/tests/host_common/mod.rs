@@ -142,7 +142,7 @@ pub fn world_with(surfaces: Arc<dyn Surfaces>) -> (Arc<HostWindows>, Arc<HoldCou
     let wakes = Arc::new(Wakes::default());
     let owner = HostWindows::new(
         Arc::new(Blocks),
-        fs_forms_run::session_locale(),
+        en(),
         (Arc::new(Files), Arc::new(One(module)), surfaces),
         Arc::clone(&wakes) as Arc<dyn Repaint>,
     );
@@ -160,7 +160,7 @@ pub fn world_over(descriptions: Arc<dyn Descriptions>, records: RecordsOf) -> Wo
     let wakes = Arc::new(Wakes::default());
     let owner = HostWindows::new(
         Arc::new(Blocks),
-        fs_forms_run::session_locale(),
+        en(),
         (
             descriptions,
             Arc::new(One(module)),
@@ -199,4 +199,9 @@ pub fn done() -> (Seen, Done) {
     let seen: Seen = Arc::default();
     let sink = Arc::clone(&seen);
     (seen, Arc::new(move |r| sink.lock().unwrap().push(r)))
+}
+
+/// The language of the test windows: English, whatever `LANG` of the machine says (the tests read sentences, not codes).
+pub fn en() -> fs_components_words::Locale {
+    fs_components_words::Locale::from_posix("en").expect("a locale")
 }

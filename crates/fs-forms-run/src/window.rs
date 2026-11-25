@@ -12,6 +12,7 @@ use fs_components_mf2::Mf2Texts;
 use fs_components_widgets::states;
 use fs_components_words::{Locale, Localized};
 
+use crate::after_write::AfterWrite;
 use crate::compose::{Composition, HostState, Node, ScreenTree};
 use crate::draw::Ctx;
 use crate::error::HostError;
@@ -67,6 +68,7 @@ pub(crate) fn ctx_of(
     view: &View,
     records: Arc<dyn Records>,
     program_style: Arc<dyn StyleSource>,
+    after_write: AfterWrite,
 ) -> Ctx {
     // the words of the board are asked by key while drawing; they are read once, here, from the host's own MF2 files
     let said = kanban_words(texts, locale);
@@ -78,6 +80,7 @@ pub(crate) fn ctx_of(
         actions: Arc::new(view.actions.clone()),
         locale: locale.clone(),
         mounts: Arc::default(),
+        after_write,
     }
 }
 
@@ -128,8 +131,28 @@ pub fn app_styled(
     records: Arc<dyn Records>,
     program_style: Arc<dyn StyleSource>,
 ) -> Result<AppWidget, AppError> {
+    window_parts(texts, locale, view, comp, records, program_style).map(|(widget, _)| widget)
+}
+
+/// [`app_styled`] and the hook its gates fire after an accepted write.
+pub(crate) fn window_parts(
+    texts: &Mf2Texts,
+    locale: &Locale,
+    view: &View,
+    comp: &Composition,
+    records: Arc<dyn Records>,
+    program_style: Arc<dyn StyleSource>,
+) -> Result<(AppWidget, AfterWrite), AppError> {
     let (sample, down) = (records.is_sample(), records.unavailable());
-    let ctx = ctx_of(texts, locale, view, Arc::clone(&records), program_style);
+    let after = AfterWrite::default();
+    let ctx = ctx_of(
+        texts,
+        locale,
+        view,
+        Arc::clone(&records),
+        program_style,
+        after.clone(),
+    );
     let labels = states::Labels::for_locale(locale);
     let title = if view.title.is_empty() {
         texts.plain("host-title")
@@ -153,6 +176,7 @@ pub fn app_styled(
         }),
         inner: Arc::new(|_| {}),
         app: Arc::default(),
+        after,
     };
     edit.install(&widget)?;
     widget.set_status(Some(crate::status::status(
@@ -162,9 +186,11 @@ pub fn app_styled(
         sample,
         down.as_deref(),
     )));
-    Ok(widget)
+    Ok((widget, edit.after))
 }
 
+#[cfg(test)]
+mod after_tests;
 #[cfg(test)]
 mod tests {
     use super::*;

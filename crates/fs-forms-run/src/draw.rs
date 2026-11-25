@@ -18,6 +18,7 @@ use fs_components_fields::Say;
 use fs_components_styles::StyleId;
 use fs_components_words::Locale;
 
+use crate::after_write::AfterWrite;
 use crate::form_data::{empty_input, input_of};
 use crate::records::Records;
 use crate::view::ActionView;
@@ -53,6 +54,8 @@ pub(crate) struct Ctx {
     pub locale: Locale,
     /// The components of this page (one set per page).
     pub mounts: MountSlot,
+    /// Fired after every accepted write of the gate: the window sets its menus again.
+    pub after_write: AfterWrite,
 }
 
 /// Whether the reader of this window sees the dark scheme.
@@ -116,6 +119,7 @@ fn draw_ctx(ctx: &Ctx, block: &str, look: (StyleId, bool)) -> DrawCtx {
             records: ctx.records.clone(),
             actions: ctx.actions.clone(),
             form,
+            after: ctx.after_write.clone(),
         }),
         reread: Arc::new(move || input_for(&*records, &block)),
     }

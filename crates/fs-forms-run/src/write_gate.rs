@@ -15,6 +15,7 @@ use std::sync::Arc;
 use fs_components_core::form_write::{FormWrite, WriteArg, WriteDone, WriteRefused, WriteValue};
 use fs_components_kanban::{Answer, CREATE, MOVE, carried_channels};
 
+use crate::after_write::AfterWrite;
 use crate::records::Records;
 use crate::view::ActionView;
 
@@ -23,6 +24,8 @@ pub(crate) struct WriteGate {
     pub records: Arc<dyn Records>,
     pub actions: Arc<Vec<ActionView>>,
     pub form: String,
+    /// Fired after an accepted write (the menu "Edit" follows the new depth of the history).
+    pub after: AfterWrite,
 }
 
 impl WriteGate {
@@ -91,7 +94,10 @@ impl FormWrite for WriteGate {
         }
         let answer = self.records.invoke(&self.form, channel, record, &values);
         match answer {
-            Answer::Accepted => Ok(WriteDone::default()),
+            Answer::Accepted => {
+                self.after.fire();
+                Ok(WriteDone::default())
+            }
             Answer::Refused(reason) => Err(WriteRefused::new(&reason.code)),
             // the gate asks no question of the reader: a question is a refusal with its own code, never a silent "unsupported"
             Answer::Ask(_) => Err(WriteRefused::new(

@@ -12,6 +12,7 @@
 #![deny(missing_docs)]
 #![warn(clippy::pedantic)]
 
+mod after_write;
 mod args;
 mod blocks;
 mod catalog;

@@ -49,6 +49,7 @@ fn invoke_answers_with_ask_and_the_question_of_the_records_is_refused_with_its_o
             open: None,
         }]),
         form: "cards-in-columns".into(),
+        after: crate::after_write::AfterWrite::default(),
     };
     let column = WriteArg {
         name: "column".into(),

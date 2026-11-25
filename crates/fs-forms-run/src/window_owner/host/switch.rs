@@ -114,6 +114,7 @@ impl Core {
             e.grip.records(),
             Arc::new(StyleCell::default()),
             &inside.panels,
+            e.attached.hook(),
         );
         if let Some(app) = &e.app {
             let records = e.grip.records();
@@ -177,6 +178,7 @@ impl Core {
             }),
             inner: Arc::new(Self::handler(core, token)),
             app: attached.cell(),
+            after: attached.hook(),
         };
         edit.install(app)
     }

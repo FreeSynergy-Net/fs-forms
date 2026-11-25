@@ -40,6 +40,7 @@ fn gate(actions: Vec<ActionView>, records: Arc<dyn Records>) -> WriteGate {
         records,
         actions: Arc::new(actions),
         form: "cards-in-columns".into(),
+        after: crate::after_write::AfterWrite::default(),
     }
 }
 

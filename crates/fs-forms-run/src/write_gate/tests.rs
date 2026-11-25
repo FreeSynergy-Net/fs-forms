@@ -17,10 +17,9 @@ use fs_components_kanban::{COLUMN_CREATE, COLUMN_LIMIT, COLUMN_RENAME, CREATE, M
 use super::WriteGate;
 use crate::records::{NoRecords, Records};
 use crate::view::ActionView;
-use crate::write::fixture::{FakeWriter, records};
-use crate::write::generated::{
-    CREATE as CREATE_KEY, MOVE as MOVE_KEY, column_of, data, field, first, lane_of, other_column,
-    second,
+use crate::write::fixture::{
+    CREATE as CREATE_KEY, FakeWriter, MOVE as MOVE_KEY, column_of, data, field, first, lane_of,
+    other_column, records, second,
 };
 
 fn action(trigger: &str, command: &str) -> ActionView {

@@ -148,8 +148,6 @@ pub(crate) mod log;
 #[cfg(test)]
 pub(crate) mod fixture;
 #[cfg(test)]
-pub(crate) mod generated;
-#[cfg(test)]
-mod parity;
-#[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_call;

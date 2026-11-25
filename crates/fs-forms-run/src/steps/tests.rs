@@ -14,8 +14,7 @@ use fs_components_app::replay::parse;
 use super::{play, read};
 use crate::file::FileLink;
 use crate::link::LayoutLink;
-use crate::write::fixture::{FakeWriter, records};
-use crate::write::generated::{CREATE, MOVE, data, first, other_column};
+use crate::write::fixture::{CREATE, FakeWriter, MOVE, data, first, other_column, records};
 
 const ELEMENT: &str = "element-6066-11e4-a52e-4f735466cecf";
 

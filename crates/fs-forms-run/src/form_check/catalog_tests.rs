@@ -172,7 +172,7 @@ fn a_module_with_the_highest_version_of_the_form_does_not_lock_the_board() {
         .map(|(block, _)| block)
         .expect("a block draws cards-in-columns");
     let w = std::sync::Arc::new(crate::write::fixture::FakeWriter::default());
-    let records = crate::write::fixture::records(&w, crate::write::generated::data());
+    let records = crate::write::fixture::records(&w, crate::write::fixture::data());
     assert_eq!(super::problems(&board, &records), Vec::new());
     let ours = super::components();
     let drawn = ours

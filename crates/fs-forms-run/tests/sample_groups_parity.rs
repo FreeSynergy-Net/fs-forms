@@ -5,6 +5,8 @@
 //!
 //! Pattern: Characterization test (the old and the new source behind the same questions).
 
+#![allow(clippy::struct_excessive_bools)] // a list of yes/no answers, compared as a whole
+
 mod sample_source;
 
 use fs_forms_run::{FormData, FormRecords, FormRow, form_problems, form_report, sample_groups};

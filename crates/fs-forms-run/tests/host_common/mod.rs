@@ -12,11 +12,17 @@ use fs_forms_layout::FrontendKey;
 use fs_forms_run::WindowOpened as Opened;
 use fs_forms_run::{
     Blocks, Coded, Descriptions, FakeModule, FileLink, HoldCounts, HostWindows, LayoutLink, Module,
-    Modules, OpenFrontend, Placement, Records, Repaint, SampleBoard, Surfaces, View,
+    Modules, OpenFrontend, Placement, Records, Repaint, Surfaces, View,
 };
+
+// The data of the board: made from a wish by the generator (package 5a); the tests read the cards from it.
+#[path = "../sample_source/mod.rs"]
+mod sample_source;
 use fs_notification::{
     Form, NoteId, Notification, NotificationCode, Notifications, Outlet, Policy,
 };
+#[allow(unused_imports)] // each test file uses a part
+pub use sample_source::{board, move_nth};
 
 pub const PROGRAM: &str = "net.freesynergy.Tasks";
 
@@ -131,12 +137,15 @@ pub fn world() -> World {
 /// The same world over windows of the caller (one that closes late, say).
 pub fn world_with(surfaces: Arc<dyn Surfaces>) -> (Arc<HostWindows>, Arc<HoldCounts>, Arc<Wakes>) {
     let counts = Arc::new(HoldCounts::default());
-    let boards: Mutex<HashMap<Option<String>, Arc<SampleBoard>>> = Mutex::default();
+    let boards: Mutex<HashMap<Option<String>, Arc<dyn Records>>> = Mutex::default();
     let module = FakeModule::new(
         Arc::clone(&counts),
         Box::new(move |scope| {
             let mut m = boards.lock().unwrap();
-            Arc::clone(m.entry(scope.map(str::to_owned)).or_default()) as Arc<dyn Records>
+            Arc::clone(
+                m.entry(scope.map(str::to_owned))
+                    .or_insert_with(sample_source::board),
+            )
         }),
     );
     let wakes = Arc::new(Wakes::default());

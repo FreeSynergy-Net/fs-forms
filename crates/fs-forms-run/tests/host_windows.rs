@@ -22,7 +22,7 @@ use fs_forms_run::{
     WindowOwner,
 };
 use fs_notification::{ActionId, Notification};
-use host_common::{PROGRAM, done, key, notes, req, world};
+use host_common::{PROGRAM, done, key, move_nth, notes, req, world};
 
 #[test]
 fn h1_two_windows_of_two_frontends_show_one_record() {
@@ -47,10 +47,7 @@ fn h1_two_windows_of_two_frontends_show_one_record() {
     );
     assert!(Arc::ptr_eq(&ga.cache(), &gb.cache()));
     let before = gb.records().forms();
-    assert_eq!(
-        fs_forms_run::sample_move_card(&*ga.records(), "FS-1", "done"),
-        Answer::Accepted
-    );
+    assert_eq!(move_nth(&*ga.records(), 0), Answer::Accepted);
     assert_ne!(gb.records().forms(), before, "B shows what A moved");
     assert_eq!(
         (ga.generation(), gb.generation()),

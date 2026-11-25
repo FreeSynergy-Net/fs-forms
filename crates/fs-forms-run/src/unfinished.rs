@@ -51,8 +51,9 @@ pub(crate) fn unfinished(locale: &Locale, id: &str, name: &str) -> Div {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::form_data::{FormData, FormRecords, FormRow};
     use crate::records::NoRecords;
-    use crate::sample::SampleBoard;
+    use fs_forms_bind::{FormRef, ModuleForm};
 
     #[test]
     fn records_decide_between_empty_and_unfinished() {
@@ -67,10 +68,30 @@ mod tests {
     }
 
     #[test]
-    fn sample_records_with_cards_are_data() {
-        assert!(
-            has_data(&SampleBoard::default()),
-            "the sample board has cards"
-        );
+    fn records_with_a_card_are_data() {
+        let form = ModuleForm {
+            data_type: String::new(),
+            form: FormRef {
+                name: "cards-in-columns".into(),
+                major: 1,
+                minor: 0,
+            },
+            map: Vec::new(),
+            fields: Vec::new(),
+        };
+        let records = FormRecords {
+            provider: "fake".into(),
+            forms: vec![FormData {
+                source: 0,
+                data_type: String::new(),
+                declared: form,
+                rows: vec![FormRow::of("a", &[("title", "One")])],
+                may: Vec::new(),
+                commands: Vec::new(),
+                columns: Vec::new(),
+            }],
+            ..FormRecords::default()
+        };
+        assert!(has_data(&records), "a form with a card is data");
     }
 }

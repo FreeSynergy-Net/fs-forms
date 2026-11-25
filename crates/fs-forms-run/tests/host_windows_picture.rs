@@ -19,7 +19,7 @@ use std::path::Path;
 
 use fs_components_kanban::Answer;
 use fs_forms_run::{WindowOpened as Opened, WindowOwner};
-use host_common::{req, world};
+use host_common::{move_nth, req, world};
 
 /// A channel may differ by this much between two draws of the same state (anti-aliasing of the renderer).
 const TOL: u8 = 2;
@@ -94,11 +94,7 @@ fn two_windows_one_record_the_other_window_shows_the_move() {
     };
     let b_before = draw(&widget(1), &out.join("two-windows-b-before.png")).unwrap();
     assert_eq!(
-        fs_forms_run::sample_move_card(
-            &*host.owner.grip_of(&first).unwrap().records(),
-            "FS-1",
-            "done"
-        ),
+        move_nth(&*host.owner.grip_of(&first).unwrap().records(), 0),
         Answer::Accepted
     );
     let b_after = draw(&widget(1), &out.join("two-windows-b-after.png")).unwrap();

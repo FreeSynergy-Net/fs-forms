@@ -8,13 +8,15 @@
 //! Mutants (each run, each red as named): M1 `Inner::write` takes `link.rev(..)` after the write as seen -> R1; M2 `attach` does not
 //! ask again after the `watch` -> R2.
 
+mod sample_source;
+
 use std::sync::Arc;
 
 use fs_components_kanban::Answer;
 use fs_forms_run::{
-    ChangeSink, FakeModule, HoldCounts, Link, Module, RecordHub, RecordKey, Records, SampleBoard,
-    refused,
+    ChangeSink, FakeModule, HoldCounts, Link, Module, RecordHub, RecordKey, Records, refused,
 };
+use sample_source::{add_card, board, column, move_nth};
 
 fn key() -> RecordKey {
     RecordKey {
@@ -28,7 +30,7 @@ fn neighbour_write(inner: &Arc<dyn Module>) {
     let link = inner.connect(Arc::new(Mute)).unwrap();
     let w = link.writer(Some("urn:a"), link.rev(Some("urn:a")));
     assert_eq!(
-        fs_forms_run::sample_add_card(&*w, "todo", "from the neighbour"),
+        add_card(&*w, &column(0), "from the neighbour"),
         Answer::Accepted
     );
 }
@@ -95,10 +97,7 @@ impl Link for RacingLink {
 }
 
 fn racing(after_write: bool, in_watch: bool) -> Arc<dyn Module> {
-    let m = FakeModule::new(
-        Arc::new(HoldCounts::default()),
-        Box::new(|_| Arc::new(SampleBoard::default()) as Arc<dyn Records>),
-    );
+    let m = FakeModule::new(Arc::new(HoldCounts::default()), Box::new(|_| board()));
     Arc::new(Racing {
         inner: m,
         after_write,
@@ -111,17 +110,14 @@ fn r1_the_view_takes_the_revision_of_its_own_change_as_seen() {
     let m = racing(true, false);
     let hub = RecordHub::new();
     let a = hub.attach(&key(), &m).unwrap();
-    assert_eq!(
-        fs_forms_run::sample_move_card(&*a.records(), "FS-1", "done"),
-        Answer::Accepted
-    );
+    assert_eq!(move_nth(&*a.records(), 0), Answer::Accepted);
     assert_eq!(
         a.seen(),
         1,
         "its own change, not the neighbour's revision 2"
     );
     assert_eq!(
-        fs_forms_run::sample_move_card(&*a.records(), "FS-2", "done"),
+        move_nth(&*a.records(), 1),
         refused("conflict"),
         "it has not seen the neighbour's change"
     );

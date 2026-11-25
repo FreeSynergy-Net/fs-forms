@@ -196,10 +196,7 @@ impl Descriptions for NoList {
 
 #[test]
 fn gc5h_a_list_that_cannot_be_read_is_said_as_such_not_as_unknown() {
-    let host = world_over(
-        Arc::new(NoList),
-        Box::new(|_| Arc::new(fs_forms_run::SampleBoard::default()) as Arc<dyn Records>),
-    );
+    let host = world_over(Arc::new(NoList), Box::new(|_| host_common::board()));
     let Opened::New(id) = host.owner.open(req("board", A)).unwrap() else {
         panic!("a new window")
     };

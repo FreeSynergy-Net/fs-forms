@@ -1,5 +1,5 @@
 //! K3: the board of the description drawn before and after each action on the sample board (a card added, a card moved, a column
-//! added), pixel for pixel. The sample data is in memory and says so in the status line ("Sample data (not your records)").
+//! added by a card in a new column), pixel for pixel. The sample data is in memory and says so in the status line ("Sample data (not your records)").
 //! Where the machine has no graphics adapter a test says so and ends green. The pictures stay under the target of the test
 //! (`k3-pictures/k3-<action>-before.png`, `-after.png`).
 //!
@@ -10,7 +10,7 @@ mod sample_source;
 mod support;
 use std::sync::Arc;
 
-use fs_forms_run::{Records, SampleBoard, sample_add_column};
+use fs_forms_run::Records;
 use sample_source::{add_card, board as sample_board, card, column, move_card, other_column};
 use support::board;
 
@@ -20,14 +20,14 @@ const WIDE: u32 = 1700;
 /// What the action is done on: the records, and the gesture.
 type Step = Box<dyn Fn(&dyn Records)>;
 
-/// A board of the new source (the wish of `tests/fixtures/sample/board-parity.toml`); the cards and columns are read from its data.
-fn new_source() -> Arc<dyn Records> {
+/// A board of the source (the wish of `tests/fixtures/sample/board-parity.toml`); the cards and columns are read from its data.
+fn source() -> Arc<dyn Records> {
     sample_board()
 }
 
-/// A board of the old fixture: only for the action the new source cannot do yet (a column: `cards-in-columns` has no command for it, card of package 5a).
-fn old_source() -> Arc<dyn Records> {
-    Arc::new(SampleBoard::default())
+/// A column name no card of a fresh board is in.
+fn new_column() -> String {
+    format!("{}-new", column(0))
 }
 
 /// A case: its name, the source it runs on and the gesture.
@@ -37,24 +37,26 @@ fn actions() -> Vec<Case> {
     vec![
         (
             "add-card",
-            new_source,
+            source,
             Box::new(|b| {
                 let _ = add_card(b, &column(0), "Ship the first release");
             }),
         ),
         (
             "move-card",
-            new_source,
+            source,
             Box::new(|b| {
                 let key = card(0);
                 let _ = move_card(b, &key, &other_column(&key));
             }),
         ),
         (
+            // `cards-in-columns` has no command for a column (card of package 5a): a column of the board is a value of the cards, so a
+            // fourth column comes when a card is added to a name no card has
             "add-column",
-            old_source,
+            source,
             Box::new(|b| {
-                let _ = sample_add_column(b, "Review");
+                let _ = add_card(b, &new_column(), "Review");
             }),
         ),
     ]

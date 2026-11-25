@@ -26,7 +26,31 @@ pub fn draw(args: &[&str], scheme: &str, path: &Path) -> Option<Picture> {
 
 /// Like `draw`, for a run that ends with the exit code `code` (the picture is written anyway).
 pub fn draw_code(args: &[&str], scheme: &str, path: &Path, code: i32) -> Option<Picture> {
-    let out = Command::new(env!("CARGO_BIN_EXE_fs-forms-run"))
+    draw_by(
+        Path::new(env!("CARGO_BIN_EXE_fs-forms-run")),
+        args,
+        scheme,
+        path,
+        code,
+    )
+}
+
+/// Like `draw` for args with `--sample-data`, with the sources of the tests: it is answered from the description (`examples/sample_host.rs`, the
+/// process of `tests/sample_source`), the way the starter answers it.
+pub fn draw_sample(args: &[&str], scheme: &str, path: &Path) -> Option<Picture> {
+    // cargo builds the examples of a package before its tests, next to `deps` (or, with a separate build dir, above the test binary)
+    let name = format!("sample_host{}", std::env::consts::EXE_SUFFIX);
+    let exe = std::env::current_exe().unwrap();
+    let host = exe
+        .ancestors()
+        .map(|d| d.join("examples").join(&name))
+        .find(|p| p.exists())
+        .expect("the test host `examples/sample_host` is built with the tests");
+    draw_by(&host, args, scheme, path, 0)
+}
+
+fn draw_by(program: &Path, args: &[&str], scheme: &str, path: &Path, code: i32) -> Option<Picture> {
+    let out = Command::new(program)
         .args(args)
         .arg("--picture")
         .arg(path)

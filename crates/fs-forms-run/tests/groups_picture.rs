@@ -12,7 +12,7 @@ use std::sync::Arc;
 
 use fs_forms_run::{Coded, FormRecords, Records, Sources, run_code_with};
 use sample_source::groups as sample_groups;
-use support::{draw, out_dir};
+use support::{draw, draw_sample, out_dir};
 
 fn groups() -> String {
     format!("{}/tests/fixtures/groups.toml", env!("CARGO_MANIFEST_DIR"))
@@ -57,7 +57,7 @@ fn run(extra: &[&str], sources: &dyn Sources, png: &Path) -> i32 {
 fn the_sample_groups_draw_a_tree_and_a_member_list_that_the_empty_window_does_not_have() {
     let (_keep, dir) = out_dir();
     let g = groups();
-    let Some(sample) = draw(
+    let Some(sample) = draw_sample(
         &["--description", &g, "--sample-data"],
         "light",
         &dir.join("groups-sample-light.png"),
@@ -73,7 +73,7 @@ fn the_sample_groups_draw_a_tree_and_a_member_list_that_the_empty_window_does_no
     };
     assert_eq!((sample.w, sample.h), (1000, 760));
     assert_ne!(sample.rgb, empty.rgb, "the sample data is drawn");
-    draw(
+    draw_sample(
         &["--description", &g, "--sample-data"],
         "dark",
         &dir.join("groups-sample-dark.png"),

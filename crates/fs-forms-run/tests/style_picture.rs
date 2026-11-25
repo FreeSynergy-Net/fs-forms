@@ -4,9 +4,10 @@
 //! Tests: pixel tests (skipped without a graphics adapter). Mutants: the style is read once at start; `default` is always admin;
 //! `--style` is ignored.
 
+mod sample_source;
 mod support;
 use std::path::Path;
-use support::{board, draw, out_dir};
+use support::{board, draw_sample, out_dir};
 
 #[test]
 #[cfg_attr(
@@ -19,7 +20,7 @@ fn the_same_description_looks_different_in_two_styles_and_the_style_is_asked_at_
     let admin = dir.join("board-sample-style-admin-light.png");
     let apple = dir.join("board-sample-style-apple-light.png");
     let sample = |style: &str, path: &Path| {
-        draw(
+        draw_sample(
             &["--description", &board, "--sample-data", "--style", style],
             "light",
             path,
@@ -33,7 +34,7 @@ fn the_same_description_looks_different_in_two_styles_and_the_style_is_asked_at_
         a.rgb, p.rgb,
         "admin and apple differ for the same description"
     );
-    let plain = draw(
+    let plain = draw_sample(
         &["--description", &board, "--sample-data"],
         "light",
         &dir.join("board-sample-style-preset-light.png"),
@@ -41,13 +42,13 @@ fn the_same_description_looks_different_in_two_styles_and_the_style_is_asked_at_
     .unwrap();
     assert_eq!(plain.rgb, a.rgb, "no --style: the preset is admin");
     // dark too
-    let da = draw(
+    let da = draw_sample(
         &["--description", &board, "--sample-data", "--style", "admin"],
         "dark",
         &dir.join("board-sample-style-admin-dark.png"),
     )
     .unwrap();
-    let dp = draw(
+    let dp = draw_sample(
         &["--description", &board, "--sample-data", "--style", "apple"],
         "dark",
         &dir.join("board-sample-style-apple-dark.png"),
@@ -77,7 +78,7 @@ fn a_change_of_the_style_set_for_the_program_shows_in_the_next_drawing_of_the_sa
         &locale,
         &view,
         &comp,
-        Arc::new(fs_forms_run::SampleBoard::default()),
+        sample_source::board(),
         cell.clone(),
     )
     .unwrap();

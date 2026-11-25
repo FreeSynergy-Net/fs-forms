@@ -13,8 +13,8 @@ use fs_components_app::AppWidget;
 use fs_forms_layout::FrontendKey;
 use fs_forms_run::{
     Blocks, Coded, Descriptions, FakeModule, FileLink, FormRecords, HoldCounts, HostWindows,
-    LayoutLink, Module, Modules, OpenFrontend, Placement, Records, Repaint, SampleBoard, Surfaces,
-    View, WindowId, WindowOpened, WindowOwner,
+    LayoutLink, Module, Modules, OpenFrontend, Placement, Records, Repaint, Surfaces, View,
+    WindowId, WindowOpened, WindowOwner,
 };
 
 // The data of the groups module standing in for the settings data: made from a wish by the generator (package 5b).
@@ -107,7 +107,7 @@ pub fn world(mode: &str) -> World {
         Arc::new(HoldCounts::default()),
         Arc::new(HoldCounts::default()),
     );
-    let boards: Mutex<HashMap<Option<String>, Arc<SampleBoard>>> = Mutex::default();
+    let boards: Mutex<HashMap<Option<String>, Arc<dyn Records>>> = Mutex::default();
     let groups: Arc<dyn Records> = Arc::new(FormRecords {
         provider: "fake".into(),
         forms: groups(),
@@ -120,7 +120,10 @@ pub fn world(mode: &str) -> World {
                 Arc::clone(&tasks),
                 Box::new(move |scope| {
                     let mut m = boards.lock().unwrap();
-                    Arc::clone(m.entry(scope.map(str::to_owned)).or_default()) as Arc<dyn Records>
+                    Arc::clone(
+                        m.entry(scope.map(str::to_owned))
+                            .or_insert_with(sample_source::board),
+                    )
                 }),
             ),
         ),

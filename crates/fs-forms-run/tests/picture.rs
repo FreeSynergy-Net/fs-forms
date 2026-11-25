@@ -8,7 +8,7 @@
 //! Set `FS_PICTURE_OUT=<dir>` to keep the pictures (they are then written there instead of a temp folder).
 
 mod support;
-use support::{Picture, board, draw, draw_code, mean, out_dir, uniform};
+use support::{Picture, board, draw, draw_code, draw_sample, mean, out_dir, uniform};
 
 #[test]
 #[cfg_attr(
@@ -86,8 +86,8 @@ fn with_sample_records_the_board_draws_cards_in_columns_light_and_dark() {
     ) else {
         return;
     };
-    let light = draw(&args, "light", &dir.join("board-sample-light.png")).unwrap();
-    let dark = draw(&args, "dark", &dir.join("board-sample-dark.png")).unwrap();
+    let light = draw_sample(&args, "light", &dir.join("board-sample-light.png")).unwrap();
+    let dark = draw_sample(&args, "dark", &dir.join("board-sample-dark.png")).unwrap();
     assert_ne!(light.rgb, empty.rgb, "sample records change the window");
     assert_ne!(light.rgb, dark.rgb);
     assert!(mean(&dark) + 20.0 < mean(&light));
@@ -117,7 +117,7 @@ fn the_side_list_stands_beside_the_board_not_above_it_light_and_dark() {
     let board = board();
     for scheme in ["light", "dark"] {
         let name = format!("board-sample-side-{scheme}.png");
-        let Some(p) = draw(
+        let Some(p) = draw_sample(
             &["--description", &board, "--sample-data"],
             scheme,
             &dir.join(name),

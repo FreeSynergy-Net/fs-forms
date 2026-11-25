@@ -11,21 +11,33 @@
 //! `rev` (straight through the link at the module's revision) -> S1c; M3 `Inner::history` stays the default -> S1b; M4 the module
 //! drops the check of `seen` in `guarded` -> S2 (S1c stays green: the client checks first).
 
+mod sample_source;
+
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use fs_components_kanban::Answer;
 use fs_forms_run::{
     ChangeSink, ChangeWatch, FakeModule, HoldCounts, Module, RecordHub, RecordKey, Records,
-    SampleBoard, UndoState,
+    UndoState,
 };
+use sample_source::{board, move_nth};
 
 /// A store with an undo depth: every accepted move is one step; a step back is taken once per call.
-#[derive(Default)]
 struct Undoable {
-    board: SampleBoard,
+    board: Arc<dyn Records>,
     steps: AtomicUsize,
     undone: AtomicUsize,
+}
+
+impl Undoable {
+    fn new() -> Self {
+        Self {
+            board: board(),
+            steps: AtomicUsize::default(),
+            undone: AtomicUsize::default(),
+        }
+    }
 }
 
 impl Records for Undoable {
@@ -65,7 +77,7 @@ fn key() -> RecordKey {
 }
 
 fn module() -> (Arc<FakeModule>, Arc<Undoable>) {
-    let store = Arc::new(Undoable::default());
+    let store = Arc::new(Undoable::new());
     let handed = Arc::clone(&store);
     let m = FakeModule::new(
         Arc::new(HoldCounts::default()),
@@ -83,10 +95,7 @@ fn s1a_a_neighbours_write_makes_the_change_watch_of_the_other_view_grow_once() {
     let b = hub.attach(&key(), &m).unwrap();
     let mut watch = ChangeWatch::new();
     assert!(!watch.grew(&*b.records()), "nothing happened yet");
-    assert_eq!(
-        fs_forms_run::sample_move_card(&*a.records(), "FS-1", "done"),
-        Answer::Accepted
-    );
+    assert_eq!(move_nth(&*a.records(), 0), Answer::Accepted);
     assert!(watch.grew(&*b.records()), "the neighbour's write is seen");
     assert!(!watch.grew(&*b.records()), "only once per change");
     assert_eq!(b.records().changed(), b.generation(), "ONE counter");
@@ -99,10 +108,7 @@ fn s1b_the_history_is_read_through_the_cache() {
     let hub = RecordHub::new();
     let a = hub.attach(&key(), &m).unwrap();
     assert_eq!(a.records().history().undoable, 0);
-    assert_eq!(
-        fs_forms_run::sample_move_card(&*a.records(), "FS-1", "done"),
-        Answer::Accepted
-    );
+    assert_eq!(move_nth(&*a.records(), 0), Answer::Accepted);
     assert_eq!(a.records().history().undoable, 1);
     assert_eq!(a.cache().history().undoable, 1, "the cache reads it too");
 }
@@ -114,10 +120,7 @@ fn s1c_a_step_back_goes_over_the_own_connection_with_the_seen_revision() {
     let hub = RecordHub::new();
     let a = hub.attach(&key(), &m).unwrap();
     let b = hub.attach(&key(), &m).unwrap();
-    assert_eq!(
-        fs_forms_run::sample_move_card(&*a.records(), "FS-1", "done"),
-        Answer::Accepted
-    );
+    assert_eq!(move_nth(&*a.records(), 0), Answer::Accepted);
     assert_eq!(
         b.records().step_back(false),
         fs_forms_run::refused("conflict"),
@@ -142,24 +145,15 @@ fn s2_the_module_refuses_a_writer_made_at_an_old_revision_without_the_client() {
     let other = m.connect(Arc::new(Mute)).unwrap();
     link.watch(Some("urn:a"));
     let first = link.writer(Some("urn:a"), link.rev(Some("urn:a")));
-    assert_eq!(
-        fs_forms_run::sample_move_card(&*first, "FS-1", "done"),
-        Answer::Accepted
-    );
+    assert_eq!(move_nth(&*first, 0), Answer::Accepted);
     // `other` still holds a writer made at revision 0: no client in between checks it
     let stale = other.writer(Some("urn:a"), 0);
-    assert_eq!(
-        fs_forms_run::sample_move_card(&*stale, "FS-2", "done"),
-        fs_forms_run::refused("conflict")
-    );
+    assert_eq!(move_nth(&*stale, 1), fs_forms_run::refused("conflict"));
     assert_eq!(
         store.steps.load(Ordering::SeqCst),
         1,
         "the stale write did not happen"
     );
     let fresh = other.writer(Some("urn:a"), other.rev(Some("urn:a")));
-    assert_eq!(
-        fs_forms_run::sample_move_card(&*fresh, "FS-2", "done"),
-        Answer::Accepted
-    );
+    assert_eq!(move_nth(&*fresh, 1), Answer::Accepted);
 }

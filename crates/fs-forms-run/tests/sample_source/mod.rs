@@ -9,6 +9,9 @@
 
 #![allow(dead_code)] // each test file uses a part
 
+mod derive;
+#[allow(unused_imports)] // each test file uses a part
+pub use derive::Derived;
 mod groups;
 #[allow(unused_imports)] // each test file uses a part
 pub use groups::{groups, rows_of};
@@ -18,7 +21,7 @@ use std::sync::{Arc, Mutex, PoisonError};
 
 use fs_components_kanban::Answer;
 use fs_forms_run::{Coded, FormData, FormRecords, FormRow, Invocation, Records, Writer};
-use fs_forms_testdata::{SampleBuilder, SampleModule, SampleSpec, SourceSpec};
+use fs_forms_testdata::{SampleModule, SourceSpec};
 use fs_interfaces::module::{
     Actor, Caller, Claimed, Context, Invocation as Call, ModuleCore, Page, PageQuery, Value,
 };
@@ -29,16 +32,14 @@ pub const FORM: &str = "cards-in-columns";
 const WISH: &str = include_str!("../fixtures/sample/board-parity.toml");
 const PERSON: &str = "urn:uuid:018f3a52-7c1e-7b3a-9d4e-5a6b7c8d9e01";
 
-/// The spec of the wish file (`SourceSpec::from_wish_text`: the same defaults a description gets).
-fn spec() -> SampleSpec {
-    SourceSpec::from_wish_text(WISH)
-        .expect("the wish reads")
-        .spec
+/// The source of the wish file (`SourceSpec::from_wish_text`: the same defaults a description gets).
+fn wish() -> SourceSpec {
+    SourceSpec::from_wish_text(WISH).expect("the wish reads")
 }
 
 enum Ask {
     Call(Call, Sender<Result<(), Coded>>),
-    Read(Sender<FormData>),
+    Read(Sender<Vec<FormData>>),
 }
 
 /// The port `Writer` of the module on its thread.
@@ -66,7 +67,7 @@ impl Writer for ModuleWriter {
         self.ask(|tx| Ask::Call(c, tx))
     }
     fn reload(&self) -> Result<Vec<FormData>, Coded> {
-        Ok(vec![self.ask(Ask::Read)])
+        Ok(self.ask(Ask::Read))
     }
 }
 
@@ -132,20 +133,25 @@ fn data_of(page: &Page, declared: &fs_forms_bind::ModuleForm) -> FormData {
     }
 }
 
-fn serve(spec: SampleSpec, rx: Receiver<Ask>) {
-    let set = SampleBuilder::new(spec).build().expect("the wish builds");
+fn serve(source: &SourceSpec, rx: Receiver<Ask>) {
+    let set = source.build().expect("the wish builds");
     let module = SampleModule::new(&set).expect("the module");
-    let (form, declared) = (set.slices[0].form.clone(), set.declared[0].clone());
     let rt = tokio::runtime::Builder::new_current_thread()
         .build()
         .expect("runtime");
     let cx = context();
-    let read = || {
-        let mut q = PageQuery::default();
-        q.form.clone_from(&form);
-        q.limit = 500;
-        let page = rt.block_on(module.page(&cx, q)).expect("page");
-        data_of(&page, &declared)
+    let read = || -> Vec<FormData> {
+        set.slices
+            .iter()
+            .zip(&set.declared)
+            .map(|(slice, declared)| {
+                let mut q = PageQuery::default();
+                q.form.clone_from(&slice.form);
+                q.limit = 500;
+                let page = rt.block_on(module.page(&cx, q)).expect("page");
+                data_of(&page, declared)
+            })
+            .collect()
     };
     for ask in rx {
         match ask {
@@ -163,20 +169,26 @@ fn serve(spec: SampleSpec, rx: Receiver<Ask>) {
     }
 }
 
-/// The records of a fresh board: its own module, its own memory (a gesture changes nothing else).
+/// The records of a module made from `source`: its own module on its own thread, its own memory (a gesture changes nothing
+/// else), every form of the source read the way a connected module is.
 #[must_use]
-pub fn board() -> Arc<dyn Records> {
+pub fn records_of(source: SourceSpec) -> Arc<dyn Records> {
     let (tx, rx) = channel();
-    let spec = spec();
-    std::thread::spawn(move || serve(spec, rx));
+    std::thread::spawn(move || serve(&source, rx));
     let writer = Arc::new(ModuleWriter(Mutex::new(tx)));
-    let first = writer.ask(Ask::Read);
+    let forms = writer.ask(Ask::Read);
     Arc::new(FormRecords {
         provider: fs_forms_testdata::SAMPLE_PROVIDER.to_owned(),
-        forms: vec![first],
+        forms,
         writer: Some(writer),
         ..FormRecords::default()
     })
+}
+
+/// The records of a fresh board (the wish `board-parity.toml`).
+#[must_use]
+pub fn board() -> Arc<dyn Records> {
+    records_of(wish())
 }
 
 /// The rows of the board now.
@@ -250,4 +262,11 @@ pub fn add_card(records: &dyn Records, column: &str, title: &str) -> Answer {
         None,
         &[pair("column", column), pair("title", title)],
     )
+}
+
+/// The `n`-th card of a fresh board dropped into a column it is not in (the same cards on every fresh board).
+#[must_use]
+pub fn move_nth(records: &dyn Records, n: usize) -> Answer {
+    let key = card(n);
+    move_card(records, &key, &other_column(&key))
 }

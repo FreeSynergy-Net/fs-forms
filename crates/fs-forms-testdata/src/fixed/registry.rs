@@ -2,7 +2,7 @@
 //!
 //! Pattern: Registry – name -> source; `standard_fixed()` like `standard_makers()`. An unknown name is `fixed-unknown`.
 
-use super::{EventsSample, FixedSource};
+use super::{EventsSample, FixedSource, PersonDirectorySample};
 use crate::error::{Failure, SampleCode, fail};
 
 /// Name -> fixed source.
@@ -57,5 +57,7 @@ impl Default for FixedRegistry {
 /// The fixed sources this crate brings: the adapters on the fixed samples of the contracts.
 #[must_use]
 pub fn standard_fixed() -> FixedRegistry {
-    FixedRegistry::new().with(Box::new(EventsSample))
+    FixedRegistry::new()
+        .with(Box::new(EventsSample))
+        .with(Box::new(PersonDirectorySample))
 }

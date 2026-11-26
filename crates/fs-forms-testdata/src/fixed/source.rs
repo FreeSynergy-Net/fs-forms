@@ -40,11 +40,12 @@ pub trait FixedSource {
     /// The AS2 type of the records (`Event`, `Task`, `Person`, `Group`).
     fn data_type(&self) -> &str;
 
-    /// The fixed "now" of the data as wall-clock time in `zone`; a view of these data never reads the clock.
+    /// The fixed "now" of the data as wall-clock time in `zone` (`None` for data that have no time of their own, e.g. a directory of people);
+    /// a view of these data never reads the clock.
     ///
     /// # Errors
     /// `zone-unknown` when the zone is not in the zone database.
-    fn now(&self, zone: &Zone) -> Result<Moment, Failure>;
+    fn now(&self, zone: &Zone) -> Result<Option<Moment>, Failure>;
 
     /// The records of `form` inside `window` (days in `zone`), as AS2 objects with standard content, the map channel -> field,
     /// and the display names of everything the records point at. No random numbers and no clock: the same call gives the same answer.

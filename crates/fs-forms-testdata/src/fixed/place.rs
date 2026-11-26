@@ -56,7 +56,7 @@ pub(crate) fn place(
     set.objects.extend(slice.objects);
     set.declared.push(slice.declared);
     set.names.extend(slice.names);
-    set.now = Some(source.now(zone)?);
+    set.now = source.now(zone)?.or(set.now);
     set.slices.push(Slice {
         form: form.key(),
         data_type: wish.data_type.clone(),

@@ -8,12 +8,15 @@
 mod events;
 mod events_record;
 mod names;
+mod person_card;
+mod person_directory;
 mod place;
 mod registry;
 mod source;
 
 pub use events::EventsSample;
 pub(crate) use names::resolve_names;
+pub use person_directory::PersonDirectorySample;
 pub(crate) use place::place;
 pub use registry::{FixedRegistry, standard_fixed};
 pub use source::{FixedSlice, FixedSource, Names};

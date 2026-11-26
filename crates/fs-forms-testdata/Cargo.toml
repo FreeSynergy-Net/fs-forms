@@ -18,6 +18,8 @@ fs-forms-layout = { path = "../fs-forms-layout", version = "0.1.0" }
 fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "71809eaa1e974841762315c7b3187276469ec0bb", version = "0.3.0" }
 # The fixed sample of the contract `events` (same rev as fs-interfaces above: one fs-interfaces in the graph); the adapter `EventsSample` copies nothing from it.
 fs-events = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "71809eaa1e974841762315c7b3187276469ec0bb", version = "0.3.0" }
+# The fixed sample of the contract `person_directory_v1` (same rev: one fs-interfaces in the graph); the adapter `PersonDirectorySample` copies nothing from it.
+fs-person-directory = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "71809eaa1e974841762315c7b3187276469ec0bb", version = "0.3.0" }
 fs-types = { git = "https://github.com/FreeSynergy-Net/fs-types", rev = "722d3ce0156711d40cb278f2e835e865d9448290", version = "0.0.7" }
 fs-objects = { git = "https://github.com/FreeSynergy-Net/fs-objects", rev = "e38093f1ec61b7c9faaa6f6046f65addb11dcf46", version = "0.0.11" }
 fs-jscalendar = { git = "https://github.com/FreeSynergy-Net/fs-jscalendar", rev = "0a3add97339c92be0ab8b524a294ca44ee8dca25", version = "0.0.7" }

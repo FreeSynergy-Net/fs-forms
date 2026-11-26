@@ -105,16 +105,8 @@ pub fn first_time(ctx: &ContentCtx, record: &Record) -> Option<chrono::NaiveDate
         .or_else(|| record.values().find_map(time))
 }
 
-/// The AS2 object of one record: deterministic id, dates of the anchor, `inReplyTo` for a parent.
-pub fn stored(
-    content: &dyn content::Content,
-    ctx: &ContentCtx,
-    (form_key, data_type): (&str, &str),
-    span: Span,
-    parent: Option<&str>,
-    (n, id): (usize, &str),
-    record: &Record,
-) -> Result<StoredObject, Failure> {
+/// The deterministic id of the `n`-th object of a form in the period of `span` (the same on every run and platform).
+pub fn object_id(form_key: &str, span: Span, n: usize) -> Result<ObjectId, Failure> {
     let day0 = span
         .first
         .and_hms_opt(0, 0, 0)
@@ -125,27 +117,56 @@ pub fn stored(
     bytes[8..].copy_from_slice(&u16::try_from(n).unwrap_or(u16::MAX).to_be_bytes());
     let millis = u64::try_from(day0.timestamp_millis()).unwrap_or(0) + n as u64;
     let uuid = uuid::Builder::from_unix_timestamp_millis(millis, &bytes).into_uuid();
-    let object_id = ObjectId::from_uuid(uuid)
-        .map_err(|_| fail(SampleCode::Unsupported, "what", "object id"))?;
+    ObjectId::from_uuid(uuid).map_err(|_| fail(SampleCode::Unsupported, "what", "object id"))
+}
+
+/// The AS2 object of one record: deterministic id, dates of the anchor, `inReplyTo` for a parent.
+pub fn stored(
+    content: &dyn content::Content,
+    ctx: &ContentCtx,
+    (form_key, data_type): (&str, &str),
+    span: Span,
+    parent: Option<&str>,
+    (n, id): (usize, &str),
+    record: &Record,
+) -> Result<StoredObject, Failure> {
+    let object_id = object_id(form_key, span, n)?;
     let parts = content.store(ctx, &format!("urn:uuid:{object_id}"), record)?;
-    let mut envelope = Envelope::new(data_type, parts.name.clone());
-    envelope.id = object_id;
-    envelope.iri = Some(id.to_owned());
-    envelope.published = day0;
-    envelope.updated = day0;
-    envelope.in_reply_to = parent.and_then(|p| match record.get(p) {
+    let in_reply_to = parent.and_then(|p| match record.get(p) {
         Some(Value::Reference(r)) => Some(r.clone()),
         _ => None,
     });
+    Ok(wrapped(
+        (object_id, content.content_type()),
+        parts,
+        (data_type, span),
+        (id, in_reply_to),
+    ))
+}
+
+/// Puts the made parts (name, content, instants) into the envelope of an AS2 object (a fixed source makes its parts itself).
+pub fn wrapped(
+    (object_id, content_type): (ObjectId, &str),
+    parts: content::Parts,
+    (data_type, span): (&str, Span),
+    (iri, in_reply_to): (&str, Option<String>),
+) -> StoredObject {
+    let day0 = span
+        .first
+        .and_hms_opt(0, 0, 0)
+        .unwrap_or_default()
+        .and_utc();
+    let mut envelope = Envelope::new(data_type, parts.name);
+    envelope.id = object_id;
+    envelope.iri = Some(iri.to_owned());
+    envelope.published = day0;
+    envelope.updated = day0;
+    envelope.in_reply_to = in_reply_to;
     if let Some((start, end)) = parts.instants {
         envelope.start_time = Some(start);
         envelope.end_time = end;
     }
-    Ok(StoredObject::new(
-        envelope,
-        content.content_type(),
-        parts.json,
-    ))
+    StoredObject::new(envelope, content_type, parts.json)
 }
 
 /// The channel that names a record (the AS2 `name`): the first required channel of art `text`.

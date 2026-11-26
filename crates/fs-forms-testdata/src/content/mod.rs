@@ -6,6 +6,7 @@
 mod as2;
 mod choose;
 mod jscalendar;
+mod jscontact;
 mod text;
 mod types;
 

@@ -1,0 +1,112 @@
+# forms description of the people frontend "people-list" (list). IMPORT FORM ONLY (ADR 0096 point 6), Format 4.
+# Draft of C5 25.11.2026 (Merkuro Contact as the model), corrected and built by C2 26.11.2026 (workflow frontend-round, step build) after the check
+# against the real block catalog (fs-forms-run tests/people_descriptions.rs): no block on a place that does not take it, one child in `main`.
+# Source: the directory of persons (capability `people.persons`, contract `person_directory_v1`), type Person. ONE person = ONE record (the real account;
+# a written-down contact is only a profile of it): the sample `person-directory.sample` (fixed source of fs-forms-testdata, AS2 object with a
+# JSContact RFC 9553 card as content) gives people with several e-mails and phones and a postal address, with their display names, never an identifier.
+# No module serves these forms yet (forms.txt: `planned`); the fixture is the provider (`fake`). Commands: none is written here, because no service
+# serves `person.*` (capabilities.txt has only the keys of the topics); what the model can do (new, delete, export) comes as cards, never as an invented command.
+# Birthday and photo as a field are missing in the directory excerpt (`ExcerptField`): not invented, card to C3 in BERICHT-people-frontends.md.
+# The three people frontends show DIFFERENT data of the same module: P-F1 rows@1.0.0 (list), P-F2 single-record@1.2.0 (all contact fields), P-F3 tiles@1.0.0 (cards).
+schema = 4
+kind = "frontend"
+id = "people-list"
+extends = "net.freesynergy.People"
+exec = "fs-forms-run"
+title = "people-list-title"
+style = "default"
+
+[[requires]]
+elem = "requires:1"
+contract = "people.persons@>=0.0.1, <0.1.0"
+
+[[source]]
+elem = "source:1"
+n = 1
+contract = "people.persons@>=0.0.1, <0.1.0"
+type = "Person"
+scope = "all"
+
+[[menu]]
+elem = "menu:0"
+kind = "standard-program"
+
+[[menu]]
+elem = "menu:1"
+kind = "menu"
+label = "menu-view"
+
+[[menu.entries]]
+elem = "menu:1.0"
+kind = "view"
+label = "view-contacts"
+view = "contacts"
+
+[[menu]]
+elem = "menu:9"
+kind = "standard-help"
+
+# Merkuro Contact (Sidebar, ContactView): the list of the people, one row = one person with the short fields (name, e-mails, phones).
+# The side strip (groups; needs the module `groups`) and the search box (not placeable in the toolbar of a workbench: it takes commands only) are cards.
+[[page]]
+elem = "page:contacts"
+page = "contacts"
+frame = "workbench"
+navigation = "list-detail"
+
+[[page.place]]
+elem = "block:contacts/list"
+at = "main"
+block = "grid"
+source = 1
+
+[[view]]
+elem = "view:contacts"
+view = "contacts"
+
+# Sample data for pictures and development (--sample-data), never real entries and never written out: the fixed people of the sample of the
+# contract `person_directory_v1` (fixed source `person-directory.sample`). No count, no seed: the data are the same on every run.
+[sample]
+anchor = { month = "2026-11", zone = "Europe/Berlin" }
+
+[[sample.set]]
+source = 1
+form = "rows@^1.0.0"
+type = "Person"
+fixed = "person-directory.sample"
+
+[[message]]
+elem = "message:people-list-title/de"
+key = "people-list-title"
+lang = "de"
+text = "FreeSynergy Personen: Liste"
+
+[[message]]
+elem = "message:people-list-title/en"
+key = "people-list-title"
+lang = "en"
+text = "FreeSynergy People: list"
+
+[[message]]
+elem = "message:menu-view/de"
+key = "menu-view"
+lang = "de"
+text = "Ansicht"
+
+[[message]]
+elem = "message:menu-view/en"
+key = "menu-view"
+lang = "en"
+text = "View"
+
+[[message]]
+elem = "message:view-contacts/de"
+key = "view-contacts"
+lang = "de"
+text = "Personen"
+
+[[message]]
+elem = "message:view-contacts/en"
+key = "view-contacts"
+lang = "en"
+text = "People"

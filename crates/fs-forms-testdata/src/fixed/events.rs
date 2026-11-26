@@ -54,7 +54,7 @@ impl FixedSource for EventsSample {
         "Event"
     }
 
-    fn now(&self, zone: &Zone) -> Result<Moment, Failure> {
+    fn now(&self, zone: &Zone) -> Result<Option<Moment>, Failure> {
         // The sample stamps every appointment with its "now" (no clock is read); the first one tells it.
         let stamp = sample()
             .appointments
@@ -62,7 +62,9 @@ impl FixedSource for EventsSample {
             .map(|(_, a): &(_, Appointment)| a.updated)
             .ok_or_else(|| unsupported("the sample has no appointments"))?;
         let utc = fs_events::zone::from_utc_ms(stamp).and_utc();
-        Ok(Moment::Local(content::zone_of(zone.id())?.to_local(utc)))
+        Ok(Some(Moment::Local(
+            content::zone_of(zone.id())?.to_local(utc),
+        )))
     }
 
     fn fill(&self, form: &Form, window: &Span, zone: &Zone) -> Result<FixedSlice, Failure> {

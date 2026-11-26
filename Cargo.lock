@@ -2079,6 +2079,7 @@ dependencies = [
  "fs-jscalendar",
  "fs-module",
  "fs-objects",
+ "fs-person-directory",
  "fs-rpc",
  "fs-types",
  "rand 0.10.4",

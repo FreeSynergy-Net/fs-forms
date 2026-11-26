@@ -247,7 +247,10 @@ fn an_iri_without_a_name_is_an_error_not_an_iri_on_the_screen() {
 
 #[test]
 fn the_registry_names_the_adapters_of_the_contracts() {
-    assert_eq!(standard_fixed().names(), vec!["events.sample"]);
+    assert_eq!(
+        standard_fixed().names(),
+        vec!["events.sample", "person-directory.sample"]
+    );
 }
 
 #[test]

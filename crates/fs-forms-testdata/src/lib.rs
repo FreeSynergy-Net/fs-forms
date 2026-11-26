@@ -2,7 +2,7 @@
 //!
 //! A [`SampleSpec`] (wishes: how many records, which edge cases, which anchor in time) and the declaration of a form
 //! (`fs_interfaces::forms`) give a [`SampleSet`] of ActivityStreams 2 objects (`fs_objects::StoredObject`) whose content follows the
-//! standard of their type (JSCalendar for `Event`, plain AS2 otherwise). Nothing here names a program or a channel: strategies
+//! standard of their type (JSCalendar for `Event`, JSContact for `Person`, plain AS2 otherwise). Nothing here names a program or a channel: strategies
 //! work per kind of channel (`Art`), cases per kind of relation. The same spec and seed give the same set on every platform
 //! (ChaCha8; the words come from the crate `fake`, pinned exactly, no word lists of our own). Failures are [`SampleCode`]s, never
 //! a silently dropped wish.
@@ -49,7 +49,10 @@ pub use case::{Case, IntervalCase};
 pub use defaults::{DEFAULT_COUNT, DEFAULT_DISTINCT};
 pub use described::{DEFAULT_SEED, SourceSpec};
 pub use error::{Failure, SampleCode};
-pub use fixed::{EventsSample, FixedRegistry, FixedSlice, FixedSource, Names, standard_fixed};
+pub use fixed::{
+    EventsSample, FixedRegistry, FixedSlice, FixedSource, Names, PersonDirectorySample,
+    standard_fixed,
+};
 pub use fs_interfaces::module::{ProviderKind, SAMPLE_PROVIDER};
 pub use makers::standard as standard_makers;
 pub use module::{SampleModule, SampleRules};

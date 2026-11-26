@@ -100,23 +100,30 @@ impl Store {
                 "this command needs a record"
             }));
         }
-        let args: Vec<(String, String)> = inv
+        // The paths of the arguments are FIELDS (as in `page`); the record keeps its values by channel.
+        let paths: Vec<(String, String)> = inv
             .args
             .iter()
             .map(|v| (v.path.clone(), v.text.clone()))
             .collect();
-        for (i, (path, text)) in args.iter().enumerate() {
-            let target = writes.iter().find(|w| &w.0 == path);
+        let mut args: Vec<(String, String)> = Vec::new();
+        for (i, (path, text)) in paths.iter().enumerate() {
+            let named = self.tables[table].channel_of(path);
+            let target = named.and_then(|n| writes.iter().find(|w| w.0 == n));
             let channel = target.and_then(|w| form.channel(&w.0));
-            if channel.is_none_or(|c| !fits(c, text)) || args[..i].iter().any(|(p, _)| p == path) {
+            if channel.is_none_or(|c| !fits(c, text)) || paths[..i].iter().any(|(p, _)| p == path) {
                 return Err(bad(path));
             }
+            args.push((named.unwrap_or_default().to_owned(), text.clone()));
         }
         if let Some(w) = writes
             .iter()
             .find(|w| w.1 && !args.iter().any(|(p, _)| p == &w.0))
         {
-            return Err(bad(&format!("{} is missing", w.0)));
+            return Err(bad(&format!(
+                "{} is missing",
+                self.tables[table].field_of(&w.0)
+            )));
         }
         let (object, rev, before) = match (t, rec_at) {
             (Some(t), Some(i)) => {
@@ -128,7 +135,7 @@ impl Store {
         if let Some(expect) = inv.expect.as_deref().filter(|e| !e.is_empty())
             && (before.is_none() || expect != rev.to_string())
         {
-            return Err(self.clash(&object, &args, before.as_ref()));
+            return Err(self.clash(table, &object, &paths, before.as_ref()));
         }
         let after = with(&before.clone().unwrap_or_default(), &args);
         let (id, at) = self.next_id();
@@ -192,14 +199,21 @@ impl Store {
         Ok(self.record(entry, (&step.run, &step.step), true))
     }
 
-    fn clash(&self, object: &str, args: &[(String, String)], before: Option<&Values>) -> Refusal {
+    fn clash(
+        &self,
+        table: usize,
+        object: &str,
+        args: &[(String, String)],
+        before: Option<&Values>,
+    ) -> Refusal {
         let fields: Vec<FieldClash> = args
             .iter()
             .map(|(p, mine)| {
+                let channel = self.tables[table].channel_of(p);
                 let now = before
                     .into_iter()
                     .flatten()
-                    .find(|(c, _)| c == p)
+                    .find(|(c, _)| Some(c.as_str()) == channel)
                     .and_then(|(_, v)| v.first().cloned())
                     .unwrap_or_default();
                 FieldClash::new(p, &now, mine)

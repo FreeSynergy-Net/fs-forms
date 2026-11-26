@@ -9,7 +9,7 @@ use std::rc::Rc;
 use fs_interfaces::module::{
     ChangeKind, ChangesQuery, Invocation, ModuleCore, PageQuery, Refusal, StepRef, Value,
 };
-use module_support::{BARS, bars_with_writes, calendar, cx, module, run};
+use module_support::{BARS, LANE, bars_with_writes, calendar, cx, module, run};
 
 fn call(command: &str, record: Option<&str>, args: &[(&str, &str)]) -> Invocation {
     let mut i = Invocation::default();
@@ -29,7 +29,7 @@ fn refused<T>(r: Result<T, Refusal>) -> Refusal {
 const MOVE: [(&str, &str); 3] = [
     ("start", "2026-05-12T10:00:00+02:00"),
     ("end", "2026-05-12T11:00:00+02:00"),
-    ("lane", "moved"),
+    (LANE, "moved"),
 ];
 
 #[test]

@@ -8,7 +8,8 @@ use fs_interfaces::module::ProviderKind;
 use fs_interfaces::module::{Ask, ChangeKind, Invocation, ModuleCore, Refusal, StepRef};
 use fs_types::Utc;
 use module_support::{
-    BARS, bars_with_writes, board, calendar, call, cx, module, page, refused, run, text,
+    BARS, LANE, TITLE, bars_with_writes, board, calendar, call, cx, module, page, refused, run,
+    text,
 };
 
 fn calendar_module(forbid: Vec<Forbid>) -> SampleModule {
@@ -18,7 +19,7 @@ fn calendar_module(forbid: Vec<Forbid>) -> SampleModule {
 const MOVE: [(&str, &str); 3] = [
     ("start", "2026-05-12T10:00:00+02:00"),
     ("end", "2026-05-12T11:00:00+02:00"),
-    ("lane", "moved"),
+    (LANE, "moved"),
 ];
 
 #[test]
@@ -66,7 +67,7 @@ fn move_writes_start_end_and_lane_from_the_declaration_and_revert_takes_it_back(
     let after = page(&m, BARS);
     assert_eq!(text(&after, &key, "start"), Some(MOVE[0].1));
     assert_eq!(text(&after, &key, "end"), Some(MOVE[1].1));
-    assert_eq!(text(&after, &key, "lane"), Some("moved"));
+    assert_eq!(text(&after, &key, LANE), Some("moved"));
     let change = done.change.expect("a change was recorded");
     assert_eq!(change.kind, ChangeKind::Update);
     assert_eq!(
@@ -96,7 +97,7 @@ fn a_create_makes_a_record_and_taking_it_back_removes_it() {
     let args = [
         ("start", "2026-05-30T09:00:00+02:00"),
         ("end", "2026-05-30T09:30:00+02:00"),
-        ("label", "Made"),
+        (TITLE, "Made"),
     ];
     let a = run(m.apply(&cx("p"), call("create", None, &args))).expect("create");
     let b = run(m.apply(&cx("p"), call("create", None, &args))).expect("create");

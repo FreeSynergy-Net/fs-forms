@@ -22,6 +22,9 @@ use fs_types::Zone;
 
 pub const BARS: &str = "bars-in-time@1.1.0";
 pub const PERSON: &str = "urn:uuid:018f3a52-7c1e-7b3a-9d4e-5a6b7c8d9e01";
+/// The fields the module declares for the channels `label` and `lane` of `bars-in-time` (`ModuleForm::map`): values are shown and written by field.
+pub const TITLE: &str = "title";
+pub const LANE: &str = "freesynergy.net:lane";
 
 /// The real declaration `bars-in-time@1.1.0` of the pinned catalog: `move` writes `start! end! lane`, `create` writes `start! end! label! lane`.
 pub fn bars_with_writes() -> Form {

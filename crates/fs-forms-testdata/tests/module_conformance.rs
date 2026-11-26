@@ -4,13 +4,14 @@
 mod module_support;
 
 use fs_forms_testdata::{Forbid, SampleSet};
+use fs_interfaces::forms::Art;
 use fs_interfaces::formsource_capnp::form_source;
 use fs_module::conformance::run_conformance;
 use fs_module::{
     CommandKind, DeclaredCommand, DeclaredForm, FormSourceFixture, Param, Sample, Verify,
 };
 use module_support::{
-    BARS, bars_with_writes, calendar, connect, connect_core, fixed_events, module, run,
+    BARS, LANE, TITLE, bars_with_writes, calendar, connect, connect_core, fixed_events, module, run,
 };
 
 /// What the suite is told about `SampleModule` on the calendar set: the names come from the set and the declaration, one place.
@@ -19,6 +20,8 @@ struct Fx {
     two: form_source::Client,
     keys: Vec<String>,
     forbid: String,
+    /// The fields the set declares for the data channels of the form (`ModuleForm::map`): what the module answers by.
+    fields: Vec<String>,
 }
 
 impl FormSourceFixture for Fx {
@@ -35,13 +38,10 @@ impl FormSourceFixture for Fx {
         Some(fs_forms_testdata::SAMPLE_PROVIDER)
     }
     fn forms(&self) -> Vec<DeclaredForm> {
-        let fields = [
-            "start", "end", "label", "lane", "state", "depends", "progress", "all-day", "color",
-        ];
         vec![DeclaredForm {
             key: BARS.into(),
             scope: String::new(),
-            fields: fields.map(str::to_owned).to_vec(),
+            fields: self.fields.clone(),
         }]
     }
     fn commands(&self) -> Vec<DeclaredCommand> {
@@ -54,12 +54,12 @@ impl FormSourceFixture for Fx {
             DeclaredCommand {
                 key: "move".into(),
                 kind: CommandKind::Record,
-                params: [when.clone(), vec![param("lane", false)]].concat(),
+                params: [when.clone(), vec![param(LANE, false)]].concat(),
             },
             DeclaredCommand {
                 key: "create".into(),
                 kind: CommandKind::Set,
-                params: [when, vec![param("label", true), param("lane", false)]].concat(),
+                params: [when, vec![param(TITLE, true), param(LANE, false)]].concat(),
             },
         ]
     }
@@ -71,7 +71,7 @@ impl FormSourceFixture for Fx {
             args: vec![
                 arg("start", "2026-05-30T09:00:00+02:00"),
                 arg("end", "2026-05-30T09:30:00+02:00"),
-                arg("label", "Made by the suite"),
+                arg(TITLE, "Made by the suite"),
             ],
             makes_record: true,
             verify: Verify::None,
@@ -82,7 +82,7 @@ impl FormSourceFixture for Fx {
             args: vec![
                 arg("start", "2026-05-28T09:00:00+02:00"),
                 arg("end", "2026-05-28T10:30:00+02:00"),
-                arg("lane", "moved"),
+                arg(LANE, "moved"),
             ],
             makes_record: true,
             verify: Verify::Value {
@@ -108,11 +108,27 @@ fn keys(set: &SampleSet) -> Vec<String> {
     set.rows(BARS).unwrap().into_iter().map(|r| r.key).collect()
 }
 
+/// The fields of the data channels of `bars-in-time` the set declares (the map channel -> field of the set, one place).
+fn fields_of(set: &SampleSet) -> Vec<String> {
+    let form = bars_with_writes();
+    let data = |c: &str| {
+        form.channel(c)
+            .is_some_and(|c| c.arts.first() != Some(&Art::Records))
+    };
+    set.declared
+        .iter()
+        .flat_map(|d| d.map.iter())
+        .filter(|(c, _)| data(c))
+        .flat_map(|(_, f)| f.clone())
+        .collect()
+}
+
 /// One suite, any set: a fixed set is a module like a generated one (no `if fixed` anywhere).
 fn passes_the_rules(make: impl Fn(Vec<Forbid>) -> SampleSet) {
     let keys = keys(&make(Vec::new()));
     let forbid = keys[1].clone();
     let set = make(vec![Forbid::on("move", &forbid)]);
+    let fields = fields_of(&set);
     let module = module(&set).declare(&bars_with_writes());
     let (one, two) = connect(module);
     let fx = Fx {
@@ -120,6 +136,7 @@ fn passes_the_rules(make: impl Fn(Vec<Forbid>) -> SampleSet) {
         two,
         keys,
         forbid,
+        fields,
     };
     let report = run(run_conformance(&fx));
     eprintln!("checked {}, skipped: {:#?}", report.checked, report.skipped);

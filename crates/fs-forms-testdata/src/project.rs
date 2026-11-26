@@ -1,4 +1,4 @@
-//! Object -> row: what `SampleModule` sends in `page`, and the table it keeps in memory.
+//! Object -> row: what `SampleModule` sends in `page`, and the table it keeps in memory. A value carries the FIELD the module declares for its channel.
 //!
 //! Pattern: Projection (the stored AS2 object, read the way a real module must: RFC 3339 with the offset of the zone of the
 //! anchor, whole days as `full-date`; the reading is `SampleSet::rows`) + Adapter (row -> `RecordView` of the contract).
@@ -34,6 +34,33 @@ pub struct Table {
     pub form: Form,
     /// The records, in the order of the set.
     pub recs: Vec<Rec>,
+    /// What the module declares for the form: channel to field names (`ModuleForm::map`). A value is shown, and a write is named, by FIELD.
+    pub map: Vec<(String, Vec<String>)>,
+}
+
+impl Table {
+    /// The path of a value of `channel`: the first field the map declares for it (a channel without an entry keeps its name).
+    #[must_use]
+    pub fn field_of<'a>(&'a self, channel: &'a str) -> &'a str {
+        self.map
+            .iter()
+            .find(|(c, _)| c == channel)
+            .and_then(|(_, fields)| fields.first())
+            .map_or(channel, String::as_str)
+    }
+
+    /// The channel a written path names: the channel whose declared fields hold `path`; a channel without an entry is named by itself.
+    #[must_use]
+    pub fn channel_of(&self, path: &str) -> Option<&str> {
+        self.map
+            .iter()
+            .find(|(_, fields)| fields.iter().any(|f| f == path))
+            .map(|(c, _)| c.as_str())
+            .or_else(|| {
+                let named = self.form.channel(path)?;
+                (!self.map.iter().any(|(c, _)| *c == named.name)).then_some(named.name.as_str())
+            })
+    }
 }
 
 /// The tables of a set: one per form, the rows read from the stored objects.
@@ -47,6 +74,11 @@ pub fn tables(set: &SampleSet) -> Result<Vec<Table>, Failure> {
             let form = fs_interfaces::forms::find_key(&slice.form).ok_or_else(|| {
                 crate::error::fail(crate::SampleCode::FormUnknown, "form", &slice.form)
             })?;
+            let map = set
+                .declared
+                .iter()
+                .find(|d| same_form(d, &slice.form))
+                .map_or_else(Vec::new, |d| d.map.clone());
             let recs = set
                 .rows(&slice.form)?
                 .into_iter()
@@ -61,6 +93,7 @@ pub fn tables(set: &SampleSet) -> Result<Vec<Table>, Failure> {
                 key: slice.form.clone(),
                 form: form.clone(),
                 recs,
+                map,
             })
         })
         .collect()
@@ -68,14 +101,14 @@ pub fn tables(set: &SampleSet) -> Result<Vec<Table>, Failure> {
 
 /// A record as the contract shows it; `may` are the commands offered on it.
 #[must_use]
-pub fn view(rec: &Rec, may: Vec<String>) -> RecordView {
+pub fn view(rec: &Rec, table: &Table, may: Vec<String>) -> RecordView {
     let mut out = RecordView::default();
     out.id.clone_from(&rec.id);
     out.may = may;
     out.values = rec
         .values
         .iter()
-        .flat_map(|(channel, texts)| texts.iter().map(|t| Value::new(channel, t)))
+        .flat_map(|(channel, texts)| texts.iter().map(|t| Value::new(table.field_of(channel), t)))
         .collect();
     out
 }
@@ -92,4 +125,11 @@ pub fn data_channels(form: &Form) -> Vec<&str> {
         })
         .map(|c| c.name.as_str())
         .collect()
+}
+
+/// Whether the declaration `d` is for the form `key` (`name@x.y.z`; the patch does not count).
+fn same_form(d: &fs_forms_bind::ModuleForm, key: &str) -> bool {
+    fs_interfaces::forms::parse_key(key).is_some_and(|(n, v)| {
+        n == d.form.name && v.major == u64::from(d.form.major) && v.minor == u64::from(d.form.minor)
+    })
 }

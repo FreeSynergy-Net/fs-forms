@@ -5,7 +5,7 @@ mod module_support;
 
 use fs_interfaces::forms::{self, Form};
 use fs_interfaces::module::ModuleCore;
-use module_support::{BARS, calendar, call, cx, module, page, refused, run, text};
+use module_support::{BARS, LANE, TITLE, calendar, call, cx, module, page, refused, run, text};
 
 const WHEN: [(&str, &str); 2] = [
     ("start", "2026-05-12T10:00:00+02:00"),
@@ -37,23 +37,21 @@ fn a_command_under_a_strange_name_changes_a_record_from_its_writes() {
 fn a_command_under_a_strange_name_makes_a_record_because_its_writes_cover_the_required_channels() {
     let m = strange_module();
     let n = page(&m, BARS).records.len();
-    let args = [WHEN[0], WHEN[1], ("label", "Made")];
+    let args = [WHEN[0], WHEN[1], (TITLE, "Made")];
     let made = run(m.apply(&cx("p"), call("add-one", None, &args))).expect("add-one");
     let p = page(&m, BARS);
     assert_eq!(p.records.len(), n + 1);
-    assert_eq!(text(&p, &made.record, "label"), Some("Made"));
+    assert_eq!(text(&p, &made.record, TITLE), Some("Made"));
 }
 
 #[test]
 fn the_name_create_decides_nothing_a_create_that_writes_only_the_lane_changes_a_record() {
     let m = strange_module();
     let key = page(&m, BARS).records[0].id.clone();
-    run(m.apply(&cx("p"), call("create", Some(&key), &[("lane", "x")]))).expect("changes");
-    assert_eq!(text(&page(&m, BARS), &key, "lane"), Some("x"));
+    run(m.apply(&cx("p"), call("create", Some(&key), &[(LANE, "x")]))).expect("changes");
+    assert_eq!(text(&page(&m, BARS), &key, LANE), Some("x"));
     // Without a record it is refused: it does not make one just for its name.
-    let r = refused(run(
-        m.apply(&cx("p"), call("create", None, &[("lane", "x")]))
-    ));
+    let r = refused(run(m.apply(&cx("p"), call("create", None, &[(LANE, "x")]))));
     assert_eq!(r.kind, "bad-arguments");
 }
 
@@ -63,12 +61,12 @@ fn an_argument_for_a_channel_that_is_not_in_writes_is_refused_even_if_the_channe
     let key = page(&m, BARS).records[0].id.clone();
     let before = page(&m, BARS);
     // `label` is a data channel of the form, but `shift` writes only `start! end!`.
-    let args = [WHEN[0], WHEN[1], ("label", "sneaked")];
+    let args = [WHEN[0], WHEN[1], (TITLE, "sneaked")];
     let r = refused(run(m.apply(&cx("p"), call("shift", Some(&key), &args))));
     assert_eq!((r.kind.as_str(), r.status), ("bad-arguments", 400));
     assert_eq!(
-        text(&page(&m, BARS), &key, "label"),
-        text(&before, &key, "label"),
+        text(&page(&m, BARS), &key, TITLE),
+        text(&before, &key, TITLE),
         "nothing was written"
     );
 }

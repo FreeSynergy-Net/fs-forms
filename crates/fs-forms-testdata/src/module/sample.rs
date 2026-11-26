@@ -145,7 +145,7 @@ impl ModuleCore for SampleModule {
         let mut page = Page::default();
         page.records = alive[from..end]
             .iter()
-            .map(|r| project::view(r, on_record.clone()))
+            .map(|r| project::view(r, table, on_record.clone()))
             .collect();
         page.total = Some(alive.len() as u64);
         page.may = on_set;

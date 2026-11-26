@@ -3,7 +3,7 @@
 //! Pattern: none (tests).
 
 use super::*;
-use fs_forms_bind::FormRef;
+use fs_forms_bind::{Basic, FormRef};
 
 fn declared() -> ModuleForm {
     ModuleForm {
@@ -28,6 +28,7 @@ fn the_input_of_a_component_has_the_channels_with_their_fields_and_the_named_col
         may: Vec::new(),
         commands: Vec::new(),
         columns: vec![("todo".into(), "To do".into())],
+        type_description: None,
     };
     let input = input_of(&data);
     assert_eq!(input.form, "cards-in-columns@1.0.0");

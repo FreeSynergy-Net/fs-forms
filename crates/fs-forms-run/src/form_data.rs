@@ -9,12 +9,11 @@
 //!
 //! Pattern: Value objects + Adapter (rows by channel in, the port `Records` out; a gesture out through the port `Writer`).
 
+use fs_types::describe::TypeDescription;
 use std::sync::{Arc, PoisonError, RwLock};
 
-use fs_components_core::form_read::{ChannelInfo, FieldInfo, FormInput};
-use fs_components_core::states::Load;
 use fs_components_kanban::Answer;
-use fs_forms_bind::{Basic, ModuleForm};
+use fs_forms_bind::ModuleForm;
 
 use crate::clock::{Clock, SystemClock};
 use crate::records::{Records, SideItem};
@@ -42,6 +41,9 @@ pub struct FormData {
     /// The columns the module names in their order as `(key, label)`, also the ones without a card (the host reads them from the
     /// description and the module). Columns of cards that are not named here follow in order of appearance.
     pub columns: Vec<(String, String)>,
+    /// What the module says of the TYPE of these records (`catalog/types.bin`, read by the starter): the word id of each field.
+    /// `None` = it says nothing (as before: the head of a field is its name).
+    pub type_description: Option<TypeDescription>,
 }
 
 impl FormData {
@@ -56,7 +58,15 @@ impl FormData {
             may: Vec::new(),
             commands: Vec::new(),
             columns: Vec::new(),
+            type_description: None,
         }
+    }
+
+    /// The same data with what the module says of their type.
+    #[must_use]
+    pub fn with_type_description(mut self, description: TypeDescription) -> Self {
+        self.type_description = Some(description);
+        self
     }
 }
 
@@ -79,83 +89,16 @@ pub struct FormRecords {
     pub problems: Vec<(u32, Coded)>,
     /// The clock of the data; `None` = the system clock. Sample data set the moment they were made (`FixedClock`).
     pub clock: Option<Arc<dyn Clock>>,
-}
-
-/// The building block that draws a fact of this basic type (`fs-components-fields`: the catalog of kinds); a type without a
-/// component is drawn as its text.
-fn block_of(basic: Basic) -> &'static str {
-    match basic {
-        Basic::Email => "field-email",
-        Basic::Bool => "field-flag",
-        Basic::Date => "field-date",
-        Basic::DateTime => "field-date-time",
-        Basic::Choice => "field-choice",
-        Basic::Reference => "field-reference",
-        Basic::Keywords => "field-keywords",
-        Basic::Link => "field-link",
-        _ => "field-text",
-    }
-}
-
-/// The form as a component is given it: the channels with the fields the module maps to them (and the block that draws a value of the
-/// field's type), the named columns as the choices of the channel `column`.
-#[must_use]
-pub fn input_of(data: &FormData) -> FormInput {
-    let channels = data
-        .declared
-        .map
-        .iter()
-        .map(|(channel, fields)| ChannelInfo {
-            name: channel.clone(),
-            fields: fields
-                .iter()
-                .map(|name| FieldInfo {
-                    name: name.clone(),
-                    block: block_of(
-                        data.declared
-                            .fields
-                            .iter()
-                            .find(|(n, _)| n == name)
-                            .map_or(Basic::Text, |(_, b)| *b),
-                    )
-                    .to_owned(),
-                    label: String::new(),
-                })
-                .collect(),
-            choices: if channel == "column" {
-                data.columns.clone()
-            } else {
-                Vec::new()
-            },
-        })
-        .collect();
-    let f = &data.declared.form;
-    FormInput {
-        form: format!("{}@{}.{}.0", f.name, f.major, f.minor),
-        rows: data.rows.clone(),
-        channels,
-        may: data.may.clone(),
-        load: Load::Ready,
-        heads: None,
-    }
-}
-
-/// Nothing to draw: the module does not offer the form (or the block names none).
-#[must_use]
-pub fn empty_input(form: &str) -> FormInput {
-    FormInput {
-        form: form.to_owned(),
-        rows: Vec::new(),
-        channels: Vec::new(),
-        may: Vec::new(),
-        load: Load::Ready,
-        heads: None,
-    }
+    /// The words of the module (`catalog/texts/`, read by the starter); `None` = none: the heads then stay the names of the fields.
+    pub module_words: Option<Arc<dyn crate::module_words::ModuleWords>>,
 }
 
 impl Records for FormRecords {
     fn side(&self) -> Vec<SideItem> {
         Vec::new()
+    }
+    fn module_words(&self) -> Option<Arc<dyn crate::module_words::ModuleWords>> {
+        self.module_words.clone()
     }
     fn clock(&self) -> Arc<dyn Clock> {
         self.clock.clone().unwrap_or_else(|| Arc::new(SystemClock))
@@ -291,3 +234,6 @@ impl FormRecords {
 
 #[cfg(test)]
 mod tests;
+
+mod input;
+pub use input::{empty_input, input_of};

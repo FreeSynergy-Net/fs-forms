@@ -6,10 +6,12 @@
 
 use std::sync::Arc;
 
+use crate::module_words::SayChain;
 use fs_components_app::{AppError, AppWidget};
 use fs_components_kanban::{WORD_KEYS, WORD_TEXTS, word_id};
 use fs_components_mf2::{Mf2Texts, NoDates, date_names};
 use fs_components_widgets::states;
+use fs_components_words::{Args, TextId, Words};
 use fs_components_words::{Locale, Localized};
 
 use crate::after_write::AfterWrite;
@@ -54,11 +56,16 @@ const CHANNEL_KEYS: &[&str] = &["channel.label", "channel.role", "channel.level"
 /// heads of the member list from the host's files (MF2 ids carry a hyphen where the key has a dot).
 fn kanban_words(texts: &Mf2Texts, locale: &Locale) -> std::collections::HashMap<String, String> {
     let board = Mf2Texts::new(WORD_TEXTS, locale);
-    let from = |t: &Mf2Texts, k: &str| (k.to_owned(), t.plain(&word_id(k)));
+    // only the sentences the host HAS: a key it lacks is left to the words of the module (`SayChain`)
+    let from = |t: &Mf2Texts, k: &str| {
+        let said = t.say(&TextId::new(word_id(k)), &Args::new());
+        said.is_found()
+            .then(|| (k.to_owned(), said.text().to_owned()))
+    };
     WORD_KEYS
         .iter()
-        .map(|k| from(&board, k))
-        .chain(CHANNEL_KEYS.iter().map(|k| from(texts, k)))
+        .filter_map(|k| from(&board, k))
+        .chain(CHANNEL_KEYS.iter().filter_map(|k| from(texts, k)))
         .collect()
 }
 
@@ -72,12 +79,15 @@ pub(crate) fn ctx_of(
     (after_write, clock): (AfterWrite, Arc<dyn Clock>),
 ) -> Ctx {
     // the words of the board are asked by key while drawing; they are read once, here, from the host's own MF2 files
-    let said = kanban_words(texts, locale);
+    let said = SayChain::new(
+        kanban_words(texts, locale),
+        records.module_words().map(|m| m.in_locale(locale)),
+    );
     let named = view.style.clone();
     Ctx {
         style: Arc::new(move || resolve(named.as_deref(), program_style.current())),
         records,
-        say: Arc::new(move |key: &str| said.get(key).cloned().unwrap_or_else(|| key.to_owned())),
+        say: Arc::new(move |key: &str| said.sentence(key)),
         actions: Arc::new(view.actions.clone()),
         locale: locale.clone(),
         mounts: Arc::default(),

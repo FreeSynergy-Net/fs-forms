@@ -31,6 +31,7 @@ pub fn cards_entry(rows: Vec<FormRow>) -> FormData {
         may: Vec::new(),
         commands: Vec::new(),
         columns: Vec::new(),
+        type_description: None,
     }
 }
 
@@ -63,6 +64,7 @@ pub fn rows_entry(
         may: Vec::new(),
         commands: Vec::new(),
         columns: Vec::new(),
+        type_description: None,
     }
 }
 

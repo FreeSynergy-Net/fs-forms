@@ -69,6 +69,9 @@ impl Records for Shared {
     fn clock(&self) -> Arc<dyn Clock> {
         self.cache.clock()
     }
+    fn module_words(&self) -> Option<Arc<dyn crate::module_words::ModuleWords>> {
+        self.cache.module_words()
+    }
     fn is_sample(&self) -> bool {
         self.cache.is_sample()
     }

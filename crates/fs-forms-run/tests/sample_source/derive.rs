@@ -105,6 +105,9 @@ impl Records for WithSide {
     fn reread(&self) -> Result<(), Coded> {
         self.inner.reread()
     }
+    fn module_words(&self) -> Option<Arc<dyn fs_forms_run::ModuleWords>> {
+        self.inner.module_words()
+    }
     fn is_sample(&self) -> bool {
         self.inner.is_sample()
     }

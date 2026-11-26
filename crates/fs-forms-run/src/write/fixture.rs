@@ -90,6 +90,7 @@ pub(crate) fn data() -> FormData {
         may: vec![CREATE.to_owned()],
         commands: vec![MOVE.to_owned(), CREATE.to_owned()],
         columns: Vec::new(),
+        type_description: None,
     }
 }
 

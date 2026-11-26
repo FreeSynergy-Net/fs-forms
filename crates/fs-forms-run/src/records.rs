@@ -42,6 +42,11 @@ fn unsupported() -> Answer {
 pub trait Records: Send + Sync {
     /// The entries of a side list.
     fn side(&self) -> Vec<SideItem>;
+    /// The words the connected module brings (its `catalog/texts/`); `None` = it brings none. `ctx.say` asks them after the words of
+    /// the host, so a head such as `person.emails` is a sentence, not the field name.
+    fn module_words(&self) -> Option<Arc<dyn crate::module_words::ModuleWords>> {
+        None
+    }
     /// The forms the connected module offers, with the rows by channel (the blocks tree and table draw from these). Read again
     /// after an accepted call, so a block takes the answer once per drawing, never keeps it.
     fn forms(&self) -> Arc<Vec<FormData>> {

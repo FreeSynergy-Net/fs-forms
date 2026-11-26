@@ -10,8 +10,11 @@
 #![allow(dead_code)] // each test file uses a part
 
 mod derive;
+mod person_types;
 #[allow(unused_imports)] // each test file uses a part
 pub use derive::Derived;
+#[allow(unused_imports)] // each test file uses a part
+pub use person_types::{PersonWords, person_type};
 mod groups;
 #[allow(unused_imports)] // each test file uses a part
 pub use groups::{groups, rows_of};
@@ -126,6 +129,7 @@ fn data_of(page: &Page, declared: &fs_forms_bind::ModuleForm) -> FormData {
         may: page.may.clone(),
         commands,
         columns,
+        type_description: None,
     }
 }
 
@@ -172,11 +176,16 @@ pub fn records_of(source: SourceSpec) -> Arc<dyn Records> {
     let (tx, rx) = channel();
     std::thread::spawn(move || serve(&source, rx));
     let writer = Arc::new(ModuleWriter(Mutex::new(tx)));
-    let forms = writer.ask(Ask::Read);
+    let mut forms = writer.ask(Ask::Read);
+    // what the starter hands over from the catalog of the module `person` (`types.bin`, `texts/`)
+    for form in forms.iter_mut().filter(|f| f.data_type == "Person") {
+        form.type_description = Some(person_type());
+    }
     Arc::new(FormRecords {
         provider: fs_forms_testdata::SAMPLE_PROVIDER.to_owned(),
         forms,
         writer: Some(writer),
+        module_words: Some(Arc::new(PersonWords)),
         ..FormRecords::default()
     })
 }

@@ -89,6 +89,7 @@ mod tests {
                 may: Vec::new(),
                 commands: Vec::new(),
                 columns: Vec::new(),
+                type_description: None,
             }],
             ..FormRecords::default()
         };

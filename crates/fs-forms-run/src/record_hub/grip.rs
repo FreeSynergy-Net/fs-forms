@@ -136,6 +136,9 @@ impl Records for Inner {
     fn clock(&self) -> Arc<dyn Clock> {
         self.shared().clock()
     }
+    fn module_words(&self) -> Option<Arc<dyn crate::module_words::ModuleWords>> {
+        self.shared().module_words()
+    }
     fn is_sample(&self) -> bool {
         self.shared().is_sample()
     }

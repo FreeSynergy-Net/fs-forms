@@ -50,3 +50,4 @@ layout-error-place-count = {$elem}: Der Platz {$place} hat {$count} Kinder, erla
 layout-error-set-unknown = {$elem}: {$owner} kennt die Einstellung {$name} nicht; sie wird übergangen.
 layout-error-format-old = Das Dateiformat {$found} ist zu alt; bekannt ist das Format {$known}. Die Seiten bitte neu als Plätze schreiben ([[page.place]], siehe Beschreibung von Format 3); alte Dateien werden nicht umgewandelt.
 layout-error-frontend-invalid = {$elem}: das eingebettete Frontend ist falsch ({$cause}).
+layout-error-action-invalid = {$elem}: die Aktion passt nicht zum Block ({$cause}).

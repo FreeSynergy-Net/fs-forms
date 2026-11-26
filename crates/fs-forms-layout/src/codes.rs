@@ -130,6 +130,8 @@ codes! {
     FormatOld => "format-old",
     /// `{elem, cause}` a frontend node (S6-3): cause = extends-empty, frontend-empty, user-unknown (`flag`), scope-from-unknown (`scope-from`).
     FrontendInvalid => "frontend-invalid",
+    /// `{elem, cause}` an action and the slot it binds: cause = at-missing (`trigger`: a gesture needs `at`), at-unknown (`at`: no place with a block), slot-unknown and slot-not-command (`block`, `slot`: the trigger is the name of a command slot of the block at `at`), repeat-exceeded (more actions than the `repeat` of the slot).
+    ActionInvalid => "action-invalid",
 }
 
 /// The error texts of the layouts interface, German (ADR 0057, `MessageFormat` 2); one line per code: `layout-error-<code> = text`.

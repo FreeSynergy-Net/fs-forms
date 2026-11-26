@@ -74,6 +74,9 @@ pub(crate) fn layout_tree(l: &Layout, own_views: bool) -> Result<Tree, Coded<Lay
         "action",
         list(&d.actions, |i| {
             let mut q = vec![elem(i), ("trigger", Tree::s(i.v.trigger.word()))];
+            if let Some(at) = &i.v.at {
+                q.push(("at", Tree::s(at.as_str())));
+            }
             match &i.v.target {
                 ActionTarget::Command { source, command } => {
                     q.push(("source", int(*source)));

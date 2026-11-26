@@ -90,6 +90,7 @@ fn check_is_at_least_as_strict_as_the_tables() {
         "action:1",
         ActionDoc {
             trigger: Trigger::Button,
+            at: None,
             target,
             confirm: None,
         },

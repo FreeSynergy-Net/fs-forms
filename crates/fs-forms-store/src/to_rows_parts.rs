@@ -3,7 +3,7 @@
 //! Pattern: Adapter (model to rows), recursive for the menu tree.
 
 use fs_forms_layout::{
-    BindFrom, Coded, Item, Layout, LayoutCode, MenuDoc, MenuKind, MenuStandard, Words,
+    ActionTarget, BindFrom, Coded, Item, Layout, LayoutCode, MenuDoc, MenuKind, MenuStandard, Words,
 };
 
 use crate::rows::{Cell, RowBuilder, Rows, int, opt_int, opt_text, text};
@@ -153,6 +153,51 @@ pub(crate) fn views(layout: &Layout, id: &Cell, rows: &mut Rows) -> Result<(), C
                 .set("descending", int(i64::from(o.v.descending)))
                 .push_into(rows);
         }
+    }
+    Ok(())
+}
+
+/// The cells of an action target: (target word, command, source, workflow). `open` has no column yet (S6-4): refused, never dropped.
+fn action_cells(t: &ActionTarget) -> Result<(&'static str, Cell, Cell, Cell), Coded<LayoutCode>> {
+    Ok(match t {
+        ActionTarget::Command { source, command } => {
+            ("command", text(command), int(*source), Cell::Null)
+        }
+        ActionTarget::Workflow(w) => ("workflow", Cell::Null, Cell::Null, text(&w.0)),
+        ActionTarget::Open { .. } => {
+            return Err(Coded::new(LayoutCode::ExportFailed)
+                .with("file", "")
+                .with("kind", "action-open-not-supported-yet"));
+        }
+    })
+}
+
+/// The rows of the actions, in order (`at` is the element id of the place whose command slot the action binds, or null).
+pub(crate) fn actions(
+    d: &fs_forms_layout::LayoutDoc,
+    id: &Cell,
+    rows: &mut Rows,
+) -> Result<(), Coded<LayoutCode>> {
+    for (n, a) in d.actions.iter().enumerate() {
+        let (target, command, source, workflow) = action_cells(&a.v.target)?;
+        RowBuilder::new(&t::ACTION)
+            .set("layout", id.clone())
+            .set("action", int(u32::try_from(n + 1).unwrap_or(0)))
+            .set("elem", elem(a))
+            .set("trigger", text(a.v.trigger.word()))
+            .set(
+                "at",
+                a.v.at.as_ref().map_or(Cell::Null, |e| text(e.as_str())),
+            )
+            .set("target", text(target))
+            .set("command", command)
+            .set("source", source)
+            .set("workflow", workflow)
+            .set(
+                "confirm",
+                a.v.confirm.map_or(Cell::Null, |c| text(c.word())),
+            )
+            .push_into(rows);
     }
     Ok(())
 }

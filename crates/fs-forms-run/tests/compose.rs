@@ -24,6 +24,7 @@ fn place(name: &str, seq: u32, block: &str) -> PlaceView {
         locks: Vec::new(),
         slot_locks: Vec::new(),
         info: fs_forms_run::PlaceInfo::default(),
+        elem: String::new(),
         embed: None,
     }
 }

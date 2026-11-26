@@ -4,13 +4,12 @@
 //! Pattern: Adapter (model to rows).
 
 use fs_forms_layout::{
-    ActionTarget, Coded, Item, Layout, LayoutCode, LayoutId, Origin, PackageRef, Reference, Rev,
-    Utc, Words,
+    Coded, Item, Layout, LayoutCode, LayoutId, Origin, PackageRef, Reference, Rev, Utc,
 };
 
 use crate::rows::{Cell, RowBuilder, Rows, int, opt_text, text};
 use crate::tables as t;
-use crate::to_rows_parts::{menu_rows, pages, views};
+use crate::to_rows_parts::{actions, menu_rows, pages, views};
 
 /// The columns of `forms_layout` that do not come from the description.
 #[derive(Clone, Debug)]
@@ -81,21 +80,6 @@ fn origin_word(o: Origin) -> &'static str {
         Origin::Person => "person",
         Origin::Import => "import",
     }
-}
-
-/// The cells of an action target: (target word, command, source, workflow). `open` has no column yet (S6-4): refused, never dropped.
-fn action_cells(t: &ActionTarget) -> Result<(&'static str, Cell, Cell, Cell), Coded<LayoutCode>> {
-    Ok(match t {
-        ActionTarget::Command { source, command } => {
-            ("command", text(command), int(*source), Cell::Null)
-        }
-        ActionTarget::Workflow(w) => ("workflow", Cell::Null, Cell::Null, text(&w.0)),
-        ActionTarget::Open { .. } => {
-            return Err(Coded::new(LayoutCode::ExportFailed)
-                .with("file", "")
-                .with("kind", "action-open-not-supported-yet"));
-        }
-    })
 }
 
 /// No column holds `[sample]` yet: refused, never dropped.
@@ -183,23 +167,7 @@ pub fn to_rows(layout: &Layout, meta: &LayoutMeta) -> Result<Rows, Coded<LayoutC
     let mut node = 0_u32;
     menu_rows(&d.menu, None, &id, &mut node, &mut rows);
     pages(layout, &id, &mut rows)?;
-    for (n, a) in d.actions.iter().enumerate() {
-        let (target, command, source, workflow) = action_cells(&a.v.target)?;
-        RowBuilder::new(&t::ACTION)
-            .set("layout", id.clone())
-            .set("action", int(u32::try_from(n + 1).unwrap_or(0)))
-            .set("elem", elem(a))
-            .set("trigger", text(a.v.trigger.word()))
-            .set("target", text(target))
-            .set("command", command)
-            .set("source", source)
-            .set("workflow", workflow)
-            .set(
-                "confirm",
-                a.v.confirm.map_or(Cell::Null, |c| text(c.word())),
-            )
-            .push_into(&mut rows);
-    }
+    actions(d, &id, &mut rows)?;
     views(layout, &id, &mut rows)?;
     for m in &d.messages {
         RowBuilder::new(&t::MESSAGE)

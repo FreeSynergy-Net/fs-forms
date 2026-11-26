@@ -32,6 +32,8 @@ pub enum Node {
     Block {
         /// The placement.
         place: String,
+        /// The element id of the placement (what an `[[action]]` names with `at`).
+        elem: String,
         /// The block the catalog chose.
         block: String,
         /// Locks of single slots (the block shows them itself).
@@ -127,6 +129,7 @@ fn screen(page: &PageView, catalog: &dyn Catalog) -> ScreenTree {
         } else if catalog.draws(&p.block) {
             nodes.push(Node::Block {
                 place: p.place.clone(),
+                elem: p.elem.clone(),
                 block: p.block.clone(),
                 slot_locks: p.slot_locks.clone(),
                 title: p.title.clone(),

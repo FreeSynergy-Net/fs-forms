@@ -117,6 +117,7 @@ pub const ACTION: Table = Table {
         Col::req("action", Int),
         ELEM,
         Col::req("trigger", Enum(TRIGGER)),
+        Col::opt("at", Text),
         Col::req("target", Enum(TARGET)),
         Col::opt("command", Text),
         Col::opt("source", Int),

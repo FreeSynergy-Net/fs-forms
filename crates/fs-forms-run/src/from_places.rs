@@ -34,11 +34,11 @@ pub(crate) fn place_views(layout: &Layout, page: &PageDoc, lang: &str) -> Vec<Pl
         seq - 1
     };
     for b in &page.blocks {
-        out.push(block_view(layout, &b.v, next(), lang));
+        out.push(block_view(layout, &b.v, b.elem.as_ref(), next(), lang));
     }
     for n in &page.places {
         out.push(match &n.v {
-            PlaceNode::Block(b) => block_view(layout, b, next(), lang),
+            PlaceNode::Block(b) => block_view(layout, b, n.elem.as_ref(), next(), lang),
             PlaceNode::Frame(f) => PlaceView {
                 place: f.place.clone(),
                 seq: next(),
@@ -47,6 +47,10 @@ pub(crate) fn place_views(layout: &Layout, page: &PageDoc, lang: &str) -> Vec<Pl
                 locks: vec![Coded::new("host-notice-frame-not-built").with("frame", &f.frame)],
                 slot_locks: Vec::new(),
                 info: PlaceInfo::default(),
+                elem: n
+                    .elem
+                    .as_ref()
+                    .map_or_else(String::new, |e| e.as_str().to_owned()),
                 embed: None,
             },
             PlaceNode::Frontend(e) => embed_view(
@@ -63,6 +67,10 @@ pub(crate) fn place_views(layout: &Layout, page: &PageDoc, lang: &str) -> Vec<Pl
                 locks: vec![Coded::new("host-notice-frame-not-built").with("frame", "?")],
                 slot_locks: Vec::new(),
                 info: PlaceInfo::default(),
+                elem: n
+                    .elem
+                    .as_ref()
+                    .map_or_else(String::new, |e| e.as_str().to_owned()),
                 embed: None,
             },
         });
@@ -70,8 +78,15 @@ pub(crate) fn place_views(layout: &Layout, page: &PageDoc, lang: &str) -> Vec<Pl
     out
 }
 
-fn block_view(layout: &Layout, b: &fs_forms_layout::BlockDoc, seq: u32, lang: &str) -> PlaceView {
+fn block_view(
+    layout: &Layout,
+    b: &fs_forms_layout::BlockDoc,
+    elem: Option<&fs_forms_layout::ElemId>,
+    seq: u32,
+    lang: &str,
+) -> PlaceView {
     PlaceView {
+        elem: elem.map_or_else(String::new, |e| e.as_str().to_owned()),
         place: b.place.clone(),
         seq,
         block: b.block.clone(),
@@ -93,6 +108,7 @@ fn embed_view(e: &EmbedDoc, elem: Option<&str>, seq: u32) -> PlaceView {
         locks: Vec::new(),
         slot_locks: Vec::new(),
         info: PlaceInfo::default(),
+        elem: elem.unwrap_or_default().to_owned(),
         embed: Some(EmbedView {
             elem: elem.unwrap_or(&e.place).to_owned(),
             key: e.key.clone(),

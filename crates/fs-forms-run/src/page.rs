@@ -99,11 +99,16 @@ impl Page {
                     column.child(self.empty_slot(place, title.as_deref().unwrap_or(&self.empty)))
                 }
                 Part::Block {
-                    place, block, info, ..
+                    place,
+                    elem,
+                    block,
+                    info,
+                    ..
                 } => {
                     match draw::block(
                         block,
                         info,
+                        elem,
                         &self.ctx,
                         inner,
                         (height - 2.0 * PAD).max(draw::MIN_H),
@@ -174,6 +179,7 @@ mod tests {
             place: place.to_owned(),
             block: "board".to_owned(),
             title: None,
+            elem: String::new(),
             info: crate::place_info::PlaceInfo::default(),
         }
     }

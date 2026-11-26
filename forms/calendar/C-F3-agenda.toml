@@ -1,6 +1,6 @@
 # forms description of the calendar frontend "calendar-agenda" (C5 draft 25.11.2026, checked and corrected by C2 25.11.2026, workflow frontend-round step check). IMPORT FORM ONLY (ADR 0096 point 6), Format 4.
 # Source: contract events, type Event (JSCalendar Event, ADR 0085): appointments are the area of the events module, tasks come as a second source later (C-F5, C-F6). The events module serves NO form for time views yet, so every block of
-# this file is placed WITHOUT bindings and the host shows "not built yet" for it. The blocks `calendar-grid`, `calendar-view` have accepts = [] and no forms=; `timeline` has forms=["bars-in-time@^1.0.0"].
+# this file is placed WITHOUT bindings and the host shows "not built yet" for it. The block `calendar-grid` has accepts = [] and no forms= here; `timeline` has forms=["bars-in-time@^1.0.0"].
 # Commands are the contract keys of events (fs-events): event.create, event.update, event.delete. A key that no module serves keeps its control locked ("coming").
 # Menus follow the model (GNOME Calendar 47, dossier kalender/vorbilder/DOSSIER-A): what has no contract command yet is NOT written here (cards in BERICHT-kalender-frontends-check.md).
 # The switch between month, week, agenda and timeline is the frontend switch of the host (as in fs-tasks/forms/README.md, M-004..M-006); the menu "View" lists the view of this description.
@@ -57,7 +57,7 @@ key = "alt+3"
 elem = "menu:9"
 kind = "standard-help"
 
-# C-F3 Agenda: tasks by due date, grouped by day (calendar-view part `agenda`). The component `calendar-view` is planned to be removed (ENTSCHEID-schnitt section d, card 1038: agenda mode into calendar-grid): decision C4.
+# C-F3 Agenda: tasks by due date, grouped by day (calendar-grid with place option `view=agenda`; the component `calendar-view` is gone, its agenda is a mode of calendar-grid). The first day of the week comes from the language, the place option `view.week-start=mon..sun` overrides it.
 # A plain list by due date over rows@1.0.0 would be a frontend of its own (card), not a second place here.
 [[page]]
 elem = "page:agenda"
@@ -68,8 +68,9 @@ navigation = "single"
 [[page.place]]
 elem = "block:agenda/main"
 at = "main"
-block = "calendar-view"
+block = "calendar-grid"
 source = 1
+set = { view = "agenda" }
 
 [[page.place]]
 elem = "block:agenda/empty"

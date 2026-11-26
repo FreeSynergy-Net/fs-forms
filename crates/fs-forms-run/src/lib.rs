@@ -21,6 +21,7 @@ mod blocks;
 mod catalog;
 mod changes;
 mod clock;
+mod clock_port;
 mod compose;
 mod described;
 mod draw;

@@ -4,6 +4,7 @@
 
 use std::sync::Arc;
 
+use fs_components_mf2::{NoDates, date_names};
 use fs_components_styles::StyleId;
 use fs_components_words::Locale;
 
@@ -23,6 +24,7 @@ fn ctx() -> Ctx {
         after_write: AfterWrite::default(),
         feeds: Arc::default(),
         clock: Arc::new(crate::clock::SystemClock),
+        dates: date_names(&NoDates, &Locale::english()),
     }
 }
 
@@ -80,4 +82,22 @@ fn two_places_of_one_block_keep_each_its_mount_over_a_rebuild() {
         "place a was remounted: its state is gone"
     );
     assert_eq!(ctx.mounts.lock().unwrap().len(), 2, "one mount per place");
+}
+
+#[test]
+fn the_clock_of_the_host_arrives_at_the_component() {
+    let moment = "2025-11-25T09:00:00Z".parse().expect("rfc3339");
+    let ctx = Ctx {
+        clock: Arc::new(crate::clock::FixedClock::new(moment)),
+        ..ctx()
+    };
+    let got = draw_ctx(
+        &ctx,
+        "calendar",
+        "",
+        (StyleId::Craft, false),
+        &PlaceInfo::default(),
+    );
+    // 2025-11-25 is day 20417 since 1970-01-01; the system clock would say another day
+    assert_eq!(got.today_days(), 20_417);
 }

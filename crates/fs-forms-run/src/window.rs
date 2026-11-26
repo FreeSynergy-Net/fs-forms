@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use fs_components_app::{AppError, AppWidget};
 use fs_components_kanban::{WORD_KEYS, WORD_TEXTS, word_id};
-use fs_components_mf2::Mf2Texts;
+use fs_components_mf2::{Mf2Texts, NoDates, date_names};
 use fs_components_widgets::states;
 use fs_components_words::{Locale, Localized};
 
@@ -84,6 +84,8 @@ pub(crate) fn ctx_of(
         after_write,
         feeds: Arc::new(view.feeds_now()),
         clock,
+        // no date package is installed in this host yet: the neutral names (ISO forms), the first day of the week from the locale
+        dates: date_names(&NoDates, locale),
     }
 }
 

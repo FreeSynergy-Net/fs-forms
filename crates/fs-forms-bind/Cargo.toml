@@ -14,7 +14,7 @@ rust-version.workspace = true
 # The input types are narrow mirrors of the F1b `Resolved` and the F1 accepts/records values; they are replaced by the real
 # crates when `forms_f1_v1` and `layouts_v1` are set.
 [dependencies]
-fs-components-commands = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "bd170fa086ec231e1eb724596849b66fb6a75320", version = "0.1.0" }
+fs-components-commands = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "f2e90244ff830197e56c127aa5da53ac591a66ea", version = "0.1.0" }
 sha2 = "0.10"
 
 [features]

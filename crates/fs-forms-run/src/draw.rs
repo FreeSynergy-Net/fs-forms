@@ -16,10 +16,11 @@ use fs_components_core::form_read::FormInput;
 use fs_components_core::form_view::{DrawCtx, FormView, Mounted};
 use fs_components_fields::Say;
 use fs_components_styles::StyleId;
-use fs_components_words::Locale;
+use fs_components_words::{DateNames, Locale};
 
 use crate::after_write::AfterWrite;
-use crate::clock::{Clock, Moment};
+use crate::clock::Clock;
+use crate::clock_port::ClockPort;
 use crate::feed::Feed;
 use crate::place_info::PlaceInfo;
 use crate::records::Records;
@@ -66,15 +67,8 @@ pub(crate) struct Ctx {
     pub feeds: Arc<Vec<Feed>>,
     /// What "now" is for this window: the ONLY way a block of the host learns the time (`tests/no_wall_clock.rs`).
     pub clock: Arc<dyn Clock>,
-}
-
-impl Ctx {
-    /// The moment the window takes as now.
-    // Read by the host's own tests only until `fs_components_core::DrawCtx` carries the clock to the components (card in FEATURES-OFFEN).
-    #[cfg_attr(not(test), allow(dead_code))]
-    pub(crate) fn now(&self) -> Moment {
-        self.clock.now()
-    }
+    /// The names of weekdays and months in the language of the reader, made once per window (`fs_components_mf2::date_names`).
+    pub dates: Arc<dyn DateNames>,
 }
 
 /// Whether the reader of this window sees the dark scheme.
@@ -133,12 +127,12 @@ fn draw_ctx(
         ctx.say.clone(),
         ctx.feeds.clone(),
     );
-    DrawCtx {
-        place: info.clone(),
+    DrawCtx::new(
+        info.clone(),
         look,
-        say: Arc::new(move |key: &str| say.say(key)),
-        locale: ctx.locale.clone(),
-        write: Arc::new(WriteGate {
+        Arc::new(move |key: &str| say.say(key)),
+        ctx.locale.clone(),
+        Arc::new(WriteGate {
             records: ctx.records.clone(),
             actions: ctx.actions.clone(),
             form,
@@ -146,8 +140,10 @@ fn draw_ctx(
             place: elem.to_owned(),
             after: ctx.after_write.clone(),
         }),
-        reread: Arc::new(move || input_for(&*records, &block, &feeds)),
-    }
+        Arc::new(move || input_for(&*records, &block, &feeds)),
+    )
+    .with_dates(ctx.dates.clone())
+    .with_clock(Arc::new(ClockPort(ctx.clock.clone())))
 }
 
 /// The component of the placement: the kept one for (block, look, info), else a new one.

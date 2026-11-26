@@ -24,24 +24,24 @@ path = "src/main.rs"
 fs-forms-client = { path = "../fs-forms-client", version = "0.1.0" }
 fs-forms-layout = { path = "../fs-forms-layout", version = "0.1.0" }
 fs-forms-exchange = { path = "../fs-forms-exchange", version = "0.1.0" }
-fs-components = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "bd170fa086ec231e1eb724596849b66fb6a75320", features = ["views"], version = "0.1.0" }
-fs-components-app = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "bd170fa086ec231e1eb724596849b66fb6a75320", features = ["play"], version = "0.1.0" }
-fs-components-widgets = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "bd170fa086ec231e1eb724596849b66fb6a75320", version = "0.1.0" }
-fs-components-mf2 = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "bd170fa086ec231e1eb724596849b66fb6a75320", version = "0.1.0" }
-fs-components-kanban = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "bd170fa086ec231e1eb724596849b66fb6a75320", version = "0.1.0" }
-fs-components-fields = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "bd170fa086ec231e1eb724596849b66fb6a75320", version = "0.1.0" }
-fs-components-styles = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "bd170fa086ec231e1eb724596849b66fb6a75320", version = "0.1.0" }
-fs-components-words = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "bd170fa086ec231e1eb724596849b66fb6a75320", version = "0.1.0" }
+fs-components = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "f2e90244ff830197e56c127aa5da53ac591a66ea", features = ["views"], version = "0.1.0" }
+fs-components-app = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "f2e90244ff830197e56c127aa5da53ac591a66ea", features = ["play"], version = "0.1.0" }
+fs-components-widgets = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "f2e90244ff830197e56c127aa5da53ac591a66ea", version = "0.1.0" }
+fs-components-mf2 = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "f2e90244ff830197e56c127aa5da53ac591a66ea", version = "0.1.0" }
+fs-components-kanban = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "f2e90244ff830197e56c127aa5da53ac591a66ea", version = "0.1.0" }
+fs-components-fields = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "f2e90244ff830197e56c127aa5da53ac591a66ea", version = "0.1.0" }
+fs-components-styles = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "f2e90244ff830197e56c127aa5da53ac591a66ea", version = "0.1.0" }
+fs-components-words = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "f2e90244ff830197e56c127aa5da53ac591a66ea", version = "0.1.0" }
 # What the blocks of the contract are (and what they accept and render): the host asks it, it has no table of its own.
-fs-components-catalog = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "bd170fa086ec231e1eb724596849b66fb6a75320", version = "0.1.0" }
+fs-components-catalog = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "f2e90244ff830197e56c127aa5da53ac591a66ea", version = "0.1.0" }
 # The command `layout.frontend` and the lines of the frontends as data (C0): the menu `View` is made of its rows, no list of our own.
-fs-components-commands = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "bd170fa086ec231e1eb724596849b66fb6a75320", version = "0.1.0" }
-fs-components-core = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "bd170fa086ec231e1eb724596849b66fb6a75320", version = "0.1.0" }
+fs-components-commands = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "f2e90244ff830197e56c127aa5da53ac591a66ea", version = "0.1.0" }
+fs-components-core = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "f2e90244ff830197e56c127aa5da53ac591a66ea", version = "0.1.0" }
 # The people workbench (widget of the block `contact-row`; `fs-components-widgets` does not hold it): one dependency, nothing copied.
-fs-components-workbenches = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "bd170fa086ec231e1eb724596849b66fb6a75320", version = "0.1.0" }
+fs-components-workbenches = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "f2e90244ff830197e56c127aa5da53ac591a66ea", version = "0.1.0" }
 
 # The question the host asks when a place is open with another record (`Notification::ask`, ADR 0106): the one existing facade, no own dialog.
-fs-notification = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "bd170fa086ec231e1eb724596849b66fb6a75320", version = "0.1.0" }
+fs-notification = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "f2e90244ff830197e56c127aa5da53ac591a66ea", version = "0.1.0" }
 
 # The form catalog (`fs_interfaces::forms`, forms.txt) and the one form match (`fs-forms-bind`): the host holds no table of forms.
 fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "92dbb53e9c9ea2c48e85a27712f0456f2a7b8161", version = "0.3.0" }

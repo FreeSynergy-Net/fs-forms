@@ -94,7 +94,7 @@ fn now_of(words_text: &str) -> Moment {
         Arc::new(StyleCell::default()),
         (AfterWrite::default(), opened.clock),
     );
-    ctx.now()
+    ctx.clock.now()
 }
 
 #[test]

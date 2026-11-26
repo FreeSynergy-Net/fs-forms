@@ -1,4 +1,4 @@
-//! The three people descriptions (P-F1 list, P-F2 single, P-F3 editor) read with the exchange reader and checked against the REAL block
+//! The four people descriptions (P-F1 table, P-F2 single, P-F3 cards, P-F4 contacts) read with the exchange reader and checked against the REAL block
 //! catalog of this build (places, takes, counts): exit 0 of the check, no problem list.
 //!
 //! Pattern: none (tests).
@@ -25,8 +25,8 @@ fn files() -> Vec<String> {
 }
 
 #[test]
-fn there_are_three_people_descriptions() {
-    assert_eq!(files().len(), 3, "{:?}", files());
+fn there_are_four_people_descriptions() {
+    assert_eq!(files().len(), 4, "{:?}", files());
 }
 
 #[test]

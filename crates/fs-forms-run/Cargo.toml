@@ -44,11 +44,11 @@ fs-components-workbenches = { git = "https://github.com/FreeSynergy-Net/fs-compo
 fs-notification = { git = "https://github.com/FreeSynergy-Net/fs-components", rev = "bd170fa086ec231e1eb724596849b66fb6a75320", version = "0.1.0" }
 
 # The form catalog (`fs_interfaces::forms`, forms.txt) and the one form match (`fs-forms-bind`): the host holds no table of forms.
-fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "2354f440985bf4c82d0a725928f8576032a595c6", version = "0.3.0" }
+fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "92dbb53e9c9ea2c48e85a27712f0456f2a7b8161", version = "0.3.0" }
 # `InterfaceVersion` (V-1, fs-types rev 722d3ce0 = v0.0.7, the same rev as fs-components): the one reader of "name@x.y.z"; the block catalog answers `draws(&InterfaceVersion)`.
 fs-types = { git = "https://github.com/FreeSynergy-Net/fs-types", rev = "722d3ce0156711d40cb278f2e835e865d9448290", version = "0.0.7" }
 fs-forms-bind = { path = "../fs-forms-bind", version = "0.1.0" }
-fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "6e80162ace04e3b3eed849b1004c175b73460ce2", version = "0.1.4" }
+fs-rpc = { git = "https://github.com/FreeSynergy-Net/fs-rpc", rev = "c0cbf7adfbe315c4452bc6a6e916a317fd24f454", version = "0.1.4" }
 # `UndoState` (the depth of the undo of one actor) for `Records::history`: one type, no copy. The rev is the one of S3-3 (v0.0.11); only the type is used.
 fs-objects = { git = "https://github.com/FreeSynergy-Net/fs-objects", rev = "e38093f1ec61b7c9faaa6f6046f65addb11dcf46", version = "0.0.11" }
 tokio = { version = "1", features = ["rt", "sync", "net", "time"] }
@@ -66,4 +66,4 @@ proptest = "1"
 # testdata depends on bind and layout only.
 fs-forms-testdata = { path = "../fs-forms-testdata", version = "0.1.0" }
 # The test data of the board tests (`tests/sample_source`): `SampleModule` answers in process; its rights come from the `fake` owner.
-fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "2354f440985bf4c82d0a725928f8576032a595c6", version = "0.3.0", features = ["fake"] }
+fs-interfaces = { git = "https://github.com/FreeSynergy-Net/fs-interfaces", rev = "92dbb53e9c9ea2c48e85a27712f0456f2a7b8161", version = "0.3.0", features = ["fake"] }

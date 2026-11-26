@@ -1,6 +1,6 @@
 # forms description of the calendar frontend "calendar-week" (C5 draft 25.11.2026, checked and corrected by C2 25.11.2026, workflow frontend-round step check). IMPORT FORM ONLY (ADR 0096 point 6), Format 4.
-# Source: contract events, type Event (JSCalendar Event, ADR 0085): appointments are the area of the events module, tasks come as a second source later (C-F5, C-F6). The events module serves NO form for time views yet, so every block of
-# this file is placed WITHOUT bindings and the host shows "not built yet" for it. The block `calendar-grid` has slots and the form `bars-in-time@^1.1.0` in the contract, but this description does not bind them yet (the binding comes with the job "calendar frontends"); `timeline` has forms=["bars-in-time@^1.0.0"].
+# Source: contract events, type Event (JSCalendar Event, ADR 0085): appointments are the area of the events module, tasks come as a second source later (C-F5, C-F6).
+# The block `calendar-grid` binds the form `bars-in-time@^1.1.0` itself (contract `forms=`, slots `items`/`start`/`end`/`label`/`all-day`/`lane`/`color`): the place `source = 1` is all this file says, the rows come as records of the events provider (the host has no binding to write, as with `task-row`). The events module serves no form for it yet, so the data of the picture are the fixed events of `[sample]`.
 # Commands are the contract keys of events (fs-events): event.create, event.update, event.delete. A key that no module serves keeps its control locked ("coming").
 # Menus follow the model (GNOME Calendar 47, dossier kalender/vorbilder/DOSSIER-A): what has no contract command yet is NOT written here (cards in BERICHT-kalender-frontends-check.md).
 # The switch between month, week, agenda and timeline is the frontend switch of the host (as in fs-tasks/forms/README.md, M-004..M-006); the menu "View" lists the view of this description.
@@ -157,9 +157,9 @@ text = "Week"
 
 
 
-# Sample data for pictures and development (--sample-data), never real entries and never written out: the fixed events of the sample of the contract events (fixed source `events.sample`), for the week of the picture (2026-W47, 16 to 22 November). No count, no seed: the data are the same on every run.
+# Sample data for pictures and development (--sample-data), never real entries and never written out: the fixed events of the sample of the contract events (fixed source `events.sample`), for the month of the picture (2026-11), so every week of the month has its events and the week view follows the clock of the data (`--sample-now`). No count, no seed: the data are the same on every run.
 [sample]
-anchor = { week = "2026-W47", zone = "Europe/Berlin" }
+anchor = { month = "2026-11", zone = "Europe/Berlin" }
 
 [[sample.set]]
 source = 1

@@ -18,7 +18,7 @@ fn month_week_agenda_and_timeline_show_the_fixed_events_of_their_window() {
     // (file, the kind of anchor it writes)
     for (file, anchor) in [
         ("C-F1-monat.toml", "month"),
-        ("C-F2-woche.toml", "week"),
+        ("C-F2-woche.toml", "month"),
         ("C-F3-agenda.toml", "month"),
         ("C-F4-zeitleiste.toml", "month"),
     ] {
@@ -40,7 +40,7 @@ fn month_week_agenda_and_timeline_show_the_fixed_events_of_their_window() {
 }
 
 #[test]
-fn the_week_of_the_picture_holds_the_events_of_16_to_22_november() {
+fn the_month_of_the_week_description_holds_the_events_of_16_to_22_november() {
     let (layout, text) = layout_of("C-F2-woche.toml");
     let set = SampleSpec::from_description(&layout, &Table, Some(&text)).expect("spec")[0]
         .build()

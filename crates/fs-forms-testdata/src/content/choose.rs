@@ -8,12 +8,12 @@ use fs_interfaces::forms::Art;
 use super::types::Content;
 use super::{as2, jscalendar, jscontact};
 
-/// The content of an AS2 type: JSCalendar for `Event`, JSContact for `Person`, plain AS2 for the rest.
+/// The content of an AS2 type: JSCalendar for `Event`, JSContact for `Person` and `Profile`, plain AS2 for the rest.
 #[must_use]
 pub fn for_type(data_type: &str) -> Box<dyn Content> {
     match data_type {
         "Event" => Box::new(jscalendar::JsEvent),
-        "Person" => Box::new(jscontact::JsContact),
+        "Person" | "Profile" => Box::new(jscontact::JsContact),
         _ => Box::new(as2::Plain),
     }
 }

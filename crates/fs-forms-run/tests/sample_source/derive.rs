@@ -15,7 +15,7 @@ use fs_forms_run::{
 };
 use fs_forms_testdata::SampleSpec;
 
-use super::{columns, records_of};
+use super::{columns, records_scoped};
 
 /// The sources of the picture tests: nothing real is connected, the sample is derived from the description.
 #[derive(Clone, Copy, Debug, Default)]
@@ -32,7 +32,7 @@ impl Sources for Derived {
 
     fn connect_sample(
         &self,
-        _: &[Want],
+        wants: &[Want],
         described: &Described<'_>,
         _: Option<&Path>,
         _: &Path,
@@ -44,7 +44,10 @@ impl Sources for Derived {
             SampleSpec::from_description(layout, &CatalogBlockForms, described.sample())
                 .map_err(|e| failed("sample-spec", e))?;
         match (specs.pop(), specs.is_empty()) {
-            (Some(one), true) => Ok(Arc::new(WithSide::of(records_of(one)))),
+            (Some(one), true) => {
+                let scope = wants.first().map_or("", |w| w.scope.as_str());
+                Ok(Arc::new(WithSide::of(records_scoped(one, scope))))
+            }
             (None, _) => Err(Coded::new("sample-no-source")),
             (Some(_), false) => Err(Coded::new("sample-many-sources")),
         }

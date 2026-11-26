@@ -45,20 +45,21 @@ fn with_the_description_the_head_is_the_word_of_the_field() {
     assert!(data.type_description.is_some(), "the fixture hands it over");
     let fields = columns(&data);
     assert!(fields.len() > 1);
-    // the fields the module describes have its word id; `address` and `surname` are test data only (the module has none of them)
-    let (named, plain): (Vec<_>, Vec<_>) = fields.iter().partition(|f| !f.label.is_empty());
-    assert!(named.len() >= 2 && !plain.is_empty());
-    for f in &named {
+    // the fixture has the fields of the module (names of its type catalog): every one has its word id
+    assert!(
+        fields.iter().all(|f| !f.label.is_empty()),
+        "a field without a word id: {fields:?}"
+    );
+    for f in &fields {
         assert_eq!(f.label, format!("person.{}", f.name), "{}", f.name);
         assert_ne!(f.shown(&said("en")), f.name, "a word, not the field name");
     }
-    for f in &plain {
-        assert_eq!(f.shown(&said("en")), f.name, "no word id: the field name");
-    }
     let heads_en: Vec<String> = fields.iter().map(|f| f.shown(&said("en"))).collect();
     let heads_de: Vec<String> = fields.iter().map(|f| f.shown(&said("de"))).collect();
-    assert_eq!(heads_en[0], "Email addresses");
-    assert_eq!(heads_de[0], "E-Mail-Adressen");
+    assert_eq!(heads_en[0], "Organizations");
+    assert!(heads_en.contains(&"Email addresses".to_owned()));
+    assert!(heads_de.contains(&"E-Mail-Adressen".to_owned()));
+    assert!(heads_en.contains(&"Nicknames".to_owned()));
     assert!(heads_en.contains(&"Titles and roles".to_owned()));
     assert!(heads_de.contains(&"Organisationen".to_owned()));
 }
@@ -82,7 +83,7 @@ fn a_field_the_description_does_not_name_keeps_its_name() {
     let titles = fields.iter().find(|f| f.name == "titles").expect("titles");
     assert_eq!(titles.label, "");
     assert_eq!(titles.shown(&said("en")), "titles");
-    assert_eq!(person_type().fields.len(), 4, "the fixture is untouched");
+    assert_eq!(person_type().fields.len(), 6, "the fixture is untouched");
 }
 
 /// The words of the module reach the host through the hub (`Shared` cache and `Grip`): a decorator that forgets to hand them on

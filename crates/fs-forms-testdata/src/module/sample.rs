@@ -18,7 +18,7 @@ use super::declared;
 use super::rules::SampleRules;
 use super::store::{Entry, Store};
 use crate::error::{Failure, SampleCode};
-use crate::project::{self, Table};
+use crate::project::{self, Rec, Table};
 use crate::set::SampleSet;
 use fs_interfaces::module::SAMPLE_PROVIDER;
 
@@ -101,6 +101,27 @@ fn applied(e: &Entry) -> Applied {
     a
 }
 
+/// The form that shows ONE record: its scope is the id of the record (as the real modules have it, `forms.txt` `single-record`).
+const SINGLE_RECORD: &str = "single-record";
+
+fn form_name(key: &str) -> Option<&str> {
+    parse_key(key).map(|(name, _)| name)
+}
+
+/// The id without the `urn:uuid:` of an IRI: a module takes both `urn:uuid:<uuid>` and the bare UUID as the scope.
+fn bare(id: &str) -> &str {
+    id.strip_prefix("urn:uuid:").unwrap_or(id)
+}
+
+/// The record a `single-record` scope names; no scope, `all` or an id nobody has is a refusal `404` (never "all records").
+fn one_record<'a>(alive: Vec<&'a Rec>, scope: &str) -> Result<Vec<&'a Rec>, Refusal> {
+    alive
+        .into_iter()
+        .find(|r| !scope.is_empty() && bare(&r.id) == bare(scope))
+        .map(|r| vec![r])
+        .ok_or_else(|| refuse("unknown-scope", 404, SampleCode::RecordUnknown))
+}
+
 fn cursor(text: &str, len: usize) -> Result<usize, Refusal> {
     if text.is_empty() {
         return Ok(0);
@@ -135,7 +156,10 @@ impl ModuleCore for SampleModule {
         let store = self.store.borrow();
         let table = &store.tables[Self::table_of(&store.tables, &q.form)?];
         let (on_record, on_set) = declared::offered(&table.form);
-        let alive: Vec<_> = table.recs.iter().filter(|r| r.alive).collect();
+        let mut alive: Vec<_> = table.recs.iter().filter(|r| r.alive).collect();
+        if form_name(&q.form) == Some(SINGLE_RECORD) {
+            alive = one_record(alive, &q.scope)?;
+        }
         let from = cursor(&q.cursor, alive.len())?;
         let end = from.saturating_add(window(q.limit)).min(alive.len());
         let mut page = Page::default();

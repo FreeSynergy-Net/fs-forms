@@ -30,7 +30,7 @@ fn every_description_asks_for_the_fixed_people_and_shows_them() {
             Some("person-directory.sample"),
             "{file}"
         );
-        assert_eq!(wish.data_type, "Person", "{file}");
+        assert_eq!(wish.data_type, "Profile", "{file}");
         let set = got[0].build().unwrap_or_else(|e| panic!("{file}: {e:?}"));
         let rows = set.rows(form).unwrap_or_else(|e| panic!("{file}: {e:?}"));
         assert!(

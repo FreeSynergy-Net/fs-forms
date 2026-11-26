@@ -1,4 +1,4 @@
-//! `person-directory.sample`: the fixed sample of the contract `person_directory_v1` (`fs_person_directory::sample()`) as `Person` records.
+//! `person-directory.sample`: the fixed sample of the contract `person_directory_v1` (`fs_person_directory::sample()`) as `Profile` records (the type of the module `person`).
 //!
 //! Pattern: Object Mother behind a Registry (the Adapter holds no data: it asks the directory `sample()` who is a person, and takes the
 //! contact fields from `sample_card`/`sample_address`, so a person with two e-mails and two phones is ONE record, as the rule "one person"
@@ -82,7 +82,7 @@ fn names() -> Names {
 }
 
 fn objects(form: &Form, window: Span) -> Result<Vec<StoredObject>, Failure> {
-    let content = content::for_type("Person");
+    let content = content::for_type("Profile");
     let key = form.key();
     let mut out = Vec::new();
     for (i, (n, view)) in people()?.iter().enumerate() {
@@ -99,7 +99,7 @@ fn objects(form: &Form, window: Span) -> Result<Vec<StoredObject>, Failure> {
         out.push(wrapped(
             (id, content.content_type()),
             parts,
-            ("Person", window),
+            ("Profile", window),
             (&uid, None),
         ));
     }
@@ -113,7 +113,7 @@ impl FixedSource for PersonDirectorySample {
 
     #[allow(clippy::unnecessary_literal_bound)] // the port says `&str`: another source may build its type at run time
     fn data_type(&self) -> &str {
-        "Person"
+        "Profile"
     }
 
     fn now(&self, _zone: &Zone) -> Result<Option<Moment>, Failure> {
@@ -126,7 +126,8 @@ impl FixedSource for PersonDirectorySample {
             label: label_of(form).map(|c| c.name.clone()),
             order: None,
         };
-        let declared: ModuleForm = module_form(form, &*content::for_type("Person"), &ctx, "Person");
+        let declared: ModuleForm =
+            module_form(form, &*content::for_type("Profile"), &ctx, "Profile");
         Ok(FixedSlice {
             objects: objects(form, *window)?,
             declared,

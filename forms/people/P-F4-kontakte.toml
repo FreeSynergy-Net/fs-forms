@@ -2,12 +2,11 @@
 # forms description of the people frontend "people-contacts" (contacts workbench). IMPORT FORM ONLY (ADR 0096 point 6), Format 4.
 # Draft of C5 25.11.2026 (Merkuro Contact as the model), corrected and built by C2 26.11.2026 (workflow frontend-round, step build) after the check
 # against the real block catalog (fs-forms-run tests/people_descriptions.rs): no block on a place that does not take it, one child in `main`.
-# Source: the directory of persons (capability `people.persons`, contract `person_directory_v1`), type Person. ONE person = ONE record (the real account;
-# a written-down contact is only a profile of it): the sample `person-directory.sample` (fixed source of fs-forms-testdata, AS2 object with a
-# JSContact RFC 9553 card as content) gives people with several e-mails and phones and a postal address, with their display names, never an identifier.
-# No module serves these forms yet (forms.txt: `planned`); the fixture is the provider (`fake`). Commands: none is written here, because no service
-# serves `person.*` (capabilities.txt has only the keys of the topics); what the model can do (new, delete, export) comes as cards, never as an invented command.
-# Birthday and photo as a field are missing in the directory excerpt (`ExcerptField`): not invented, card to C3 in BERICHT-people-frontends.md.
+# Source: the module `person` (the one that is installed; contract `person@>=0.0.1, <0.1.0`), type `Profile` (RFC 9553 card). ONE person = ONE record (the real
+# account; a written-down contact is only a profile of it). The module offers rows@1.0.0 and tiles@1.1.0 with the scope `all` and single-record@1.2.0 ONLY with the
+# id of one profile as the scope (`urn:uuid:<uuid>` or the bare UUID), never `all`: one record is one view. The sample `person-directory.sample` (fixed source of
+# fs-forms-testdata, the fixed people of the module) gives the same fields as the module (`name`, `emails`, `phones`, `addresses`, `organizations`, `titles`,
+# `nicknames`; names as in catalog/types.bin). No command is written here: the module offers none for these forms; what the model can do comes as cards.
 # The four people frontends show DIFFERENT data of the same module: P-F1 rows@1.0.0 (table: name + the short fields), P-F2 single-record@1.2.0 (all contact fields of one person), P-F3 tiles@1.1.0 (cards), P-F4 rows@1.0.0 (contacts workbench: the list of faces and names, and the sheet of the chosen person).
 schema = 4
 kind = "frontend"
@@ -19,13 +18,13 @@ style = "default"
 
 [[requires]]
 elem = "requires:1"
-contract = "people.persons@>=0.0.1, <0.1.0"
+contract = "person@>=0.0.1, <0.1.0"
 
 [[source]]
 elem = "source:1"
 n = 1
-contract = "people.persons@>=0.0.1, <0.1.0"
-type = "Person"
+contract = "person@>=0.0.1, <0.1.0"
+type = "Profile"
 scope = "all"
 
 [[menu]]
@@ -73,7 +72,7 @@ anchor = { month = "2026-11", zone = "Europe/Berlin" }
 [[sample.set]]
 source = 1
 form = "rows@^1.0.0"
-type = "Person"
+type = "Profile"
 fixed = "person-directory.sample"
 
 [[message]]

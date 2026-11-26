@@ -13,14 +13,13 @@ use fs_components_widgets::detail_page::form_view::sheet;
 use fs_components_widgets::tile_grid::form_view::tiles;
 use fs_components_words::{Args, Locale, TextId};
 use fs_forms_run::{Blocks, ModuleWords, input_of};
-use fs_forms_testdata::SourceSpec;
-use sample_source::{PersonWords, records_of};
+use sample_source::{PersonWords, records_of_text};
 
 const SINGLE: &str = include_str!("../../../forms/people/P-F2-einzel.toml");
 const CARDS: &str = include_str!("../../../forms/people/P-F3-karten.toml");
 
 fn input(text: &str) -> FormInput {
-    let records = records_of(SourceSpec::from_wish_text(text).expect("the wish reads"));
+    let records = records_of_text(text);
     input_of(records.forms().first().expect("a form of persons"))
 }
 

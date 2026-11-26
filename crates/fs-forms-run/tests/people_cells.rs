@@ -8,7 +8,7 @@
 mod sample_source;
 
 use fs_forms_testdata::SourceSpec;
-use sample_source::records_of;
+use sample_source::{records_scoped, scope_of};
 
 /// The shipped people descriptions.
 const FILES: [&str; 4] = [
@@ -26,7 +26,7 @@ fn every_cell_holds_the_values_of_its_own_field() {
     for text in FILES {
         let spec = SourceSpec::from_wish_text(text).expect("the wish reads");
         let set = spec.clone().build().expect("the wish builds");
-        let records = records_of(spec);
+        let records = records_scoped(spec, &scope_of(text));
         let forms = records.forms();
         let form = forms.first().expect("a form of persons");
         let key = format!(
@@ -68,7 +68,7 @@ fn every_cell_holds_the_values_of_its_own_field() {
 #[test]
 fn amara_with_two_mails_and_an_empty_field_shifts_nothing() {
     let spec = SourceSpec::from_wish_text(FILES[1]).expect("the wish reads");
-    let records = records_of(spec);
+    let records = records_scoped(spec, &scope_of(FILES[1]));
     let forms = records.forms();
     let form = &forms[0];
     let amara = form

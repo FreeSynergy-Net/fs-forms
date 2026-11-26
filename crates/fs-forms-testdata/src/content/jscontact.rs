@@ -23,15 +23,42 @@ pub struct JsContact;
 /// The names of the fields (the module's own paths: the form maps its channels onto them).
 const NAME: &str = "name";
 const PHOTO: &str = "photo";
-/// The fields that carry values: path, JSContact member, basic type.
-const FIELDS: [(&str, Basic); 6] = [
-    ("emails", Basic::Email),
-    ("phones", Basic::Text),
-    ("address", Basic::Text),
-    ("surname", Basic::Text),
+/// The fields that carry values, by their name in the type of the module `person` (`FieldDescription.name`, lowerCamelCase).
+const NICKNAMES: &str = "nicknames";
+/// The channel fields of the forms the module serves (`catalog/forms.json` of fs-modules-person: `rows` columns, `tiles` facts, and
+/// the fields of `single-record` that the sample has values for), in the order of the module. A form the module does not serve gets
+/// `OTHER`. Departure: a copy of the map of the module (the testdata crate must not depend on it), the test `channels_are_the_fields_of_the_module` pins the
+/// names to the type catalog of the module as the starter reads it.
+const ROWS: [(&str, Basic); 5] = [
     ("organizations", Basic::Text),
     ("titles", Basic::Text),
+    ("emails", Basic::Email),
+    ("phones", Basic::Text),
+    (NICKNAMES, Basic::Text),
 ];
+const TILES: [(&str, Basic); 4] = [
+    ("organizations", Basic::Text),
+    ("titles", Basic::Text),
+    ("emails", Basic::Email),
+    ("phones", Basic::Text),
+];
+const OTHER: [(&str, Basic); 6] = [
+    (NICKNAMES, Basic::Text),
+    ("organizations", Basic::Text),
+    ("titles", Basic::Text),
+    ("emails", Basic::Email),
+    ("phones", Basic::Text),
+    ("addresses", Basic::Text),
+];
+
+/// The fields a form of the module fills in its many-field channel.
+fn fields_of(form: &str) -> &'static [(&'static str, Basic)] {
+    match form {
+        "rows" => &ROWS,
+        "tiles" => &TILES,
+        _ => &OTHER,
+    }
+}
 
 /// The items of a map member (`emails`: id -> `{address}`) as text, in the order of their ids; `key` names the text inside an item.
 fn items(card: &Json, member: &str, key: &str) -> Vec<String> {
@@ -43,15 +70,6 @@ fn items(card: &Json, member: &str, key: &str) -> Vec<String> {
                 .collect()
         })
         .unwrap_or_default()
-}
-
-/// The `value` of the component of `kind` in a name (`surname`).
-fn component(card: &Json, kind: &str) -> Option<String> {
-    card.pointer("/name/components")?
-        .as_array()?
-        .iter()
-        .find(|c| c.get("kind").and_then(Json::as_str) == Some(kind))
-        .and_then(|c| c.get("value")?.as_str().map(str::to_owned))
 }
 
 /// The photo of a card: the `uri` of its first medium of kind `photo`.
@@ -98,10 +116,10 @@ impl Content for JsContact {
         };
         add(NAME, items_of(json.get("name"), "full"));
         add(PHOTO, photo(json).into_iter().collect());
-        add("surname", component(json, "surname").into_iter().collect());
         add("emails", items(json, "emails", "address"));
         add("phones", items(json, "phones", "number"));
-        add("address", items(json, "addresses", "full"));
+        add("addresses", items(json, "addresses", "full"));
+        add(NICKNAMES, items(json, "nicknames", "name"));
         add("organizations", items(json, "organizations", "name"));
         add("titles", items(json, "titles", "name"));
         if let Some(object) = json.as_object() {
@@ -130,20 +148,20 @@ impl Content for JsContact {
                 map.push((name.to_owned(), vec![PHOTO.to_owned()]));
                 fields.push((PHOTO.to_owned(), Basic::Image));
             } else if channel.count.max.is_none_or(|m| m > 1) && channel.arts.contains(&Art::Text) {
-                // As many fields as the channel takes (`facts` 0..4, `fields` 0..n), in the order of FIELDS.
+                // As many fields as the channel takes (`facts` 0..4, `fields` 0..n), in the order of the module.
+                let all = fields_of(&form.name);
                 let take = channel
                     .count
                     .max
-                    .map_or(FIELDS.len(), |m| FIELDS.len().min(m as usize));
+                    .map_or(all.len(), |m| all.len().min(m as usize));
                 map.push((
                     name.to_owned(),
-                    FIELDS
-                        .iter()
+                    all.iter()
                         .take(take)
                         .map(|(p, _)| (*p).to_owned())
                         .collect(),
                 ));
-                for (path, basic) in FIELDS.into_iter().take(take) {
+                for (path, basic) in all.iter().copied().take(take) {
                     if !fields.iter().any(|(p, _)| p == path) {
                         fields.push((path.to_owned(), basic));
                     }

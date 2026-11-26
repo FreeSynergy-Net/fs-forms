@@ -16,8 +16,11 @@ pub use derive::Derived;
 #[allow(unused_imports)] // each test file uses a part
 pub use person_types::{PersonWords, person_type};
 mod groups;
+mod scope;
 #[allow(unused_imports)] // each test file uses a part
 pub use groups::{groups, rows_of};
+#[allow(unused_imports)] // each test file uses a part
+pub use scope::{records_of_text, scope_of};
 
 use std::sync::mpsc::{Receiver, Sender, channel};
 use std::sync::{Arc, Mutex, PoisonError};
@@ -133,7 +136,7 @@ fn data_of(page: &Page, declared: &fs_forms_bind::ModuleForm) -> FormData {
     }
 }
 
-fn serve(source: &SourceSpec, rx: Receiver<Ask>) {
+fn serve(source: &SourceSpec, scope: &str, rx: Receiver<Ask>) {
     let set = source.build().expect("the wish builds");
     let module = SampleModule::new(&set).expect("the module");
     let rt = tokio::runtime::Builder::new_current_thread()
@@ -147,6 +150,7 @@ fn serve(source: &SourceSpec, rx: Receiver<Ask>) {
             .map(|(slice, declared)| {
                 let mut q = PageQuery::default();
                 q.form.clone_from(&slice.form);
+                scope.clone_into(&mut q.scope);
                 q.limit = 500;
                 let page = rt.block_on(module.page(&cx, q)).expect("page");
                 data_of(&page, declared)
@@ -173,12 +177,20 @@ fn serve(source: &SourceSpec, rx: Receiver<Ask>) {
 /// else), every form of the source read the way a connected module is.
 #[must_use]
 pub fn records_of(source: SourceSpec) -> Arc<dyn Records> {
+    records_scoped(source, "")
+}
+
+/// The same with the scope of the source the description gives (`[[source]] scope`; the host word `all` is no scope for the module):
+/// a form that shows one record (`single-record`) is refused without the id of the record, as the real modules do.
+#[must_use]
+pub fn records_scoped(source: SourceSpec, scope: &str) -> Arc<dyn Records> {
+    let scope = scope.to_owned();
     let (tx, rx) = channel();
-    std::thread::spawn(move || serve(&source, rx));
+    std::thread::spawn(move || serve(&source, &scope, rx));
     let writer = Arc::new(ModuleWriter(Mutex::new(tx)));
     let mut forms = writer.ask(Ask::Read);
     // what the starter hands over from the catalog of the module `person` (`types.bin`, `texts/`)
-    for form in forms.iter_mut().filter(|f| f.data_type == "Person") {
+    for form in forms.iter_mut().filter(|f| f.data_type == "Profile") {
         form.type_description = Some(person_type());
     }
     Arc::new(FormRecords {

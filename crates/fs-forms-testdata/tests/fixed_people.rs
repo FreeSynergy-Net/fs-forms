@@ -20,7 +20,7 @@ const SINGLE: &str = "single-record@1.2.0";
 const TILES: &str = "tiles@1.1.0";
 
 fn wish(form: &str) -> SetWish {
-    SetWish::new(form, "Person", 0).fixed(SOURCE)
+    SetWish::new(form, "Profile", 0).fixed(SOURCE)
 }
 
 fn spec(sets: Vec<SetWish>) -> SampleSpec {
@@ -137,8 +137,7 @@ fn one_person_with_two_mails_and_two_phones_is_one_record() {
         .expect("Amara");
     assert_eq!(values(amara, "emails").len(), mails);
     assert_eq!(values(amara, "phones").len(), phones);
-    assert_eq!(values(amara, "address"), ["Musterweg 12\n10115 Berlin"]);
-    assert_eq!(values(amara, "surname"), ["Zolenko"]);
+    assert_eq!(values(amara, "addresses"), ["Musterweg 12\n10115 Berlin"]);
     let first_mail = card.iter().find_map(|v| match v {
         ExcerptValue::Email(e) => Some(e.canonical()),
         _ => None,
@@ -174,14 +173,7 @@ fn the_list_has_the_short_fields_and_the_tile_its_facts() {
         .expect("columns");
     assert_eq!(
         columns,
-        [
-            "emails",
-            "phones",
-            "address",
-            "surname",
-            "organizations",
-            "titles"
-        ]
+        ["organizations", "titles", "emails", "phones", "nicknames"]
     );
     let facts = declared(TILES)
         .map

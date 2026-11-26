@@ -989,7 +989,7 @@ checksum = "fe6d2e5af09e8c8ad56c969f2157a3d4238cebc7c55f0a517728c38f7b200f81"
 dependencies = [
  "serde",
  "termcolor",
- "unicode-width 0.1.14",
+ "unicode-width 0.2.3",
 ]
 
 [[package]]
@@ -2206,7 +2206,7 @@ dependencies = [
 [[package]]
 name = "fs-rpc"
 version = "0.1.4"
-source = "git+https://github.com/FreeSynergy-Net/fs-rpc?rev=dba7125f4c8baa51d55786bbbff150b9052c35a1#dba7125f4c8baa51d55786bbbff150b9052c35a1"
+source = "git+https://github.com/FreeSynergy-Net/fs-rpc?rev=e0471c7c1ff66da09fd48a236813db1a9769a81d#e0471c7c1ff66da09fd48a236813db1a9769a81d"
 dependencies = [
  "capnp",
  "capnp-rpc",
@@ -2245,7 +2245,7 @@ dependencies = [
 [[package]]
 name = "fs-trusted-path"
 version = "0.1.4"
-source = "git+https://github.com/FreeSynergy-Net/fs-rpc?rev=dba7125f4c8baa51d55786bbbff150b9052c35a1#dba7125f4c8baa51d55786bbbff150b9052c35a1"
+source = "git+https://github.com/FreeSynergy-Net/fs-rpc?rev=e0471c7c1ff66da09fd48a236813db1a9769a81d#e0471c7c1ff66da09fd48a236813db1a9769a81d"
 dependencies = [
  "windows-sys 0.61.2",
 ]

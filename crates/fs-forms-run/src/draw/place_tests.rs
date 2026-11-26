@@ -59,3 +59,25 @@ fn two_placements_with_other_view_are_two_mounts() {
     assert_eq!(slots.len(), 2, "one mount per (block, look, info)");
     assert_ne!(slots[0].info, slots[1].info);
 }
+
+#[test]
+fn two_places_of_one_block_keep_each_its_mount_over_a_rebuild() {
+    let name = crate::blocks::forms_of_blocks()
+        .into_iter()
+        .map(|(n, _)| n)
+        .find(|n| has(n))
+        .expect("a block with a view");
+    let ctx = ctx();
+    let same = from_set([("view", "week")]);
+    let first = mount(&ctx, &name, "block:p/a", &same).expect("a");
+    assert!(mount(&ctx, &name, "block:p/b", &same).is_some());
+    let again = mount(&ctx, &name, "block:p/a", &same).expect("a again");
+    assert!(
+        std::ptr::eq(
+            Arc::as_ptr(&first).cast::<()>(),
+            Arc::as_ptr(&again).cast::<()>()
+        ),
+        "place a was remounted: its state is gone"
+    );
+    assert_eq!(ctx.mounts.lock().unwrap().len(), 2, "one mount per place");
+}

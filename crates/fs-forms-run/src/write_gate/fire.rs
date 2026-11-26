@@ -10,6 +10,10 @@
 //! command (the description gives an action no other name). Every action of the place with that name runs; without an entry the one
 //! action of the place and trigger is taken, several are `gesture-ambiguous`.
 //!
+//! Several actions of one name run one after the other; if the module refuses a later one, the earlier ones are NOT taken back (the
+//! contract of `FormWrite::fire` has no rollback). An action with `confirm` is refused `confirm-unsupported` (like `open-unsupported`)
+//! until the confirmation dialog (G8) exists; the refusal comes before any call, also in `may_fire`.
+//!
 //! Pattern: Command (the action is the command object, the gate the invoker); the choice of way is a Strategy over the slot's `args`.
 
 use fs_components_core::form_write::{Gesture, WriteArg, WriteDone, WriteRefused, trigger};
@@ -53,6 +57,11 @@ impl WriteGate {
         // an action `open` is carried out by the owner of the windows, not by the records: refused with its own code, never silent
         if action.open.is_some() {
             return Err(WriteRefused::new("open-unsupported"));
+        }
+        // an action that asks first needs the confirmation dialog (G8): until it exists it is refused with its own code, never carried out
+        // without the question
+        if action.confirm {
+            return Err(WriteRefused::new("confirm-unsupported"));
         }
         let args = crate::blocks::Blocks::rules()
             .command_args(&self.block, trigger)

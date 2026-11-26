@@ -31,6 +31,7 @@ fn action(trigger: &str, command: &str) -> ActionView {
         at: Some(PLACE.into()),
         command: command.into(),
         open: None,
+        confirm: false,
     }
 }
 

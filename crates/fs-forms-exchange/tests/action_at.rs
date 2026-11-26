@@ -1,5 +1,7 @@
 //! The place of an action (`at`): read from the file, written back and kept in the round trip; an `at` that is no element id is an
 //! error of the file, never dropped.
+//!
+//! Pattern: none (tests).
 
 use std::path::Path;
 

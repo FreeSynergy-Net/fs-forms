@@ -90,6 +90,7 @@ fn gate(records: Arc<dyn Records>, after: AfterWrite) -> WriteGate {
             at: Some("block:board/main".into()),
             command: "card.move".into(),
             open: None,
+            confirm: false,
         }]),
         form: "cards-in-columns".into(),
         block: "board".into(),

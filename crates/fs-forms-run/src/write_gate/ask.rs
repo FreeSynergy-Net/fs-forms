@@ -48,6 +48,7 @@ fn invoke_answers_with_ask_and_the_question_of_the_records_is_refused_with_its_o
             at: Some("block:board/main".into()),
             command: "card.move".into(),
             open: None,
+            confirm: false,
         }]),
         form: "cards-in-columns".into(),
         block: "board".into(),

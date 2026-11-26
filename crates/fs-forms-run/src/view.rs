@@ -130,6 +130,9 @@ pub struct ActionView {
     pub command: String,
     /// For the action `open`: the element id of the frontend node it opens; `None` for a command.
     pub open: Option<String>,
+    /// The action asks the reader first (`confirm` of the description is `confirm` or `choice`). The gate has no dialog yet (G8), so a
+    /// gesture on such an action is refused `confirm-unsupported`, never carried out without the question.
+    pub confirm: bool,
 }
 
 impl View {

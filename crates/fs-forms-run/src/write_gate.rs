@@ -124,6 +124,8 @@ impl FormWrite for WriteGate {
 #[cfg(test)]
 mod ask;
 #[cfg(test)]
+mod fire_confirm_tests;
+#[cfg(test)]
 mod fire_tests;
 #[cfg(test)]
 mod tests;

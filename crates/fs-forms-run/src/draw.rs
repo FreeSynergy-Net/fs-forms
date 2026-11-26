@@ -1,4 +1,4 @@
-//! The blockslots.retain(|s| !(s.block == name && s.info == *info && s.elem == elem)); of `fs-components` this host draws as elements of a page, and the data each one is given. Which block has which widget is
+//! The blocks of `fs-components` this host draws as elements of a page, and the data each one is given. Which block has which widget is
 //! the catalog's (`widget` of the contract) and which component draws a widget is `fs_components::views()`; the host only feeds the
 //! view with the form the block names (`forms=` of the contract) and keeps the mounted component over a rebuild, so its state stays.
 //! There is no name of a block here except `sidebar`, the one composition left (it needs `tree@1.1.0`); nothing is painted here and
@@ -165,7 +165,7 @@ fn mount(ctx: &Ctx, name: &str, elem: &str, info: &PlaceInfo) -> Option<Arc<dyn 
     }
     let mounted: Arc<dyn Mounted> =
         Arc::from(view.mount(input, draw_ctx(ctx, name, elem, look, info)));
-    slots.retain(|s| !(s.block == name && s.info == *info));
+    slots.retain(|s| !(s.block == name && s.info == *info && s.elem == elem));
     slots.push(Slot {
         block: name.to_owned(),
         info: info.clone(),

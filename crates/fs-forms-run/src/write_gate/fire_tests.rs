@@ -20,18 +20,19 @@ use crate::write::fixture::{
     records, second,
 };
 
-const PLACE: &str = "block:board/main";
+pub(super) const PLACE: &str = "block:board/main";
 
-fn action(at: Option<&str>, trigger: &str, command: &str) -> ActionView {
+pub(super) fn action(at: Option<&str>, trigger: &str, command: &str) -> ActionView {
     ActionView {
         trigger: trigger.into(),
         at: at.map(str::to_owned),
         command: command.into(),
         open: None,
+        confirm: false,
     }
 }
 
-fn gate(actions: Vec<ActionView>, w: &Arc<FakeWriter>) -> WriteGate {
+pub(super) fn gate(actions: Vec<ActionView>, w: &Arc<FakeWriter>) -> WriteGate {
     let mut d = data();
     // the module also allows to delete the first card (a command the form has no channel for here)
     d.commands.push(REMOVE.to_owned());
@@ -235,7 +236,9 @@ fn the_entry_of_the_menu_is_the_name_of_the_action_and_runs_only_that_one() {
         .expect("the entry is allowed");
     g.fire(Gesture::menu_entry(REMOVE), Some(&first()), &[])
         .expect("fires");
-    assert_eq!(w.calls.lock().unwrap().len(), 1);
+    let calls = w.calls.lock().unwrap();
+    assert_eq!(calls.len(), 1);
+    assert_eq!(calls[0].command, REMOVE, "the entry names which one runs");
 }
 
 #[test]

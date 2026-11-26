@@ -4,7 +4,7 @@
 //!
 //! Pattern: Anti-corruption mirror (the model of the layout in, the narrow view out).
 
-use fs_forms_layout::{ActionTarget, Item, Layout, MenuDoc, MenuKind, Words};
+use fs_forms_layout::{ActionTarget, Confirm, Item, Layout, MenuDoc, MenuKind, Words};
 
 use crate::view::{ActionView, Coded, MenuItem, MenuState, PageView, View};
 
@@ -87,6 +87,7 @@ pub fn view_of(layout: &Layout, lang: &str) -> View {
                 at: a.v.at.as_ref().map(|e| e.as_str().to_owned()),
                 command: command.clone(),
                 open: None,
+                confirm: confirms(a.v.confirm.as_ref()),
             }),
             // `open` is carried out by the window owner (`HostWindows::open_embed`), no command of a module
             ActionTarget::Open { elem } => Some(ActionView {
@@ -94,6 +95,7 @@ pub fn view_of(layout: &Layout, lang: &str) -> View {
                 at: a.v.at.as_ref().map(|e| e.as_str().to_owned()),
                 command: "open".to_owned(),
                 open: Some(elem.as_str().to_owned()),
+                confirm: confirms(a.v.confirm.as_ref()),
             }),
             // a workflow is no command; it is not offered
             ActionTarget::Workflow(_) => None,
@@ -111,4 +113,9 @@ pub fn view_of(layout: &Layout, lang: &str) -> View {
         menu,
         notices,
     }
+}
+
+/// Does the action ask the reader first: `confirm` and `choice` do, `none` and no word do not.
+fn confirms(word: Option<&Confirm>) -> bool {
+    matches!(word, Some(Confirm::Confirm | Confirm::Choice))
 }

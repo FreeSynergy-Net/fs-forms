@@ -97,10 +97,12 @@ pub enum BindFrom {
     Condition,
 }
 /// What triggers an action.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Trigger {
     /// Button.
     Button,
+    /// Activate: a click without a carry, Enter or Space on an entry (slot `activate`).
+    Activate,
     /// Menu.
     Menu,
     /// Key.

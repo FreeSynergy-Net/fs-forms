@@ -175,7 +175,8 @@ pub fn rich(frontend: &str) -> LayoutDoc {
     d.actions = vec![item(
         "action:go",
         ActionDoc {
-            trigger: Trigger::QuickAdd,
+            trigger: Trigger::Button,
+            at: None,
             target: ActionTarget::Workflow(Reference("https://example.org/wf/1".into())),
             confirm: Some(Confirm::Choice),
         },

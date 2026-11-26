@@ -27,7 +27,7 @@ fn ctx() -> Ctx {
 }
 
 fn place_of(info: &PlaceInfo) -> PlaceInfo {
-    draw_ctx(&ctx(), "calendar", (StyleId::Craft, false), info).place
+    draw_ctx(&ctx(), "calendar", "", (StyleId::Craft, false), info).place
 }
 
 #[test]
@@ -52,9 +52,9 @@ fn two_placements_with_other_view_are_two_mounts() {
         .expect("a block with a view");
     let ctx = ctx();
     let (week, month) = (from_set([("view", "week")]), from_set([("view", "month")]));
-    assert!(mount(&ctx, &name, &week).is_some());
-    assert!(mount(&ctx, &name, &month).is_some());
-    assert!(mount(&ctx, &name, &week).is_some());
+    assert!(mount(&ctx, &name, "", &week).is_some());
+    assert!(mount(&ctx, &name, "", &month).is_some());
+    assert!(mount(&ctx, &name, "", &week).is_some());
     let slots = ctx.mounts.lock().unwrap();
     assert_eq!(slots.len(), 2, "one mount per (block, look, info)");
     assert_ne!(slots[0].info, slots[1].info);

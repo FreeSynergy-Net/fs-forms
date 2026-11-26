@@ -224,8 +224,18 @@ fn action(f: &mut Fields<'_>, cx: &mut Ctx<'_>) -> ActionDoc {
             ActionTarget::Workflow(Reference(String::new()))
         }
     };
+    let at = f
+        .str(cx, "at")
+        .and_then(|s| match fs_forms_layout::ElemId::parse(&s) {
+            Ok(e) => Some(e),
+            Err(c) => {
+                cx.errs.push(c.with("line", cx.line_of(&s)));
+                None
+            }
+        });
     ActionDoc {
         trigger,
+        at,
         target,
         confirm: word(f, cx, "confirm"),
     }

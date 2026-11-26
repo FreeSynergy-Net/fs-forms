@@ -153,26 +153,26 @@ nth = 0
 lock = true
 
 [[page.place.bind]]
-elem = "binding:board/main/card-menu/0"
-slot = "card-menu"
+elem = "binding:board/main/menu/0"
+slot = "menu"
 nth = 0
 command = "claim"
 
 [[page.place.bind]]
-elem = "binding:board/main/card-menu/1"
-slot = "card-menu"
+elem = "binding:board/main/menu/1"
+slot = "menu"
 nth = 1
 command = "release"
 
 [[page.place.bind]]
-elem = "binding:board/main/card-menu/2"
-slot = "card-menu"
+elem = "binding:board/main/menu/2"
+slot = "menu"
 nth = 2
 command = "note"
 
 [[page.place.bind]]
-elem = "binding:board/main/card-menu/3"
-slot = "card-menu"
+elem = "binding:board/main/menu/3"
+slot = "menu"
 nth = 3
 command = "delete"
 
@@ -195,8 +195,8 @@ nth = 0
 grouping = "board"
 
 [[page.place.bind]]
-elem = "binding:board/main/move/0"
-slot = "move"
+elem = "binding:board/main/drop/0"
+slot = "drop"
 nth = 0
 command = "move"
 
@@ -231,12 +231,14 @@ text = "tasks-board-empty-text"
 
 [[action]]
 elem = "action:1"
+at = "block:board/main"
 trigger = "quick-add"
 source = 1
 command = "create"
 
 [[action]]
 elem = "action:2"
+at = "block:board/main"
 trigger = "drop"
 source = 1
 command = "move"
@@ -261,6 +263,7 @@ command = "column.limit"
 
 [[action]]
 elem = "action:6"
+at = "block:board/main"
 trigger = "menu"
 source = 1
 command = "delete"

@@ -87,10 +87,13 @@ fn gate(records: Arc<dyn Records>, after: AfterWrite) -> WriteGate {
         records,
         actions: Arc::new(vec![ActionView {
             trigger: "drop".into(),
+            at: Some("block:board/main".into()),
             command: "card.move".into(),
             open: None,
         }]),
         form: "cards-in-columns".into(),
+        block: "board".into(),
+        place: "block:board/main".into(),
         after,
     }
 }

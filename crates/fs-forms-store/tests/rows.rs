@@ -130,7 +130,8 @@ fn layout() -> Layout {
         actions: vec![it(
             "action:1",
             ActionDoc {
-                trigger: Trigger::Button,
+                trigger: Trigger::Drop,
+                at: Some(fs_forms_layout::ElemId::parse("block:main").expect("id")),
                 target: ActionTarget::Command {
                     source: 1,
                     command: "create".into(),

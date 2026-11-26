@@ -1,38 +1,44 @@
-//! The write side of the board for the components: the gestures of a view come as channels of the form (`FormWrite`: `move`, `create`
-//! and the three gestures on a column), this gate decides and carries them out. A gesture is allowed only when the DESCRIPTION has an
-//! `[[action]]` for it (`quick-add` calling `create`, `drop` calling `move`, a `button` calling `column.create`) AND the records can do
-//! it: a channel the module binds to a command goes to the module ([`Records::invoke`], the rights are the module's). Every other
-//! control stays locked and says so.
+//! The write side of the board for the components. A GESTURE of a view (`fire`: `drop`, `menu`, `quick-add`, `activate`, named as the
+//! command slots of the contract) is allowed only when the DESCRIPTION has an `[[action]]` at this place for it, and goes the way
+//! gesture, action, command ([`fire`]): no channel name is known to the host. The channels of the older way (`can`, `send`: `move`,
+//! `create` and the three gestures on a column) are still here until the components say their gestures by `fire` (card G8); they too
+//! need an action AT THIS PLACE and records that bind a command. Every other control stays locked and says so.
 //!
-//! The host knows no layout of a component: what a gesture carries is asked of the component ([`carried_channels`]). It does still
-//! know the channels of the board by name (`move`, `create`, `column.*`) to see which action of the description a gesture needs;
-//! records that bind no command for a channel leave it locked (no second, older way).
+//! The host knows no layout of a component: what a gesture carries is the `args` of the slot in the catalog.
 //!
-//! Pattern: Adapter (`FormWrite` over `Records`), gated by the actions of the description.
+//! Pattern: Adapter (`FormWrite` over `Records`), gated by the actions of the description; one gate per PLACE.
 
 use std::sync::Arc;
 
 use fs_components_core::form_write::{FormWrite, WriteArg, WriteDone, WriteRefused, WriteValue};
-use fs_components_kanban::{Answer, CREATE, MOVE, carried_channels};
+use fs_components_kanban::{CREATE, MOVE, carried_channels};
 
 use crate::after_write::AfterWrite;
 use crate::records::Records;
 use crate::view::ActionView;
 
-/// The gate of one form over the records.
+mod fire;
+
+/// The gate of one place of a form over the records.
 pub(crate) struct WriteGate {
     pub records: Arc<dyn Records>,
     pub actions: Arc<Vec<ActionView>>,
     pub form: String,
+    /// The block of the place (its command slots tell which arguments a gesture carries).
+    pub block: String,
+    /// The element id of the place: an `[[action]]` binds a gesture of THIS place with `at`.
+    pub place: String,
     /// Fired after an accepted write (the menu "Edit" follows the new depth of the history).
     pub after: AfterWrite,
 }
 
 impl WriteGate {
     fn has(&self, trigger: &str, command: &str) -> bool {
-        self.actions
-            .iter()
-            .any(|a| a.trigger == trigger && a.command == command)
+        self.actions.iter().any(|a| {
+            a.at.as_deref() == Some(self.place.as_str())
+                && a.trigger == trigger
+                && a.command == command
+        })
     }
 
     /// The command the module binds to the channel (the key of the contract, `card.move`); none = not bound.
@@ -40,14 +46,18 @@ impl WriteGate {
         self.records.command_of(&self.form, channel)
     }
 
-    /// Whether the description connects the channel to a gesture at all. Records that bind no command are asked by the channel's name.
+    /// Whether the description connects the channel to a gesture of this place at all. Records that bind no command are asked by the
+    /// channel's name.
     fn described(&self, channel: &str) -> bool {
         let key = self.bound(channel);
         let key = key.as_deref().unwrap_or(channel);
         match channel {
             MOVE => self.has("drop", key),
             CREATE => self.has("quick-add", key),
-            _ => self.has("button", channel),
+            _ => self
+                .actions
+                .iter()
+                .any(|a| a.trigger == "button" && a.command == channel),
         }
     }
 }
@@ -92,22 +102,26 @@ impl FormWrite for WriteGate {
                 values.push((name, String::new()));
             }
         }
-        let answer = self.records.invoke(&self.form, channel, record, &values);
-        match answer {
-            Answer::Accepted => {
-                self.after.fire();
-                Ok(WriteDone::default())
-            }
-            Answer::Refused(reason) => Err(WriteRefused::new(&reason.code)),
-            // the gate asks no question of the reader: a question is a refusal with its own code, never a silent "unsupported"
-            Answer::Ask(_) => Err(WriteRefused::new(
-                fs_components_core::form_write::ASK_UNSUPPORTED,
-            )),
-        }
+        self.answer(self.records.invoke(&self.form, channel, record, &values))
+    }
+
+    fn may_fire(&self, trigger: &str, record: Option<&str>) -> Result<(), WriteRefused> {
+        self.may_gesture(trigger, record)
+    }
+
+    fn fire(
+        &self,
+        trigger: &str,
+        record: Option<&str>,
+        args: &[WriteArg],
+    ) -> Result<WriteDone, WriteRefused> {
+        self.gesture(trigger, record, args)
     }
 }
 
 #[cfg(test)]
 mod ask;
+#[cfg(test)]
+mod fire_tests;
 #[cfg(test)]
 mod tests;

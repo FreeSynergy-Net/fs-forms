@@ -4,7 +4,7 @@
 //!
 //! Pattern: Anti-corruption mirror (the model of the layout in, the narrow view out).
 
-use fs_forms_layout::{ActionTarget, Item, Layout, MenuDoc, MenuKind, Trigger};
+use fs_forms_layout::{ActionTarget, Item, Layout, MenuDoc, MenuKind, Words};
 
 use crate::view::{ActionView, Coded, MenuItem, MenuState, PageView, View};
 
@@ -55,17 +55,6 @@ fn menu_items(layout: &Layout, entries: &[Item<MenuDoc>], lang: &str, out: &mut 
     }
 }
 
-fn trigger_name(t: Trigger) -> &'static str {
-    match t {
-        Trigger::Button => "button",
-        Trigger::Menu => "menu",
-        Trigger::Key => "key",
-        Trigger::Drop => "drop",
-        Trigger::QuickAdd => "quick-add",
-        Trigger::Submit => "submit",
-    }
-}
-
 /// The view of `layout` for a reader of `lang`.
 #[must_use]
 pub fn view_of(layout: &Layout, lang: &str) -> View {
@@ -94,13 +83,15 @@ pub fn view_of(layout: &Layout, lang: &str) -> View {
         .iter()
         .filter_map(|a| match &a.v.target {
             ActionTarget::Command { command, .. } => Some(ActionView {
-                trigger: trigger_name(a.v.trigger).to_owned(),
+                trigger: a.v.trigger.word().to_owned(),
+                at: a.v.at.as_ref().map(|e| e.as_str().to_owned()),
                 command: command.clone(),
                 open: None,
             }),
             // `open` is carried out by the window owner (`HostWindows::open_embed`), no command of a module
             ActionTarget::Open { elem } => Some(ActionView {
-                trigger: trigger_name(a.v.trigger).to_owned(),
+                trigger: a.v.trigger.word().to_owned(),
+                at: a.v.at.as_ref().map(|e| e.as_str().to_owned()),
                 command: "open".to_owned(),
                 open: Some(elem.as_str().to_owned()),
             }),

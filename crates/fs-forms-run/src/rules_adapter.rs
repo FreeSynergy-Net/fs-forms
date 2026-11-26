@@ -59,6 +59,14 @@ impl CatalogRules for ContractRules<'_> {
             .map_or(0, |s| s.repeat)
     }
 
+    fn command_args(&self, block: &str, slot: &str) -> Option<Vec<String>> {
+        self.0
+            .block(block)
+            .and_then(|b| b.slot(slot))
+            .filter(|s| s.kind == SlotKind::Command)
+            .map(|s| s.args.clone())
+    }
+
     fn places_of(&self, frame: &str) -> Option<Vec<PlaceRule>> {
         let b = self.0.block(frame)?;
         // a block without `places` says nothing: no place is checked (the flat pages of before)

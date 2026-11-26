@@ -46,6 +46,7 @@ fn good() -> Item<PlaceNode> {
 fn open(id: &str) -> Item<ActionDoc> {
     bare(ActionDoc {
         trigger: Trigger::Button,
+        at: None,
         target: ActionTarget::Open { elem: eid(id) },
         confirm: None,
     })

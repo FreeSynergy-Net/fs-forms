@@ -48,7 +48,7 @@ pub trait Writer: Send + Sync + std::fmt::Debug {
 
 /// The form the module declares, in the catalog: the same name and the same `major.minor` (the highest patch). Two versions of one
 /// form are in the catalog (`1.0.0` and `1.1.0`); the one the module keeps decides what a command writes.
-fn definition(data: &FormData) -> Option<&'static Form> {
+pub(crate) fn definition(data: &FormData) -> Option<&'static Form> {
     let (name, major, minor) = (
         &data.declared.form.name,
         u64::from(data.declared.form.major),
@@ -123,9 +123,15 @@ pub fn args_of(
 /// the question of the whole board (review v3-sw2) is answered so, the exact answer is asked per record when the gesture has one.
 #[must_use]
 pub fn allowed(data: &FormData, channel: &str, record: Option<&str>) -> bool {
-    let Some(key) = command_key(data, channel) else {
-        return false;
-    };
+    command_key(data, channel)
+        .is_some_and(|key| allowed_command(data, key, record, channel == "create"))
+}
+
+/// The same question for a command KEY without a channel (a gesture slot without arguments: `activate`, `menu`): the key is in the
+/// command set of the module and the module says the person may, on the record (or on the page for no record; `creates` = a call that
+/// only the page may open, a row's `may` never does).
+#[must_use]
+pub fn allowed_command(data: &FormData, key: &str, record: Option<&str>, creates: bool) -> bool {
     if !data.commands.iter().any(|c| c == key) {
         return false;
     }
@@ -136,10 +142,7 @@ pub fn allowed(data: &FormData, channel: &str, record: Option<&str>) -> bool {
             .iter()
             .find(|row| row.key == r)
             .is_some_and(|row| says(&row.may)),
-        // `create` comes only from the page: a row's `may` never opens it
-        None => {
-            says(&data.may) || (channel != "create" && data.rows.iter().any(|row| says(&row.may)))
-        }
+        None => says(&data.may) || (!creates && data.rows.iter().any(|row| says(&row.may))),
     }
 }
 

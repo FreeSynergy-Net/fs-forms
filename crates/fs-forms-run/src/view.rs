@@ -75,6 +75,8 @@ pub struct PlaceView {
     pub slot_locks: Vec<Coded>,
     /// `view=` and `variant=` of the placement (`None` where it says nothing).
     pub info: crate::place_info::PlaceInfo,
+    /// The element id of the placement (`block:board/main`): what an `[[action]]` names with `at`. Empty where the layout gives none.
+    pub elem: String,
     /// The frontend placed here (`block` is then `frontend`); `None` for a block.
     pub embed: Option<EmbedView>,
 }
@@ -122,6 +124,8 @@ pub struct MenuItem {
 pub struct ActionView {
     /// The trigger.
     pub trigger: String,
+    /// The element id of the place whose command slot the action binds (`block:board/main`); `None` = a trigger of the page.
+    pub at: Option<String>,
     /// The command name (`create`, `move`, ...); actions that start a workflow are not read here.
     pub command: String,
     /// For the action `open`: the element id of the frontend node it opens; `None` for a command.

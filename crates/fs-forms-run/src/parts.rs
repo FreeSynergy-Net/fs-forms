@@ -19,6 +19,7 @@ pub(crate) enum Part {
     /// A block that is built; the host has a drawing for the state blocks only.
     Block {
         place: String,
+        elem: String,
         block: String,
         title: Option<String>,
         info: PlaceInfo,
@@ -81,12 +82,14 @@ pub(crate) fn parts_with(texts: &Mf2Texts, nodes: &[Node], panels: &Panels) -> V
                 },
                 Node::Block {
                     place,
+                    elem,
                     block,
                     title,
                     info,
                     ..
                 } => Part::Block {
                     place: place.clone(),
+                    elem: elem.clone(),
                     block: block.clone(),
                     title: title.clone(),
                     info: info.clone(),

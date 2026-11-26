@@ -91,7 +91,8 @@ block = "partial-notice"
 
 [[action]]
 elem = "action:1"
-trigger = "menu"
+at = "block:month/main"
+trigger = "quick-add"
 source = 1
 command = "event.create"
 

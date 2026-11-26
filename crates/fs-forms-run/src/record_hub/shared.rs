@@ -60,6 +60,12 @@ impl Records for Shared {
     fn can_channel(&self, form: &str, channel: &str, record: Option<&str>) -> bool {
         self.cache.can_channel(form, channel, record)
     }
+    fn channel_of(&self, form: &str, command: &str) -> Option<String> {
+        self.cache.channel_of(form, command)
+    }
+    fn can_command(&self, form: &str, command: &str, record: Option<&str>) -> bool {
+        self.cache.can_command(form, command, record)
+    }
     fn clock(&self) -> Arc<dyn Clock> {
         self.cache.clock()
     }

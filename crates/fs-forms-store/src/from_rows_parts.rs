@@ -22,6 +22,9 @@ pub(crate) fn actions(rows: &Rows, id: &str) -> Vec<Item<ActionDoc>> {
                     .text("trigger")
                     .and_then(|w| Words::from_word(&w))
                     .unwrap_or(fs_forms_layout::Trigger::Button),
+                at: r
+                    .text("at")
+                    .and_then(|e| fs_forms_layout::ElemId::parse(&e).ok()),
                 target,
                 confirm: r.text("confirm").and_then(|w| Words::from_word(&w)),
             };

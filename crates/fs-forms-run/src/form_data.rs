@@ -19,7 +19,7 @@ use fs_forms_bind::{Basic, ModuleForm};
 use crate::clock::{Clock, SystemClock};
 use crate::records::{Records, SideItem};
 use crate::view::Coded;
-use crate::write::{Invocation, Writer, allowed, args_of, command_key};
+use crate::write::{Invocation, Writer, allowed, allowed_command, args_of, command_key};
 
 pub use fs_components_core::form_read::FormRow;
 
@@ -217,24 +217,41 @@ impl Records for FormRecords {
             record: record.map(str::to_owned),
             args,
         };
-        let answer = writer.invoke(&call);
-        eprintln!(
-            "fs-forms-run: {}",
-            crate::write::log::line(&self.provider, &call, &answer)
-        );
-        if let Err(c) = answer {
-            return refused(&c.code);
+        self.commit(writer, &call)
+    }
+    fn channel_of(&self, form: &str, command: &str) -> Option<String> {
+        let forms = self.forms();
+        let data = forms.iter().find(|f| f.declared.form.name == form)?;
+        data.declared
+            .map
+            .iter()
+            .map(|(c, _)| c.as_str())
+            .find(|c| command_key(data, c) == Some(command))
+            .map(str::to_owned)
+    }
+    fn can_command(&self, form: &str, command: &str, record: Option<&str>) -> bool {
+        self.writer.is_some()
+            && self
+                .forms()
+                .iter()
+                .find(|f| f.declared.form.name == form)
+                .is_some_and(|d| allowed_command(d, command, record, false))
+    }
+    fn invoke_command(&self, form: &str, command: &str, record: Option<&str>) -> Answer {
+        use crate::records::refused;
+        let Some(writer) = &self.writer else {
+            return refused("unsupported");
+        };
+        if !self.can_command(form, command, record) {
+            return refused("locked");
         }
-        // accepted: the module is read again, the board shows what it now says (nothing is guessed here)
-        if let Ok(all) = writer.reload() {
-            *self.fresh.write().unwrap_or_else(PoisonError::into_inner) = Some(Arc::new(all));
-            *self.stale.write().unwrap_or_else(PoisonError::into_inner) = None;
-        } else {
-            // the call was accepted, the module has written: this is no refusal; the old state stays and the failure is kept
-            *self.stale.write().unwrap_or_else(PoisonError::into_inner) =
-                Some("host-notice-data-reload".to_owned());
-        }
-        Answer::Accepted
+        let call = Invocation {
+            form: form.to_owned(),
+            command: command.to_owned(),
+            record: record.map(str::to_owned),
+            args: Vec::new(),
+        };
+        self.commit(writer, &call)
     }
     fn stale(&self) -> Option<String> {
         self.stale
@@ -244,6 +261,30 @@ impl Records for FormRecords {
     }
     fn source_problems(&self) -> Vec<(u32, Coded)> {
         self.problems.clone()
+    }
+}
+
+impl FormRecords {
+    /// Sends one call to the module and, when it is accepted, reads the forms again (the board shows what the module now says,
+    /// nothing is guessed here). A refusal is its code.
+    fn commit(&self, writer: &Arc<dyn Writer>, call: &Invocation) -> Answer {
+        let answer = writer.invoke(call);
+        eprintln!(
+            "fs-forms-run: {}",
+            crate::write::log::line(&self.provider, call, &answer)
+        );
+        if let Err(c) = answer {
+            return crate::records::refused(&c.code);
+        }
+        if let Ok(all) = writer.reload() {
+            *self.fresh.write().unwrap_or_else(PoisonError::into_inner) = Some(Arc::new(all));
+            *self.stale.write().unwrap_or_else(PoisonError::into_inner) = None;
+        } else {
+            // the call was accepted, the module has written: this is no refusal; the old state stays and the failure is kept
+            *self.stale.write().unwrap_or_else(PoisonError::into_inner) =
+                Some("host-notice-data-reload".to_owned());
+        }
+        Answer::Accepted
     }
 }
 

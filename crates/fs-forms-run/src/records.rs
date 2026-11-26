@@ -52,6 +52,12 @@ pub trait Records: Send + Sync {
     fn command_of(&self, _form: &str, _channel: &str) -> Option<String> {
         None
     }
+    /// The channel of the form `form` the module binds the command key `command` to (`card.move` is `move`): the way BACK of
+    /// [`Records::command_of`], the one a gesture with arguments takes (the arguments are named as the channels). `None` = no channel of
+    /// the form is bound to it. No fixed channel name anywhere in the host.
+    fn channel_of(&self, _form: &str, _command: &str) -> Option<String> {
+        None
+    }
     /// Whether the channel `channel` of the form `form` may be used now on `record` (`None` = without a record, or on any: see
     /// [`crate::write::allowed`]). Default `false`: what is not said is locked.
     fn can_channel(&self, _form: &str, _channel: &str, _record: Option<&str>) -> bool {
@@ -67,6 +73,15 @@ pub trait Records: Send + Sync {
         _record: Option<&str>,
         _values: &[(String, String)],
     ) -> Answer {
+        unsupported()
+    }
+    /// May the command `command` (a key of the contract) be called now on `record`, with no channel and no arguments (a gesture slot
+    /// without `args`: `activate`, `menu`)? The module's command set and the `may` of the record decide. Default `false`.
+    fn can_command(&self, _form: &str, _command: &str, _record: Option<&str>) -> bool {
+        false
+    }
+    /// The call of the command `command` with the record only (no arguments); after an accepted call the form is read again.
+    fn invoke_command(&self, _form: &str, _command: &str, _record: Option<&str>) -> Answer {
         unsupported()
     }
     /// How many undo and redo steps the person has on these records. Default: none (what is not said is locked, like

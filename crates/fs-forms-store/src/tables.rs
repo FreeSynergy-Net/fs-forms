@@ -34,7 +34,15 @@ pub const FROM: &[&str] = &[
     "condition",
 ];
 pub const ROLE: &[&str] = &["input", "display", "compact", "cell"];
-pub const TRIGGER: &[&str] = &["button", "menu", "key", "drop", "quick-add", "submit"];
+pub const TRIGGER: &[&str] = &[
+    "button",
+    "activate",
+    "menu",
+    "key",
+    "drop",
+    "quick-add",
+    "submit",
+];
 pub const TARGET: &[&str] = &["command", "workflow"];
 pub const CONFIRM: &[&str] = &["none", "confirm", "choice"];
 pub const VIEW_SCOPE: &[&str] = &["all", "person"];

@@ -22,9 +22,13 @@ use crate::write::fixture::{
     other_column, records, second,
 };
 
+/// The element id of the place the gate stands at.
+const PLACE: &str = "block:board/main";
+
 fn action(trigger: &str, command: &str) -> ActionView {
     ActionView {
         trigger: trigger.into(),
+        at: Some(PLACE.into()),
         command: command.into(),
         open: None,
     }
@@ -40,6 +44,8 @@ fn gate(actions: Vec<ActionView>, records: Arc<dyn Records>) -> WriteGate {
         records,
         actions: Arc::new(actions),
         form: "cards-in-columns".into(),
+        block: "board".into(),
+        place: PLACE.into(),
         after: crate::after_write::AfterWrite::default(),
     }
 }
@@ -244,14 +250,39 @@ fn records_that_bind_no_command_keep_the_gesture_locked_and_say_so_when_sent() {
 fn an_action_that_calls_another_command_than_the_module_bound_to_the_gesture_is_warned() {
     let w = Arc::new(FakeWriter::default());
     let r = records(&w, data());
-    assert_eq!(crate::action_report(&described(), &r), Vec::new());
-    let wrong = [
+    assert_eq!(crate::action_report(&view_of(described()), &r), Vec::new());
+    let wrong = vec![
         action("drop", "move"),
         action("quick-add", CREATE_KEY),
         action("button", "anything"),
     ];
-    let said = crate::action_report(&wrong, &r);
+    let said = crate::action_report(&view_of(wrong), &r);
     assert_eq!(said.len(), 1);
     assert_eq!(said[0].code.code, "action-channel-mismatch");
     assert!(!said[0].red);
+}
+
+/// A view with one page whose place `PLACE` holds a board and the given actions.
+fn view_of(actions: Vec<ActionView>) -> crate::view::View {
+    crate::view::View {
+        actions,
+        pages: vec![crate::view::PageView {
+            page: "board".into(),
+            seq: 0,
+            frame: "workbench".into(),
+            locks: Vec::new(),
+            places: vec![crate::view::PlaceView {
+                place: "main".into(),
+                seq: 0,
+                block: "board".into(),
+                title: None,
+                locks: Vec::new(),
+                slot_locks: Vec::new(),
+                info: crate::place_info::PlaceInfo::default(),
+                elem: PLACE.into(),
+                embed: None,
+            }],
+        }],
+        ..crate::view::View::default()
+    }
 }

@@ -175,7 +175,8 @@ pub fn full_doc() -> LayoutDoc {
         actions: vec![it(
             "action:1",
             ActionDoc {
-                trigger: Trigger::QuickAdd,
+                trigger: Trigger::Button,
+                at: None,
                 target: ActionTarget::Command {
                     source: 1,
                     command: "create".into(),

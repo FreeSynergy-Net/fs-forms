@@ -45,10 +45,13 @@ fn invoke_answers_with_ask_and_the_question_of_the_records_is_refused_with_its_o
         records: Arc::new(Asking),
         actions: Arc::new(vec![ActionView {
             trigger: "drop".into(),
+            at: Some("block:board/main".into()),
             command: "card.move".into(),
             open: None,
         }]),
         form: "cards-in-columns".into(),
+        block: "board".into(),
+        place: "block:board/main".into(),
         after: crate::after_write::AfterWrite::default(),
     };
     let column = WriteArg {

@@ -1,0 +1,13 @@
+# The wish for sample events: the section `[sample]` of a description, nothing else.
+# Eight events on two lanes (bars-in-time): the title is the field `title`, the lane the field `freesynergy.net:lane`; the channels
+# are `label` and `lane`. Read by `tests/sample_source` (`events`).
+[sample]
+seed = 7
+anchor = { month = "2026-05", zone = "Europe/Berlin" }
+
+[[sample.set]]
+source = 1
+form = "bars-in-time@^1.0.0"
+type = "Event"
+count = 8
+distinct = { lane = 2 }

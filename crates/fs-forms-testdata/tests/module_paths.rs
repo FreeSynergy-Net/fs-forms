@@ -8,13 +8,12 @@ mod module_support;
 use fs_forms_testdata::SampleSet;
 use fs_interfaces::module::ModuleCore;
 use module_support::{
-    BARS, LANE, TITLE, bars_with_writes, calendar, call, cx, fixed_events, module, page, refused,
-    run, text,
+    BARS, LANE, TITLE, bars_declared, bars_with_writes, calendar, call, cx, fixed_events, module,
+    page, refused, run, text,
 };
 
 fn declared_fields(set: &SampleSet) -> Vec<String> {
-    set.declared
-        .iter()
+    bars_declared(set)
         .flat_map(|d| d.map.iter().flat_map(|(_, f)| f.clone()))
         .collect()
 }
@@ -74,4 +73,27 @@ fn a_write_by_field_path_round_trips_and_a_channel_name_is_no_path() {
     let made = run(m.apply(&cx("p"), call("create", None, &made))).expect("create by field");
     assert_eq!(text(&page(&m, BARS), &made.record, TITLE), Some("Made"));
     assert_eq!(text(&page(&m, BARS), &made.record, "label"), None);
+}
+
+#[test]
+fn two_fields_of_one_channel_in_a_call_are_a_duplicate() {
+    let mut set = calendar(false, 0, Vec::new());
+    for d in &mut set.declared {
+        for (c, fields) in &mut d.map {
+            if c == "label" {
+                fields.push("alt-title".to_owned());
+            }
+        }
+    }
+    let m = module(&set).declare(&bars_with_writes());
+    let when = [
+        ("start", "2026-05-12T10:00:00+02:00"),
+        ("end", "2026-05-12T11:00:00+02:00"),
+    ];
+    let both = [when[0], when[1], (TITLE, "A"), ("alt-title", "B")];
+    let r = refused(run(m.apply(&cx("p"), call("create", None, &both))));
+    assert_eq!(r.kind, "bad-arguments", "one channel twice");
+    let one = [when[0], when[1], ("alt-title", "B")];
+    let made = run(m.apply(&cx("p"), call("create", None, &one))).expect("any declared field");
+    assert_eq!(text(&page(&m, BARS), &made.record, TITLE), Some("B"));
 }

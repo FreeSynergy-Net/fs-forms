@@ -11,7 +11,8 @@ use fs_module::{
     CommandKind, DeclaredCommand, DeclaredForm, FormSourceFixture, Param, Sample, Verify,
 };
 use module_support::{
-    BARS, LANE, TITLE, bars_with_writes, calendar, connect, connect_core, fixed_events, module, run,
+    BARS, LANE, TITLE, bars_declared, bars_with_writes, calendar, connect, connect_core,
+    fixed_events, module, run,
 };
 
 /// What the suite is told about `SampleModule` on the calendar set: the names come from the set and the declaration, one place.
@@ -115,8 +116,7 @@ fn fields_of(set: &SampleSet) -> Vec<String> {
         form.channel(c)
             .is_some_and(|c| c.arts.first() != Some(&Art::Records))
     };
-    set.declared
-        .iter()
+    bars_declared(set)
         .flat_map(|d| d.map.iter())
         .filter(|(c, _)| data(c))
         .flat_map(|(_, f)| f.clone())

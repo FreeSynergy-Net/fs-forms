@@ -107,14 +107,16 @@ impl Store {
             .map(|v| (v.path.clone(), v.text.clone()))
             .collect();
         let mut args: Vec<(String, String)> = Vec::new();
-        for (i, (path, text)) in paths.iter().enumerate() {
+        for (path, text) in &paths {
             let named = self.tables[table].channel_of(path);
             let target = named.and_then(|n| writes.iter().find(|w| w.0 == n));
             let channel = target.and_then(|w| form.channel(&w.0));
-            if channel.is_none_or(|c| !fits(c, text)) || paths[..i].iter().any(|(p, _)| p == path) {
+            // two fields of one channel in a call are a duplicate as well (the record keeps its values by channel)
+            let name = named.unwrap_or_default();
+            if channel.is_none_or(|c| !fits(c, text)) || args.iter().any(|(c, _)| c == name) {
                 return Err(bad(path));
             }
-            args.push((named.unwrap_or_default().to_owned(), text.clone()));
+            args.push((name.to_owned(), text.clone()));
         }
         if let Some(w) = writes
             .iter()

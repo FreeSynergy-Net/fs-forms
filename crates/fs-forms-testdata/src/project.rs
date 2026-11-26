@@ -39,7 +39,9 @@ pub struct Table {
 }
 
 impl Table {
-    /// The path of a value of `channel`: the first field the map declares for it (a channel without an entry keeps its name).
+    /// The path of a value of `channel`: the first field the map declares for it (only the first is shown; every declared field may be
+    /// written). A channel without an entry keeps its name: `SampleModule::declare` can give a form of a newer minor than the set
+    /// declared, whose channels the map does not know; the host reads only by the map, so it never sees such a value.
     #[must_use]
     pub fn field_of<'a>(&'a self, channel: &'a str) -> &'a str {
         self.map
@@ -127,9 +129,20 @@ pub fn data_channels(form: &Form) -> Vec<&str> {
         .collect()
 }
 
-/// Whether the declaration `d` is for the form `key` (`name@x.y.z`; the patch does not count).
+/// Whether the key `key` (`name@x.y.z`; the patch does not count) is the form `name` of version `major.minor` (one rule for the table of a
+/// key and the declaration of a form).
+#[must_use]
+pub fn is_form(key: &str, name: &str, major: u64, minor: u64) -> bool {
+    fs_interfaces::forms::parse_key(key)
+        .is_some_and(|(n, v)| n == name && v.major == major && v.minor == minor)
+}
+
+/// Whether the declaration `d` is for the form `key`.
 fn same_form(d: &fs_forms_bind::ModuleForm, key: &str) -> bool {
-    fs_interfaces::forms::parse_key(key).is_some_and(|(n, v)| {
-        n == d.form.name && v.major == u64::from(d.form.major) && v.minor == u64::from(d.form.minor)
-    })
+    is_form(
+        key,
+        &d.form.name,
+        u64::from(d.form.major),
+        u64::from(d.form.minor),
+    )
 }

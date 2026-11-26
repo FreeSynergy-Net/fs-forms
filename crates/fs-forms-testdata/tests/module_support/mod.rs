@@ -165,3 +165,14 @@ pub fn fixed_events(forbid: Vec<Forbid>) -> SampleSet {
     .build()
     .expect("builds")
 }
+
+/// The declarations of the set that are for `bars-in-time@1.1` (the form of `BARS`, the patch does not count): the one place the
+/// oracles of the tests take their fields from.
+pub fn bars_declared(set: &SampleSet) -> impl Iterator<Item = &fs_forms_bind::ModuleForm> {
+    let (name, v) = forms::parse_key(BARS).expect("the key of BARS");
+    set.declared.iter().filter(move |d| {
+        d.form.name == name
+            && u64::from(d.form.major) == v.major
+            && u64::from(d.form.minor) == v.minor
+    })
+}

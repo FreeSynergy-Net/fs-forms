@@ -97,10 +97,16 @@ fn data_of(page: &Page, declared: &fs_forms_bind::ModuleForm) -> FormData {
                 values: Vec::new(),
                 may: r.may.clone(),
             };
-            for v in &r.values {
-                match row.values.iter_mut().find(|(c, _)| *c == v.path) {
-                    Some((_, all)) => all.push(v.text.clone()),
-                    None => row.values.push((v.path.clone(), vec![v.text.clone()])),
+            // The path of a value is a FIELD; the host reads by channel, each channel the values of the fields the map names for it
+            // (as `fs-starter-host` `pages.rs::rows`). A value of no declared field is never seen.
+            for (channel, fields) in &declared.map {
+                let got: Vec<String> = fields
+                    .iter()
+                    .flat_map(|f| r.values.iter().filter(move |v| v.path == *f))
+                    .map(|v| v.text.clone())
+                    .collect();
+                if !got.is_empty() {
+                    row.values.push((channel.clone(), got));
                 }
             }
             for m in &r.may {
@@ -269,4 +275,14 @@ pub fn add_card(records: &dyn Records, column: &str, title: &str) -> Answer {
 pub fn move_nth(records: &dyn Records, n: usize) -> Answer {
     let key = card(n);
     move_card(records, &key, &other_column(&key))
+}
+
+/// The records of sample events (the wish `events-parity.toml`: `bars-in-time`, channels `label` and `lane`, fields `title` and
+/// `freesynergy.net:lane`).
+#[must_use]
+pub fn events() -> Arc<dyn Records> {
+    records_of(
+        SourceSpec::from_wish_text(include_str!("../fixtures/sample/events-parity.toml"))
+            .expect("the wish reads"),
+    )
 }

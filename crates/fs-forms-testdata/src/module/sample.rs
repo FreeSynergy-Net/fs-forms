@@ -65,11 +65,7 @@ impl SampleModule {
         let (name, want) = parse_key(key).ok_or_else(unknown_form)?;
         tables
             .iter()
-            .position(|t| {
-                parse_key(&t.key).is_some_and(|(n, v)| {
-                    n == name && v.major == want.major && v.minor == want.minor
-                })
-            })
+            .position(|t| project::is_form(&t.key, name, want.major, want.minor))
             .ok_or_else(unknown_form)
     }
 

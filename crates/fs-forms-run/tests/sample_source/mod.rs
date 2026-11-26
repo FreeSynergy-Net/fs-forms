@@ -15,8 +15,11 @@ mod person_types;
 pub use derive::Derived;
 #[allow(unused_imports)] // each test file uses a part
 pub use person_types::{PersonWords, person_type};
+mod gestures;
 mod groups;
 mod scope;
+#[allow(unused_imports)] // each test file uses a part
+pub use gestures::{add_card, move_card, move_nth};
 #[allow(unused_imports)] // each test file uses a part
 pub use groups::{groups, rows_of};
 #[allow(unused_imports)] // each test file uses a part
@@ -25,7 +28,6 @@ pub use scope::{records_of_text, scope_of};
 use std::sync::mpsc::{Receiver, Sender, channel};
 use std::sync::{Arc, Mutex, PoisonError};
 
-use fs_components_kanban::Answer;
 use fs_forms_run::{Coded, FormData, FormRecords, FormRow, Invocation, Records, Writer};
 use fs_forms_testdata::{SampleModule, SourceSpec};
 use fs_interfaces::module::{
@@ -258,34 +260,6 @@ pub fn other_column(key: &str) -> String {
         .into_iter()
         .find(|c| *c != own)
         .expect("a second column")
-}
-
-fn pair(name: &str, value: &str) -> (String, String) {
-    (name.to_owned(), value.to_owned())
-}
-
-/// The card `key` dropped into column `to` (the gesture on the channel `move`).
-#[must_use]
-pub fn move_card(records: &dyn Records, key: &str, to: &str) -> Answer {
-    records.invoke(FORM, "move", Some(key), &[pair("column", to)])
-}
-
-/// A card titled `title` quick-added to `column` (the gesture on the channel `create`).
-#[must_use]
-pub fn add_card(records: &dyn Records, column: &str, title: &str) -> Answer {
-    records.invoke(
-        FORM,
-        "create",
-        None,
-        &[pair("column", column), pair("title", title)],
-    )
-}
-
-/// The `n`-th card of a fresh board dropped into a column it is not in (the same cards on every fresh board).
-#[must_use]
-pub fn move_nth(records: &dyn Records, n: usize) -> Answer {
-    let key = card(n);
-    move_card(records, &key, &other_column(&key))
 }
 
 /// The records of sample events (the wish `events-parity.toml`: `bars-in-time`, channels `label` and `lane`, fields `title` and

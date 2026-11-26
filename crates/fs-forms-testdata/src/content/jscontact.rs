@@ -27,8 +27,8 @@ const PHOTO: &str = "photo";
 const NICKNAMES: &str = "nicknames";
 /// The channel fields of the forms the module serves (`catalog/forms.json` of fs-modules-person: `rows` columns, `tiles` facts, and
 /// the fields of `single-record` that the sample has values for), in the order of the module. A form the module does not serve gets
-/// `OTHER`. Departure: a copy of the map of the module (the testdata crate must not depend on it), the test `channels_are_the_fields_of_the_module` pins the
-/// names to the type catalog of the module as the starter reads it.
+/// `OTHER`. Departure: copied BY HAND from `catalog/forms.json` of fs-modules-person @6766d91b (the testdata crate must not depend on it);
+/// nothing binds the copy to the module yet (card: read the file instead).
 const ROWS: [(&str, Basic); 5] = [
     ("organizations", Basic::Text),
     ("titles", Basic::Text),

@@ -113,13 +113,17 @@ fn bare(id: &str) -> &str {
     id.strip_prefix("urn:uuid:").unwrap_or(id)
 }
 
-/// The record a `single-record` scope names; no scope, `all` or an id nobody has is a refusal `404` (never "all records").
+/// The record a `single-record` scope names (as `fs-person-service` `record_page`): a scope that is no id (empty, `all`, no UUID and no
+/// key of a record) is a refusal `404`; an id nobody has is an EMPTY page (`Ok`, no record), never "all records".
 fn one_record<'a>(alive: Vec<&'a Rec>, scope: &str) -> Result<Vec<&'a Rec>, Refusal> {
-    alive
+    let found: Vec<&Rec> = alive
         .into_iter()
-        .find(|r| !scope.is_empty() && bare(&r.id) == bare(scope))
-        .map(|r| vec![r])
-        .ok_or_else(|| refuse("unknown-scope", 404, SampleCode::RecordUnknown))
+        .filter(|r| !scope.is_empty() && bare(&r.id) == bare(scope))
+        .collect();
+    if found.is_empty() && uuid::Uuid::parse_str(bare(scope)).is_err() {
+        return Err(refuse("unknown-scope", 404, SampleCode::RecordUnknown));
+    }
+    Ok(found)
 }
 
 fn cursor(text: &str, len: usize) -> Result<usize, Refusal> {

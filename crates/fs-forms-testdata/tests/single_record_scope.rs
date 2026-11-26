@@ -1,6 +1,6 @@
-//! The form that shows ONE record (`single-record`) is served only with the id of that record as the scope: no scope, `all` and an id
-//! nobody has are a refusal `404`, the id (`urn:uuid:<uuid>` or the bare UUID) gives exactly that record; the list and the tiles take
-//! every record. The same rule as the module `person` has (`catalog/forms.json`, scope = the id of the profile).
+//! The form that shows ONE record (`single-record`) is served only with the id of that record as the scope: no scope, `all` and a scope that is
+//! no UUID are a refusal `404`, a valid id nobody has is an EMPTY page, the id (`urn:uuid:<uuid>` or the bare UUID) gives exactly that record; the list and the tiles take
+//! every record. The same rule as `record_page` of `fs-person-service` (fs-modules-person @6766d91b).
 //!
 //! Pattern: Characterization test of the Fake Object `SampleModule` (the rule of the real modules, stated once).
 #![allow(dead_code)] // module_support serves several test files
@@ -52,9 +52,18 @@ fn one_record_needs_the_id_of_the_record() {
         Ok(1),
         "the bare UUID names the same record"
     );
-    for scope in ["", "all", "urn:uuid:00000000-0000-7000-8000-0000000000ff"] {
+    for scope in ["", "all", "no-uuid", "urn:uuid:not-a-uuid"] {
         assert_eq!(ask(&m, "single-record@1.2.0", scope), Err(404), "{scope:?}");
     }
+    // a valid id nobody has: an empty page, as the module answers (not a refusal)
+    assert_eq!(
+        ask(
+            &m,
+            "single-record@1.2.0",
+            "urn:uuid:00000000-0000-7000-8000-0000000000ff"
+        ),
+        Ok(0)
+    );
 }
 
 #[test]

@@ -1,4 +1,4 @@
-//! Every description of the repository (the fixtures of the host and of the test data, the calendar frontends) passes the check of its
+//! Every descriptio of the repository (the fixtures of the host and of the test data, the calendar frontends) passes the check of its
 //! gestures against the REAL block catalog (`Blocks::rules()`): each `[[action]]` with `at` names a command slot of the block at that
 //! place, within its `repeat`, and no gesture is left without a place (`action-invalid`). More directories (e.g. the forms of a program
 //! repository) are checked when `FS_DESCRIPTION_DIRS` names them (separated like `PATH`).
@@ -38,17 +38,13 @@ fn dirs() -> Vec<PathBuf> {
     dirs
 }
 
-/// Open until the block `quick-add` (programs.toml, `accepts = []`) has a command slot `quick-add` (card for C4): the action of the
-/// entry row of `day.toml` is then correctly red. The test says so itself, and fails when it is fixed (the entry must then go).
-const OPEN_UNTIL_C4: [(&str, &str); 1] = [("day.toml", "slot-unknown")];
-
 #[test]
 fn every_action_of_every_description_fits_the_block_it_is_at() {
     let mut files = Vec::new();
     for d in dirs() {
         files_in(&d, &mut files);
     }
-    let (mut checked, mut open, mut bad) = (0, Vec::new(), Vec::new());
+    let (mut checked, mut bad) = (0, Vec::new());
     for f in &files {
         let Ok(mut file) = fs::File::open(f) else {
             continue;
@@ -61,7 +57,6 @@ fn every_action_of_every_description_fits_the_block_it_is_at() {
             continue;
         }
         checked += 1;
-        let name = f.file_name().and_then(|n| n.to_str()).unwrap_or("");
         let problems = doc
             .check(&Blocks::rules(), &Limits::declared())
             .err()
@@ -73,15 +68,11 @@ fn every_action_of_every_description_fits_the_block_it_is_at() {
             )
         }) {
             let cause = c.param("cause").unwrap_or("");
-            if OPEN_UNTIL_C4.contains(&(name, cause)) {
-                open.push((name.to_owned(), cause.to_owned()));
-            } else {
-                bad.push(format!(
-                    "{}: {} {cause}",
-                    f.display(),
-                    c.param("elem").unwrap_or("")
-                ));
-            }
+            bad.push(format!(
+                "{}: {} {cause}",
+                f.display(),
+                c.param("elem").unwrap_or("")
+            ));
         }
     }
     assert!(bad.is_empty(), "{bad:#?}");
@@ -89,10 +80,4 @@ fn every_action_of_every_description_fits_the_block_it_is_at() {
         checked >= 8,
         "the descriptions with actions are found: {checked}"
     );
-    for (name, cause) in OPEN_UNTIL_C4 {
-        assert!(
-            open.iter().any(|(n, c)| n == name && c == cause),
-            "{name} is fixed now: take it out of OPEN_UNTIL_C4"
-        );
-    }
 }

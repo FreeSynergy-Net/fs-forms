@@ -6,9 +6,13 @@
 //! channel name is known here and there is no fallback "the name of the channel is the command": what no action binds, or the
 //! module binds to no channel, is refused `gesture-unbound{trigger}`.
 //!
+//! The ENTRY ([`Gesture::entry`], only at the slot `menu`) is the name of one line of the context menu; the name of an action is its
+//! command (the description gives an action no other name). Every action of the place with that name runs; without an entry the one
+//! action of the place and trigger is taken, several are `gesture-ambiguous`.
+//!
 //! Pattern: Command (the action is the command object, the gate the invoker); the choice of way is a Strategy over the slot's `args`.
 
-use fs_components_core::form_write::{WriteArg, WriteDone, WriteRefused};
+use fs_components_core::form_write::{Gesture, WriteArg, WriteDone, WriteRefused, trigger};
 use fs_components_kanban::Answer;
 use fs_forms_layout::CatalogRules;
 
@@ -23,98 +27,109 @@ enum Way {
     Command(String),
 }
 
-/// The refusal of a gesture the description or the module does not carry (code and the trigger).
-fn unbound(trigger: &str) -> WriteRefused {
-    WriteRefused::unbound(trigger)
-}
-
 impl WriteGate {
-    /// The one action of this place for the gesture; none = `gesture-unbound`, several = `gesture-ambiguous` (the port names no entry).
-    fn action_of(&self, trigger: &str) -> Result<&ActionView, WriteRefused> {
-        let mut hits = self
-            .actions
-            .iter()
-            .filter(|a| a.at.as_deref() == Some(self.place.as_str()) && a.trigger == trigger);
-        match (hits.next(), hits.next()) {
-            (Some(a), None) => Ok(a),
-            (None, _) => Err(unbound(trigger)),
-            (Some(_), Some(_)) => {
-                let mut r = WriteRefused::new("gesture-ambiguous");
-                r.params.push(("trigger".to_owned(), trigger.to_owned()));
-                Err(r)
-            }
+    /// The actions of this place for the gesture: none (or an entry no action carries, or an entry at a slot without entries) =
+    /// `gesture-unbound`, several without an entry = `gesture-ambiguous`.
+    fn actions_of(&self, gesture: Gesture<'_>) -> Result<Vec<&ActionView>, WriteRefused> {
+        let here = self.actions.iter().filter(|a| {
+            a.at.as_deref() == Some(self.place.as_str()) && a.trigger == gesture.trigger
+        });
+        let hits: Vec<&ActionView> = match gesture.entry {
+            None => here.collect(),
+            // only the slot `menu` has entries
+            Some(_) if gesture.trigger != trigger::MENU => Vec::new(),
+            Some(entry) => here.filter(|a| a.command == entry).collect(),
+        };
+        match hits.len() {
+            0 => Err(WriteRefused::unbound(gesture.trigger)),
+            1 => Ok(hits),
+            _ if gesture.entry.is_some() => Ok(hits),
+            _ => Err(WriteRefused::ambiguous(gesture.trigger)),
         }
     }
 
-    /// The way of the gesture: from the action to the command, then by the `args` of the slot.
-    fn way(&self, trigger: &str) -> Result<Way, WriteRefused> {
-        let action = self.action_of(trigger)?;
+    /// The way of ONE action: from the action to the command, then by the `args` of the slot.
+    fn way(&self, trigger: &str, action: &ActionView) -> Result<Way, WriteRefused> {
         // an action `open` is carried out by the owner of the windows, not by the records: refused with its own code, never silent
         if action.open.is_some() {
             return Err(WriteRefused::new("open-unsupported"));
         }
         let args = crate::blocks::Blocks::rules()
             .command_args(&self.block, trigger)
-            .ok_or_else(|| unbound(trigger))?;
+            .ok_or_else(|| WriteRefused::unbound(trigger))?;
         if args.is_empty() {
             return Ok(Way::Command(action.command.clone()));
         }
         let channel = self
             .records
             .channel_of(&self.form, &action.command)
-            .ok_or_else(|| unbound(trigger))?;
+            .ok_or_else(|| WriteRefused::unbound(trigger))?;
         Ok(Way::Channel { channel, args })
+    }
+
+    /// Every way of the gesture (one per action), or the first refusal.
+    fn ways(&self, gesture: Gesture<'_>) -> Result<Vec<Way>, WriteRefused> {
+        self.actions_of(gesture)?
+            .into_iter()
+            .map(|a| self.way(gesture.trigger, a))
+            .collect()
     }
 
     /// May the gesture be used now (the way is there and the module says the person may).
     pub(super) fn may_gesture(
         &self,
-        trigger: &str,
+        gesture: Gesture<'_>,
         record: Option<&str>,
     ) -> Result<(), WriteRefused> {
-        let yes = match self.way(trigger)? {
-            Way::Channel { channel, .. } => self.records.can_channel(&self.form, &channel, record),
-            // a slot without arguments acts on a record: without one there is nothing to call
-            Way::Command(command) => {
-                record.is_some() && self.records.can_command(&self.form, &command, record)
+        for way in self.ways(gesture)? {
+            let yes = match way {
+                Way::Channel { channel, .. } => {
+                    self.records.can_channel(&self.form, &channel, record)
+                }
+                // a slot without arguments acts on a record: without one there is nothing to call
+                Way::Command(command) => {
+                    record.is_some() && self.records.can_command(&self.form, &command, record)
+                }
+            };
+            if !yes {
+                return Err(WriteRefused::new("locked"));
             }
-        };
-        if yes {
-            Ok(())
-        } else {
-            Err(WriteRefused::new("locked"))
         }
+        Ok(())
     }
 
-    /// The gesture happened: ONE call of the module, or a refusal as a code.
+    /// The gesture happened: ONE call of the module per action, or a refusal as a code.
     pub(super) fn gesture(
         &self,
-        trigger: &str,
+        gesture: Gesture<'_>,
         record: Option<&str>,
         args: &[WriteArg],
     ) -> Result<WriteDone, WriteRefused> {
-        self.may_gesture(trigger, record)?;
-        let answer = match self.way(trigger)? {
-            Way::Channel {
-                channel,
-                args: carried,
-            } => {
-                let mut values: Vec<(String, String)> = args
-                    .iter()
-                    .map(|a| (a.name.clone(), text_of(&a.value)))
-                    .collect();
-                // an argument of the slot the gesture gives no value (a drop at the end of a column has no `before`) is handed on as
-                // "carried, without value" (empty text): the rule of [`crate::write::args_of`] never fills it from the record
-                for name in carried {
-                    if !values.iter().any(|(c, _)| *c == name) {
-                        values.push((name, String::new()));
+        self.may_gesture(gesture, record)?;
+        for way in self.ways(gesture)? {
+            let answer = match way {
+                Way::Channel {
+                    channel,
+                    args: carried,
+                } => {
+                    let mut values: Vec<(String, String)> = args
+                        .iter()
+                        .map(|a| (a.name.clone(), text_of(&a.value)))
+                        .collect();
+                    // an argument of the slot the gesture gives no value (a drop at the end of a column has no `before`) is handed on
+                    // as "carried, without value" (empty text): the rule of [`crate::write::args_of`] never fills it from the record
+                    for name in carried {
+                        if !values.iter().any(|(c, _)| *c == name) {
+                            values.push((name, String::new()));
+                        }
                     }
+                    self.records.invoke(&self.form, &channel, record, &values)
                 }
-                self.records.invoke(&self.form, &channel, record, &values)
-            }
-            Way::Command(command) => self.records.invoke_command(&self.form, &command, record),
-        };
-        self.answer(answer)
+                Way::Command(command) => self.records.invoke_command(&self.form, &command, record),
+            };
+            self.answer(answer)?;
+        }
+        Ok(WriteDone::default())
     }
 }
 

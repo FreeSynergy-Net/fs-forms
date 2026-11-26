@@ -45,16 +45,22 @@ fn with_the_description_the_head_is_the_word_of_the_field() {
     assert!(data.type_description.is_some(), "the fixture hands it over");
     let fields = columns(&data);
     assert!(fields.len() > 1);
-    for f in &fields {
+    // the fields the module describes have its word id; `address` and `surname` are test data only (the module has none of them)
+    let (named, plain): (Vec<_>, Vec<_>) = fields.iter().partition(|f| !f.label.is_empty());
+    assert!(named.len() >= 2 && !plain.is_empty());
+    for f in &named {
         assert_eq!(f.label, format!("person.{}", f.name), "{}", f.name);
+        assert_ne!(f.shown(&said("en")), f.name, "a word, not the field name");
+    }
+    for f in &plain {
+        assert_eq!(f.shown(&said("en")), f.name, "no word id: the field name");
     }
     let heads_en: Vec<String> = fields.iter().map(|f| f.shown(&said("en"))).collect();
     let heads_de: Vec<String> = fields.iter().map(|f| f.shown(&said("de"))).collect();
     assert_eq!(heads_en[0], "Email addresses");
     assert_eq!(heads_de[0], "E-Mail-Adressen");
-    for (f, head) in fields.iter().zip(&heads_en) {
-        assert_ne!(head, &f.name, "a word, not the field name");
-    }
+    assert!(heads_en.contains(&"Titles and roles".to_owned()));
+    assert!(heads_de.contains(&"Organisationen".to_owned()));
 }
 
 #[test]
@@ -76,5 +82,33 @@ fn a_field_the_description_does_not_name_keeps_its_name() {
     let titles = fields.iter().find(|f| f.name == "titles").expect("titles");
     assert_eq!(titles.label, "");
     assert_eq!(titles.shown(&said("en")), "titles");
-    assert_eq!(person_type().fields.len(), 6, "the fixture is untouched");
+    assert_eq!(person_type().fields.len(), 4, "the fixture is untouched");
+}
+
+/// The words of the module reach the host through the hub (`Shared` cache and `Grip`): a decorator that forgets to hand them on
+/// would silently leave every head a field name (the default of `Records::module_words` is none).
+#[test]
+fn the_words_of_the_module_survive_the_hub() {
+    let records = records_of(SourceSpec::from_wish_text(LIST).expect("the wish reads"));
+    let counts = std::sync::Arc::new(fs_forms_run::HoldCounts::default());
+    let module: std::sync::Arc<dyn fs_forms_run::Module> =
+        fs_forms_run::FakeModule::new(counts, Box::new(move |_| records.clone()));
+    let hub = fs_forms_run::RecordHub::new();
+    let key = fs_forms_run::RecordKey {
+        range: "net.freesynergy.People".into(),
+        scope: None,
+    };
+    let grip = hub.attach(&key, &module).expect("attached");
+    let en = Locale::english();
+    for (what, records) in [("grip", grip.records()), ("cache", grip.cache())] {
+        let words = records
+            .module_words()
+            .unwrap_or_else(|| panic!("{what}: the words are lost"))
+            .in_locale(&en);
+        let said = words.say(
+            &fs_components_words::TextId::new("person.emails"),
+            &fs_components_words::Args::new(),
+        );
+        assert_eq!(said.text(), "Email addresses", "{what}");
+    }
 }

@@ -11,8 +11,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 use fs_components_app::AppWidget;
-use fs_components_core::form_write::FormWrite;
-use fs_components_kanban::{Answer, MOVE, Reason};
+use fs_components_core::form_write::{FormWrite, Gesture};
+use fs_components_kanban::{Answer, Reason};
 use fs_components_words::Locale;
 use fs_objects::UndoState;
 
@@ -52,8 +52,8 @@ impl Records for Moving {
             redoable: 0,
         }
     }
-    fn command_of(&self, _form: &str, channel: &str) -> Option<String> {
-        (channel == MOVE).then(|| "card.move".to_owned())
+    fn channel_of(&self, _form: &str, command: &str) -> Option<String> {
+        (command == "card.move").then(|| "move".to_owned())
     }
     fn can_channel(&self, _form: &str, _channel: &str, _record: Option<&str>) -> bool {
         true
@@ -137,7 +137,7 @@ fn a1_a_card_moved_through_the_gate_unlocks_undo_in_the_real_window() {
     assert!(undo_locked(&w), "no step yet");
     assert!(!w.choose("app.undo"), "locked: a click does nothing");
     gate(records.clone(), after)
-        .send(MOVE, Some("FS-1"), &[])
+        .fire(Gesture::new("drop"), Some("FS-1"), &[])
         .expect("the move is accepted");
     assert!(!undo_locked(&w), "the move is a step: Undo is open");
     assert!(w.choose("app.undo"), "and the click reaches the records");
@@ -147,7 +147,11 @@ fn a1_a_card_moved_through_the_gate_unlocks_undo_in_the_real_window() {
 fn a2_a_refused_write_leaves_undo_locked() {
     let records = Moving::new(0, Answer::Refused(Reason::new("conflict", "")));
     let (w, after) = window(&records);
-    assert!(gate(records, after).send(MOVE, Some("FS-1"), &[]).is_err());
+    assert!(
+        gate(records, after)
+            .fire(Gesture::new("drop"), Some("FS-1"), &[])
+            .is_err()
+    );
     assert!(undo_locked(&w));
 }
 

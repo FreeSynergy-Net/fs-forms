@@ -1,14 +1,14 @@
 //! A question of the records is a refusal with its own code: the gate asks nothing of the reader, so it must not hide the question
 //! behind the silent "unsupported".
 //!
-//! Tests: records that bind the move to a command and answer the call (`invoke`) with `Answer::Ask`.
+//! Tests: records that bind the card move to a channel (the way back of the command) and answer the call (`invoke`) with `Answer::Ask`.
 //!
 //! Pattern: none (tests).
 
 use std::sync::Arc;
 
-use fs_components_core::form_write::{FormWrite, WriteArg, WriteValue};
-use fs_components_kanban::{Answer, MOVE, Question};
+use fs_components_core::form_write::{FormWrite, Gesture, WriteArg, WriteValue};
+use fs_components_kanban::{Answer, Question};
 
 use super::WriteGate;
 use crate::records::{Records, SideItem};
@@ -21,8 +21,8 @@ impl Records for Asking {
     fn side(&self) -> Vec<SideItem> {
         Vec::new()
     }
-    fn command_of(&self, _form: &str, channel: &str) -> Option<String> {
-        (channel == MOVE).then(|| "card.move".to_owned())
+    fn channel_of(&self, _form: &str, command: &str) -> Option<String> {
+        (command == "card.move").then(|| "move".to_owned())
     }
     fn can_channel(&self, _form: &str, _channel: &str, _record: Option<&str>) -> bool {
         true
@@ -59,7 +59,9 @@ fn invoke_answers_with_ask_and_the_question_of_the_records_is_refused_with_its_o
         name: "column".into(),
         value: WriteValue::Text("done".into()),
     };
-    let refused = gate.send(MOVE, Some("k"), &[column]).unwrap_err();
+    let refused = gate
+        .fire(Gesture::new("drop"), Some("k"), &[column])
+        .unwrap_err();
     assert_eq!(
         refused.code,
         fs_components_core::form_write::ASK_UNSUPPORTED

@@ -1,8 +1,9 @@
 //! The write side of the board for the components. A GESTURE of a view (`fire`: `drop`, `menu`, `quick-add`, `activate`, named as the
 //! command slots of the contract) is allowed only when the DESCRIPTION has an `[[action]]` at this place for it, and goes the way
-//! gesture, action, command ([`fire`]): no channel name is known to the host. The channels of the older way (`can`, `send`: `move`,
-//! `create` and the three gestures on a column) are still here until the components say their gestures by `fire` (card G8); they too
-//! need an action AT THIS PLACE and records that bind a command. Every other control stays locked and says so.
+//! gesture, action, command ([`fire`]): no channel name is known to the host, and card moves and new cards have NO channel way any
+//! more (the board says `drop` and `quick-add` by `fire`; G8). Only the three dialogs on a column (`can`, `send`: column create,
+//! rename, limit) still go by channel until G8b; they too need an action AT THIS PLACE and records that bind a command. Every other
+//! control stays locked and says so.
 //!
 //! The host knows no layout of a component: what a gesture carries is the `args` of the slot in the catalog.
 //!
@@ -13,7 +14,6 @@ use std::sync::Arc;
 use fs_components_core::form_write::{
     FormWrite, Gesture, WriteArg, WriteDone, WriteRefused, WriteValue,
 };
-use fs_components_kanban::{CREATE, MOVE, carried_channels};
 
 use crate::after_write::AfterWrite;
 use crate::records::Records;
@@ -35,32 +35,17 @@ pub(crate) struct WriteGate {
 }
 
 impl WriteGate {
-    fn has(&self, trigger: &str, command: &str) -> bool {
-        self.actions.iter().any(|a| {
-            a.at.as_deref() == Some(self.place.as_str())
-                && a.trigger == trigger
-                && a.command == command
-        })
-    }
-
     /// The command the module binds to the channel (the key of the contract, `card.move`); none = not bound.
     fn bound(&self, channel: &str) -> Option<String> {
         self.records.command_of(&self.form, channel)
     }
 
-    /// Whether the description connects the channel to a gesture of this place at all. Records that bind no command are asked by the
-    /// channel's name.
+    /// Whether the description connects the channel to a button of the page (the dialogs on a column). The gestures of a place never
+    /// come here: they go by `fire`.
     fn described(&self, channel: &str) -> bool {
-        let key = self.bound(channel);
-        let key = key.as_deref().unwrap_or(channel);
-        match channel {
-            MOVE => self.has("drop", key),
-            CREATE => self.has("quick-add", key),
-            _ => self
-                .actions
-                .iter()
-                .any(|a| a.trigger == "button" && a.command == channel),
-        }
+        self.actions
+            .iter()
+            .any(|a| a.trigger == "button" && a.command == channel)
     }
 }
 
@@ -93,17 +78,10 @@ impl FormWrite for WriteGate {
         if !self.can(channel, record) {
             return Err(WriteRefused::new("locked"));
         }
-        let mut values: Vec<(String, String)> = args
+        let values: Vec<(String, String)> = args
             .iter()
             .map(|a| (a.name.clone(), text_of(&a.value)))
             .collect();
-        // a channel the gesture carries but gives no value (a drop at the end of a column has no `before`) is handed on as "carried,
-        // without value" (empty text): the rule of [`crate::write::args_of`] then never fills it from the record
-        for name in carried_channels() {
-            if !values.iter().any(|(c, _)| *c == name) {
-                values.push((name, String::new()));
-            }
-        }
         self.answer(self.records.invoke(&self.form, channel, record, &values))
     }
 

@@ -75,7 +75,7 @@ elem = "block:gantt/partial"
 at = "partial"
 block = "partial-notice"
 
-# No `[[action]]` here: the block `timeline` has no command slot in the contract (fs-components f2e90244, `accepts = []`), so a quick-add gesture at it is `slot-unknown` (test `gestures_in_descriptions`). The new event is the menu entry "New" (`event.create`); card at fs-components: command slots `quick-add`/`activate` for `timeline`.
+# No `[[action]]` here: the block `timeline` has no command slot in the contract (fs-components 08d501d9, `accepts = []`), so a quick-add gesture at it is `slot-unknown` (test `gestures_in_descriptions`). The new event is the menu entry "New" (`event.create`); card at fs-components: command slots `quick-add`/`activate` for `timeline`.
 [[view]]
 elem = "view:gantt"
 view = "gantt"

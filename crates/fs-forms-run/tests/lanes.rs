@@ -158,7 +158,7 @@ fn failure_5_a_card_value_without_a_head_gets_its_lane_at_the_end() {
         .rows
         .iter()
         .map(|r| {
-            let v: Vec<&str> = r.all("assignee").iter().map(String::as_str).collect();
+            let v = r.all("assignee");
             LaneCard::new(&r.key).with(&grouping, &v)
         })
         .collect();

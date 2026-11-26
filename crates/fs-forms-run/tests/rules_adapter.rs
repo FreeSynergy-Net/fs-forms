@@ -4,7 +4,7 @@ use fs_components_catalog::BlockCatalog;
 use fs_forms_layout::CatalogRules;
 use fs_forms_run::{Blocks, ContractRules};
 
-const CONTRACT: &str = "[contract]\nversion = \"0.5.0\"\n[vocabulary]\nstates = [\"default\"]\nreads = [\"bounds\"]\nsets = [\"axis\", \"min-width\"]\n";
+const CONTRACT: &str = "[contract]\nversion = \"0.6.0\"\n[vocabulary]\nstates = [\"default\"]\nreads = [\"bounds\"]\nsets = [\"axis\", \"min-width\"]\n";
 const BLOCKS: &str = "[block.pair]\naccepts = []\nparts = [\"pane\", \"bar\"]\nsets = [\"axis\"]\n\
 places = [{ place = \"pane\", takes = [\"form\", \"frame\"], min = 2, max = \"n\" }, { place = \"bar\", takes = [\"command\"], min = 0, max = 1 }]\n\n\
 [block.list]\naccepts = [{ slot = \"rows\", kind = \"records\", required = true }]\nsets = [\"min-width\"]\n\n\

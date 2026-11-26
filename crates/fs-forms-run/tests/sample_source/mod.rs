@@ -92,29 +92,19 @@ fn data_of(page: &Page, declared: &fs_forms_bind::ModuleForm) -> FormData {
         .records
         .iter()
         .map(|r| {
-            let mut row = FormRow {
-                key: r.id.clone(),
-                values: Vec::new(),
-                may: r.may.clone(),
-            };
-            // The path of a value is a FIELD; the host reads by channel, each channel the values of the fields the map names for it
-            // (as `fs-starter-host` `pages.rs::rows`). A value of no declared field is never seen.
-            for (channel, fields) in &declared.map {
-                let got: Vec<String> = fields
-                    .iter()
-                    .flat_map(|f| r.values.iter().filter(move |v| v.path == *f))
-                    .map(|v| v.text.clone())
-                    .collect();
-                if !got.is_empty() {
-                    row.values.push((channel.clone(), got));
-                }
-            }
             for m in &r.may {
                 if !commands.contains(m) {
                     commands.push(m.clone());
                 }
             }
-            row
+            // The path of a value is a FIELD; the one adapter of the components reads by channel, each channel the values of the
+            // fields the map names for it, and keeps the path of every value (a value of no declared field is never seen).
+            FormRow::from_values(
+                &r.id,
+                r.may.clone(),
+                &declared.map,
+                r.values.iter().map(|v| (v.path.as_str(), v.text.as_str())),
+            )
         })
         .collect();
     for c in &commands {

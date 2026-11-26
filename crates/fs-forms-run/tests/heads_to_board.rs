@@ -9,7 +9,7 @@ mod lanes_support;
 
 use std::sync::Arc;
 
-use fs_components_core::form_read::{FormInput, HeadRow, Heads};
+use fs_components_core::form_read::{FieldValue, FormInput, HeadRow, Heads};
 use fs_components_core::form_write::{FormWrite, WriteArg, WriteDone, WriteRefused};
 use fs_components_fields::KeysAsText;
 use fs_components_kanban::{BoardSource, FormSource, LaneCard, LaneHead, LanePlan, lanes_of};
@@ -103,8 +103,13 @@ fn a_card_with_two_people_stands_in_two_lanes_and_the_empty_lane_stays() {
     let mut forms = all_forms();
     let mut two = card("t1", "Anna");
     two.values.retain(|(c, _)| c != "assignee");
-    two.values
-        .push(("assignee".into(), vec!["Anna".into(), "Ben".into()]));
+    two.values.push((
+        "assignee".into(),
+        vec![
+            FieldValue::new("assignee", "Anna"),
+            FieldValue::new("assignee", "Ben"),
+        ],
+    ));
     forms[0] = cards_entry(vec![two]);
     forms[2] = rows_entry(2, "Lane", true, {
         let mut r = lanes_rows();
@@ -120,7 +125,7 @@ fn a_card_with_two_people_stands_in_two_lanes_and_the_empty_lane_stays() {
         .rows
         .iter()
         .map(|r| {
-            let v: Vec<&str> = r.all("assignee").iter().map(String::as_str).collect();
+            let v = r.all("assignee");
             LaneCard::new(&r.key).with(&grouping, &v)
         })
         .collect();

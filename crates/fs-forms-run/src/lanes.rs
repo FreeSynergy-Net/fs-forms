@@ -71,12 +71,7 @@ fn heads_form(block: &str) -> Result<String, Coded> {
 
 /// The heads in the order the module gave them; the key of a head is its IRI unless the cards carry names (then all keys are names).
 fn align(heads: &FormInput, cards: &FormInput, grouping: &str) -> Vec<LaneHead> {
-    let used: HashSet<&str> = cards
-        .rows
-        .iter()
-        .flat_map(|r| r.all(grouping))
-        .map(String::as_str)
-        .collect();
+    let used: HashSet<&str> = cards.rows.iter().flat_map(|r| r.all(grouping)).collect();
     let label =
         |r: &fs_components_core::form_read::FormRow| r.get("label").unwrap_or(&r.key).to_owned();
     // ONE decision for the whole list (an empty lane has no card to say which it is): the cards carry names, not IRIs

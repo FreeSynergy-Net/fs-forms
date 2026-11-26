@@ -24,11 +24,13 @@ pub struct JsContact;
 const NAME: &str = "name";
 const PHOTO: &str = "photo";
 /// The fields that carry values: path, JSContact member, basic type.
-const FIELDS: [(&str, Basic); 4] = [
+const FIELDS: [(&str, Basic); 6] = [
     ("emails", Basic::Email),
     ("phones", Basic::Text),
     ("address", Basic::Text),
     ("surname", Basic::Text),
+    ("organizations", Basic::Text),
+    ("titles", Basic::Text),
 ];
 
 /// The items of a map member (`emails`: id -> `{address}`) as text, in the order of their ids; `key` names the text inside an item.
@@ -100,6 +102,8 @@ impl Content for JsContact {
         add("emails", items(json, "emails", "address"));
         add("phones", items(json, "phones", "number"));
         add("address", items(json, "addresses", "full"));
+        add("organizations", items(json, "organizations", "name"));
+        add("titles", items(json, "titles", "name"));
         if let Some(object) = json.as_object() {
             for (key, value) in object {
                 if let Some(channel) = key.strip_prefix(VENDOR) {

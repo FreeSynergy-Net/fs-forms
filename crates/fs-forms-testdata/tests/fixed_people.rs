@@ -172,7 +172,17 @@ fn the_list_has_the_short_fields_and_the_tile_its_facts() {
         .find(|(c, _)| c == "columns")
         .map(|(_, f)| f.iter().collect())
         .expect("columns");
-    assert_eq!(columns, ["emails", "phones", "address", "surname"]);
+    assert_eq!(
+        columns,
+        [
+            "emails",
+            "phones",
+            "address",
+            "surname",
+            "organizations",
+            "titles"
+        ]
+    );
     let facts = declared(TILES)
         .map
         .iter()

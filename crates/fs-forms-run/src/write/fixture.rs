@@ -8,6 +8,7 @@
 
 use std::sync::{Arc, Mutex};
 
+use fs_components_core::form_read::FieldValue;
 use fs_forms_bind::ModuleForm;
 use fs_forms_testdata::{SampleSet, SourceSpec};
 
@@ -68,7 +69,14 @@ pub(crate) fn data() -> FormData {
         .into_iter()
         .map(|r| FormRow {
             key: r.key,
-            values: r.values,
+            values: r
+                .values
+                .into_iter()
+                .map(|(c, texts)| {
+                    let values = texts.iter().map(|t| FieldValue::new(&c, t)).collect();
+                    (c, values)
+                })
+                .collect(),
             may: Vec::new(),
         })
         .collect();
@@ -150,7 +158,7 @@ pub(crate) fn field(d: &FormData, channel: &str) -> String {
 pub(crate) fn moved(of: &FormRow, column: &str) -> FormRow {
     let mut row = of.clone();
     if let Some((_, v)) = row.values.iter_mut().find(|(c, _)| c == "column") {
-        *v = vec![column.to_owned()];
+        *v = vec![FieldValue::new("column", column)];
     }
     row
 }

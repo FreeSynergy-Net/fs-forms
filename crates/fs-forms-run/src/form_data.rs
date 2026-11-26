@@ -119,6 +119,7 @@ pub fn input_of(data: &FormData) -> FormInput {
                             .map_or(Basic::Text, |(_, b)| *b),
                     )
                     .to_owned(),
+                    label: String::new(),
                 })
                 .collect(),
             choices: if channel == "column" {

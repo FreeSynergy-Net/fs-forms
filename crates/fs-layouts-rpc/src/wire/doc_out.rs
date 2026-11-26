@@ -151,10 +151,6 @@ pub(crate) fn write_binding(mut x: w::binding::Builder<'_>, b: &Item<fs_forms_la
 }
 
 fn write_action(mut e: w::action::Builder<'_>, nth: u32, a: &Item<ActionDoc>) -> R<()> {
-    // the wire has no member `at` yet (fs-interfaces layouts.capnp): refused, never dropped
-    if a.v.at.is_some() {
-        return Err(Coded::new(LayoutCode::ExportFailed).with("what", "action-at"));
-    }
     e.set_elem(elem_text(a));
     e.set_n(nth);
     e.set_trigger(a.v.trigger.word());
@@ -174,6 +170,8 @@ fn write_action(mut e: w::action::Builder<'_>, nth: u32, a: &Item<ActionDoc>) ->
         }
     }
     e.set_confirm(a.v.confirm.map_or("", Words::word));
+    // `""` = no place (as `elem`): the wire member `at` is appended, an old reader ignores it
+    e.set_at(a.v.at.as_ref().map_or("", ElemId::as_str));
     Ok(())
 }
 

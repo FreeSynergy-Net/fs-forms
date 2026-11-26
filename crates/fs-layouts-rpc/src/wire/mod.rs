@@ -3,6 +3,8 @@
 //!
 //! Pattern: Adapter (both directions); one module per family of structs.
 
+#[cfg(test)]
+mod action_at_tests;
 pub(crate) mod answers;
 pub(crate) mod conflict;
 pub(crate) mod doc_in;

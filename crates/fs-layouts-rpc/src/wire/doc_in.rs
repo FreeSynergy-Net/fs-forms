@@ -254,7 +254,7 @@ fn read_action(a: w::action::Reader<'_>) -> R<Item<ActionDoc>> {
         elem(a.get_elem())?,
         ActionDoc {
             trigger: word(a.get_trigger())?,
-            at: None,
+            at: elem(a.get_at())?,
             target,
             confirm: opt(a.get_confirm())?.map(|t| word_of(&t)).transpose()?,
         },

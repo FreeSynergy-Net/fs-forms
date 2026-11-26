@@ -70,6 +70,7 @@ elem = "block:week/main"
 at = "main"
 block = "calendar-grid"
 source = 1
+set = { view = "week" }
 
 [[page.place]]
 elem = "block:week/partial"

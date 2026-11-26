@@ -10,7 +10,9 @@
 
 use std::sync::Arc;
 
-use fs_components_core::form_write::{FormWrite, WriteArg, WriteDone, WriteRefused, WriteValue};
+use fs_components_core::form_write::{
+    FormWrite, Gesture, WriteArg, WriteDone, WriteRefused, WriteValue,
+};
 use fs_components_kanban::{CREATE, MOVE, carried_channels};
 
 use crate::after_write::AfterWrite;
@@ -105,17 +107,17 @@ impl FormWrite for WriteGate {
         self.answer(self.records.invoke(&self.form, channel, record, &values))
     }
 
-    fn may_fire(&self, trigger: &str, record: Option<&str>) -> Result<(), WriteRefused> {
-        self.may_gesture(trigger, record)
+    fn may_fire(&self, gesture: Gesture<'_>, record: Option<&str>) -> Result<(), WriteRefused> {
+        self.may_gesture(gesture, record)
     }
 
     fn fire(
         &self,
-        trigger: &str,
+        gesture: Gesture<'_>,
         record: Option<&str>,
         args: &[WriteArg],
     ) -> Result<WriteDone, WriteRefused> {
-        self.gesture(trigger, record, args)
+        self.gesture(gesture, record, args)
     }
 }
 

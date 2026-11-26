@@ -61,3 +61,35 @@ fn a_value_is_read_by_channel_and_an_empty_one_is_none() {
     assert_eq!(row.get("parent"), None);
     assert_eq!(row.all("nope").len(), 0);
 }
+
+#[test]
+fn the_block_of_a_field_is_the_choice_of_the_catalog_and_empty_when_the_catalog_has_none() {
+    let mut declared = declared();
+    declared.map = vec![
+        ("preview".into(), vec!["photo".into()]),
+        ("facts".into(), vec!["mail".into()]),
+    ];
+    declared.fields = vec![
+        ("photo".into(), Basic::Image),
+        ("mail".into(), Basic::Email),
+    ];
+    let data = FormData {
+        source: 0,
+        data_type: String::new(),
+        declared,
+        rows: Vec::new(),
+        may: Vec::new(),
+        commands: Vec::new(),
+        columns: Vec::new(),
+        type_description: None,
+    };
+    let input = input_of(&data);
+    let block = |channel: &str| {
+        input.channel(channel).expect("channel").fields[0]
+            .block
+            .clone()
+    };
+    // the catalog has no block for an image (the tile and the sheet draw the face): EMPTY, never a guessed `field-text`
+    assert_eq!(block("preview"), "");
+    assert_eq!(block("facts"), "field-email");
+}

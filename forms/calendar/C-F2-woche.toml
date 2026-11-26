@@ -78,13 +78,15 @@ block = "partial-notice"
 
 [[action]]
 elem = "action:1"
+at = "block:week/main"
 trigger = "drop"
 source = 1
 command = "event.update"
 
 [[action]]
 elem = "action:2"
-trigger = "menu"
+at = "block:week/main"
+trigger = "quick-add"
 source = 1
 command = "event.create"
 

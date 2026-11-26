@@ -4,11 +4,11 @@ use fs_components_catalog::BlockCatalog;
 use fs_forms_layout::CatalogRules;
 use fs_forms_run::{Blocks, ContractRules};
 
-const CONTRACT: &str = "[contract]\nversion = \"0.4.0\"\n[vocabulary]\nstates = [\"default\"]\nreads = [\"bounds\"]\nsets = [\"axis\", \"min-width\"]\n";
+const CONTRACT: &str = "[contract]\nversion = \"0.5.0\"\n[vocabulary]\nstates = [\"default\"]\nreads = [\"bounds\"]\nsets = [\"axis\", \"min-width\"]\n";
 const BLOCKS: &str = "[block.pair]\naccepts = []\nparts = [\"pane\", \"bar\"]\nsets = [\"axis\"]\n\
 places = [{ place = \"pane\", takes = [\"form\", \"frame\"], min = 2, max = \"n\" }, { place = \"bar\", takes = [\"command\"], min = 0, max = 1 }]\n\n\
 [block.list]\naccepts = [{ slot = \"rows\", kind = \"records\", required = true }]\nsets = [\"min-width\"]\n\n\
-[block.press]\naccepts = [{ slot = \"go\", kind = \"command\" }]\n\n\
+[block.press]\naccepts = [{ slot = \"activate\", kind = \"command\" }]\n\n\
 [block.plain]\naccepts = []\n";
 
 fn catalog() -> BlockCatalog {
@@ -54,4 +54,19 @@ fn sets_of_lists_the_attribute_names_of_the_block() {
 fn the_rules_of_this_build_read_the_real_contract() {
     let r = Blocks::rules();
     assert!(r.block_known("workbench") && r.block_known("board"));
+}
+
+#[test]
+fn command_args_is_none_for_a_slot_that_is_no_command_slot_and_says_the_args_of_a_command_slot() {
+    let c = catalog();
+    let r = ContractRules(&c);
+    // `rows` is a records slot, `other` does not exist, `activate` is a command slot without args
+    assert_eq!(r.command_args("list", "rows"), None);
+    assert_eq!(r.command_args("list", "other"), None);
+    assert_eq!(r.command_args("press", "activate"), Some(Vec::new()));
+    // the real contract: a drop on the board carries the place of the card
+    let real = Blocks::rules();
+    let args = real.command_args("board", "drop").expect("board has drop");
+    assert_eq!(args, ["column", "lane", "after", "before"]);
+    assert_eq!(real.command_args("board", "cards"), None);
 }

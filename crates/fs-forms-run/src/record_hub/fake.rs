@@ -256,6 +256,9 @@ impl Records for LinkWriter {
     ) -> Answer {
         self.guarded(|s| s.invoke(form, channel, record, values))
     }
+    fn invoke_command(&self, form: &str, command: &str, record: Option<&str>) -> Answer {
+        self.guarded(|s| s.invoke_command(form, command, record))
+    }
     fn history(&self) -> UndoState {
         self.store.history()
     }

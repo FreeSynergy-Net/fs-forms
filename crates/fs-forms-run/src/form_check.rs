@@ -224,34 +224,3 @@ mod tests {
 
 #[cfg(test)]
 mod catalog_tests;
-
-/// The channel of the form `cards-in-columns` a gesture of the description is for (the table of the schnitt: a drop moves, the quick
-/// row and a sent form create); the other triggers (`button`, `menu`, `key`) call any command and are not checked.
-fn channel_of(trigger: &str) -> Option<&'static str> {
-    match trigger {
-        "drop" => Some("move"),
-        "quick-add" | "submit" => Some("create"),
-        _ => None,
-    }
-}
-
-/// The actions of the description whose command is not the one the module binds to the channel their gesture is for: the warning
-/// `action-channel-mismatch{trigger, command}` (yellow, nothing is locked here: the control simply stays locked, because the key
-/// is not what the module bound). Only for records that bind commands at all (a module without writing says nothing).
-#[must_use]
-pub fn action_report(actions: &[crate::view::ActionView], records: &dyn Records) -> Vec<Finding> {
-    let bound = |ch: &str| records.command_of("cards-in-columns", ch);
-    actions
-        .iter()
-        .filter_map(|a| {
-            let channel = channel_of(&a.trigger)?;
-            let key = bound(channel)?;
-            (key != a.command).then(|| Finding {
-                code: Coded::new("action-channel-mismatch")
-                    .with("trigger", a.trigger.clone())
-                    .with("command", a.command.clone()),
-                red: false,
-            })
-        })
-        .collect()
-}

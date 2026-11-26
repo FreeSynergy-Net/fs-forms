@@ -1,4 +1,4 @@
-//! The blocks of `fs-components` this host draws as elements of a page, and the data each one is given. Which block has which widget is
+//! The blockslots.retain(|s| !(s.block == name && s.info == *info && s.elem == elem)); of `fs-components` this host draws as elements of a page, and the data each one is given. Which block has which widget is
 //! the catalog's (`widget` of the contract) and which component draws a widget is `fs_components::views()`; the host only feeds the
 //! view with the form the block names (`forms=` of the contract) and keeps the mounted component over a rebuild, so its state stays.
 //! There is no name of a block here except `sidebar`, the one composition left (it needs `tree@1.1.0`); nothing is painted here and
@@ -38,6 +38,8 @@ pub(crate) struct Slot {
     block: String,
     /// The declaration of the placement: two placements of one block with other `view=` are two components.
     info: PlaceInfo,
+    /// The element id of the placement: two placements of one block are two components, each with the gate of its own place.
+    elem: String,
     look: (StyleId, bool),
     mounted: Arc<dyn Mounted>,
 }
@@ -114,7 +116,13 @@ pub(crate) fn missing(name: &str) -> String {
 }
 
 /// What the view is given besides the data.
-fn draw_ctx(ctx: &Ctx, block: &str, look: (StyleId, bool), info: &PlaceInfo) -> DrawCtx {
+fn draw_ctx(
+    ctx: &Ctx,
+    block: &str,
+    elem: &str,
+    look: (StyleId, bool),
+    info: &PlaceInfo,
+) -> DrawCtx {
     let form = crate::blocks::forms_of(block)
         .first()
         .map(|f| f.name().to_owned())
@@ -134,6 +142,8 @@ fn draw_ctx(ctx: &Ctx, block: &str, look: (StyleId, bool), info: &PlaceInfo) -> 
             records: ctx.records.clone(),
             actions: ctx.actions.clone(),
             form,
+            block: block.clone(),
+            place: elem.to_owned(),
             after: ctx.after_write.clone(),
         }),
         reread: Arc::new(move || input_for(&*records, &block, &feeds)),
@@ -141,23 +151,25 @@ fn draw_ctx(ctx: &Ctx, block: &str, look: (StyleId, bool), info: &PlaceInfo) -> 
 }
 
 /// The component of the placement: the kept one for (block, look, info), else a new one.
-fn mount(ctx: &Ctx, name: &str, info: &PlaceInfo) -> Option<Arc<dyn Mounted>> {
+fn mount(ctx: &Ctx, name: &str, elem: &str, info: &PlaceInfo) -> Option<Arc<dyn Mounted>> {
     let view = view_of(name)?;
     let look = ((ctx.style)(), dark());
     let input = input_for(&*ctx.records, name, &ctx.feeds);
     let mut slots = ctx.mounts.lock().unwrap_or_else(PoisonError::into_inner);
     if let Some(slot) = slots
         .iter()
-        .find(|s| s.block == name && s.look == look && s.info == *info)
+        .find(|s| s.block == name && s.look == look && s.info == *info && s.elem == elem)
     {
         slot.mounted.refresh(input);
         return Some(slot.mounted.clone());
     }
-    let mounted: Arc<dyn Mounted> = Arc::from(view.mount(input, draw_ctx(ctx, name, look, info)));
+    let mounted: Arc<dyn Mounted> =
+        Arc::from(view.mount(input, draw_ctx(ctx, name, elem, look, info)));
     slots.retain(|s| !(s.block == name && s.info == *info));
     slots.push(Slot {
         block: name.to_owned(),
         info: info.clone(),
+        elem: elem.to_owned(),
         look,
         mounted: mounted.clone(),
     });
@@ -168,6 +180,7 @@ fn mount(ctx: &Ctx, name: &str, info: &PlaceInfo) -> Option<Arc<dyn Mounted>> {
 pub(crate) fn block(
     name: &str,
     info: &PlaceInfo,
+    elem: &str,
     ctx: &Ctx,
     width: f32,
     height: f32,
@@ -175,7 +188,7 @@ pub(crate) fn block(
     if name == "sidebar" {
         return Some(sidebar(ctx, width, height));
     }
-    let mounted = mount(ctx, name, info)?;
+    let mounted = mount(ctx, name, elem, info)?;
     Some(mounted.build(width, height))
 }
 

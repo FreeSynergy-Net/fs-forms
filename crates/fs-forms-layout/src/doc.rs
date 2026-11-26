@@ -134,6 +134,9 @@ pub struct BindingDoc {
 pub struct ActionDoc {
     /// What triggers it.
     pub trigger: Trigger,
+    /// The place (element id of a `[[page.place]]` with a block) whose command slot this action binds: `trigger` is then the NAME of that slot
+    /// (`drop`, `menu`, `quick-add`, `activate`). `None`: a trigger of the page (`button`, `key`, `submit`).
+    pub at: Option<crate::ids::ElemId>,
     /// What it does.
     pub target: ActionTarget,
     /// Confirmation.

@@ -14,6 +14,7 @@
 
 mod apply;
 mod check;
+mod check_actions;
 mod check_frontend;
 mod check_places;
 mod check_sources;

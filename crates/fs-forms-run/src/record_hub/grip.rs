@@ -115,6 +115,15 @@ impl Records for Inner {
     fn can_channel(&self, form: &str, channel: &str, record: Option<&str>) -> bool {
         self.shared().can_channel(form, channel, record)
     }
+    fn channel_of(&self, form: &str, command: &str) -> Option<String> {
+        self.shared().channel_of(form, command)
+    }
+    fn can_command(&self, form: &str, command: &str, record: Option<&str>) -> bool {
+        self.shared().can_command(form, command, record)
+    }
+    fn invoke_command(&self, form: &str, command: &str, record: Option<&str>) -> Answer {
+        self.write(|w| w.invoke_command(form, command, record))
+    }
     fn invoke(
         &self,
         form: &str,

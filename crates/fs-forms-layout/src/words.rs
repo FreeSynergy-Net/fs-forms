@@ -24,7 +24,7 @@ macro_rules! words {
 }
 words!(OnWhat { Always => "always", Selected => "selected" });
 words!(Navigation { Single => "single", ListDetail => "list-detail" });
-words!(Trigger { Button => "button", Menu => "menu", Key => "key", Drop => "drop", QuickAdd => "quick-add", Submit => "submit" });
+words!(Trigger { Button => "button", Activate => "activate", Menu => "menu", Key => "key", Drop => "drop", QuickAdd => "quick-add", Submit => "submit" });
 words!(Confirm { None => "none", Confirm => "confirm", Choice => "choice" });
 words!(OrderBy { Field => "field", Order => "order" });
 words!(Placement { Panel => "panel", Window => "window" });

@@ -12,6 +12,7 @@
 #![deny(missing_docs)]
 #![warn(clippy::pedantic)]
 
+mod action_check;
 mod after_write;
 mod args;
 mod bind_spec;
@@ -62,6 +63,7 @@ mod words;
 pub mod write;
 mod write_gate;
 
+pub use action_check::action_report;
 pub use args::{Command, Config, HELP, parse};
 pub use bind_spec::{block_spec, module_forms};
 pub use block_forms::CatalogBlockForms;
@@ -74,7 +76,7 @@ pub use described::Described;
 pub use error::{EXIT_CONTRACT, HostError};
 pub use feed::{Feed, HeadsRef, Want, feeds_of, wants_of};
 pub use file::{FileLink, Loaded};
-pub use form_check::{Finding, action_report, problems as form_problems, report as form_report};
+pub use form_check::{Finding, problems as form_problems, report as form_report};
 pub use form_data::{FormData, FormRecords, FormRow};
 pub use from_layout::view_of;
 pub use fs_objects::UndoState;

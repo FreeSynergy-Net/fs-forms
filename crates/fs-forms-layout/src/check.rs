@@ -4,6 +4,7 @@
 
 use std::collections::HashSet;
 
+use crate::check_actions::check_actions;
 use crate::check_frontend::check_frontends;
 use crate::check_places::check_tree;
 use crate::check_sources::check_binding_sources;
@@ -26,6 +27,11 @@ pub trait CatalogRules {
     fn slot_known(&self, block: &str, slot: &str) -> bool;
     /// How many bindings the slot takes (`repeat`, 1..=16); `nth` must be below it.
     fn slot_repeat(&self, block: &str, slot: &str) -> u32;
+    /// The `args` of a COMMAND slot (the names of the values a gesture carries; may be empty); `None` = the slot is no command slot. The
+    /// default is `None` (nothing is a command slot).
+    fn command_args(&self, _block: &str, _slot: &str) -> Option<Vec<String>> {
+        None
+    }
     /// The places a frame declares (K4, K6); `None` = the catalog says nothing, so no place is checked. The default is `None`.
     fn places_of(&self, _frame: &str) -> Option<Vec<PlaceRule>> {
         None
@@ -61,6 +67,9 @@ impl CatalogRules for OpenCatalog {
     }
     fn slot_repeat(&self, _: &str, _: &str) -> u32 {
         Technical::NTH_MAX
+    }
+    fn command_args(&self, _: &str, _: &str) -> Option<Vec<String>> {
+        Some(Vec::new())
     }
 }
 
@@ -110,6 +119,7 @@ impl LayoutDoc {
             check_tree(p, catalog, limits, &mut out);
         }
         check_frontends(&self, &mut out);
+        check_actions(&self, catalog, &mut out);
         doc_rules(&self, limits, &mut out);
         if out.is_empty() {
             Ok(Layout::from_checked(self))
